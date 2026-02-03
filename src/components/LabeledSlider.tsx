@@ -27,7 +27,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
       </label>
       <div className="space-y-2">
         {/* Slider track */}
-        <div className="relative pt-0.5">
+        <div className="relative pt-1">
           <input
             type="range"
             min={0}
@@ -37,7 +37,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
             onChange={(e) => onChange(options[parseInt(e.target.value)])}
             disabled={disabled}
             className={`
-              w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer
+              w-full h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded-full appearance-none cursor-pointer
               accent-orange-500
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}

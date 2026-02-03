@@ -98,3 +98,48 @@ body.dark {
 .listening .sound-wave-bar {
   animation-duration: 1.2s;
 }
+
+/* Custom slider thumb styling */
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: 2px solid #f97316; /* orange-500 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: 2px solid #f97316;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
+}
+
+/* Dark mode adjustments */
+.dark input[type="range"]::-webkit-slider-thumb {
+  background: white;
+  border-color: #f97316;
+}
+
+.dark input[type="range"]::-moz-range-thumb {
+  background: white;
+  border-color: #f97316;
+}
