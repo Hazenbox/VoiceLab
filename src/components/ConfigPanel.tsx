@@ -45,7 +45,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   };
 
   return (
-    <aside className="w-[260px] h-full bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col overflow-hidden">
+    <aside className="w-[320px] h-full bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="p-3 border-b border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center justify-between">
@@ -72,13 +72,10 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
             </svg>
           </button>
         </div>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-          Powered by {providerName}
-        </p>
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 space-y-6">
         {/* Voice Selection */}
         <VoiceSelector
           value={voiceGender}

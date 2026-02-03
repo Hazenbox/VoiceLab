@@ -326,7 +326,7 @@ function App() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Tab Navigation */}
-        <div className="flex items-center gap-4 p-3 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center justify-center p-3 border-b border-zinc-200 dark:border-zinc-800">
           <div className="inline-flex bg-zinc-100 dark:bg-zinc-800 rounded-full p-0.5">
             <button
               onClick={() => setActiveTab('tts')}
@@ -348,14 +348,6 @@ function App() {
             >
               Tap-to-Talk
             </button>
-          </div>
-
-          {/* Provider info */}
-          <div className="ml-auto flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-            <span>Provider:</span>
-            <span className="font-medium">
-              {activeTab === 'tts' ? getTTSProviderType() : getConversationProviderType()}
-            </span>
           </div>
         </div>
 
@@ -494,8 +486,21 @@ function App() {
           </div>
         </div>
 
-        {/* Error Toast */}
-        {error && (
+        {/* Footer - Provider Info */}
+        <div className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+          <div className="flex items-center justify-end px-4 py-2">
+            <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+              <span>Provider:</span>
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                {activeTab === 'tts' ? getTTSProviderType() : getConversationProviderType()}
+              </span>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Error Toast */}
+      {error && (
           <div className="fixed bottom-3 left-1/2 -translate-x-1/2 max-w-md w-full mx-auto px-4">
             <div className="bg-red-500 text-white px-3 py-2 rounded-full shadow-lg flex items-center gap-2">
               <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -513,7 +518,6 @@ function App() {
             </div>
           </div>
         )}
-      </main>
     </div>
   );
 }
