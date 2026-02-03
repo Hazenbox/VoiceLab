@@ -14,11 +14,12 @@ export interface AlibabaConfig {
 }
 
 /**
- * Proxy server configuration for WebSocket connections
- * Browser WebSockets cannot send custom headers, so we use a proxy
+ * Proxy server configuration for WebSocket and HTTP connections
+ * Browser WebSockets cannot send custom headers, and HTTP requests are blocked by CORS
  */
 export interface ProxyConfig {
   wsProxyUrl: string;
+  httpProxyUrl: string;
   wsProxyPort: number;
 }
 
@@ -113,14 +114,17 @@ export function getAlibabaConfig(): AlibabaConfig {
 }
 
 /**
- * Get WebSocket proxy configuration
- * The proxy is needed because browser WebSockets cannot send custom Authorization headers
+ * Get proxy server configuration
+ * The proxy is needed because:
+ * - Browser WebSockets cannot send custom Authorization headers
+ * - Browser fetch requests are blocked by CORS policy
  */
 export function getProxyConfig(): ProxyConfig {
   const port = parseInt(getEnv('VITE_WS_PROXY_PORT', '3001'), 10);
   const host = getEnv('VITE_WS_PROXY_HOST', 'localhost');
   return {
     wsProxyUrl: `ws://${host}:${port}`,
+    httpProxyUrl: `http://${host}:${port}`,
     wsProxyPort: port,
   };
 }

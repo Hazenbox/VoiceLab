@@ -1,12 +1,15 @@
 /**
- * WebSocket Proxy Server for DashScope ASR
+ * WebSocket and HTTP Proxy Server for DashScope APIs
  * 
- * This proxy is needed because browser WebSockets cannot send custom HTTP headers.
+ * This proxy is needed because:
+ * 1. Browser WebSockets cannot send custom HTTP headers
+ * 2. Browser fetch requests are blocked by CORS policy
  * DashScope requires Authorization header for authentication, so we proxy through
  * this server which adds the required headers.
  */
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
+import https from 'https';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -23,10 +26,90 @@ const PROXY_PORT = process.env.WS_PROXY_PORT || 3001;
 // DashScope endpoints
 const DASHSCOPE_ASR_ENDPOINT = 'wss://dashscope-intl.aliyuncs.com/api-ws/v1/realtime';
 const DASHSCOPE_TTS_ENDPOINT = 'wss://dashscope.aliyuncs.com/api-ws/v1/inference/';
+const DASHSCOPE_TTS_HTTP_ENDPOINT = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2audio/generation';
 
 if (!DASHSCOPE_API_KEY) {
   console.error('Error: VITE_DASHSCOPE_API_KEY is not set in .env file');
   process.exit(1);
+}
+
+/**
+ * HTTP Proxy Handler for TTS requests
+ */
+async function handleTTSProxy(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+  
+  if (req.method !== 'POST') {
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Method not allowed' }));
+    return;
+  }
+  
+  // Read request body
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString();
+  });
+  
+  req.on('end', () => {
+    console.log('[Proxy] TTS request received');
+    
+    // Parse request body
+    let requestData;
+    try {
+      requestData = JSON.parse(body);
+    } catch (error) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid JSON' }));
+      return;
+    }
+    
+    // Prepare request to DashScope
+    const postData = JSON.stringify(requestData);
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DASHSCOPE_API_KEY}`,
+        'X-DashScope-DataInspection': 'enable',
+        'Content-Length': Buffer.byteLength(postData),
+      },
+    };
+    
+    // Forward request to DashScope
+    const proxyReq = https.request(DASHSCOPE_TTS_HTTP_ENDPOINT, options, (proxyRes) => {
+      console.log(`[Proxy] TTS response status: ${proxyRes.statusCode}`);
+      
+      // Forward status code and headers
+      res.writeHead(proxyRes.statusCode, {
+        'Content-Type': proxyRes.headers['content-type'] || 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      });
+      
+      // Forward response body
+      proxyRes.pipe(res);
+    });
+    
+    proxyReq.on('error', (error) => {
+      console.error('[Proxy] TTS request error:', error.message);
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Proxy request failed', message: error.message }));
+    });
+    
+    // Send request body
+    proxyReq.write(postData);
+    proxyReq.end();
+  });
 }
 
 // Create HTTP server
@@ -37,6 +120,13 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ status: 'ok', service: 'ws-proxy' }));
     return;
   }
+  
+  // TTS proxy endpoint
+  if (req.url === '/api/tts') {
+    handleTTSProxy(req, res);
+    return;
+  }
+  
   res.writeHead(404);
   res.end();
 });
@@ -66,11 +156,14 @@ wss.on('connection', (clientWs, req) => {
   console.log(`[Proxy] Connecting to DashScope: ${dashscopeUrl}`);
   
   // Connect to DashScope with proper authentication headers
+  // Note: rejectUnauthorized: false is for development only
+  // In production, use proper SSL certificates
   const dashscopeWs = new WebSocket(dashscopeUrl, {
     headers: {
       'Authorization': `Bearer ${DASHSCOPE_API_KEY}`,
       'OpenAI-Beta': 'realtime=v1',
     },
+    rejectUnauthorized: false, // Allow self-signed certificates in development
   });
   
   // Handle DashScope connection open
@@ -132,11 +225,12 @@ wss.on('connection', (clientWs, req) => {
 server.listen(PROXY_PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║           DashScope WebSocket Proxy Server                     ║
+║           DashScope WebSocket & HTTP Proxy Server              ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  Status: Running                                               ║
 ║  Port: ${PROXY_PORT}                                                    ║
-║  ASR Endpoint: ws://localhost:${PROXY_PORT}?service=asr&model=...      ║
+║  ASR WebSocket: ws://localhost:${PROXY_PORT}?service=asr&model=...    ║
+║  TTS HTTP: http://localhost:${PROXY_PORT}/api/tts                     ║
 ║  Health Check: http://localhost:${PROXY_PORT}/health                   ║
 ╚═══════════════════════════════════════════════════════════════╝
   `);

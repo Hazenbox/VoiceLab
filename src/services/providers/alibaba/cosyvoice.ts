@@ -2,7 +2,7 @@ import type { TTSProvider, VoiceConfig } from '../types';
 import type { Voice } from '../../../types';
 import { VoiceGender } from '../../../types';
 import { ALIBABA_VOICES, getAlibabaVoiceByGender } from '../../../constants';
-import { getAlibabaConfig, isAlibabaConfigured } from '../../../config/providers';
+import { getAlibabaConfig, isAlibabaConfigured, getProxyConfig } from '../../../config/providers';
 import { generateUUID, createAudioContext, decodeMP3 } from '../../audioUtils';
 
 /**
@@ -47,6 +47,7 @@ export class CosyVoiceTTSProvider implements TTSProvider {
   readonly displayName = 'Alibaba CosyVoice';
 
   private config = getAlibabaConfig();
+  private proxyConfig = getProxyConfig();
   private audioContext: AudioContext | null = null;
 
   constructor() {
@@ -252,17 +253,17 @@ export class CosyVoiceTTSProvider implements TTSProvider {
   }
 
   /**
-   * Use HTTP/REST API for TTS synthesis
-   * This is more reliable from browser as it supports proper auth headers
+   * Use HTTP/REST API for TTS synthesis through proxy server
+   * The proxy server adds the Authorization header and handles CORS
    */
   private async synthesizeViaHTTP(text: string, voiceConfig: VoiceConfig): Promise<AudioBuffer> {
-    // Use DashScope's HTTP API for TTS
-    const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text2audio/generation', {
+    // Use proxy server to avoid CORS issues
+    const proxyUrl = `${this.proxyConfig.httpProxyUrl}/api/tts`;
+    
+    const response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.config.apiKey}`,
-        'X-DashScope-DataInspection': 'enable',
       },
       body: JSON.stringify({
         model: this.config.ttsModel,
