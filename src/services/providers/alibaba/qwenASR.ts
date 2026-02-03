@@ -82,9 +82,9 @@ export class QwenASRClient {
 
     return new Promise((resolve, reject) => {
       try {
-        // Note: Browser WebSocket doesn't support custom headers
-        // For production, you'd need a proxy server or use a different auth method
-        this.ws = new WebSocket(this.config.asrEndpoint);
+        // Browser WebSocket auth via URL query parameter
+        const wsUrl = `${this.config.asrEndpoint}?token=${encodeURIComponent(this.config.apiKey)}`;
+        this.ws = new WebSocket(wsUrl);
 
         const timeout = setTimeout(() => {
           if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
