@@ -171,7 +171,9 @@ function App() {
       const provider = createConversationProvider();
       conversationProviderRef.current = provider;
 
-      const voice = provider.getDefaultVoice(voiceGender === VoiceGender.FEMALE ? 'female' : 'male');
+      // Get voice from TTS provider (not conversation provider) to ensure correct voice IDs
+      const ttsProvider = createTTSProvider();
+      const voice = ttsProvider.getDefaultVoice(voiceGender === VoiceGender.FEMALE ? 'female' : 'male');
       const systemPrompt = getSystemInstruction(config);
 
       // Connect to conversation service
