@@ -56,6 +56,7 @@ export function decodeAudioData(
 
 /**
  * Convert Float32Array to PCM16 Base64 blob for sending to API
+ * Also exported as float32ToPCM16Base64 for clarity
  */
 export function createBlob(data: Float32Array): string {
   // Convert Float32 to PCM16
@@ -205,3 +206,8 @@ export function concatenateAudioBuffers(
 
   return result;
 }
+
+/**
+ * Alias for createBlob - converts Float32Array to PCM16 Base64
+ */
+export const float32ToPCM16Base64 = createBlob;

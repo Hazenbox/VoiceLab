@@ -13,6 +13,15 @@ export interface AlibabaConfig {
   region: 'beijing' | 'singapore';
 }
 
+/**
+ * Proxy server configuration for WebSocket connections
+ * Browser WebSockets cannot send custom headers, so we use a proxy
+ */
+export interface ProxyConfig {
+  wsProxyUrl: string;
+  wsProxyPort: number;
+}
+
 export interface GeminiConfig {
   apiKey: string;
   ttsModel: string;
@@ -100,6 +109,19 @@ export function getAlibabaConfig(): AlibabaConfig {
     ttsEndpoint: 'wss://dashscope.aliyuncs.com/api-ws/v1/inference/',
     asrEndpoint: 'wss://dashscope-intl.aliyuncs.com/api-ws/v1/realtime',
     region: 'singapore', // Using international endpoint
+  };
+}
+
+/**
+ * Get WebSocket proxy configuration
+ * The proxy is needed because browser WebSockets cannot send custom Authorization headers
+ */
+export function getProxyConfig(): ProxyConfig {
+  const port = parseInt(getEnv('VITE_WS_PROXY_PORT', '3001'), 10);
+  const host = getEnv('VITE_WS_PROXY_HOST', 'localhost');
+  return {
+    wsProxyUrl: `ws://${host}:${port}`,
+    wsProxyPort: port,
   };
 }
 

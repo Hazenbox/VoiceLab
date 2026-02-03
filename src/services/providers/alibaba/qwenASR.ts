@@ -1,5 +1,5 @@
-import { generateUUID, createBlob } from '../../audioUtils';
-import { getAlibabaConfig } from '../../../config/providers';
+import { generateUUID, float32ToPCM16Base64 } from '../../audioUtils';
+import { getAlibabaConfig, getProxyConfig } from '../../../config/providers';
 
 /**
  * ASR event callbacks
@@ -11,66 +11,59 @@ export interface ASRCallbacks {
 }
 
 /**
- * Qwen ASR Realtime WebSocket Message Types
+ * Qwen ASR Realtime WebSocket Message Types (New API format)
  */
-interface ASRHeader {
-  action?: string;
-  event?: string;
-  task_id: string;
-  streaming?: string;
-  error_code?: string;
-  error_message?: string;
+interface ASRSessionConfig {
+  modalities: string[];
+  input_audio_format: string;
+  sample_rate: number;
+  input_audio_transcription?: {
+    language?: string;
+  };
+  turn_detection?: {
+    type: 'server_vad';
+    threshold: number;
+    silence_duration_ms: number;
+  } | null;
 }
 
-interface ASRPayload {
-  task_group?: string;
-  task?: string;
-  function?: string;
-  model?: string;
-  parameters?: Record<string, unknown>;
-  input?: {
-    audio?: string;
+interface ASRServerEvent {
+  type: string;
+  event_id?: string;
+  session?: {
+    id: string;
   };
-  output?: {
-    sentence?: {
-      text?: string;
-      end_time?: number;
-    };
-    transcription?: {
-      text?: string;
-      sentences?: Array<{
-        text: string;
-        begin_time: number;
-        end_time: number;
-      }>;
-    };
+  transcript?: string;
+  text?: string;
+  stash?: string;
+  error?: {
+    message: string;
+    code: string;
   };
-}
-
-interface ASRMessage {
-  header: ASRHeader;
-  payload: ASRPayload;
 }
 
 /**
  * Qwen ASR Realtime Client
  * Handles real-time speech recognition using Alibaba's Qwen ASR service
+ * Uses WebSocket proxy to handle authentication (browser WebSockets can't send custom headers)
  */
 export class QwenASRClient {
   private config = getAlibabaConfig();
+  private proxyConfig = getProxyConfig();
   private ws: WebSocket | null = null;
-  private taskId: string = '';
+  private sessionId: string = '';
   private callbacks: ASRCallbacks = {};
   private isConnected = false;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 3;
+  private enableServerVad = true; // Use server-side VAD by default
 
   constructor(callbacks: ASRCallbacks = {}) {
     this.callbacks = callbacks;
   }
 
   /**
-   * Connect to Qwen ASR service
+   * Connect to Qwen ASR service through proxy
    */
   async connect(): Promise<void> {
     if (this.isConnected) {
@@ -78,39 +71,54 @@ export class QwenASRClient {
     }
 
     this.callbacks.onStateChange?.('connecting');
-    this.taskId = generateUUID();
 
     return new Promise((resolve, reject) => {
       try {
-        // Browser WebSocket auth via URL query parameter
-        const wsUrl = `${this.config.asrEndpoint}?token=${encodeURIComponent(this.config.apiKey)}`;
-        this.ws = new WebSocket(wsUrl);
+        // Connect through the proxy server
+        // The proxy adds the required Authorization header
+        const proxyUrl = `${this.proxyConfig.wsProxyUrl}?service=asr&model=${encodeURIComponent(this.config.asrModel)}`;
+        console.log('[QwenASR] Connecting to proxy:', proxyUrl);
+        
+        this.ws = new WebSocket(proxyUrl);
 
         const timeout = setTimeout(() => {
           if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
             this.ws.close();
+            this.callbacks.onStateChange?.('error');
             reject(new Error('Connection timeout'));
           }
-        }, 10000);
+        }, 15000);
 
         this.ws.onopen = () => {
+          console.log('[QwenASR] WebSocket connected, sending session.update');
           clearTimeout(timeout);
-          this.sendRunTask();
+          this.sendSessionUpdate();
         };
 
         this.ws.onmessage = (event) => {
-          this.handleMessage(event);
+          this.handleMessage(event.data);
+          
+          // Resolve on first successful message (session.created)
           if (!this.isConnected) {
-            this.isConnected = true;
-            this.reconnectAttempts = 0;
-            this.callbacks.onStateChange?.('listening');
-            resolve();
+            try {
+              const data = JSON.parse(event.data);
+              if (data.type === 'session.created') {
+                this.isConnected = true;
+                this.sessionId = data.session?.id || '';
+                this.reconnectAttempts = 0;
+                this.callbacks.onStateChange?.('listening');
+                console.log('[QwenASR] Session created:', this.sessionId);
+                resolve();
+              }
+            } catch {
+              // Not JSON, ignore
+            }
           }
         };
 
         this.ws.onerror = (error) => {
           clearTimeout(timeout);
-          console.error('ASR WebSocket error:', error);
+          console.error('[QwenASR] WebSocket error:', error);
           this.callbacks.onStateChange?.('error');
           this.callbacks.onError?.(new Error('WebSocket connection error'));
           reject(error);
@@ -119,8 +127,9 @@ export class QwenASRClient {
         this.ws.onclose = (event) => {
           clearTimeout(timeout);
           this.isConnected = false;
+          console.log(`[QwenASR] WebSocket closed: ${event.code} - ${event.reason}`);
           
-          if (event.code !== 1000) {
+          if (event.code !== 1000 && event.code !== 1005) {
             // Abnormal close, try to reconnect
             this.handleReconnect();
           } else {
@@ -135,77 +144,108 @@ export class QwenASRClient {
   }
 
   /**
-   * Send run-task instruction to start ASR
+   * Send session.update to configure the ASR session
    */
-  private sendRunTask(): void {
-    const message: ASRMessage = {
-      header: {
-        action: 'run-task',
-        task_id: this.taskId,
-        streaming: 'duplex',
-      },
-      payload: {
-        task_group: 'audio',
-        task: 'asr',
-        function: 'recognition',
-        model: this.config.asrModel,
-        parameters: {
-          format: 'pcm',
-          sample_rate: 16000,
-          enable_punctuation_prediction: true,
-          enable_inverse_text_normalization: true,
-          language_hints: ['en'], // English
-        },
-        input: {},
+  private sendSessionUpdate(): void {
+    const sessionConfig: ASRSessionConfig = {
+      modalities: ['text'],
+      input_audio_format: 'pcm',
+      sample_rate: 16000,
+      input_audio_transcription: {
+        language: 'en', // English
       },
     };
 
-    this.ws?.send(JSON.stringify(message));
+    // Add VAD configuration if enabled
+    if (this.enableServerVad) {
+      sessionConfig.turn_detection = {
+        type: 'server_vad',
+        threshold: 0.0,
+        silence_duration_ms: 400,
+      };
+    } else {
+      sessionConfig.turn_detection = null;
+    }
+
+    const event = {
+      event_id: `event_${generateUUID()}`,
+      type: 'session.update',
+      session: sessionConfig,
+    };
+
+    console.log('[QwenASR] Sending session.update:', JSON.stringify(event, null, 2));
+    this.ws?.send(JSON.stringify(event));
   }
 
   /**
    * Handle incoming WebSocket messages
    */
-  private handleMessage(event: MessageEvent): void {
+  private handleMessage(data: string): void {
     try {
-      const message: ASRMessage = JSON.parse(event.data);
-      const eventType = message.header.event;
+      const event: ASRServerEvent = JSON.parse(data);
+      const eventType = event.type;
+
+      console.log('[QwenASR] Received event:', eventType);
 
       switch (eventType) {
-        case 'task-started':
-          // ASR task started successfully
-          console.log('ASR task started');
+        case 'session.created':
+          console.log('[QwenASR] Session created');
           break;
 
-        case 'result-generated':
-          // Handle transcription result
-          if (message.payload.output?.sentence) {
-            const sentence = message.payload.output.sentence;
-            const isFinal = sentence.end_time !== undefined && sentence.end_time > 0;
-            this.callbacks.onTranscript?.(sentence.text || '', isFinal);
+        case 'session.updated':
+          console.log('[QwenASR] Session updated');
+          break;
+
+        case 'input_audio_buffer.speech_started':
+          console.log('[QwenASR] Speech started (VAD)');
+          break;
+
+        case 'input_audio_buffer.speech_stopped':
+          console.log('[QwenASR] Speech stopped (VAD)');
+          break;
+
+        case 'input_audio_buffer.committed':
+          console.log('[QwenASR] Audio buffer committed');
+          break;
+
+        case 'conversation.item.created':
+          console.log('[QwenASR] Conversation item created');
+          break;
+
+        case 'conversation.item.input_audio_transcription.text':
+          // Partial/interim transcription result
+          if (event.text || event.stash) {
+            const text = event.text || event.stash || '';
+            this.callbacks.onTranscript?.(text, false);
           }
           break;
 
-        case 'task-finished':
-          // Task completed
-          console.log('ASR task finished');
+        case 'conversation.item.input_audio_transcription.completed':
+          // Final transcription result
+          if (event.transcript) {
+            this.callbacks.onTranscript?.(event.transcript, true);
+          }
+          break;
+
+        case 'session.finished':
+          console.log('[QwenASR] Session finished');
           this.disconnect();
           break;
 
-        case 'task-failed':
-          // Task failed
-          const errorMsg = message.header.error_message || 'ASR task failed';
-          console.error('ASR task failed:', errorMsg);
+        case 'error':
+          const errorMsg = event.error?.message || 'Unknown ASR error';
+          console.error('[QwenASR] Error:', errorMsg);
           this.callbacks.onError?.(new Error(errorMsg));
           this.callbacks.onStateChange?.('error');
           break;
 
         default:
-          // Unknown event
+          // Unknown event type
+          console.log('[QwenASR] Unknown event type:', eventType);
           break;
       }
     } catch (error) {
-      console.error('Failed to parse ASR message:', error);
+      console.error('[QwenASR] Failed to parse message:', error);
     }
   }
 
@@ -219,44 +259,48 @@ export class QwenASRClient {
     }
 
     // Convert Float32Array to PCM16 Base64
-    const base64Audio = createBlob(audioData);
+    const base64Audio = float32ToPCM16Base64(audioData);
 
-    const message: ASRMessage = {
-      header: {
-        action: 'continue-task',
-        task_id: this.taskId,
-        streaming: 'duplex',
-      },
-      payload: {
-        input: {
-          audio: base64Audio,
-        },
-      },
+    const event = {
+      event_id: `event_${Date.now()}`,
+      type: 'input_audio_buffer.append',
+      audio: base64Audio,
     };
 
-    this.ws.send(JSON.stringify(message));
+    this.ws.send(JSON.stringify(event));
   }
 
   /**
-   * Finish the ASR task (call when user stops speaking)
+   * Commit the audio buffer (for manual mode without VAD)
    */
-  finishTask(): void {
+  commitAudio(): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       return;
     }
 
-    const message: ASRMessage = {
-      header: {
-        action: 'finish-task',
-        task_id: this.taskId,
-        streaming: 'duplex',
-      },
-      payload: {
-        input: {},
-      },
+    const event = {
+      event_id: `event_${generateUUID()}`,
+      type: 'input_audio_buffer.commit',
     };
 
-    this.ws.send(JSON.stringify(message));
+    this.ws.send(JSON.stringify(event));
+  }
+
+  /**
+   * Finish the ASR session (call when done with recognition)
+   */
+  finishSession(): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    const event = {
+      event_id: `event_${generateUUID()}`,
+      type: 'session.finish',
+    };
+
+    console.log('[QwenASR] Sending session.finish');
+    this.ws.send(JSON.stringify(event));
   }
 
   /**
@@ -265,11 +309,11 @@ export class QwenASRClient {
   private handleReconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+      console.log(`[QwenASR] Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
       
       setTimeout(() => {
         this.connect().catch((error) => {
-          console.error('Reconnection failed:', error);
+          console.error('[QwenASR] Reconnection failed:', error);
         });
       }, 1000 * this.reconnectAttempts);
     } else {
@@ -284,12 +328,13 @@ export class QwenASRClient {
   disconnect(): void {
     if (this.ws) {
       if (this.ws.readyState === WebSocket.OPEN) {
-        this.finishTask();
+        this.finishSession();
         this.ws.close(1000, 'Normal closure');
       }
       this.ws = null;
     }
     this.isConnected = false;
+    this.sessionId = '';
     this.callbacks.onStateChange?.('idle');
   }
 
