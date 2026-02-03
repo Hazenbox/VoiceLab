@@ -227,7 +227,7 @@ export class AlibabaConversationProvider implements ConversationProvider {
   }
 
   /**
-   * Speak the response using CosyVoice TTS
+   * Speak the response using configured TTS provider
    */
   private async speakResponse(text: string): Promise<void> {
     if (!this.ttsProvider || !this.audioContext) {
@@ -237,7 +237,8 @@ export class AlibabaConversationProvider implements ConversationProvider {
     this.setState('speaking');
 
     try {
-      const voice = this.sessionConfig?.voice || this.getDefaultVoice('female');
+      // Use the TTS provider's default voice if none configured
+      const voice = this.sessionConfig?.voice || this.ttsProvider.getDefaultVoice('female');
       
       const audioBuffer = await this.ttsProvider.synthesize(text, {
         voice,
@@ -288,11 +289,14 @@ export class AlibabaConversationProvider implements ConversationProvider {
   }
 
   getSupportedVoices(): Voice[] {
-    return ALIBABA_VOICES;
+    // Return voices from the configured TTS provider
+    return this.ttsProvider?.getSupportedVoices() || ALIBABA_VOICES;
   }
 
   getDefaultVoice(gender: 'male' | 'female'): string {
-    return getAlibabaVoiceByGender(gender === 'female' ? VoiceGender.FEMALE : VoiceGender.MALE);
+    // Delegate to the configured TTS provider
+    return this.ttsProvider?.getDefaultVoice(gender) || 
+           getAlibabaVoiceByGender(gender === 'female' ? VoiceGender.FEMALE : VoiceGender.MALE);
   }
 
   isReady(): boolean {
