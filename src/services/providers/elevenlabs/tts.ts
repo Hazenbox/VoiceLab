@@ -129,7 +129,7 @@ export class ElevenLabsTTSProvider implements TTSProvider {
 
       // Decode MP3 to AudioBuffer
       const audioContext = this.getAudioContext();
-      const audioBuffer = await decodeMP3(audioContext, audioData);
+      const audioBuffer = await decodeMP3(audioData, audioContext);
 
       console.log('[ElevenLabs] Audio decoded successfully:', audioBuffer.duration.toFixed(2), 'seconds');
       return audioBuffer;
@@ -230,7 +230,7 @@ export class ElevenLabsTTSProvider implements TTSProvider {
 
             // Decode MP3 to AudioBuffer
             const audioContext = this.getAudioContext();
-            const audioBuffer = await decodeMP3(audioContext, combinedAudio.buffer);
+            const audioBuffer = await decodeMP3(combinedAudio.buffer, audioContext);
 
             console.log('[ElevenLabs] Audio decoded successfully:', audioBuffer.duration.toFixed(2), 'seconds');
             resolve(audioBuffer);
