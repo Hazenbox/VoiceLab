@@ -25,9 +25,9 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
       <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
         {label}
       </label>
-      <div className="space-y-2">
+      <div className="space-y-1">
         {/* Slider track */}
-        <div className="relative pt-1">
+        <div className="relative pt-0.5">
           <input
             type="range"
             min={0}
@@ -36,6 +36,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
             value={currentIndex}
             onChange={(e) => onChange(options[parseInt(e.target.value)])}
             disabled={disabled}
+            data-at-zero={currentIndex === 0 ? "true" : "false"}
             className={`
               w-full h-2.5 bg-zinc-200 dark:bg-zinc-700 rounded-full appearance-none cursor-pointer
               accent-orange-500

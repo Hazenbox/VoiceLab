@@ -99,15 +99,16 @@ body.dark {
   animation-duration: 1.2s;
 }
 
-/* Custom slider thumb styling - 8px white knob */
+/* Custom slider thumb styling - 6px white knob with margins */
 input[type="range"]::-webkit-slider-thumb {
   appearance: none;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: white;
   cursor: pointer;
   border: none;
+  margin: 0 4px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   transition: all 0.2s ease;
 }
@@ -122,12 +123,13 @@ input[type="range"]::-webkit-slider-thumb:active {
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: white;
   cursor: pointer;
   border: none;
+  margin: 0 4px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   transition: all 0.2s ease;
 }
@@ -141,6 +143,17 @@ input[type="range"]::-moz-range-thumb:active {
   transform: scale(0.9);
 }
 
+/* Orange ring when slider is at zero position */
+input[type="range"][data-at-zero="true"]::-webkit-slider-thumb {
+  border: 2px solid #f97316;
+  box-shadow: 0 0 0 2px white, 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+input[type="range"][data-at-zero="true"]::-moz-range-thumb {
+  border: 2px solid #f97316;
+  box-shadow: 0 0 0 2px white, 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
 /* Dark mode adjustments */
 .dark input[type="range"]::-webkit-slider-thumb {
   background: white;
@@ -150,4 +163,14 @@ input[type="range"]::-moz-range-thumb:active {
 .dark input[type="range"]::-moz-range-thumb {
   background: white;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+.dark input[type="range"][data-at-zero="true"]::-webkit-slider-thumb {
+  border: 2px solid #f97316;
+  box-shadow: 0 0 0 2px white, 0 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+.dark input[type="range"][data-at-zero="true"]::-moz-range-thumb {
+  border: 2px solid #f97316;
+  box-shadow: 0 0 0 2px white, 0 2px 3px rgba(0, 0, 0, 0.2);
 }
