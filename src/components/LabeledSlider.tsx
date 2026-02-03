@@ -21,13 +21,13 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
   const currentIndex = options.indexOf(value);
 
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+    <div className="space-y-1.5">
+      <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
         {label}
       </label>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {/* Slider track */}
-        <div className="relative pt-1">
+        <div className="relative pt-0.5">
           <input
             type="range"
             min={0}
@@ -37,7 +37,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
             onChange={(e) => onChange(options[parseInt(e.target.value)])}
             disabled={disabled}
             className={`
-              w-full h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer
+              w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer
               accent-orange-500
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}
@@ -56,7 +56,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
               onClick={() => !disabled && onChange(option)}
               disabled={disabled}
               className={`
-                px-2 py-1 rounded transition-colors duration-200
+                px-1.5 py-0.5 rounded transition-colors duration-200
                 ${index === currentIndex
                   ? 'text-orange-600 dark:text-orange-400 font-medium'
                   : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'

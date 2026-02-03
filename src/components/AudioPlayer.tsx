@@ -223,8 +223,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   if (!audioBuffer) {
     return (
-      <div className="flex items-center justify-center h-24 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
-        <p className="text-zinc-500 dark:text-zinc-400 text-sm">
+      <div className="flex items-center justify-center h-16 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+        <p className="text-zinc-500 dark:text-zinc-400 text-xs">
           No audio generated yet
         </p>
       </div>
@@ -232,29 +232,29 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Waveform canvas */}
       <canvas
         ref={canvasRef}
         onClick={seek}
-        className="w-full h-20 cursor-pointer rounded-lg bg-zinc-100 dark:bg-zinc-800"
+        className="w-full h-14 cursor-pointer rounded-lg bg-zinc-100 dark:bg-zinc-800"
       />
 
       {/* Controls */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* Play/Pause button */}
           <button
             onClick={togglePlayPause}
-            className="p-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white transition-colors"
+            className="p-1.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white transition-colors"
           >
             {isPlaying ? (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <rect x="6" y="4" width="4" height="16" rx="1" />
                 <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             )}
@@ -263,16 +263,16 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           {/* Restart button */}
           <button
             onClick={restart}
-            className="p-2 rounded-full bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-700 dark:text-zinc-300 transition-colors"
+            className="p-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-700 dark:text-zinc-300 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </button>
         </div>
 
         {/* Time display */}
-        <div className="text-sm font-mono text-zinc-600 dark:text-zinc-400">
+        <div className="text-xs font-mono text-zinc-600 dark:text-zinc-400">
           {formatTime(currentTime)} / {formatTime(duration)}
         </div>
       </div>

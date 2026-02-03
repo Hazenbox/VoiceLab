@@ -45,20 +45,20 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   };
 
   return (
-    <aside className="w-[300px] h-full bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col overflow-hidden">
+    <aside className="w-[260px] h-full bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="p-3 border-b border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-zinc-900 dark:text-white">
+          <h1 className="text-base font-bold text-zinc-900 dark:text-white">
             Voice Designer
           </h1>
           <button
             onClick={onShowDocs}
-            className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            className="p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             title="Documentation"
           >
             <svg
-              className="w-5 h-5 text-zinc-600 dark:text-zinc-400"
+              className="w-4 h-4 text-zinc-600 dark:text-zinc-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -72,13 +72,13 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
             </svg>
           </button>
         </div>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
           Powered by {providerName}
         </p>
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
         {/* Voice Selection */}
         <VoiceSelector
           value={voiceGender}
@@ -87,16 +87,16 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
         />
 
         {/* Tone Definition */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
             Tone Definition
           </label>
           <textarea
             value={config.persona.tone}
             onChange={(e) => updatePersona('tone', e.target.value)}
             disabled={disabled}
-            rows={3}
-            className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white placeholder-zinc-500 resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+            rows={2}
+            className="w-full px-2.5 py-1.5 text-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white placeholder-zinc-500 resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
             placeholder="Describe the personality..."
           />
         </div>
@@ -111,8 +111,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
         />
 
         {/* Greeting */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
             Greeting
           </label>
           <input
@@ -120,7 +120,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
             value={config.greeting}
             onChange={(e) => onConfigChange({ ...config, greeting: e.target.value })}
             disabled={disabled}
-            className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
+            className="w-full px-2.5 py-1.5 text-sm bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
             placeholder="Initial greeting message..."
           />
         </div>
@@ -145,28 +145,28 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
       </div>
 
       {/* Footer - Theme Toggle */}
-      <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
+      <div className="p-3 border-t border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-zinc-700 dark:text-zinc-300">Theme</span>
+          <span className="text-xs text-zinc-700 dark:text-zinc-300">Theme</span>
           <button
             onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
-            className="relative w-12 h-6 rounded-full bg-zinc-200 dark:bg-zinc-700 transition-colors"
+            className="relative w-10 h-5 rounded-full bg-zinc-200 dark:bg-zinc-700 transition-colors"
           >
             <span
               className={`
-                absolute top-1 w-4 h-4 rounded-full transition-all duration-200
+                absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200
                 ${colorMode === 'Dark' 
-                  ? 'right-1 bg-orange-500' 
-                  : 'left-1 bg-white shadow'
+                  ? 'right-0.5 bg-orange-500' 
+                  : 'left-0.5 bg-white shadow'
                 }
               `}
             />
             <span className="sr-only">Toggle theme</span>
           </button>
         </div>
-        <div className="flex items-center gap-2 mt-2">
+        <div className="flex items-center gap-1.5 mt-1.5">
           <svg
-            className={`w-4 h-4 ${colorMode === 'Light' ? 'text-orange-500' : 'text-zinc-400'}`}
+            className={`w-3 h-3 ${colorMode === 'Light' ? 'text-orange-500' : 'text-zinc-400'}`}
             fill="currentColor"
             viewBox="0 0 24 24"
           >
@@ -175,7 +175,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           <span className="text-xs text-zinc-500">Light</span>
           <span className="text-xs text-zinc-400">/</span>
           <svg
-            className={`w-4 h-4 ${colorMode === 'Dark' ? 'text-orange-500' : 'text-zinc-400'}`}
+            className={`w-3 h-3 ${colorMode === 'Dark' ? 'text-orange-500' : 'text-zinc-400'}`}
             fill="currentColor"
             viewBox="0 0 24 24"
           >

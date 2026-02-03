@@ -53,8 +53,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   }, []);
 
   return (
-    <div className="space-y-2" ref={selectRef}>
-      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+    <div className="space-y-1.5" ref={selectRef}>
+      <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
         {label}
       </label>
       <div className="relative">
@@ -63,10 +63,10 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           className={`
-            w-full flex items-center justify-between px-3 py-2 
+            w-full flex items-center justify-between px-2.5 py-1.5 
             bg-white dark:bg-zinc-800 
             border border-zinc-200 dark:border-zinc-700 
-            rounded-lg text-left
+            rounded-lg text-left text-sm
             transition-colors duration-200
             ${disabled 
               ? 'opacity-50 cursor-not-allowed' 
@@ -78,7 +78,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             {selectedOption?.label || 'Select...'}
           </span>
           <svg
-            className={`w-5 h-5 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -98,7 +98,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   setIsOpen(false);
                 }}
                 className={`
-                  w-full px-3 py-2 text-left transition-colors duration-150
+                  w-full px-2.5 py-1.5 text-sm text-left transition-colors duration-150
                   ${option.value === value
                     ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300'
                     : 'text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-700'

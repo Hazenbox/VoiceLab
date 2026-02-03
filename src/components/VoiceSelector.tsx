@@ -16,19 +16,14 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
   disabled = false,
 }) => {
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+    <div className="space-y-1.5">
+      <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
         Voice Model
       </label>
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-2">
         <label
           className={`
-            flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer
-            transition-all duration-200
-            ${value === VoiceGender.FEMALE
-              ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300'
-              : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
-            }
+            flex items-center gap-2 cursor-pointer
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
         >
@@ -39,32 +34,14 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
             checked={value === VoiceGender.FEMALE}
             onChange={() => onChange(VoiceGender.FEMALE)}
             disabled={disabled}
-            className="sr-only"
+            className="w-4 h-4 text-orange-500 border-zinc-300 dark:border-zinc-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-0"
           />
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
-          <span className="font-medium">Female</span>
+          <span className="text-sm text-zinc-700 dark:text-zinc-300">Female</span>
         </label>
 
         <label
           className={`
-            flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer
-            transition-all duration-200
-            ${value === VoiceGender.MALE
-              ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300'
-              : 'border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600'
-            }
+            flex items-center gap-2 cursor-pointer
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
         >
@@ -75,22 +52,9 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
             checked={value === VoiceGender.MALE}
             onChange={() => onChange(VoiceGender.MALE)}
             disabled={disabled}
-            className="sr-only"
+            className="w-4 h-4 text-orange-500 border-zinc-300 dark:border-zinc-600 focus:ring-2 focus:ring-orange-500 focus:ring-offset-0"
           />
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
-          <span className="font-medium">Male</span>
+          <span className="text-sm text-zinc-700 dark:text-zinc-300">Male</span>
         </label>
       </div>
     </div>
