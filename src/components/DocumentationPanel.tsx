@@ -28,7 +28,7 @@ export const DocumentationPanel: React.FC<DocumentationPanelProps> = ({ onBack }
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-4 p-4 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="flex items-center gap-4 p-4">
         <button
           onClick={onBack}
           className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"

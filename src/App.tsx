@@ -326,7 +326,7 @@ function App() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Tab Navigation */}
-        <div className="flex items-center justify-center p-3 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center justify-center p-3">
           <div className="inline-flex bg-zinc-100 dark:bg-zinc-800 rounded-full p-0.5">
             <button
               onClick={() => setActiveTab('tts')}
@@ -487,7 +487,7 @@ function App() {
         </div>
 
         {/* Footer - Provider Info */}
-        <div className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <div className="bg-white dark:bg-zinc-900">
           <div className="flex items-center justify-end px-4 py-2">
             <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
               <span>Provider:</span>

@@ -45,13 +45,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   };
 
   return (
-    <aside className="w-[320px] h-full bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col overflow-hidden">
+    <aside className="w-[320px] h-full bg-white dark:bg-zinc-900 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-3 border-b border-zinc-200 dark:border-zinc-800">
+      <div className="p-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-base font-bold text-zinc-900 dark:text-white">
-            Voice Designer
-          </h1>
+          <img 
+            src="/jio-voice-lab.svg" 
+            alt="Jio Voice Lab" 
+            className="h-8"
+          />
           <button
             onClick={onShowDocs}
             className="p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
@@ -142,7 +144,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
       </div>
 
       {/* Footer - Theme Toggle */}
-      <div className="p-3 border-t border-zinc-200 dark:border-zinc-800">
+      <div className="p-3">
         <div className="flex items-center justify-between">
           <span className="text-xs text-zinc-700 dark:text-zinc-300">Theme</span>
           <button
