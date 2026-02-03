@@ -59,6 +59,17 @@ export const GEMINI_VOICES: Voice[] = [
   { id: 'Puck', name: 'Puck', gender: VG.MALE, language: 'Indian English', description: 'Default male voice for Jio' },
 ];
 
+// ElevenLabs voices (supports Hindi and Indian English)
+export const ELEVENLABS_VOICES: Voice[] = [
+  // General English voices
+  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', gender: VG.MALE, language: 'English', description: 'Deep, Natural Male Voice' },
+  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Dorothy', gender: VG.FEMALE, language: 'English', description: 'Pleasant, Natural Female Voice' },
+  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella', gender: VG.FEMALE, language: 'English', description: 'Soft, Expressive Female Voice' },
+  { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh', gender: VG.MALE, language: 'English', description: 'Young, Professional Male Voice' },
+  { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', gender: VG.MALE, language: 'English', description: 'Mature, Authoritative Male Voice' },
+  { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli', gender: VG.FEMALE, language: 'English', description: 'Warm, Friendly Female Voice' },
+];
+
 // Get voice by gender for Alibaba
 export const getAlibabaVoiceByGender = (gender: VoiceGender): string => {
   return gender === VG.FEMALE ? 'loongeva_v2' : 'loongbrian_v2';
@@ -67,6 +78,11 @@ export const getAlibabaVoiceByGender = (gender: VoiceGender): string => {
 // Get voice by gender for Gemini
 export const getGeminiVoiceByGender = (gender: VoiceGender): string => {
   return gender === VG.FEMALE ? 'Kore' : 'Puck';
+};
+
+// Get voice by gender for ElevenLabs
+export const getElevenLabsVoiceByGender = (gender: VoiceGender): string => {
+  return gender === VG.FEMALE ? 'EXAVITQu4vr4xnSDxMaL' : 'pNInz6obpgDQGcFmaJgB'; // Bella : Adam
 };
 
 // System instruction for live conversation
@@ -141,7 +157,13 @@ export const DOCUMENTATION_SECTIONS: DocSection[] = [
     • Kore (Female) - Default female voice
     • Puck (Male) - Default male voice
     
-    Select the voice model that best fits your use case. For Indian English accent, Gemini voices are recommended.`,
+    ElevenLabs (Multilingual - Hindi & English):
+    • Adam (Male) - Deep, Natural Male Voice
+    • Bella (Female) - Soft, Expressive Female Voice
+    • Dorothy (Female) - Pleasant, Natural Female Voice
+    • Josh (Male) - Young, Professional Male Voice
+    
+    Select the voice model that best fits your use case. ElevenLabs is recommended for Hindi and high-quality English voices.`,
   },
   {
     id: 'tone-definition',
@@ -183,6 +205,10 @@ export const WEBSOCKET_ENDPOINTS = {
   gemini: {
     live: 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent',
   },
+  elevenlabs: {
+    rest: 'https://api.elevenlabs.io/v1',
+    websocket: 'wss://api.elevenlabs.io/v1/text-to-speech',
+  },
 };
 
 // Model names
@@ -195,5 +221,8 @@ export const MODELS = {
   gemini: {
     tts: 'gemini-2.0-flash',
     live: 'gemini-2.0-flash',
+  },
+  elevenlabs: {
+    tts: 'eleven_multilingual_v2',
   },
 };

@@ -1,6 +1,7 @@
 import type { TTSProvider, ConversationProvider, ProviderType } from './types';
 import { createCosyVoiceTTSProvider, createAlibabaConversationProvider } from './alibaba';
 import { createGeminiTTSProvider, createGeminiLiveProvider } from './gemini';
+import { createElevenLabsTTSProvider } from './elevenlabs';
 import { getTTSProviderType, getConversationProviderType } from '../../config/providers';
 
 // Re-export types
@@ -18,6 +19,9 @@ export function createTTSProvider(type?: ProviderType): TTSProvider {
     
     case 'gemini':
       return createGeminiTTSProvider();
+    
+    case 'elevenlabs':
+      return createElevenLabsTTSProvider();
     
     default:
       throw new Error(`Unknown TTS provider type: ${providerType}`);

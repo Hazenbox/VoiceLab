@@ -51,7 +51,7 @@ export interface Voice {
 }
 
 // TTS Provider types
-export type TTSProviderType = 'alibaba' | 'gemini';
+export type TTSProviderType = 'alibaba' | 'gemini' | 'elevenlabs';
 export type ConversationProviderType = 'alibaba' | 'gemini';
 
 // Audio output format

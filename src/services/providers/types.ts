@@ -142,7 +142,7 @@ export interface ConversationProvider {
 /**
  * Provider factory type
  */
-export type ProviderType = 'alibaba' | 'gemini';
+export type ProviderType = 'alibaba' | 'gemini' | 'elevenlabs';
 
 /**
  * Provider factory interface

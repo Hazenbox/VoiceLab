@@ -29,6 +29,12 @@ export interface GeminiConfig {
   liveModel: string;
 }
 
+export interface ElevenLabsConfig {
+  apiKey: string;
+  defaultVoiceId: string;
+  hindiVoiceId: string;
+}
+
 /**
  * Full provider configuration
  */
@@ -37,6 +43,7 @@ export interface ProviderConfig {
     provider: ProviderType;
     alibaba: AlibabaConfig;
     gemini: GeminiConfig;
+    elevenlabs: ElevenLabsConfig;
   };
   conversation: {
     provider: ProviderType;
@@ -58,7 +65,8 @@ function getEnv(key: string, fallback: string = ''): string {
  * Get the configured TTS provider type
  */
 export function getTTSProviderType(): ProviderType {
-  const provider = getEnv('VITE_TTS_PROVIDER', 'alibaba');
+  const provider = getEnv('VITE_TTS_PROVIDER', 'elevenlabs');
+  if (provider === 'elevenlabs') return 'elevenlabs';
   return provider === 'gemini' ? 'gemini' : 'alibaba';
 }
 
@@ -85,6 +93,13 @@ export function getGeminiApiKey(): string {
 }
 
 /**
+ * Get ElevenLabs API key
+ */
+export function getElevenLabsApiKey(): string {
+  return getEnv('VITE_ELEVENLABS_API_KEY', '');
+}
+
+/**
  * Check if Alibaba provider is configured
  */
 export function isAlibabaConfigured(): boolean {
@@ -96,6 +111,13 @@ export function isAlibabaConfigured(): boolean {
  */
 export function isGeminiConfigured(): boolean {
   return getGeminiApiKey().length > 0;
+}
+
+/**
+ * Check if ElevenLabs provider is configured
+ */
+export function isElevenLabsConfigured(): boolean {
+  return getElevenLabsApiKey().length > 0;
 }
 
 /**
@@ -141,17 +163,30 @@ export function getGeminiConfig(): GeminiConfig {
 }
 
 /**
+ * Get ElevenLabs configuration
+ */
+export function getElevenLabsConfig(): ElevenLabsConfig {
+  return {
+    apiKey: getElevenLabsApiKey(),
+    defaultVoiceId: getEnv('VITE_ELEVENLABS_DEFAULT_VOICE', 'pNInz6obpgDQGcFmaJgB'), // Adam - natural male voice
+    hindiVoiceId: getEnv('VITE_ELEVENLABS_HINDI_VOICE', 'pNInz6obpgDQGcFmaJgB'),
+  };
+}
+
+/**
  * Get the full provider configuration
  */
 export function getProviderConfig(): ProviderConfig {
   const alibabaConfig = getAlibabaConfig();
   const geminiConfig = getGeminiConfig();
+  const elevenLabsConfig = getElevenLabsConfig();
 
   return {
     tts: {
       provider: getTTSProviderType(),
       alibaba: alibabaConfig,
       gemini: geminiConfig,
+      elevenlabs: elevenLabsConfig,
     },
     conversation: {
       provider: getConversationProviderType(),
@@ -185,6 +220,10 @@ export function validateConfig(): { valid: boolean; errors: string[] } {
     errors.push('Google Gemini API key is required for conversation');
   }
 
+  if (ttsProvider === 'elevenlabs' && !isElevenLabsConfigured()) {
+    errors.push('ElevenLabs API key is required for TTS');
+  }
+
   return {
     valid: errors.length === 0,
     errors,
@@ -200,6 +239,8 @@ export function getProviderDisplayName(provider: ProviderType): string {
       return 'Alibaba CosyVoice';
     case 'gemini':
       return 'Google Gemini';
+    case 'elevenlabs':
+      return 'ElevenLabs';
     default:
       return provider;
   }
