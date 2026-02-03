@@ -24,11 +24,15 @@ import {
 import { createAudioContext, createBlob } from './services/audioUtils';
 import { validateConfig, getTTSProviderType, getConversationProviderType } from './config/providers';
 
-function App() {
+interface AppProps {
+  colorMode: ColorMode;
+  onColorModeChange: (mode: ColorMode) => void;
+}
+
+function App({ colorMode, onColorModeChange }: AppProps) {
   // UI State
   const [activeTab, setActiveTab] = useState<ActiveTab>('tts');
   const [activeView, setActiveView] = useState<ActiveView>('main');
-  const [colorMode, setColorMode] = useState<ColorMode>('Light');
   const [error, setError] = useState<AppError | null>(null);
 
   // Configuration State
@@ -50,15 +54,6 @@ function App() {
   const inputAudioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
-
-  // Apply theme
-  useEffect(() => {
-    if (colorMode === 'Dark') {
-      document.body.classList.add('dark');
-    } else {
-      document.body.classList.remove('dark');
-    }
-  }, [colorMode]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -299,7 +294,7 @@ function App() {
           config={config}
           onConfigChange={setConfig}
           colorMode={colorMode}
-          onColorModeChange={setColorMode}
+          onColorModeChange={onColorModeChange}
           onShowDocs={() => setActiveView('docs')}
           disabled={appState !== AppState.IDLE}
         />
@@ -320,7 +315,7 @@ function App() {
         config={config}
         onConfigChange={setConfig}
         colorMode={colorMode}
-        onColorModeChange={setColorMode}
+        onColorModeChange={onColorModeChange}
         onShowDocs={() => setActiveView('docs')}
         disabled={appState !== AppState.IDLE && activeTab === 'talk'}
       />
