@@ -8,19 +8,28 @@ import { createAudioContext, decodeMP3 } from '../../audioUtils';
  * ElevenLabs voice definitions with Indian accent support
  */
 const ELEVENLABS_VOICES: Voice[] = [
+  // Custom Jio voices (primary)
+  {
+    id: 'xMagNCpMgZ83QOEsHNre',
+    name: 'Jio Male',
+    gender: VoiceGender.MALE,
+    language: 'Indian English',
+    description: 'Custom Jio Male Voice'
+  },
+  {
+    id: '90ipbRoKi4CpHXvKVtl0',
+    name: 'Jio Female',
+    gender: VoiceGender.FEMALE,
+    language: 'Indian English',
+    description: 'Custom Jio Female Voice'
+  },
+  // Standard ElevenLabs voices (fallback)
   {
     id: 'pNInz6obpgDQGcFmaJgB', // Adam
     name: 'Adam',
     gender: VoiceGender.MALE,
     language: 'English',
     description: 'Deep, Natural Male Voice'
-  },
-  {
-    id: 'ThT5KcBeYPX3keUQqHPh', // Dorothy
-    name: 'Dorothy',
-    gender: VoiceGender.FEMALE,
-    language: 'English',
-    description: 'Pleasant, Natural Female Voice'
   },
   {
     id: 'EXAVITQu4vr4xnSDxMaL', // Bella
@@ -30,25 +39,18 @@ const ELEVENLABS_VOICES: Voice[] = [
     description: 'Soft, Expressive Female Voice'
   },
   {
+    id: 'ThT5KcBeYPX3keUQqHPh', // Dorothy
+    name: 'Dorothy',
+    gender: VoiceGender.FEMALE,
+    language: 'English',
+    description: 'Pleasant, Natural Female Voice'
+  },
+  {
     id: 'TxGEqnHWrfWFTfGW9XjX', // Josh
     name: 'Josh',
     gender: VoiceGender.MALE,
     language: 'English',
     description: 'Young, Professional Male Voice'
-  },
-  {
-    id: 'VR6AewLTigWG4xSOukaG', // Arnold
-    name: 'Arnold',
-    gender: VoiceGender.MALE,
-    language: 'English',
-    description: 'Mature, Authoritative Male Voice'
-  },
-  {
-    id: 'MF3mGyEYCl7XYWbV9V6O', // Elli
-    name: 'Elli',
-    gender: VoiceGender.FEMALE,
-    language: 'English',
-    description: 'Warm, Friendly Female Voice'
   }
 ];
 
@@ -260,11 +262,14 @@ export class ElevenLabsTTSProvider implements TTSProvider {
 
   /**
    * Get default voice for a gender
+   * Returns custom Jio voices as default
    */
   getDefaultVoice(gender: 'male' | 'female'): string {
-    const targetGender = gender === 'male' ? VoiceGender.MALE : VoiceGender.FEMALE;
-    const voice = ELEVENLABS_VOICES.find(v => v.gender === targetGender);
-    return voice?.id || ELEVENLABS_VOICES[0].id;
+    // Custom Jio voices
+    if (gender === 'male') {
+      return 'xMagNCpMgZ83QOEsHNre'; // Jio Male
+    }
+    return '90ipbRoKi4CpHXvKVtl0'; // Jio Female
   }
 
   /**

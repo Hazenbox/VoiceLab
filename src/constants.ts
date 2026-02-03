@@ -61,13 +61,14 @@ export const GEMINI_VOICES: Voice[] = [
 
 // ElevenLabs voices (supports Hindi and Indian English)
 export const ELEVENLABS_VOICES: Voice[] = [
-  // General English voices
+  // Custom Jio voices (primary)
+  { id: 'xMagNCpMgZ83QOEsHNre', name: 'Jio Male', gender: VG.MALE, language: 'Indian English', description: 'Custom Jio Male Voice' },
+  { id: '90ipbRoKi4CpHXvKVtl0', name: 'Jio Female', gender: VG.FEMALE, language: 'Indian English', description: 'Custom Jio Female Voice' },
+  // Standard ElevenLabs voices (fallback)
   { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', gender: VG.MALE, language: 'English', description: 'Deep, Natural Male Voice' },
-  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Dorothy', gender: VG.FEMALE, language: 'English', description: 'Pleasant, Natural Female Voice' },
   { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella', gender: VG.FEMALE, language: 'English', description: 'Soft, Expressive Female Voice' },
+  { id: 'ThT5KcBeYPX3keUQqHPh', name: 'Dorothy', gender: VG.FEMALE, language: 'English', description: 'Pleasant, Natural Female Voice' },
   { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh', gender: VG.MALE, language: 'English', description: 'Young, Professional Male Voice' },
-  { id: 'VR6AewLTigWG4xSOukaG', name: 'Arnold', gender: VG.MALE, language: 'English', description: 'Mature, Authoritative Male Voice' },
-  { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli', gender: VG.FEMALE, language: 'English', description: 'Warm, Friendly Female Voice' },
 ];
 
 // Get voice by gender for Alibaba
@@ -80,9 +81,9 @@ export const getGeminiVoiceByGender = (gender: VoiceGender): string => {
   return gender === VG.FEMALE ? 'Kore' : 'Puck';
 };
 
-// Get voice by gender for ElevenLabs
+// Get voice by gender for ElevenLabs (custom Jio voices)
 export const getElevenLabsVoiceByGender = (gender: VoiceGender): string => {
-  return gender === VG.FEMALE ? 'EXAVITQu4vr4xnSDxMaL' : 'pNInz6obpgDQGcFmaJgB'; // Bella : Adam
+  return gender === VG.FEMALE ? '90ipbRoKi4CpHXvKVtl0' : 'xMagNCpMgZ83QOEsHNre'; // Jio Female : Jio Male
 };
 
 // System instruction for live conversation
