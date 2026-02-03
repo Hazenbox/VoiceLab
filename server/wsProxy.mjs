@@ -84,6 +84,7 @@ async function handleTTSProxy(req, res) {
         'X-DashScope-DataInspection': 'enable',
         'Content-Length': Buffer.byteLength(postData),
       },
+      rejectUnauthorized: false, // Allow self-signed certs in dev
     };
     
     // Forward request to DashScope
