@@ -24,9 +24,10 @@ const DASHSCOPE_API_KEY = process.env.VITE_DASHSCOPE_API_KEY;
 const PROXY_PORT = process.env.WS_PROXY_PORT || 3001;
 
 // DashScope endpoints
+// Using international endpoints (dashscope-intl) for Singapore region API keys
 const DASHSCOPE_ASR_ENDPOINT = 'wss://dashscope-intl.aliyuncs.com/api-ws/v1/realtime';
 const DASHSCOPE_TTS_ENDPOINT = 'wss://dashscope.aliyuncs.com/api-ws/v1/inference/';
-const DASHSCOPE_TTS_HTTP_ENDPOINT = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text2audio/generation';
+const DASHSCOPE_TTS_HTTP_ENDPOINT = 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2audio/generation';
 
 if (!DASHSCOPE_API_KEY) {
   console.error('Error: VITE_DASHSCOPE_API_KEY is not set in .env file');
@@ -63,11 +64,14 @@ async function handleTTSProxy(req, res) {
   
   req.on('end', () => {
     console.log('[Proxy] TTS request received');
+    console.log('[Proxy] API Key loaded:', DASHSCOPE_API_KEY ? `${DASHSCOPE_API_KEY.substring(0, 10)}...` : 'MISSING');
+    console.log('[Proxy] TTS Endpoint:', DASHSCOPE_TTS_HTTP_ENDPOINT);
     
     // Parse request body
     let requestData;
     try {
       requestData = JSON.parse(body);
+      console.log('[Proxy] Request body:', JSON.stringify(requestData, null, 2));
     } catch (error) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Invalid JSON' }));
@@ -88,6 +92,8 @@ async function handleTTSProxy(req, res) {
     };
     
     // Forward request to DashScope
+    console.log('[Proxy] Forwarding to DashScope TTS endpoint');
+    console.log('[Proxy] Authorization header:', `Bearer ${DASHSCOPE_API_KEY.substring(0, 10)}...`);
     const proxyReq = https.request(DASHSCOPE_TTS_HTTP_ENDPOINT, options, (proxyRes) => {
       console.log(`[Proxy] TTS response status: ${proxyRes.statusCode}`);
       
