@@ -2,14 +2,15 @@ import type {
   ConversationProvider, 
   ConversationState, 
   ConversationCallbacks, 
-  ConversationSessionConfig 
+  ConversationSessionConfig,
+  TTSProvider 
 } from '../types';
 import type { Voice } from '../../../types';
 import { VoiceGender } from '../../../types';
 import { ALIBABA_VOICES, getAlibabaVoiceByGender, RESPONSE_LENGTH_WORDS } from '../../../constants';
-import { getAlibabaConfig, isAlibabaConfigured } from '../../../config/providers';
+import { getAlibabaConfig, isAlibabaConfigured, getProxyConfig } from '../../../config/providers';
 import { QwenASRClient } from './qwenASR';
-import { CosyVoiceTTSProvider } from './cosyvoice';
+import { createTTSProvider } from '../index';
 import { createAudioContext, decodeAudioData } from '../../audioUtils';
 
 /**
@@ -23,12 +24,13 @@ export class AlibabaConversationProvider implements ConversationProvider {
 
   private _state: ConversationState = 'idle';
   private config = getAlibabaConfig();
+  private proxyConfig = getProxyConfig();
   private callbacks: ConversationCallbacks = {};
   private sessionConfig: ConversationSessionConfig | null = null;
 
   // Components
   private asrClient: QwenASRClient | null = null;
-  private ttsProvider: CosyVoiceTTSProvider | null = null;
+  private ttsProvider: TTSProvider | null = null;
   private audioContext: AudioContext | null = null;
 
   // Conversation state
@@ -67,8 +69,8 @@ export class AlibabaConversationProvider implements ConversationProvider {
       // Initialize audio context
       this.audioContext = createAudioContext(24000);
 
-      // Initialize TTS provider
-      this.ttsProvider = new CosyVoiceTTSProvider();
+      // Initialize TTS provider (uses configured provider from env)
+      this.ttsProvider = createTTSProvider();
 
       // Initialize ASR client with callbacks
       this.asrClient = new QwenASRClient({
@@ -200,21 +202,18 @@ export class AlibabaConversationProvider implements ConversationProvider {
       ...this.conversationHistory.slice(-10), // Keep last 10 messages for context
     ];
 
-    const response = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+    // Use proxy for LLM API call to avoid CORS
+    const proxyUrl = `${this.proxyConfig.httpProxyUrl}/api/llm`;
+    const response = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.config.apiKey}`,
       },
       body: JSON.stringify({
         model: this.config.llmModel,
-        input: {
-          messages,
-        },
-        parameters: {
-          max_tokens: maxWords * 5, // Approximate tokens
-          temperature: 0.7,
-        },
+        messages,
+        maxTokens: maxWords * 5,
+        temperature: 0.7,
       }),
     });
 

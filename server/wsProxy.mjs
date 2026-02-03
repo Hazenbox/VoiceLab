@@ -28,10 +28,104 @@ const PROXY_PORT = process.env.WS_PROXY_PORT || 3001;
 const DASHSCOPE_ASR_ENDPOINT = 'wss://dashscope-intl.aliyuncs.com/api-ws/v1/realtime';
 const DASHSCOPE_TTS_ENDPOINT = 'wss://dashscope.aliyuncs.com/api-ws/v1/inference/';
 const DASHSCOPE_TTS_HTTP_ENDPOINT = 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2audio/generation';
+const DASHSCOPE_LLM_HTTP_ENDPOINT = 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
 
 if (!DASHSCOPE_API_KEY) {
   console.error('Error: VITE_DASHSCOPE_API_KEY is not set in .env file');
   process.exit(1);
+}
+
+/**
+ * HTTP Proxy Handler for LLM requests
+ */
+async function handleLLMProxy(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+  
+  if (req.method !== 'POST') {
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Method not allowed' }));
+    return;
+  }
+  
+  // Read request body
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString();
+  });
+  
+  req.on('end', () => {
+    console.log('[Proxy] LLM request received');
+    
+    // Parse request body
+    let requestData;
+    try {
+      requestData = JSON.parse(body);
+      console.log('[Proxy] LLM Request model:', requestData.model);
+    } catch (error) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid JSON' }));
+      return;
+    }
+    
+    // Convert to DashScope format
+    const dashscopeRequest = {
+      model: requestData.model,
+      input: {
+        messages: requestData.messages
+      },
+      parameters: {
+        max_tokens: requestData.maxTokens || 150,
+        temperature: requestData.temperature || 0.7,
+        result_format: 'message'
+      }
+    };
+    
+    const postData = JSON.stringify(dashscopeRequest);
+    
+    // Prepare request options
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DASHSCOPE_API_KEY}`,
+        'Content-Length': Buffer.byteLength(postData),
+      },
+      rejectUnauthorized: false
+    };
+    
+    console.log('[Proxy] Forwarding to DashScope LLM endpoint');
+    
+    // Forward request to DashScope
+    const proxyReq = https.request(DASHSCOPE_LLM_HTTP_ENDPOINT, options, (proxyRes) => {
+      console.log('[Proxy] DashScope LLM response status:', proxyRes.statusCode);
+      
+      // Set response headers
+      res.setHeader('Content-Type', 'application/json');
+      res.writeHead(proxyRes.statusCode);
+      
+      // Pipe the response back to the client
+      proxyRes.pipe(res);
+    });
+    
+    proxyReq.on('error', (error) => {
+      console.error('[Proxy] LLM request error:', error.message);
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Proxy request failed', details: error.message }));
+    });
+    
+    proxyReq.write(postData);
+    proxyReq.end();
+  });
 }
 
 /**
@@ -131,6 +225,12 @@ const server = http.createServer((req, res) => {
   // TTS proxy endpoint
   if (req.url === '/api/tts') {
     handleTTSProxy(req, res);
+    return;
+  }
+  
+  // LLM proxy endpoint
+  if (req.url === '/api/llm') {
+    handleLLMProxy(req, res);
     return;
   }
   
