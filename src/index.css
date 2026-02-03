@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/* Custom JioVarType font */
+@font-face {
+  font-family: 'JioVarType';
+  src: url('/fonts/JioVarType.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  font-family: 'JioVarType', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light mode defaults */
+body {
+  @apply bg-white text-zinc-900;
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Dark mode */
+body.dark {
+  @apply bg-zinc-950 text-white;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-zinc-100;
+}
+
+.dark ::-webkit-scrollbar-track {
+  @apply bg-zinc-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-300 rounded-full;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-zinc-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-zinc-400;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-zinc-500;
+}
+
+/* Sound wave animation */
+@keyframes soundWave {
+  0%, 100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.sound-wave-bar {
+  animation: soundWave 0.8s ease-in-out infinite;
+}
+
+.sound-wave-bar:nth-child(1) { animation-delay: 0ms; }
+.sound-wave-bar:nth-child(2) { animation-delay: 60ms; }
+.sound-wave-bar:nth-child(3) { animation-delay: 120ms; }
+.sound-wave-bar:nth-child(4) { animation-delay: 180ms; }
+.sound-wave-bar:nth-child(5) { animation-delay: 240ms; }
+.sound-wave-bar:nth-child(6) { animation-delay: 300ms; }
+.sound-wave-bar:nth-child(7) { animation-delay: 360ms; }
+.sound-wave-bar:nth-child(8) { animation-delay: 420ms; }
+.sound-wave-bar:nth-child(9) { animation-delay: 480ms; }
+.sound-wave-bar:nth-child(10) { animation-delay: 540ms; }
+.sound-wave-bar:nth-child(11) { animation-delay: 600ms; }
+.sound-wave-bar:nth-child(12) { animation-delay: 660ms; }
+
+/* Fast animation for speaking state */
+.speaking .sound-wave-bar {
+  animation-duration: 0.4s;
+}
+
+/* Slow animation for listening state */
+.listening .sound-wave-bar {
+  animation-duration: 1.2s;
+}
