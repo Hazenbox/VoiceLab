@@ -128,23 +128,12 @@ export function useStrokeColor(emphasis: TextEmphasis = 'medium'): string {
  * @returns CSS color string (hex)
  * 
  * Usage:
- * - Primary brand color, typically orange (#f97316)
+ * - Primary brand color - standard orange (#f97316)
+ * - Matches Radio button secondary appearance and other accent elements
  * - Used for active states, highlights, and brand elements
  */
 export function useAccentColor(): string {
-  // Try to get a primary/accent color using bold emphasis
-  // This typically gives orange/primary brand color
-  try {
-    const result = useSurfaceBackground({
-      appearance: 'secondary' as any,
-      emphasis: 'bold',
-      state: 'idle',
-    });
-    return result?.hex || '#f97316';
-  } catch {
-    // Fallback to orange if not available
-    return '#f97316';
-  }
+  return '#f97316'; // Standard orange (Tailwind orange-500)
 }
 
 /**
