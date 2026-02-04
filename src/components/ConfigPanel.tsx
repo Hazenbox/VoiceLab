@@ -32,13 +32,13 @@ export const ConfigPanel = memo(function ConfigPanel({
   onColorModeChange,
   onShowDocs: _onShowDocs, // Prefix with _ to indicate intentionally unused
   disabled = false,
-}) => {
+}: ConfigPanelProps) {
   // Theme colors from DS tokens
   const theme = useThemeColors();
   const { toggleDesignSystem, designSystem } = useDesignSystem();
   
   // Helper to update nested config
-  const updatePersona = (key: string, value: unknown) => {
+  const updatePersona = useCallback((key: string, value: unknown) => {
     onConfigChange({
       ...config,
       persona: {
@@ -46,7 +46,7 @@ export const ConfigPanel = memo(function ConfigPanel({
         [key]: value,
       },
     });
-  };
+  }, [config, onConfigChange]);
 
   return (
     <aside 
