@@ -132,23 +132,19 @@ export function useStrokeColor(emphasis: TextEmphasis = 'medium'): string {
  * - Used for active states, highlights, and brand elements
  */
 export function useAccentColor(): string {
-  const dsContext = useDsContext();
-  
-  return useMemo(() => {
-    // Try to get a primary/accent color using bold emphasis
-    // This typically gives orange/primary brand color
-    try {
-      const result = useSurfaceBackground({
-        appearance: 'secondary' as any,
-        emphasis: 'bold',
-        state: 'idle',
-      });
-      return result.hex;
-    } catch {
-      // Fallback to orange if not available
-      return '#f97316';
-    }
-  }, [dsContext.colorMode]);
+  // Try to get a primary/accent color using bold emphasis
+  // This typically gives orange/primary brand color
+  try {
+    const result = useSurfaceBackground({
+      appearance: 'secondary' as any,
+      emphasis: 'bold',
+      state: 'idle',
+    });
+    return result?.hex || '#f97316';
+  } catch {
+    // Fallback to orange if not available
+    return '#f97316';
+  }
 }
 
 /**
