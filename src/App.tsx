@@ -336,7 +336,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         <div className="flex items-center justify-center p-3">
           <div 
             className="inline-flex rounded-full p-0.5"
-            style={{ backgroundColor: theme.background.moderate }}
+            style={{ backgroundColor: theme.background.subtle }}
           >
             <button
               onClick={() => setActiveTab('tts')}
@@ -391,7 +391,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                     rows={3}
                     className="w-full px-3 py-2 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-500"
                     style={{
-                      backgroundColor: theme.background.moderate,
+                      backgroundColor: theme.background.ghost,
                       border: `1px solid ${theme.stroke.low}`,
                       color: theme.text.high,
                     }}
@@ -466,7 +466,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       className="w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 transform"
                       style={{
                         backgroundColor: appState === AppState.IDLE || appState === AppState.ERROR
-                          ? theme.background.moderate
+                          ? theme.background.subtle
                           : appState === AppState.LISTENING
                           ? '#f97316'
                           : appState === AppState.SPEAKING
@@ -532,7 +532,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   {transcript && (
                     <div 
                       className="mt-3 p-3 rounded-lg"
-                      style={{ backgroundColor: theme.background.moderate }}
+                      style={{ backgroundColor: theme.background.subtle }}
                     >
                       <p 
                         className="text-xs mb-1"

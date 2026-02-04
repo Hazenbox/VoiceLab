@@ -77,7 +77,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             }
           `}
           style={{
-            backgroundColor: '#ffffff',
+            backgroundColor: theme.background.ghost,
             border: `1px solid ${theme.stroke.low}`,
           }}
         >
@@ -99,7 +99,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           <div 
             className="absolute z-10 w-full mt-1 rounded-lg shadow-lg overflow-hidden"
             style={{
-              backgroundColor: theme.background.elevated,
+              backgroundColor: theme.background.subtle,
               border: `1px solid ${theme.stroke.low}`,
             }}
           >

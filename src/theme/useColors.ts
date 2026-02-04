@@ -23,14 +23,13 @@ export type BackgroundEmphasis = SurfaceEmphasis;
 /**
  * Hook to get background color based on surface emphasis level
  * 
- * @param emphasis - Surface emphasis: 'ghost' | 'subtle' | 'moderate' | 'elevated'
+ * @param emphasis - Surface emphasis: 'ghost' | 'subtle' | 'bold'
  * @returns CSS color string (hex)
  * 
  * Usage:
- * - ghost: Page backgrounds (most transparent)
- * - subtle: Card backgrounds, secondary containers
- * - moderate: Input backgrounds, tertiary containers
- * - elevated: Dropdowns, modals, overlays
+ * - ghost: Lightest surface, white/light backgrounds in light mode, page backgrounds
+ * - subtle: Medium surface, gray backgrounds, card containers
+ * - bold: Strongest surface, darkest backgrounds, emphasized containers
  */
 export function useBackgroundColor(emphasis: BackgroundEmphasis = 'subtle'): string {
   const result = useSurfaceBackground({
@@ -126,11 +125,10 @@ export function useThemeColors() {
   const dsContext = useDsContext();
   const isLight = dsContext.colorMode === 'Light';
   
-  // Get background colors
+  // Get background colors - only valid SurfaceEmphasis levels: 'ghost' | 'subtle' | 'bold'
   const bgGhost = useBackgroundColor('ghost');
   const bgSubtle = useBackgroundColor('subtle');
-  const bgModerate = useBackgroundColor('moderate');
-  const bgElevated = useBackgroundColor('elevated');
+  const bgBold = useBackgroundColor('bold');
   
   // Get text colors
   const textHigh = useTextColor('high');
@@ -148,8 +146,7 @@ export function useThemeColors() {
     background: {
       ghost: bgGhost,
       subtle: bgSubtle,
-      moderate: bgModerate,
-      elevated: bgElevated,
+      bold: bgBold,
     },
     text: {
       high: textHigh,

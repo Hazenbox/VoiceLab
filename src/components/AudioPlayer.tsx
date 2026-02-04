@@ -228,7 +228,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     return (
       <div 
         className="flex items-center justify-center h-16 rounded-lg"
-        style={{ backgroundColor: theme.background.moderate }}
+        style={{ backgroundColor: theme.background.subtle }}
       >
         <p 
           className="text-xs"
@@ -247,7 +247,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         ref={canvasRef}
         onClick={seek}
         className="w-full h-14 cursor-pointer rounded-lg"
-        style={{ backgroundColor: theme.background.moderate }}
+        style={{ backgroundColor: theme.background.subtle }}
       />
 
       {/* Controls */}
@@ -275,7 +275,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             onClick={restart}
             className="p-1.5 rounded-full transition-colors"
             style={{ 
-              backgroundColor: theme.background.moderate,
+              backgroundColor: theme.background.subtle,
               color: theme.text.medium,
             }}
           >
