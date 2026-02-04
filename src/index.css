@@ -110,13 +110,13 @@ input[type="range"] {
 /* Ensure track has rounded corners and explicit height */
 input[type="range"]::-webkit-slider-runnable-track {
   border-radius: 9999px;
-  overflow: hidden;
+  overflow: visible;
   height: 12px;
 }
 
 input[type="range"]::-moz-range-track {
   border-radius: 9999px;
-  overflow: hidden;
+  overflow: visible;
   height: 12px;
 }
 

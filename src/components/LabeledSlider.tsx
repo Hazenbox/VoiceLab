@@ -47,9 +47,9 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
       >
         {label}
       </label>
-      <div className="space-y-0.5">
+      <div className="space-y-0.5 overflow-visible">
         {/* Slider track */}
-        <div className="relative -mr-0.5">
+        <div className="relative -mr-0.5 overflow-visible">
           <div className="relative h-3 overflow-visible">
             {/* Background track - inactive color */}
             <div 
