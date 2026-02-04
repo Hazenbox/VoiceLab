@@ -25,7 +25,7 @@ const sizeClasses: Record<SegmentedControlSize, string> = {
  * Tailwind-styled segmented control item
  */
 export const TwSegmentedControlItem: React.FC<TwSegmentedControlItemProps> = ({
-  value,
+  value: _value, // Prefix with _ to indicate intentionally unused
   children,
 }) => {
   // This component is just a placeholder for typing

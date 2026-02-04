@@ -29,7 +29,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   onConfigChange,
   colorMode,
   onColorModeChange,
-  onShowDocs,
+  onShowDocs: _onShowDocs, // Prefix with _ to indicate intentionally unused
   disabled = false,
 }) => {
   // Theme colors from DS tokens

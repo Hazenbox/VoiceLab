@@ -28,7 +28,7 @@ export const TwConfigPanel: React.FC<TwConfigPanelProps> = ({
   onConfigChange,
   colorMode,
   onColorModeChange,
-  onShowDocs,
+  onShowDocs: _onShowDocs, // Prefix with _ to indicate intentionally unused
   disabled = false,
 }) => {
   const { toggleDesignSystem, designSystem } = useDesignSystem();
