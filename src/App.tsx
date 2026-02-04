@@ -60,6 +60,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
 
+  // Inject CSS variables for local tokens
+  useEffect(() => {
+    document.documentElement.style.setProperty('--local-white', theme.local.white);
+  }, [theme.local.white]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {

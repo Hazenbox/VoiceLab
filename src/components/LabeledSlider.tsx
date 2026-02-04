@@ -48,7 +48,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}
             style={{
-              background: `linear-gradient(to right, rgb(249, 115, 22) 0%, rgb(249, 115, 22) ${(currentIndex / (options.length - 1)) * 100}%, ${theme.background.minimal} ${(currentIndex / (options.length - 1)) * 100}%, ${theme.background.minimal} 100%)`,
+              background: `linear-gradient(to right, ${theme.accent} 0%, ${theme.accent} ${(currentIndex / (options.length - 1)) * 100}%, ${theme.background.minimal} ${(currentIndex / (options.length - 1)) * 100}%, ${theme.background.minimal} 100%)`,
             }}
           />
         </div>

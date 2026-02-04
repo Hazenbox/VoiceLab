@@ -20,6 +20,11 @@ import {
 export type TextEmphasis = 'high' | 'medium' | 'low';
 export type BackgroundEmphasis = SurfaceEmphasis;
 
+// Local color tokens (not available in design system)
+const LOCAL_COLORS = {
+  white: '#ffffff',
+} as const;
+
 /**
  * Hook to get background color based on surface emphasis level
  * 
@@ -118,6 +123,35 @@ export function useStrokeColor(emphasis: TextEmphasis = 'medium'): string {
 }
 
 /**
+ * Hook to get accent/primary color
+ * 
+ * @returns CSS color string (hex)
+ * 
+ * Usage:
+ * - Primary brand color, typically orange (#f97316)
+ * - Used for active states, highlights, and brand elements
+ */
+export function useAccentColor(): string {
+  const dsContext = useDsContext();
+  
+  return useMemo(() => {
+    // Try to get a primary/accent color using bold emphasis
+    // This typically gives orange/primary brand color
+    try {
+      const result = useSurfaceBackground({
+        appearance: 'secondary' as any,
+        emphasis: 'bold',
+        state: 'idle',
+      });
+      return result.hex;
+    } catch {
+      // Fallback to orange if not available
+      return '#f97316';
+    }
+  }, [dsContext.colorMode]);
+}
+
+/**
  * Hook to get all theme colors at once
  * Useful when you need multiple colors in the same component
  */
@@ -152,6 +186,9 @@ export function useThemeColors() {
   const strokeMedium = useStrokeColor('medium');
   const strokeLow = useStrokeColor('low');
   
+  // Get accent color
+  const accent = useAccentColor();
+  
   return {
     isLight,
     colorMode: dsContext.colorMode,
@@ -170,6 +207,10 @@ export function useThemeColors() {
       high: strokeHigh,
       medium: strokeMedium,
       low: strokeLow,
+    },
+    accent,
+    local: {
+      white: LOCAL_COLORS.white,
     },
   };
 }
