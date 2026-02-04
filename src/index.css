@@ -102,6 +102,17 @@ body.dark {
   animation-duration: 1.2s;
 }
 
+/* Ensure track has rounded corners */
+input[type="range"]::-webkit-slider-runnable-track {
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+input[type="range"]::-moz-range-track {
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
 /* Custom slider thumb styling - 8px white knob */
 input[type="range"]::-webkit-slider-thumb {
   appearance: none;

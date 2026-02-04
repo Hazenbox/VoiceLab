@@ -30,7 +30,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
       >
         {label}
       </label>
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         {/* Slider track */}
         <div className="relative pt-0.5">
           <input
@@ -66,7 +66,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
                 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
               `}
               style={{
-                color: index === currentIndex ? '#ea580c' : theme.text.low,
+                color: index === currentIndex ? theme.text.high : theme.text.low,
                 fontWeight: index === currentIndex ? 500 : 400,
               }}
             >
