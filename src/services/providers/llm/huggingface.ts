@@ -287,8 +287,8 @@ export class HuggingFaceProvider implements LLMProvider {
 
   async healthCheck(): Promise<boolean> {
     try {
-      // Check model availability via HF API
-      const response = await fetch(`${this.config.baseUrl}/models/${this.modelConfig.id}`, {
+      // Check model availability via HuggingFace Hub API
+      const response = await fetch(`https://huggingface.co/api/models/${this.modelConfig.id}`, {
         method: 'GET',
         headers: { 
           'Authorization': `Bearer ${this.config.apiKey}`,
