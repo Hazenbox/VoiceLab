@@ -175,6 +175,6 @@ export const ConfigPanel = memo(function ConfigPanel({
       </div>
     </aside>
   );
-};
+});
 
 export default ConfigPanel;
