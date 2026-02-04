@@ -22,7 +22,7 @@ import {
   type ConversationProvider 
 } from './services/providers';
 import { createAudioContext } from './services/audioUtils';
-import { validateConfig, getTTSProviderType, getConversationProviderType } from './config/providers';
+import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
 
 interface AppProps {
@@ -551,21 +551,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Footer - Provider Info */}
-        <div style={{ backgroundColor: theme.background.subtle }}>
-          <div className="flex items-center justify-end px-4 py-2">
-            <div className="flex items-center gap-2 text-xs">
-              <span style={{ color: theme.text.low }}>Provider:</span>
-              <span 
-                className="font-medium"
-                style={{ color: theme.text.medium }}
-              >
-                {activeTab === 'tts' ? getTTSProviderType() : getConversationProviderType()}
-              </span>
-            </div>
           </div>
         </div>
       </main>
