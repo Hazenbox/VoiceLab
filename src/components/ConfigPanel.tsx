@@ -55,15 +55,6 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
         borderRight: `1px solid ${theme.stroke.low}`
       }}
     >
-      {/* Header */}
-      <div className="p-3">
-        <img 
-          src="/jio-voice-lab.svg" 
-          alt="Jio Voice Lab" 
-          className="h-8"
-        />
-      </div>
-
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {/* Voice Selection */}

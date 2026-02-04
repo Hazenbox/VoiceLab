@@ -46,15 +46,6 @@ export const TwConfigPanel: React.FC<TwConfigPanelProps> = ({
 
   return (
     <aside className="w-[320px] h-full flex flex-col overflow-hidden bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800">
-      {/* Header */}
-      <div className="p-3">
-        <img 
-          src="/jio-voice-lab.svg" 
-          alt="Jio Voice Lab" 
-          className="h-8"
-        />
-      </div>
-
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {/* Voice Selection */}
