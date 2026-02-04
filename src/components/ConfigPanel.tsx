@@ -5,7 +5,7 @@ import { CustomSelect } from './CustomSelect';
 import { LabeledSlider } from './LabeledSlider';
 import { VIBE_OPTIONS } from '../constants';
 import { useThemeColors } from '../theme';
-import { Button } from '@marcelinodzn/ds-react';
+import { Button, TextArea } from '@marcelinodzn/ds-react';
 
 interface ConfigPanelProps {
   voiceGender: VoiceGender;
@@ -101,17 +101,12 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           >
             Tone Definition
           </label>
-          <textarea
+          <TextArea
             value={config.persona.tone}
-            onChange={(e) => updatePersona('tone', e.target.value)}
-            disabled={disabled}
+            onChange={(value: string) => updatePersona('tone', value)}
+            isDisabled={disabled}
             rows={2}
-            className="w-full px-2.5 py-1.5 text-sm rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
-            style={{
-              backgroundColor: theme.background.ghost,
-              border: `1px solid ${theme.stroke.low}`,
-              color: theme.text.high,
-            }}
+            size="S"
             placeholder="Describe the personality..."
           />
         </div>

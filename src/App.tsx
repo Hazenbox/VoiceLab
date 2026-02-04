@@ -24,6 +24,7 @@ import {
 import { createAudioContext } from './services/audioUtils';
 import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
+import { TextArea } from '@marcelinodzn/ds-react';
 
 interface AppProps {
   colorMode: ColorMode;
@@ -384,17 +385,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   </h2>
                   
                   {/* Text input */}
-                  <textarea
+                  <TextArea
                     value={ttsText}
-                    onChange={(e) => setTtsText(e.target.value)}
+                    onChange={(value: string) => setTtsText(value)}
                     placeholder="Enter text to convert to speech..."
                     rows={3}
-                    className="w-full px-3 py-2 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    style={{
-                      backgroundColor: theme.background.ghost,
-                      border: `1px solid ${theme.stroke.low}`,
-                      color: theme.text.high,
-                    }}
+                    size="S"
                   />
 
                   {/* Generate button */}
