@@ -50,10 +50,10 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
       <div className="space-y-0.5">
         {/* Slider track */}
         <div className="relative pt-0.5 -mr-0.5">
-          <div className="relative">
+          <div className="relative h-3">
             {/* Background track - inactive color */}
             <div 
-              className="absolute inset-0 rounded-full pointer-events-none"
+              className="absolute left-0 right-0 top-0 rounded-full pointer-events-none"
               style={{
                 background: inactiveBg,
                 height: '12px',
@@ -62,7 +62,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
             
             {/* Active portion overlay - rounded at both ends */}
             <div 
-              className="absolute left-0 top-0 bottom-0 rounded-full pointer-events-none"
+              className="absolute left-0 top-0 rounded-full pointer-events-none"
               style={{
                 width: `${(currentIndex / (options.length - 1)) * 100}%`,
                 background: activeBg,
