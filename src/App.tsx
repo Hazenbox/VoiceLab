@@ -395,14 +395,13 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   </div>
 
                   {/* Generate button */}
-                  <div style={{ marginTop: '0.75rem' }}>
+                  <div className="mt-3">
                     <Button
                       onPress={handleGenerateTTS}
                       isDisabled={isTtsLoading || !ttsText.trim()}
                       appearance="primary"
                       size="S"
                       aria-label="Generate speech from text"
-                      style={{ width: '100%' }}
                     >
                       {isTtsLoading ? (
                         <>
