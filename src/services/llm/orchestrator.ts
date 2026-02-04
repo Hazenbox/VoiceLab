@@ -367,9 +367,9 @@ export function getOrchestratorInstance(): LLMOrchestrator {
     const enableFallback = import.meta.env.VITE_ENABLE_FALLBACK !== 'false';
     const enableCaching = import.meta.env.VITE_ENABLE_CACHING !== 'false';
     
-    const fallbackChain = import.meta.env.VITE_FALLBACK_CHAIN
-      ? import.meta.env.VITE_FALLBACK_CHAIN.split(',').map((s: string) => s.trim())
-      : ['claude', 'gemini-text', 'qwen-text'];
+    const fallbackChain = import.meta.env.VITE_LLM_FALLBACK_CHAIN
+      ? import.meta.env.VITE_LLM_FALLBACK_CHAIN.split(',').map((s: string) => s.trim())
+      : ['huggingface', 'openai', 'claude']; // Default with huggingface as primary (free)
 
     orchestratorInstance = new LLMOrchestrator({
       enableRetry,

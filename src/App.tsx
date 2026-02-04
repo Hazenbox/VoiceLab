@@ -89,8 +89,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [selectedTTSProvider, setSelectedTTSProvider] = useState<TTSProviderType>('dashscope');
   const [selectedTalkLLMProvider, setSelectedTalkLLMProvider] = useState<LLMProviderType>('qwen-text');
 
-  // Request cancellation
-  const { abort: abortChat, reset: resetChatAbort, signal: chatAbortSignal } = useAbortController();
+  // Request cancellation - use getSignal() to get fresh signal after reset
+  const { abort: abortChat, reset: resetChatAbort, getSignal: getChatAbortSignal } = useAbortController();
 
   // Refs for audio handling
   const ttsProviderRef = useRef<TTSProvider | null>(null);
@@ -159,7 +159,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           messages,
           maxTokens: 1000,
           temperature: 0.7,
-          signal: chatAbortSignal,
+          signal: getChatAbortSignal(), // Get fresh signal after reset
         },
         createLLMProvider
       );

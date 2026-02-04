@@ -6,10 +6,16 @@
 import { useEffect, useRef, useCallback } from 'react';
 
 interface UseAbortControllerReturn {
+  /** @deprecated Use getSignal() instead to avoid stale signal references */
   signal: AbortSignal;
+  /** Get the current abort signal - use this after calling reset() */
+  getSignal: () => AbortSignal;
   abort: () => void;
   reset: () => void;
+  /** @deprecated Use isAborted() function instead */
   isAborted: boolean;
+  /** Check if the current signal is aborted */
+  getIsAborted: () => boolean;
 }
 
 /**
@@ -43,11 +49,21 @@ export function useAbortController(): UseAbortControllerReturn {
     controllerRef.current = new AbortController();
   }, []);
 
+  // Getter function to always get the current signal (avoids stale references)
+  const getSignal = useCallback(() => controllerRef.current.signal, []);
+  
+  // Getter function to check if current signal is aborted
+  const getIsAborted = useCallback(() => controllerRef.current.signal.aborted, []);
+
   return {
+    // Keep backward compatibility with deprecated properties
     signal: controllerRef.current.signal,
+    // New getter functions that always return current values
+    getSignal,
     abort,
     reset,
     isAborted: controllerRef.current.signal.aborted,
+    getIsAborted,
   };
 }
 
@@ -55,7 +71,7 @@ export function useAbortController(): UseAbortControllerReturn {
  * Hook for cancellable fetch operations
  */
 export function useCancellableFetch() {
-  const { signal, abort, reset } = useAbortController();
+  const { getSignal, abort, reset } = useAbortController();
 
   const fetchWithAbort = useCallback(async <T>(
     url: string,
@@ -63,7 +79,7 @@ export function useCancellableFetch() {
   ): Promise<T> => {
     const response = await fetch(url, {
       ...options,
-      signal,
+      signal: getSignal(), // Use getter to get fresh signal
     });
 
     if (!response.ok) {
@@ -71,7 +87,7 @@ export function useCancellableFetch() {
     }
 
     return response.json();
-  }, [signal]);
+  }, [getSignal]);
 
   return {
     fetch: fetchWithAbort,
