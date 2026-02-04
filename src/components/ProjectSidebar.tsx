@@ -138,9 +138,9 @@ export const ProjectSidebar: React.FC = () => {
             </div>
 
             {/* Projects List */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto px-2 py-2">
         {isCreatingProject && (
-          <div className="p-2 space-y-2" style={{ backgroundColor: theme.background.subtle }}>
+          <div className="mb-2 p-2 space-y-2 rounded-lg" style={{ backgroundColor: theme.background.subtle }}>
             <input
               type="text"
               value={newProjectName}
@@ -151,7 +151,7 @@ export const ProjectSidebar: React.FC = () => {
               }}
               placeholder="Project name..."
               autoFocus
-              className="w-full px-2 py-1.5 text-xs rounded border"
+              className="w-full px-2 py-1.5 text-xs rounded-md border"
               style={{
                 backgroundColor: theme.background.ghost,
                 borderColor: theme.stroke.medium,
@@ -161,7 +161,7 @@ export const ProjectSidebar: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={handleCreateProject}
-                className="flex-1 px-2 py-1 text-xs rounded font-medium"
+                className="flex-1 px-2 py-1 text-xs rounded-md font-medium"
                 style={{
                   backgroundColor: '#f97316',
                   color: 'white',
@@ -171,7 +171,7 @@ export const ProjectSidebar: React.FC = () => {
               </button>
               <button
                 onClick={() => setIsCreatingProject(false)}
-                className="flex-1 px-2 py-1 text-xs rounded font-medium"
+                className="flex-1 px-2 py-1 text-xs rounded-md font-medium"
                 style={{
                   backgroundColor: theme.background.subtle,
                   border: `1px solid ${theme.stroke.medium}`,
@@ -184,44 +184,45 @@ export const ProjectSidebar: React.FC = () => {
           </div>
         )}
 
-              {projects.map((project) => (
-                <button
-                  key={project.id}
-                  onClick={() => setActiveProject(project.id)}
-                  className="w-full p-2.5 flex items-center justify-between group transition-colors"
-                  style={{
-                    backgroundColor: activeProject?.id === project.id ? theme.background.subtle : 'transparent',
-                    borderBottom: `1px solid ${theme.stroke.low}`,
-                  }}
-                >
-                  <div className="flex-1 text-left">
-                    <div 
-                      className="text-sm font-medium truncate"
-                      style={{ color: theme.text.high }}
-                    >
-                      {project.name}
+              <div className="space-y-1">
+                {projects.map((project) => (
+                  <button
+                    key={project.id}
+                    onClick={() => setActiveProject(project.id)}
+                    className="w-full px-2.5 py-2 flex items-center justify-between group transition-all rounded-lg hover:scale-[0.98]"
+                    style={{
+                      backgroundColor: activeProject?.id === project.id ? theme.background.subtle : 'transparent',
+                    }}
+                  >
+                    <div className="flex-1 text-left">
+                      <div 
+                        className="text-sm font-medium truncate"
+                        style={{ color: theme.text.high }}
+                      >
+                        {project.name}
+                      </div>
+                      <div 
+                        className="text-xs"
+                        style={{ color: theme.text.low }}
+                      >
+                        {formatDate(project.updatedAt)}
+                      </div>
                     </div>
-                    <div 
-                      className="text-xs"
-                      style={{ color: theme.text.low }}
-                    >
-                      {formatDate(project.updatedAt)}
-                    </div>
-                  </div>
-                  
-                  {projects.length > 1 && (
-                    <button
-                      onClick={(e) => handleDeleteProject(project.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
-                      style={{ color: theme.text.low }}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
-                </button>
-              ))}
+                    
+                    {projects.length > 1 && (
+                      <button
+                        onClick={(e) => handleDeleteProject(project.id, e)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
+                        style={{ color: theme.text.low }}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </>
         ) : (
@@ -247,7 +248,7 @@ export const ProjectSidebar: React.FC = () => {
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto px-2 py-2">
               {audios.length === 0 ? (
                 <div 
                   className="p-4 text-center text-xs"
@@ -256,14 +257,13 @@ export const ProjectSidebar: React.FC = () => {
                   No saved audios yet
                 </div>
               ) : (
-                <div className="p-2 space-y-2">
+                <div className="space-y-1.5">
                   {audios.map((audio) => (
                     <div
                       key={audio.id}
-                      className="p-2 rounded-lg group"
+                      className="p-2.5 rounded-lg group transition-all hover:scale-[0.98]"
                       style={{
                         backgroundColor: theme.background.subtle,
-                        border: `1px solid ${theme.stroke.low}`,
                       }}
                     >
                       <div className="flex items-start gap-2">
