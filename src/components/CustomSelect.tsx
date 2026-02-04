@@ -78,7 +78,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           `}
           style={{
             backgroundColor: theme.background.ghost,
-            border: `1px solid ${theme.stroke.low}`,
+            border: `2px solid ${theme.stroke.low}`,
           }}
         >
           <span style={{ color: theme.text.high }}>
@@ -100,7 +100,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             className="absolute z-10 w-full mt-1 rounded-lg overflow-hidden"
             style={{
               backgroundColor: theme.background.ghost,
-              border: `1px solid ${theme.stroke.low}`,
+              border: `2px solid ${theme.stroke.low}`,
             }}
           >
             {options.map((option) => (
