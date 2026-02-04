@@ -48,7 +48,7 @@ export const TwSegmentedControl: React.FC<TwSegmentedControlProps> = ({
 
   return (
     <div
-      className="inline-flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 gap-1"
+      className="inline-flex bg-zinc-100 dark:bg-zinc-800 rounded-full p-1 gap-1"
       role="tablist"
       aria-label={ariaLabel}
     >
@@ -63,9 +63,9 @@ export const TwSegmentedControl: React.FC<TwSegmentedControlProps> = ({
               aria-selected={isActive}
               className={`
                 ${sizeClass}
-                rounded-md font-medium transition-all duration-200
+                rounded-full font-medium transition-all duration-200
                 ${isActive
-                  ? 'bg-white text-orange-500 shadow-sm dark:bg-zinc-700 dark:text-orange-400'
+                  ? 'bg-white text-orange-500 dark:bg-zinc-700 dark:text-orange-400'
                   : 'text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200'
                 }
               `}

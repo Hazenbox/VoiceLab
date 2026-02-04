@@ -89,7 +89,7 @@ export const TwCustomSelect: React.FC<TwCustomSelectProps> = ({
 
         {isOpen && (
           <div 
-            className="absolute z-50 w-full mt-1 rounded-lg overflow-hidden shadow-lg bg-zinc-50 border-2 border-zinc-300 dark:bg-zinc-800 dark:border-zinc-600"
+            className="absolute z-50 w-full mt-1 rounded-lg overflow-hidden bg-zinc-50 border-2 border-zinc-300 dark:bg-zinc-800 dark:border-zinc-600"
           >
             {options.map((option) => (
               <button

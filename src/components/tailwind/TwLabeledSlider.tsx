@@ -27,7 +27,7 @@ export const TwLabeledSlider: React.FC<TwLabeledSliderProps> = ({
       </label>
       <div className="space-y-0.5">
         {/* Slider track */}
-        <div className="relative pt-0.5 -mr-0.5">
+        <div className="relative">
           <input
             type="range"
             min={0}
@@ -36,14 +36,10 @@ export const TwLabeledSlider: React.FC<TwLabeledSliderProps> = ({
             value={currentIndex}
             onChange={(e) => onChange(options[parseInt(e.target.value)])}
             disabled={disabled}
-            data-at-zero={currentIndex === 0 ? "true" : "false"}
             className={`
-              w-full h-3 rounded-full appearance-none cursor-pointer
+              w-full cursor-pointer
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}
-            style={{
-              background: `linear-gradient(to right, #f97316 0%, #f97316 ${(currentIndex / (options.length - 1)) * 100}%, ${document.body.classList.contains('dark') ? '#262626' : '#F5F5F5'} ${(currentIndex / (options.length - 1)) * 100}%, ${document.body.classList.contains('dark') ? '#262626' : '#F5F5F5'} 100%)`,
-            }}
           />
         </div>
 

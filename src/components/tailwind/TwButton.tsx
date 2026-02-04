@@ -39,7 +39,7 @@ export const TwButton: React.FC<TwButtonProps> = ({
     }
   };
 
-  const baseClasses = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2';
+  const baseClasses = 'font-medium rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2';
   const sizeClass = sizeClasses[size];
 
   let appearanceClasses = '';
