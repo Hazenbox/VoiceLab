@@ -178,3 +178,20 @@ input[type="range"][data-at-zero="true"]::-moz-range-thumb {
 .dark input[type="range"][data-at-zero="true"]::-moz-range-thumb {
   /* No additional styling */
 }
+
+/* Counter-scale borders for scaled TextArea */
+.scaled-textarea-wrapper {
+  transform: scale(0.85);
+  transform-origin: left top;
+  width: 117.6%;
+  margin-bottom: -12px;
+}
+
+/* Counter-scale borders back to original size */
+.scaled-textarea-wrapper textarea,
+.scaled-textarea-wrapper [role="textbox"],
+.scaled-textarea-wrapper [class*="TextArea"],
+.scaled-textarea-wrapper [class*="textarea"] {
+  border-width: 1.176px !important;
+  border-radius: calc(8px * 1.176) !important;
+}

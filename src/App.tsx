@@ -384,7 +384,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   </h2>
                   
                   {/* Text input */}
-                  <div style={{ transform: 'scale(0.85)', transformOrigin: 'left top', width: '117.6%' }}>
+                  <div className="scaled-textarea-wrapper">
                     <TextArea
                       value={ttsText}
                       onChange={(value: string) => setTtsText(value)}
