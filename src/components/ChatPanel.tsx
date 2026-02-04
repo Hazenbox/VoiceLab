@@ -40,6 +40,10 @@ interface ChatPanelProps {
   inputDisabled?: boolean;
   /** ID for ARIA panel reference */
   id?: string;
+  /** Callback when user clicks mic button to start voice mode */
+  onVoiceClick?: () => void;
+  /** Whether voice is supported in this browser */
+  voiceSupported?: boolean;
 }
 
 // =============================================================================
@@ -57,6 +61,8 @@ export const ChatPanel = memo(function ChatPanel({
   emptyStateMessage = 'Start a conversation to generate copy',
   inputDisabled = false,
   id,
+  onVoiceClick,
+  voiceSupported = true,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -220,10 +226,11 @@ export const ChatPanel = memo(function ChatPanel({
         className="border-t p-4"
         style={{ borderColor: theme.stroke.low }}
       >
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-end">
           <div className="flex-1">
             <TextArea
               ref={inputRef}
+              data-chat-input
               value={inputValue}
               onChange={(value: string) => setInputValue(value)}
               placeholder={placeholder}
@@ -241,6 +248,43 @@ export const ChatPanel = memo(function ChatPanel({
               Press Enter to send, Shift+Enter for new line
             </p>
           </div>
+          {/* Voice chat button - only shown in copy mode */}
+          {onVoiceClick && (
+            <button
+              onClick={onVoiceClick}
+              disabled={!voiceSupported}
+              aria-label={!voiceSupported 
+                ? "Voice chat not supported in this browser" 
+                : "Switch to voice chat"}
+              title={!voiceSupported 
+                ? "Voice chat not supported in this browser" 
+                : "Voice chat (speak with AI)"}
+              className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
+                !voiceSupported 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:opacity-80'
+              }`}
+              style={{ 
+                backgroundColor: theme.background.subtle,
+                color: theme.text.medium,
+              }}
+            >
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="22" />
+              </svg>
+            </button>
+          )}
           <Button
             onPress={handleSubmit}
             isDisabled={!inputValue.trim() || isLoading || inputDisabled}

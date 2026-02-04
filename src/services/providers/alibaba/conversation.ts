@@ -37,6 +37,9 @@ export class AlibabaConversationProvider implements ConversationProvider {
   private conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
   // private _currentTranscript = '';
   private isProcessing = false;
+  
+  // AbortController for cancelling in-flight LLM requests
+  private abortController: AbortController | null = null;
 
   get state(): ConversationState {
     return this._state;
@@ -190,6 +193,10 @@ export class AlibabaConversationProvider implements ConversationProvider {
    * Generate response using Qwen LLM via HTTP API
    */
   private async generateResponse(_userMessage: string): Promise<string> {
+    // Cancel any in-flight request
+    this.abortController?.abort();
+    this.abortController = new AbortController();
+
     const maxWords = this.sessionConfig 
       ? RESPONSE_LENGTH_WORDS[this.sessionConfig.maxResponseLength]
       : 30;
@@ -204,26 +211,36 @@ export class AlibabaConversationProvider implements ConversationProvider {
 
     // Use proxy for LLM API call to avoid CORS
     const proxyUrl = `${this.proxyConfig.httpProxyUrl}/api/llm`;
-    const response = await fetch(proxyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: this.config.llmModel,
-        messages,
-        maxTokens: maxWords * 5,
-        temperature: 0.7,
-      }),
-    });
+    
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: this.config.llmModel,
+          messages,
+          maxTokens: maxWords * 5,
+          temperature: 0.7,
+        }),
+        signal: this.abortController.signal,
+      });
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`LLM request failed: ${error}`);
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`LLM request failed: ${error}`);
+      }
+
+      const data = await response.json();
+      return data.output?.text || data.output?.choices?.[0]?.message?.content || 'I apologize, I could not generate a response.';
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        console.log('[AlibabaConversation] LLM request aborted');
+        throw error;
+      }
+      throw error;
     }
-
-    const data = await response.json();
-    return data.output?.text || data.output?.choices?.[0]?.message?.content || 'I apologize, I could not generate a response.';
   }
 
   /**
@@ -307,6 +324,12 @@ export class AlibabaConversationProvider implements ConversationProvider {
    * Disconnect and cleanup
    */
   disconnect(): void {
+    // Abort any in-flight LLM requests
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+
     // Disconnect ASR
     if (this.asrClient) {
       this.asrClient.disconnect();

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import type { ChatMessage } from '../../types';
+import type { ChatMessage, ChatMode } from '../../types';
 import { useThemeColors } from '../../theme';
 import { TwButton } from './TwButton';
 import { MessageContent } from '../MessageContent';
@@ -8,9 +8,36 @@ interface TwChatPanelProps {
   messages: ChatMessage[];
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  /** Current chat mode for styling */
+  mode?: ChatMode;
+  /** Placeholder text for input */
+  placeholder?: string;
+  /** Callback when user wants to save an audio message */
+  onSaveAudio?: (messageId: string) => void;
+  /** Whether to show empty state */
+  showEmptyState?: boolean;
+  /** Custom empty state message */
+  emptyStateMessage?: string;
+  /** Whether input is disabled */
+  inputDisabled?: boolean;
+  /** ID for ARIA panel reference */
+  id?: string;
+  /** Callback when user clicks mic button to start voice mode */
+  onVoiceClick?: () => void;
+  /** Whether voice is supported in this browser */
+  voiceSupported?: boolean;
 }
 
-export function TwChatPanel({ messages, onSendMessage, isLoading }: TwChatPanelProps) {
+export function TwChatPanel({ 
+  messages, 
+  onSendMessage, 
+  isLoading,
+  placeholder = 'Type your prompt here...',
+  emptyStateMessage = 'Start a conversation to generate copy',
+  inputDisabled = false,
+  onVoiceClick,
+  voiceSupported = true,
+}: TwChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -30,7 +57,7 @@ export function TwChatPanel({ messages, onSendMessage, isLoading }: TwChatPanelP
   }, [inputValue]);
 
   const handleSubmit = () => {
-    if (inputValue.trim() && !isLoading) {
+    if (inputValue.trim() && !isLoading && !inputDisabled) {
       onSendMessage(inputValue.trim());
       setInputValue('');
     }
@@ -56,7 +83,7 @@ export function TwChatPanel({ messages, onSendMessage, isLoading }: TwChatPanelP
               className="text-sm"
               style={{ color: theme.text.low }}
             >
-              Start a conversation to generate copy
+              {emptyStateMessage}
             </p>
           </div>
         ) : (
@@ -120,10 +147,11 @@ export function TwChatPanel({ messages, onSendMessage, isLoading }: TwChatPanelP
           <div className="flex-1">
             <textarea
               ref={textareaRef}
+              data-chat-input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Type your prompt here..."
+              placeholder={placeholder}
               className="w-full px-3 py-2 text-sm rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-500"
               style={{
                 backgroundColor: theme.isLight ? '#ffffff' : '#18181b',
@@ -133,12 +161,49 @@ export function TwChatPanel({ messages, onSendMessage, isLoading }: TwChatPanelP
                 maxHeight: '120px',
               }}
               rows={1}
-              disabled={isLoading}
+              disabled={isLoading || inputDisabled}
             />
           </div>
+          {/* Voice chat button - only shown in copy mode */}
+          {onVoiceClick && (
+            <button
+              onClick={onVoiceClick}
+              disabled={!voiceSupported}
+              aria-label={!voiceSupported 
+                ? "Voice chat not supported in this browser" 
+                : "Switch to voice chat"}
+              title={!voiceSupported 
+                ? "Voice chat not supported in this browser" 
+                : "Voice chat (speak with AI)"}
+              className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
+                !voiceSupported 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:opacity-80'
+              }`}
+              style={{ 
+                backgroundColor: theme.background.subtle,
+                color: theme.text.medium,
+              }}
+            >
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="22" />
+              </svg>
+            </button>
+          )}
           <TwButton
             onPress={handleSubmit}
-            isDisabled={!inputValue.trim() || isLoading}
+            isDisabled={!inputValue.trim() || isLoading || inputDisabled}
             appearance="primary"
             size="S"
           >

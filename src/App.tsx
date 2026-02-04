@@ -26,7 +26,6 @@ import {
   ModelSelector,
   TTSProviderSelector,
   UsageStatsBar,
-  ModeToggle,
 } from './components';
 import type { TTSProviderType } from './components';
 import { useChatPersistence, useNetworkStatus } from './hooks';
@@ -47,7 +46,7 @@ import {
 } from './services/providers';
 import { getOrchestratorInstance } from './services/llm/orchestrator';
 import { getDefaultLLMProviderType, createLLMProvider, type LLMProviderType } from './services/providers/llm';
-import { createAudioContext } from './services/audioUtils';
+import { createAudioContext, checkAudioSupport } from './services/audioUtils';
 import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
 import { useDesignSystem } from './context/DesignSystemContext';
@@ -55,6 +54,9 @@ import { useProject } from './context/ProjectContext';
 import { useAudioLibrary } from './context/AudioLibraryContext';
 import { useAbortController } from './hooks';
 import { TextArea, Button } from '@marcelinodzn/ds-react';
+
+// Storage key for chat mode persistence
+const CHAT_MODE_STORAGE_KEY = 'voiceDesigner_chatMode';
 
 interface AppProps {
   colorMode: ColorMode;
@@ -72,12 +74,22 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const { activeProject, updateProjectConfig, updateProjectVoiceGender } = useProject();
   const { saveAudio } = useAudioLibrary();
   
-  // UI State
-  const [chatMode, setChatMode] = useState<ChatMode>('copy');
+  // UI State - chatMode persisted to localStorage
+  const [chatMode, setChatMode] = useState<ChatMode>(() => {
+    try {
+      const stored = localStorage.getItem(CHAT_MODE_STORAGE_KEY);
+      return (stored === 'voice' || stored === 'copy') ? stored : 'copy';
+    } catch {
+      return 'copy';
+    }
+  });
   const [activeView, setActiveView] = useState<ActiveView>('main');
   const [error, setError] = useState<AppError | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [audioToSave, setAudioToSave] = useState<{ messageId: string; audioData: string; transcript: string } | null>(null);
+  
+  // Voice feature support detection
+  const [voiceSupported, setVoiceSupported] = useState<boolean | null>(null);
 
   // TTS State (for standalone TTS generation within voice mode)
   const [ttsText, setTtsText] = useState('');
@@ -136,6 +148,24 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   useEffect(() => {
     document.documentElement.style.setProperty('--local-white', theme.local.white);
   }, [theme.local.white]);
+
+  // Feature detection for voice support
+  useEffect(() => {
+    const support = checkAudioSupport();
+    setVoiceSupported(support.supported);
+    if (!support.supported) {
+      console.warn('[App] Voice not supported:', support.message);
+    }
+  }, []);
+
+  // Persist chatMode to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(CHAT_MODE_STORAGE_KEY, chatMode);
+    } catch {
+      // Ignore storage errors (e.g., private browsing)
+    }
+  }, [chatMode]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -350,6 +380,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
   // Handle microphone access and start conversation
   const handleStartConversation = async () => {
+    // Double-click guard - prevent multiple simultaneous starts
+    if (appState !== AppState.IDLE && appState !== AppState.ERROR) {
+      return;
+    }
+
     // Validate config
     const configValidation = validateConfig();
     if (!configValidation.valid) {
@@ -485,6 +520,24 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     } catch (err) {
       console.error('Failed to start conversation:', err);
       setAppState(AppState.ERROR);
+      
+      // Handle specific permission errors with user-friendly messages
+      if (err instanceof DOMException) {
+        if (err.name === 'NotAllowedError') {
+          setError({
+            code: 'PERMISSION_DENIED',
+            message: 'Microphone access was denied. Please allow microphone access in your browser settings and try again.',
+          });
+          return;
+        } else if (err.name === 'NotFoundError') {
+          setError({
+            code: 'NO_MICROPHONE',
+            message: 'No microphone found. Please connect a microphone and try again.',
+          });
+          return;
+        }
+      }
+      
       setError({
         code: 'START_ERROR',
         message: err instanceof Error ? err.message : 'Failed to start conversation',
@@ -493,7 +546,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   };
 
   // Handle stop conversation
-  const handleStopConversation = () => {
+  const handleStopConversation = useCallback(() => {
     // Disconnect provider
     if (conversationProviderRef.current) {
       conversationProviderRef.current.disconnect();
@@ -518,18 +571,41 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       streamRef.current = null;
     }
 
+    // Reset turn tracking to prevent stale data
+    currentTurnRef.current = { userMessageId: null, responseText: '' };
+
     setAppState(AppState.IDLE);
     setTranscript('');
-  };
+  }, []);
 
   // Toggle conversation
-  const handleToggleConversation = () => {
+  const handleToggleConversation = useCallback(() => {
     if (appState === AppState.IDLE || appState === AppState.ERROR) {
       handleStartConversation();
     } else {
       handleStopConversation();
     }
-  };
+  }, [appState]);
+
+  // Safe mode change with cleanup and focus management
+  const handleModeChange = useCallback((newMode: ChatMode) => {
+    // Cleanup any active voice conversation before mode switch
+    if (appState !== AppState.IDLE && appState !== AppState.ERROR) {
+      handleStopConversation();
+    }
+    setChatMode(newMode);
+    
+    // Move focus after state update for accessibility
+    requestAnimationFrame(() => {
+      if (newMode === 'voice') {
+        // Focus the mic button in voice UI
+        document.querySelector<HTMLButtonElement>('[data-voice-mic-button]')?.focus();
+      } else {
+        // Focus the text input
+        document.querySelector<HTMLTextAreaElement>('[data-chat-input]')?.focus();
+      }
+    });
+  }, [appState]);
 
   // Don't render until we have an active project
   if (!activeProject) {
@@ -585,9 +661,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Mode Navigation with Usage Stats */}
+        {/* Header with Status and Usage Stats */}
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex-1">
+          <div className="flex-1 flex items-center gap-2">
             {/* Offline indicator */}
             {!isOnline && (
               <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30">
@@ -603,14 +679,19 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               </div>
             )}
           </div>
-          <ModeToggle
-            mode={chatMode}
-            onChange={setChatMode}
-            disabled={appState !== AppState.IDLE && appState !== AppState.ERROR}
-          />
           <div className="flex-1 flex justify-end">
             <UsageStatsBar />
           </div>
+        </div>
+
+        {/* Screen reader announcements for mode changes */}
+        <div 
+          role="status" 
+          aria-live="polite" 
+          aria-atomic="true"
+          className="sr-only"
+        >
+          {chatMode === 'voice' ? 'Voice chat mode activated' : 'Text chat mode activated'}
         </div>
 
         {/* Mode Content */}
@@ -656,11 +737,28 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               {/* Voice Mode: Microphone Control + Chat History */}
               {chatMode === 'voice' && (
                 <div 
-                  className="px-4 py-3 border-b flex items-center justify-center gap-4"
+                  className="px-4 py-3 border-b flex items-center justify-center gap-4 relative"
                   style={{ borderColor: theme.stroke.low, backgroundColor: theme.background.subtle }}
                 >
+                  {/* Close button - return to text mode */}
+                  <button
+                    onClick={() => handleModeChange('copy')}
+                    className="absolute top-2 right-2 p-2 rounded-full transition-colors hover:opacity-80"
+                    style={{ 
+                      backgroundColor: theme.background.ghost,
+                      color: theme.text.medium,
+                    }}
+                    aria-label="Close voice chat and return to text input"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+
                   {/* Microphone button */}
                   <button
+                    data-voice-mic-button
                     onClick={handleToggleConversation}
                     className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 transform"
                     style={{
@@ -764,6 +862,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                     : 'Start a voice conversation or type a message'}
                   inputDisabled={chatMode === 'voice' && appState !== AppState.IDLE && appState !== AppState.ERROR}
                   id={`${chatMode}-panel`}
+                  onVoiceClick={chatMode === 'copy' ? () => handleModeChange('voice') : undefined}
+                  voiceSupported={voiceSupported ?? true}
                 />
               </div>
             </div>
