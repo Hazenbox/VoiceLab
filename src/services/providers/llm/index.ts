@@ -9,6 +9,7 @@ import { createClaudeProvider } from './claude';
 import { createGeminiTextProvider } from './gemini';
 import { createQwenTextProvider } from './qwen';
 import { createInworldLLMProvider } from './inworldLLM';
+import { createHuggingFaceProvider } from './huggingface';
 
 // Re-export types and utilities
 export * from './types';
@@ -17,6 +18,7 @@ export { createClaudeProvider } from './claude';
 export { createGeminiTextProvider } from './gemini';
 export { createQwenTextProvider } from './qwen';
 export { createInworldLLMProvider } from './inworldLLM';
+export { createHuggingFaceProvider, HF_MODELS, type HFModelKey } from './huggingface';
 
 /**
  * Create an LLM provider by type
@@ -37,6 +39,9 @@ export function createLLMProvider(type: LLMProviderType): LLMProvider {
     
     case 'inworld':
       return createInworldLLMProvider();
+    
+    case 'huggingface':
+      return createHuggingFaceProvider();
     
     default:
       throw new Error(`Unknown LLM provider type: ${type}`);
@@ -95,6 +100,13 @@ export function getAvailableLLMProviders(): Array<{
       checkEnvKey: 'VITE_INWORLD_API_KEY',
       supportsStreaming: false,
     },
+    { 
+      type: 'huggingface', 
+      name: 'huggingface', 
+      displayName: 'Hugging Face', 
+      checkEnvKey: 'VITE_HUGGINGFACE_API_KEY',
+      supportsStreaming: true,
+    },
   ];
 
   return providers.map(p => ({
@@ -128,9 +140,9 @@ export function getConfiguredLLMProviders(): Array<{
 export function getDefaultLLMProviderType(): LLMProviderType {
   const configured = getConfiguredLLMProviders();
   
-  // Prefer in order: openai, claude, gemini, qwen, inworld
+  // Prefer in order: huggingface (free), openai, claude, gemini, qwen, inworld
   const preferenceOrder: LLMProviderType[] = [
-    'openai', 'claude', 'gemini-text', 'qwen-text', 'inworld'
+    'huggingface', 'openai', 'claude', 'gemini-text', 'qwen-text', 'inworld'
   ];
   
   for (const type of preferenceOrder) {

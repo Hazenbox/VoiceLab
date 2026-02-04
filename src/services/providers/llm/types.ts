@@ -74,7 +74,8 @@ export type LLMProviderType =
   | 'claude' 
   | 'gemini-text' 
   | 'qwen-text' 
-  | 'inworld';
+  | 'inworld'
+  | 'huggingface';
 
 // Standard error codes across all providers
 export const ERROR_CODES = {
