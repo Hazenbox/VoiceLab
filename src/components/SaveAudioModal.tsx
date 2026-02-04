@@ -148,9 +148,9 @@ export const SaveAudioModal = memo(function SaveAudioModal({
   const handleSave = useCallback(() => {
     if (name.trim()) {
       onSave(name.trim());
-      onClose();
+      // Don't close here - let parent handle closing after async save completes
     }
-  }, [name, onSave, onClose]);
+  }, [name, onSave]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -180,25 +180,25 @@ export const SaveAudioModal = memo(function SaveAudioModal({
         aria-modal="true"
         aria-labelledby="save-audio-title"
         aria-describedby="save-audio-description"
-        className="w-full max-w-md rounded-xl shadow-xl p-6 space-y-6"
+        className="w-full max-w-md rounded-xl shadow-xl p-5 space-y-4"
         style={{
-          backgroundColor: theme.background.ghost,
+          backgroundColor: theme.isLight ? '#FFFFFF' : theme.background.ghost,
           border: `1px solid ${theme.stroke.low}`,
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <h2 
             id="save-audio-title"
-            className="text-lg font-semibold"
+            className="text-base font-semibold"
             style={{ color: theme.text.high }}
           >
             Save Audio to Library
           </h2>
           <p 
             id="save-audio-description"
-            className="text-sm"
+            className="text-xs"
             style={{ color: theme.text.medium }}
           >
             Give your audio a memorable name
@@ -206,10 +206,10 @@ export const SaveAudioModal = memo(function SaveAudioModal({
         </div>
 
         {/* Input Field */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <label 
             htmlFor="audio-name-input"
-            className="block text-sm font-medium"
+            className="block text-xs font-medium"
             style={{ color: theme.text.high }}
           >
             Audio Name
@@ -221,9 +221,9 @@ export const SaveAudioModal = memo(function SaveAudioModal({
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Enter audio name..."
-            className="w-full px-3 py-2.5 text-sm rounded-lg border focus:outline-none focus:ring-2 transition-colors"
+            className="w-full px-2.5 py-1.5 text-sm rounded-lg border focus:outline-none focus:ring-2 transition-colors"
             style={{
-              backgroundColor: theme.background.ghost,
+              backgroundColor: theme.isLight ? '#FFFFFF' : theme.background.ghost,
               borderColor: theme.stroke.medium,
               color: theme.text.high,
             }}
@@ -233,11 +233,11 @@ export const SaveAudioModal = memo(function SaveAudioModal({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 pt-2">
+        <div className="flex gap-2 pt-1">
           <Button
             onPress={onClose}
             appearance="secondary"
-            size="M"
+            size="S"
             style={{ flex: 1 }}
           >
             Cancel
@@ -245,7 +245,7 @@ export const SaveAudioModal = memo(function SaveAudioModal({
           <Button
             onPress={handleSave}
             appearance="primary"
-            size="M"
+            size="S"
             isDisabled={!name.trim()}
             style={{ flex: 1 }}
           >
