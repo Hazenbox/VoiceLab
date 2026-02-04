@@ -101,14 +101,16 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           >
             Tone Definition
           </label>
-          <TextArea
-            value={config.persona.tone}
-            onChange={(value: string) => updatePersona('tone', value)}
-            isDisabled={disabled}
-            rows={2}
-            size="S"
-            placeholder="Describe the personality..."
-          />
+          <div style={{ transform: 'scale(0.85)', transformOrigin: 'left top' }}>
+            <TextArea
+              value={config.persona.tone}
+              onChange={(value: string) => updatePersona('tone', value)}
+              isDisabled={disabled}
+              rows={2}
+              size="S"
+              placeholder="Describe the personality..."
+            />
+          </div>
         </div>
 
         {/* Vibe Select */}
