@@ -390,7 +390,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                     onChange={(value: string) => setTtsText(value)}
                     placeholder="Enter text to convert to speech..."
                     rows={3}
-                    size="S"
+                    size="XS"
                   />
 
                   {/* Generate button */}

@@ -106,7 +106,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
             onChange={(value: string) => updatePersona('tone', value)}
             isDisabled={disabled}
             rows={2}
-            size="S"
+            size="XS"
             placeholder="Describe the personality..."
           />
         </div>
