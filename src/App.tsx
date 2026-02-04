@@ -494,7 +494,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 <div 
                   className="rounded-xl p-4"
                   style={{ 
-                    backgroundColor: theme.background.subtle,
+                    backgroundColor: theme.background.minimal,
                     border: `1px solid ${theme.stroke.low}`
                   }}
                 >
@@ -515,7 +515,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       className="w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 transform"
                       style={{
                         backgroundColor: appState === AppState.IDLE || appState === AppState.ERROR
-                          ? theme.background.subtle
+                          ? theme.background.minimal
                           : appState === AppState.LISTENING
                           ? '#f97316'
                           : appState === AppState.SPEAKING
@@ -581,7 +581,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   {transcript && (
                     <div 
                       className="mt-3 p-3 rounded-lg"
-                      style={{ backgroundColor: theme.background.subtle }}
+                      style={{ backgroundColor: theme.background.minimal }}
                     >
                       <p 
                         className="text-xs mb-1"
