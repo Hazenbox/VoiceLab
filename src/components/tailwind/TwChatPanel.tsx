@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { ChatMessage, ChatMode } from '../../types';
 import { useThemeColors } from '../../theme';
-import { TwButton } from './TwButton';
 import { MessageContent } from '../MessageContent';
 
 interface TwChatPanelProps {
@@ -26,35 +25,30 @@ interface TwChatPanelProps {
   onVoiceClick?: () => void;
   /** Whether voice is supported in this browser */
   voiceSupported?: boolean;
+  /** Model selector component to render inside the input bar */
+  modelSelector?: React.ReactNode;
 }
 
 export function TwChatPanel({ 
   messages, 
   onSendMessage, 
   isLoading,
-  placeholder = 'Type your prompt here...',
+  placeholder = 'What do you want to know?',
   emptyStateMessage = 'Start a conversation to generate copy',
   inputDisabled = false,
   onVoiceClick,
   voiceSupported = true,
+  modelSelector,
 }: TwChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  // Auto-resize textarea
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
-    }
-  }, [inputValue]);
 
   const handleSubmit = () => {
     if (inputValue.trim() && !isLoading && !inputDisabled) {
@@ -64,7 +58,7 @@ export function TwChatPanel({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter') {
       e.preventDefault();
       handleSubmit();
     }
@@ -138,33 +132,15 @@ export function TwChatPanel({
         </div>
       )}
 
-      {/* Input Area */}
-      <div 
-        className="border-t p-4"
-        style={{ borderColor: theme.stroke.low }}
-      >
-        <div className="flex gap-2 items-end">
-          <div className="flex-1">
-            <textarea
-              ref={textareaRef}
-              data-chat-input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder={placeholder}
-              className="w-full px-3 py-2 text-sm rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-500"
-              style={{
-                backgroundColor: theme.isLight ? '#ffffff' : '#18181b',
-                color: theme.text.high,
-                border: `1px solid ${theme.stroke.low}`,
-                minHeight: '40px',
-                maxHeight: '120px',
-              }}
-              rows={1}
-              disabled={isLoading || inputDisabled}
-            />
-          </div>
-          {/* Voice chat button - only shown in copy mode */}
+      {/* Input Area - Grok-style pill-shaped input */}
+      <div className="p-4">
+        <div 
+          className="rounded-full flex items-center px-2 py-1.5 gap-1"
+          style={{ 
+            backgroundColor: theme.stroke.low,
+          }}
+        >
+          {/* Mic button - pill shaped, on the left */}
           {onVoiceClick && (
             <button
               onClick={onVoiceClick}
@@ -175,19 +151,18 @@ export function TwChatPanel({
               title={!voiceSupported 
                 ? "Voice chat not supported in this browser" 
                 : "Voice chat (speak with AI)"}
-              className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
+              className={`p-2 rounded-full transition-colors flex-shrink-0 ${
                 !voiceSupported 
                   ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:opacity-80'
+                  : 'hover:opacity-70'
               }`}
               style={{ 
-                backgroundColor: theme.background.subtle,
                 color: theme.text.medium,
               }}
             >
               <svg 
-                width="20" 
-                height="20" 
+                width="18" 
+                height="18" 
                 viewBox="0 0 24 24" 
                 fill="none" 
                 stroke="currentColor" 
@@ -201,14 +176,56 @@ export function TwChatPanel({
               </svg>
             </button>
           )}
-          <TwButton
-            onPress={handleSubmit}
-            isDisabled={!inputValue.trim() || isLoading || inputDisabled}
-            appearance="primary"
-            size="S"
+
+          {/* Single-line text input */}
+          <input
+            ref={inputRef}
+            data-chat-input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder={placeholder}
+            disabled={inputDisabled}
+            aria-label="Message input"
+            className="flex-1 bg-transparent outline-none text-sm px-2"
+            style={{ 
+              color: theme.text.high,
+            }}
+          />
+
+          {/* Model selector - rendered inside input bar */}
+          {modelSelector}
+
+          {/* Arrow send button - pill shaped */}
+          <button
+            onClick={handleSubmit}
+            disabled={!inputValue.trim() || isLoading || inputDisabled}
+            aria-label="Send message"
+            className={`p-2 rounded-full transition-colors flex-shrink-0 ${
+              !inputValue.trim() || isLoading || inputDisabled
+                ? 'opacity-40 cursor-not-allowed'
+                : 'hover:opacity-70'
+            }`}
+            style={{ 
+              backgroundColor: theme.background.ghost,
+              color: theme.text.medium,
+            }}
           >
-            Send
-          </TwButton>
+            <svg 
+              width="18" 
+              height="18" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="M12 19V5" />
+              <path d="M5 12l7-7 7 7" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>

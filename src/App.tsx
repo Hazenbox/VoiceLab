@@ -755,28 +755,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           <ErrorBoundary>
             <div className="h-full flex flex-col">
               {/* Header with Mode-specific Controls */}
-              <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: theme.stroke.low }}>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs" style={{ color: theme.text.low }}>Model:</span>
-                  <ModelSelector
-                    value={chatMode === 'copy' ? selectedLLMProvider : selectedTalkLLMProvider}
-                    onChange={chatMode === 'copy' ? setSelectedLLMProvider : setSelectedTalkLLMProvider}
-                    showHealth
-                    size="sm"
-                    disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
-                  />
-                  {chatMode === 'voice' && (
-                    <>
-                      <span className="text-xs ml-3" style={{ color: theme.text.low }}>TTS:</span>
-                      <TTSProviderSelector
-                        value={selectedTTSProvider}
-                        onChange={setSelectedTTSProvider}
-                        size="sm"
-                        disabled={appState !== AppState.IDLE}
-                      />
-                    </>
-                  )}
-                </div>
+              <div className="flex items-center justify-end px-4 py-2 border-b" style={{ borderColor: theme.stroke.low }}>
                 <div className="flex items-center gap-2">
                   {chatMode === 'voice' && <StatusIndicator state={appState} />}
                   {isChatLoading && (
@@ -910,7 +889,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   isLoading={isChatLoading}
                   mode={chatMode}
                   placeholder={chatMode === 'copy' 
-                    ? 'Type your prompt here...' 
+                    ? 'What do you want to know?' 
                     : 'Type a message or use the microphone...'}
                   onSaveAudio={handleSaveAudioFromChat}
                   emptyStateMessage={chatMode === 'copy'
@@ -920,6 +899,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   id={`${chatMode}-panel`}
                   onVoiceClick={chatMode === 'copy' ? () => handleModeChange('voice') : undefined}
                   voiceSupported={voiceSupported ?? true}
+                  modelSelector={
+                    <ModelSelector
+                      value={chatMode === 'copy' ? selectedLLMProvider : selectedTalkLLMProvider}
+                      onChange={chatMode === 'copy' ? setSelectedLLMProvider : setSelectedTalkLLMProvider}
+                      showHealth={false}
+                      size="sm"
+                      disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
+                    />
+                  }
                 />
               </div>
             </div>

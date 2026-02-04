@@ -71,14 +71,16 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           </h2>
           <button
             onClick={() => setIsCreatingProject(true)}
-            className="px-2 py-0.5 rounded-md text-xs font-medium transition-colors hover:opacity-80"
+            className="p-1.5 rounded-full transition-colors hover:opacity-70"
             style={{
-              backgroundColor: theme.background.minimal,
-              border: `1px solid ${theme.stroke.medium}`,
-              color: theme.text.high,
+              backgroundColor: theme.stroke.low,
+              color: theme.text.medium,
             }}
+            aria-label="Create new project"
           >
-            + New
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
           </button>
         </div>
 
@@ -134,9 +136,9 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               <button
                 key={project.id}
                 onClick={() => setActiveProject(project.id)}
-                className="w-full px-2 py-1.5 flex items-center justify-between group transition-all rounded-lg hover:scale-[0.98]"
+                className="w-full px-2 py-1.5 flex items-center justify-between group transition-colors rounded-lg"
                 style={{
-                  backgroundColor: activeProject?.id === project.id ? theme.background.subtle : 'transparent',
+                  backgroundColor: activeProject?.id === project.id ? theme.stroke.low : 'transparent',
                 }}
               >
                 <div className="flex-1 text-left">
@@ -172,9 +174,9 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       >
         <button
           onClick={onNavigateToLibrary}
-          className="w-full px-2 py-2 flex items-center gap-2 rounded-lg transition-all hover:scale-[0.98]"
+          className="w-full px-2 py-2 flex items-center gap-2 rounded-lg transition-colors"
           style={{
-            backgroundColor: isLibraryActive ? theme.background.minimal : 'transparent',
+            backgroundColor: isLibraryActive ? theme.stroke.low : 'transparent',
           }}
         >
           <svg 

@@ -9,10 +9,10 @@
  * - Keyboard navigation
  * - Auto-scroll to bottom
  * - Loading indicators
+ * - Grok-style pill-shaped input with embedded controls
  */
 
-import { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { Button, TextArea } from '@marcelinodzn/ds-react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import type { ChatMessage, ChatMode } from '../types';
 import { useThemeColors } from '../theme';
 import { MessageContent } from './MessageContent';
@@ -44,6 +44,8 @@ interface ChatPanelProps {
   onVoiceClick?: () => void;
   /** Whether voice is supported in this browser */
   voiceSupported?: boolean;
+  /** Model selector component to render inside the input bar */
+  modelSelector?: React.ReactNode;
 }
 
 // =============================================================================
@@ -55,7 +57,7 @@ export const ChatPanel = memo(function ChatPanel({
   onSendMessage, 
   isLoading,
   mode = 'copy',
-  placeholder = 'Type your prompt here...',
+  placeholder = 'What do you want to know?',
   onSaveAudio,
   showEmptyState = true,
   emptyStateMessage = 'Start a conversation to generate copy',
@@ -63,12 +65,13 @@ export const ChatPanel = memo(function ChatPanel({
   id,
   onVoiceClick,
   voiceSupported = true,
+  modelSelector,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -85,7 +88,7 @@ export const ChatPanel = memo(function ChatPanel({
 
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter') {
       e.preventDefault();
       handleSubmit();
     }
@@ -221,34 +224,15 @@ export const ChatPanel = memo(function ChatPanel({
         </div>
       )}
 
-      {/* Input Area */}
-      <div 
-        className="border-t p-4"
-        style={{ borderColor: theme.stroke.low }}
-      >
-        <div className="flex gap-2 items-end">
-          <div className="flex-1">
-            <TextArea
-              ref={inputRef}
-              data-chat-input
-              value={inputValue}
-              onChange={(value: string) => setInputValue(value)}
-              placeholder={placeholder}
-              rows={2}
-              size="S"
-              onKeyDown={handleKeyDown}
-              isDisabled={inputDisabled}
-              aria-label="Message input"
-              aria-describedby="input-hint"
-            />
-            <p 
-              id="input-hint" 
-              className="sr-only"
-            >
-              Press Enter to send, Shift+Enter for new line
-            </p>
-          </div>
-          {/* Voice chat button - only shown in copy mode */}
+      {/* Input Area - Grok-style pill-shaped input */}
+      <div className="p-4">
+        <div 
+          className="rounded-full flex items-center px-2 py-1.5 gap-1"
+          style={{ 
+            backgroundColor: theme.stroke.low,
+          }}
+        >
+          {/* Mic button - pill shaped, on the left */}
           {onVoiceClick && (
             <button
               onClick={onVoiceClick}
@@ -259,19 +243,18 @@ export const ChatPanel = memo(function ChatPanel({
               title={!voiceSupported 
                 ? "Voice chat not supported in this browser" 
                 : "Voice chat (speak with AI)"}
-              className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
+              className={`p-2 rounded-full transition-colors flex-shrink-0 ${
                 !voiceSupported 
                   ? 'opacity-50 cursor-not-allowed' 
-                  : 'hover:opacity-80'
+                  : 'hover:opacity-70'
               }`}
               style={{ 
-                backgroundColor: theme.background.subtle,
                 color: theme.text.medium,
               }}
             >
               <svg 
-                width="20" 
-                height="20" 
+                width="18" 
+                height="18" 
                 viewBox="0 0 24 24" 
                 fill="none" 
                 stroke="currentColor" 
@@ -285,25 +268,57 @@ export const ChatPanel = memo(function ChatPanel({
               </svg>
             </button>
           )}
-          <Button
-            onPress={handleSubmit}
-            isDisabled={!inputValue.trim() || isLoading || inputDisabled}
-            appearance="primary"
-            size="S"
+
+          {/* Single-line text input */}
+          <input
+            ref={inputRef}
+            data-chat-input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            disabled={inputDisabled}
+            aria-label="Message input"
+            className="flex-1 bg-transparent outline-none text-sm px-2"
+            style={{ 
+              color: theme.text.high,
+            }}
+          />
+
+          {/* Model selector - rendered inside input bar */}
+          {modelSelector}
+
+          {/* Arrow send button - pill shaped */}
+          <button
+            onClick={handleSubmit}
+            disabled={!inputValue.trim() || isLoading || inputDisabled}
             aria-label="Send message"
+            className={`p-2 rounded-full transition-colors flex-shrink-0 ${
+              !inputValue.trim() || isLoading || inputDisabled
+                ? 'opacity-40 cursor-not-allowed'
+                : 'hover:opacity-70'
+            }`}
+            style={{ 
+              backgroundColor: theme.background.ghost,
+              color: theme.text.medium,
+            }}
           >
-            Send
-          </Button>
+            <svg 
+              width="18" 
+              height="18" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="M12 19V5" />
+              <path d="M5 12l7-7 7 7" />
+            </svg>
+          </button>
         </div>
-        
-        {/* Keyboard hint */}
-        <p 
-          className="text-xs mt-2 opacity-60"
-          style={{ color: theme.text.low }}
-          aria-hidden="true"
-        >
-          Press Enter to send, Shift+Enter for new line
-        </p>
       </div>
     </div>
   );
