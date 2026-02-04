@@ -97,6 +97,9 @@ export type ActiveTab = 'tts' | 'talk';
 // Color mode
 export type ColorMode = 'Light' | 'Dark';
 
+// Design system type
+export type DesignSystem = 'jio' | 'tailwind';
+
 // Documentation section
 export interface DocSection {
   id: string;

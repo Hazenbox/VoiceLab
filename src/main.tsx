@@ -1,6 +1,7 @@
 import { StrictMode, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { DsProvider } from '@marcelinodzn/ds-react'
+import { DesignSystemProvider } from './context/DesignSystemContext'
 import './index.css'
 import App from './App.tsx'
 import type { ColorMode } from './types'
@@ -18,13 +19,15 @@ function Root() {
   }, [colorMode]);
 
   return (
-    <DsProvider
-      platform="Desktop (1440)"
-      colorMode={colorMode}
-      density="Default"
-    >
-      <App colorMode={colorMode} onColorModeChange={setColorMode} />
-    </DsProvider>
+    <DesignSystemProvider>
+      <DsProvider
+        platform="Desktop (1440)"
+        colorMode={colorMode}
+        density="Default"
+      >
+        <App colorMode={colorMode} onColorModeChange={setColorMode} />
+      </DsProvider>
+    </DesignSystemProvider>
   );
 }
 

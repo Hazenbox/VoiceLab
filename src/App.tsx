@@ -15,6 +15,15 @@ import {
   DocumentationPanel,
   SoundWave 
 } from './components';
+import {
+  TwConfigPanel,
+  TwAudioPlayer,
+  TwDocumentationPanel,
+  TwButton,
+  TwTextArea,
+  TwSegmentedControl,
+  TwSegmentedControlItem
+} from './components/tailwind';
 import { 
   createTTSProvider, 
   createConversationProvider,
@@ -24,6 +33,7 @@ import {
 import { createAudioContext } from './services/audioUtils';
 import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
+import { useDesignSystem } from './context/DesignSystemContext';
 import { TextArea, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
 
 interface AppProps {
@@ -32,6 +42,9 @@ interface AppProps {
 }
 
 function App({ colorMode, onColorModeChange }: AppProps) {
+  // Design system context
+  const { designSystem } = useDesignSystem();
+  
   // Theme colors from DS tokens
   const theme = useThemeColors();
   
@@ -296,12 +309,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
   // Render documentation view
   if (activeView === 'docs') {
+    const ConfigPanelComponent = designSystem === 'jio' ? ConfigPanel : TwConfigPanel;
+    const DocPanelComponent = designSystem === 'jio' ? DocumentationPanel : TwDocumentationPanel;
+    
     return (
       <div 
         className="flex h-screen"
         style={{ backgroundColor: theme.background.ghost }}
       >
-        <ConfigPanel
+        <ConfigPanelComponent
           voiceGender={voiceGender}
           onVoiceGenderChange={setVoiceGender}
           config={config}
@@ -312,20 +328,27 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           disabled={appState !== AppState.IDLE}
         />
         <main className="flex-1 overflow-hidden">
-          <DocumentationPanel onBack={() => setActiveView('main')} />
+          <DocPanelComponent onBack={() => setActiveView('main')} />
         </main>
       </div>
     );
   }
 
   // Render main view
+  const ConfigPanelComponent = designSystem === 'jio' ? ConfigPanel : TwConfigPanel;
+  const ButtonComponent = designSystem === 'jio' ? Button : TwButton;
+  const TextAreaComponent = designSystem === 'jio' ? TextArea : TwTextArea;
+  const SegmentedControlComponent = designSystem === 'jio' ? SegmentedControl : TwSegmentedControl;
+  const SegmentedControlItemComponent = designSystem === 'jio' ? SegmentedControlItem : TwSegmentedControlItem;
+  const AudioPlayerComponent = designSystem === 'jio' ? AudioPlayer : TwAudioPlayer;
+  
   return (
     <div 
       className="flex h-screen"
       style={{ backgroundColor: theme.background.ghost }}
     >
       {/* Config Panel */}
-      <ConfigPanel
+      <ConfigPanelComponent
         voiceGender={voiceGender}
         onVoiceGenderChange={setVoiceGender}
         config={config}
@@ -340,15 +363,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Tab Navigation */}
         <div className="flex items-center justify-center p-3">
-          <SegmentedControl
+          <SegmentedControlComponent
             value={activeTab}
             onChange={(value) => setActiveTab(value as ActiveTab)}
             size="S"
             aria-label="Mode selection"
           >
-            <SegmentedControlItem value="tts">Text-to-Speech</SegmentedControlItem>
-            <SegmentedControlItem value="talk">Tap-to-Talk</SegmentedControlItem>
-          </SegmentedControl>
+            <SegmentedControlItemComponent value="tts">Text-to-Speech</SegmentedControlItemComponent>
+            <SegmentedControlItemComponent value="talk">Tap-to-Talk</SegmentedControlItemComponent>
+          </SegmentedControlComponent>
         </div>
 
         {/* Tab Content */}
@@ -371,8 +394,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   </h2>
                   
                   {/* Text input */}
-                  <div className="scaled-textarea-wrapper">
-                    <TextArea
+                  <div className={designSystem === 'jio' ? 'scaled-textarea-wrapper' : ''}>
+                    <TextAreaComponent
                       value={ttsText}
                       onChange={(value: string) => setTtsText(value)}
                       placeholder="Enter text to convert to speech..."
@@ -383,7 +406,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
                   {/* Generate button */}
                   <div style={{ marginTop: '12px' }}>
-                    <Button
+                    <ButtonComponent
                       onPress={handleGenerateTTS}
                       isDisabled={isTtsLoading || !ttsText.trim()}
                       appearance="primary"
@@ -391,7 +414,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       aria-label="Generate speech from text"
                     >
                       {isTtsLoading ? 'Generating...' : 'Generate'}
-                    </Button>
+                    </ButtonComponent>
                   </div>
                 </div>
 
@@ -408,7 +431,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   >
                     Audio Output
                   </h2>
-                  <AudioPlayer audioBuffer={generatedAudio} />
+                  <AudioPlayerComponent audioBuffer={generatedAudio} />
                 </div>
               </div>
             ) : (
