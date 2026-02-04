@@ -11,6 +11,17 @@ interface LabeledSliderProps {
 
 /**
  * Discrete slider with labeled options (e.g., Slow/Medium/Fast)
+ * 
+ * Design System Integration:
+ * - Uses HTML range input (no DS Slider component available yet)
+ * - Filled track color: LOCAL_COLORS.accent (matches Radio appearance="secondary")
+ * - Background: theme.background.minimal (DS token)
+ * - Knob: theme.local.white via CSS variable (local token)
+ * - Text: theme.text.high/medium/low (DS tokens)
+ * 
+ * Future Migration:
+ * When Jio Design System adds a Slider component, replace with:
+ * <Slider appearance="secondary" size="M" />
  */
 export const LabeledSlider: React.FC<LabeledSliderProps> = ({
   label,
@@ -44,7 +55,6 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
             data-at-zero={currentIndex === 0 ? "true" : "false"}
             className={`
               w-full h-3 rounded-full appearance-none cursor-pointer
-              accent-orange-500
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}
             style={{

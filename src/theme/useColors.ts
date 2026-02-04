@@ -20,9 +20,26 @@ import {
 export type TextEmphasis = 'high' | 'medium' | 'low';
 export type BackgroundEmphasis = SurfaceEmphasis;
 
-// Local color tokens (not available in design system)
+/**
+ * Local color tokens - Colors not yet exposed by Jio Design System
+ * 
+ * These colors match design system component appearances but aren't
+ * available as direct tokens. Keep in sync with design system updates.
+ */
 const LOCAL_COLORS = {
+  /**
+   * Pure white - used for slider knob
+   * @token Not available in DS - custom local token
+   */
   white: '#ffffff',
+  
+  /**
+   * Brand accent orange - matches Radio appearance="secondary"
+   * @token Equivalent to design system's secondary appearance color
+   * @value #f97316 (Tailwind orange-500)
+   * @usage Active states, highlights, brand elements, slider fill
+   */
+  accent: '#f97316',
 } as const;
 
 /**
@@ -123,17 +140,20 @@ export function useStrokeColor(emphasis: TextEmphasis = 'medium'): string {
 }
 
 /**
- * Hook to get accent/primary color
+ * Hook to get accent/primary brand color
  * 
  * @returns CSS color string (hex)
  * 
  * Usage:
- * - Primary brand color - standard orange (#f97316)
- * - Matches Radio button secondary appearance and other accent elements
- * - Used for active states, highlights, and brand elements
+ * - Matches Radio button appearance="secondary" color
+ * - Used for active states, highlights, brand elements
+ * - Applied to slider filled track, status indicators, etc.
+ * 
+ * Note: This color is not yet exposed as a design system token.
+ * When DS exposes secondary/brand color tokens, migrate to use those.
  */
 export function useAccentColor(): string {
-  return '#f97316'; // Standard orange (Tailwind orange-500)
+  return LOCAL_COLORS.accent;
 }
 
 /**
