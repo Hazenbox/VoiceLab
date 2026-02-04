@@ -192,3 +192,16 @@ input[type="range"][data-at-zero="true"]::-moz-range-thumb {
   font-size: 0.875rem !important;  /* ~14px text size */
   line-height: 1.4 !important;     /* Tighter line spacing */
 }
+
+/* TextArea dark mode fix - ensure visible background */
+.dark .scaled-textarea-wrapper > *,
+.dark .scaled-textarea-wrapper textarea,
+.dark .scaled-textarea-wrapper [role="textbox"] {
+  background-color: rgba(39, 39, 42, 0.5) !important; /* zinc-800 with opacity */
+}
+
+/* Radio button dark mode visibility */
+.dark [role="radio"]:not([aria-checked="true"]) {
+  border-color: rgba(161, 161, 170, 0.5) !important; /* zinc-400 */
+  background-color: rgba(39, 39, 42, 0.3) !important; /* zinc-800 */
+}

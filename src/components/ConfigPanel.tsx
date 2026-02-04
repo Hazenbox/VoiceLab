@@ -143,11 +143,11 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
       <div className="p-3 flex items-center justify-start">
         <button
           onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
-          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
           style={{
-            backgroundColor: theme.background.subtle,
-            border: `1px solid ${theme.stroke.low}`,
-            color: theme.text.medium,
+            backgroundColor: theme.isLight ? theme.background.subtle : '#27272a',
+            border: `2px solid ${theme.stroke.medium}`,
+            color: theme.text.high,
           }}
           aria-label={`Switch to ${colorMode === 'Light' ? 'dark' : 'light'} mode`}
         >

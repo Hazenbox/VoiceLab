@@ -35,6 +35,9 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
   
   // Surface-Minimal: Always use #F5F5F5 for light mode, #262626 for dark mode
   const inactiveBg = theme.isLight ? '#F5F5F5' : '#262626';
+  
+  // Active color: Use bright orange in light mode, darker orange in dark mode (matches radio)
+  const activeBg = theme.isLight ? '#f97316' : '#ea580c';
 
   return (
     <div className="space-y-1.5">
@@ -61,7 +64,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}
             style={{
-              background: `linear-gradient(to right, ${theme.accent} 0%, ${theme.accent} ${(currentIndex / (options.length - 1)) * 100}%, ${inactiveBg} ${(currentIndex / (options.length - 1)) * 100}%, ${inactiveBg} 100%)`,
+              background: `linear-gradient(to right, ${activeBg} 0%, ${activeBg} ${(currentIndex / (options.length - 1)) * 100}%, ${inactiveBg} ${(currentIndex / (options.length - 1)) * 100}%, ${inactiveBg} 100%)`,
             }}
           />
         </div>

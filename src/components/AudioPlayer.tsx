@@ -83,7 +83,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
       // Color based on progress - use theme stroke color for unplayed
       if (x < progressX) {
-        ctx.fillStyle = '#f97316'; // Orange for played portion
+        ctx.fillStyle = theme.isLight ? '#f97316' : '#fb923c'; // Brighter orange in dark mode
       } else {
         ctx.fillStyle = theme.stroke.low; // Theme color for remaining
       }
@@ -92,7 +92,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       ctx.roundRect(x + 1, y, barWidth - 2, barHeight, 2);
       ctx.fill();
     });
-  }, [waveformData, theme.stroke.low]);
+  }, [waveformData, theme.stroke.low, theme.isLight]);
 
   // Animation loop for playback progress
   const animate = useCallback(() => {
@@ -273,10 +273,11 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           {/* Restart button */}
           <button
             onClick={restart}
-            className="p-1.5 rounded-full transition-colors"
+            className="p-1.5 rounded-lg transition-colors hover:opacity-80"
             style={{ 
-              backgroundColor: theme.background.subtle,
-              color: theme.text.medium,
+              backgroundColor: theme.background.bold,
+              border: `2px solid ${theme.stroke.medium}`,
+              color: theme.text.high,
             }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
