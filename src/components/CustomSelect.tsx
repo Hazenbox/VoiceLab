@@ -97,9 +97,9 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
         {isOpen && (
           <div 
-            className="absolute z-10 w-full mt-1 rounded-lg shadow-lg overflow-hidden"
+            className="absolute z-10 w-full mt-1 rounded-lg overflow-hidden"
             style={{
-              backgroundColor: theme.background.subtle,
+              backgroundColor: theme.background.ghost,
               border: `1px solid ${theme.stroke.low}`,
             }}
           >
