@@ -37,7 +37,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
   const inactiveBg = theme.isLight ? '#F5F5F5' : '#262626';
   
   // Active color: Use bright orange in light mode, darker orange in dark mode (matches radio)
-  const activeBg = theme.isLight ? '#f97316' : '#ea580c';
+  const activeBg = theme.isLight ? '#fa7d19' : '#ea580c';
 
   return (
     <div className="space-y-1.5">
@@ -60,15 +60,27 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
               }}
             />
             
-            {/* Active portion overlay - rounded at both ends */}
+            {/* Active portion overlay with knob at right edge */}
             <div 
               className="absolute left-0 top-0 rounded-full pointer-events-none"
               style={{
                 width: `${(currentIndex / (options.length - 1)) * 100}%`,
+                minWidth: '8px',
                 background: activeBg,
                 height: '12px',
               }}
-            />
+            >
+              {/* Knob positioned at right edge of active track */}
+              <div 
+                className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2"
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: 'white',
+                }}
+              />
+            </div>
             
             {/* Actual range input - transparent background */}
             <input
