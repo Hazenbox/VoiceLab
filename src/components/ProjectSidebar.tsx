@@ -59,18 +59,18 @@ export const ProjectSidebar: React.FC = () => {
 
   return (
     <aside 
-      className="w-[280px] h-full flex flex-col overflow-hidden"
+      className="w-[240px] h-full flex flex-col overflow-hidden"
       style={{ 
         backgroundColor: theme.background.ghost,
         borderRight: `1px solid ${theme.stroke.low}`
       }}
     >
       {/* Logo */}
-      <div className="p-3">
+      <div className="p-2">
         <img 
-          src="/jio-voice-lab.svg" 
+          src={theme.isLight ? "/jio-voice-lab-light.svg" : "/jio-voice-lab-dark.svg"}
           alt="Jio Voice Lab" 
-          className="h-8"
+          className="h-7"
         />
       </div>
 
@@ -80,7 +80,7 @@ export const ProjectSidebar: React.FC = () => {
           <>
             {/* Projects Header */}
             <div 
-              className="p-3 flex items-center justify-between"
+              className="p-2 flex items-center justify-between"
               style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
             >
               <h2 
@@ -91,7 +91,7 @@ export const ProjectSidebar: React.FC = () => {
               </h2>
               <button
                 onClick={() => setIsCreatingProject(true)}
-                className="px-2.5 py-1 rounded-md text-xs font-medium transition-colors hover:opacity-80"
+                className="px-2 py-0.5 rounded-md text-xs font-medium transition-colors hover:opacity-80"
                 style={{
                   backgroundColor: theme.background.minimal,
                   border: `1px solid ${theme.stroke.medium}`,
@@ -103,9 +103,9 @@ export const ProjectSidebar: React.FC = () => {
             </div>
 
             {/* Projects List */}
-            <div className="flex-1 overflow-y-auto px-2 py-2">
+            <div className="flex-1 overflow-y-auto px-1.5 py-1.5">
         {isCreatingProject && (
-          <div className="mb-2 p-2 space-y-2 rounded-lg" style={{ backgroundColor: theme.background.minimal }}>
+          <div className="mb-2 p-1.5 space-y-2 rounded-lg" style={{ backgroundColor: theme.background.minimal }}>
             <input
               type="text"
               value={newProjectName}
@@ -126,7 +126,7 @@ export const ProjectSidebar: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={handleCreateProject}
-                className="flex-1 px-2 py-1 text-xs rounded-md font-medium"
+                className="flex-1 px-1.5 py-0.5 text-xs rounded-md font-medium"
                 style={{
                   backgroundColor: '#f97316',
                   color: 'white',
@@ -136,7 +136,7 @@ export const ProjectSidebar: React.FC = () => {
               </button>
               <button
                 onClick={() => setIsCreatingProject(false)}
-                className="flex-1 px-2 py-1 text-xs rounded-md font-medium"
+                className="flex-1 px-1.5 py-0.5 text-xs rounded-md font-medium"
                 style={{
                   backgroundColor: theme.background.minimal,
                   border: `1px solid ${theme.stroke.medium}`,
@@ -149,19 +149,19 @@ export const ProjectSidebar: React.FC = () => {
           </div>
         )}
 
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {projects.map((project) => (
                   <button
                     key={project.id}
                     onClick={() => setActiveProject(project.id)}
-                    className="w-full px-2.5 py-2 flex items-center justify-between group transition-all rounded-lg hover:scale-[0.98]"
+                    className="w-full px-2 py-1.5 flex items-center justify-between group transition-all rounded-lg hover:scale-[0.98]"
                     style={{
                       backgroundColor: activeProject?.id === project.id ? theme.background.subtle : 'transparent',
                     }}
                   >
                     <div className="flex-1 text-left">
                       <div 
-                        className="text-sm font-medium truncate"
+                        className="text-xs font-medium truncate"
                         style={{ color: theme.text.high }}
                       >
                         {project.name}
@@ -188,7 +188,7 @@ export const ProjectSidebar: React.FC = () => {
           <>
             {/* Audio Library View */}
             <div 
-              className="p-3 flex items-center justify-between"
+              className="p-2 flex items-center justify-between"
               style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
             >
               <h2 
@@ -207,7 +207,7 @@ export const ProjectSidebar: React.FC = () => {
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto px-2 py-2">
+            <div className="flex-1 overflow-y-auto px-1.5 py-1.5">
               {audios.length === 0 ? (
                 <div 
                   className="p-4 text-center text-xs"
@@ -216,11 +216,11 @@ export const ProjectSidebar: React.FC = () => {
                   No saved audios yet
                 </div>
               ) : (
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   {audios.map((audio) => (
                     <div
                       key={audio.id}
-                      className="p-2.5 rounded-lg group transition-all hover:scale-[0.98]"
+                      className="p-2 rounded-lg group transition-all hover:scale-[0.98]"
                       style={{
                         backgroundColor: theme.background.minimal,
                       }}
@@ -281,18 +281,18 @@ export const ProjectSidebar: React.FC = () => {
 
       {/* Bottom Navigation - Library */}
       <div 
-        className="p-2"
+        className="p-1.5"
         style={{ borderTop: `1px solid ${theme.stroke.low}` }}
       >
         <button
           onClick={() => setActiveView(activeView === 'library' ? 'projects' : 'library')}
-          className="w-full px-3 py-2.5 flex items-center gap-3 rounded-lg transition-all hover:scale-[0.98]"
+          className="w-full px-2 py-2 flex items-center gap-2 rounded-lg transition-all hover:scale-[0.98]"
           style={{
             backgroundColor: activeView === 'library' ? theme.background.minimal : 'transparent',
           }}
         >
           <svg 
-            className="w-5 h-5" 
+            className="w-4 h-4" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -301,7 +301,7 @@ export const ProjectSidebar: React.FC = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
           </svg>
           <span 
-            className="text-sm font-medium"
+            className="text-xs font-medium"
             style={{ color: theme.text.high }}
           >
             Library
