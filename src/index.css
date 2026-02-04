@@ -102,6 +102,11 @@ body.dark {
   animation-duration: 1.2s;
 }
 
+/* Ensure input element has pill shape */
+input[type="range"] {
+  border-radius: 9999px;  /* Pill shape for the entire input */
+}
+
 /* Ensure track has rounded corners */
 input[type="range"]::-webkit-slider-runnable-track {
   border-radius: 9999px;
