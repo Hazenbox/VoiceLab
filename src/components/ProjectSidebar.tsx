@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useAudioLibrary } from '../context/AudioLibraryContext';
 import { useThemeColors } from '../theme';
-import { useDesignSystem } from '../context/DesignSystemContext';
-import { SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
-import { TwSegmentedControl, TwSegmentedControlItem } from './tailwind';
 
 type SidebarView = 'projects' | 'library';
 
 export const ProjectSidebar: React.FC = () => {
   const theme = useThemeColors();
-  const { designSystem } = useDesignSystem();
   const { projects, activeProject, setActiveProject, createProject, deleteProject } = useProject();
   const { getAudiosByProject, playAudio, deleteAudio, playingAudioId, stopAudio } = useAudioLibrary();
   
@@ -19,9 +15,6 @@ export const ProjectSidebar: React.FC = () => {
   const [newProjectName, setNewProjectName] = useState('');
 
   const audios = activeProject ? getAudiosByProject(activeProject.id) : [];
-  
-  const SegmentedControlComponent = designSystem === 'jio' ? SegmentedControl : TwSegmentedControl;
-  const SegmentedControlItemComponent = designSystem === 'jio' ? SegmentedControlItem : TwSegmentedControlItem;
 
   const handleCreateProject = () => {
     if (newProjectName.trim()) {
@@ -64,21 +57,6 @@ export const ProjectSidebar: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const formatDate = (timestamp: number): string => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  };
-
   return (
     <aside 
       className="w-[280px] h-full flex flex-col overflow-hidden"
@@ -96,20 +74,7 @@ export const ProjectSidebar: React.FC = () => {
         />
       </div>
 
-      {/* Segmented Control */}
-      <div className="px-3 pb-3">
-        <SegmentedControlComponent
-          value={activeView}
-          onChange={(value) => setActiveView(value as SidebarView)}
-          size="S"
-          aria-label="Sidebar view selection"
-        >
-          <SegmentedControlItemComponent value="projects">Projects</SegmentedControlItemComponent>
-          <SegmentedControlItemComponent value="library">Library</SegmentedControlItemComponent>
-        </SegmentedControlComponent>
-      </div>
-
-      {/* Dynamic Content Area */}
+      {/* Main Content Area */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {activeView === 'projects' ? (
           <>
@@ -128,7 +93,7 @@ export const ProjectSidebar: React.FC = () => {
                 onClick={() => setIsCreatingProject(true)}
                 className="px-2.5 py-1 rounded-md text-xs font-medium transition-colors hover:opacity-80"
                 style={{
-                  backgroundColor: theme.background.subtle,
+                  backgroundColor: theme.background.minimal,
                   border: `1px solid ${theme.stroke.medium}`,
                   color: theme.text.high,
                 }}
@@ -140,7 +105,7 @@ export const ProjectSidebar: React.FC = () => {
             {/* Projects List */}
             <div className="flex-1 overflow-y-auto px-2 py-2">
         {isCreatingProject && (
-          <div className="mb-2 p-2 space-y-2 rounded-lg" style={{ backgroundColor: theme.background.subtle }}>
+          <div className="mb-2 p-2 space-y-2 rounded-lg" style={{ backgroundColor: theme.background.minimal }}>
             <input
               type="text"
               value={newProjectName}
@@ -173,7 +138,7 @@ export const ProjectSidebar: React.FC = () => {
                 onClick={() => setIsCreatingProject(false)}
                 className="flex-1 px-2 py-1 text-xs rounded-md font-medium"
                 style={{
-                  backgroundColor: theme.background.subtle,
+                  backgroundColor: theme.background.minimal,
                   border: `1px solid ${theme.stroke.medium}`,
                   color: theme.text.high,
                 }}
@@ -191,7 +156,7 @@ export const ProjectSidebar: React.FC = () => {
                     onClick={() => setActiveProject(project.id)}
                     className="w-full px-2.5 py-2 flex items-center justify-between group transition-all rounded-lg hover:scale-[0.98]"
                     style={{
-                      backgroundColor: activeProject?.id === project.id ? theme.background.subtle : 'transparent',
+                      backgroundColor: activeProject?.id === project.id ? theme.background.minimal : 'transparent',
                     }}
                   >
                     <div className="flex-1 text-left">
@@ -200,12 +165,6 @@ export const ProjectSidebar: React.FC = () => {
                         style={{ color: theme.text.high }}
                       >
                         {project.name}
-                      </div>
-                      <div 
-                        className="text-xs"
-                        style={{ color: theme.text.low }}
-                      >
-                        {formatDate(project.updatedAt)}
                       </div>
                     </div>
                     
@@ -263,7 +222,7 @@ export const ProjectSidebar: React.FC = () => {
                       key={audio.id}
                       className="p-2.5 rounded-lg group transition-all hover:scale-[0.98]"
                       style={{
-                        backgroundColor: theme.background.subtle,
+                        backgroundColor: theme.background.minimal,
                       }}
                     >
                       <div className="flex items-start gap-2">
@@ -294,12 +253,10 @@ export const ProjectSidebar: React.FC = () => {
                             {audio.name}
                           </div>
                           <div 
-                            className="text-xs flex items-center gap-2 mt-0.5"
+                            className="text-xs mt-0.5"
                             style={{ color: theme.text.low }}
                           >
-                            <span>{formatDuration(audio.duration)}</span>
-                            <span>•</span>
-                            <span>{formatDate(audio.createdAt)}</span>
+                            {formatDuration(audio.duration)}
                           </div>
                         </div>
 
@@ -320,6 +277,47 @@ export const ProjectSidebar: React.FC = () => {
             </div>
           </>
         )}
+      </div>
+
+      {/* Bottom Navigation - Library */}
+      <div 
+        className="p-2"
+        style={{ borderTop: `1px solid ${theme.stroke.low}` }}
+      >
+        <button
+          onClick={() => setActiveView(activeView === 'library' ? 'projects' : 'library')}
+          className="w-full px-3 py-2.5 flex items-center gap-3 rounded-lg transition-all hover:scale-[0.98]"
+          style={{
+            backgroundColor: activeView === 'library' ? theme.background.minimal : 'transparent',
+          }}
+        >
+          <svg 
+            className="w-5 h-5" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            style={{ color: theme.text.high }}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          </svg>
+          <span 
+            className="text-sm font-medium"
+            style={{ color: theme.text.high }}
+          >
+            Library
+          </span>
+          {activeView === 'library' && audios.length > 0 && (
+            <span 
+              className="ml-auto text-xs px-2 py-0.5 rounded-full"
+              style={{ 
+                backgroundColor: theme.background.subtle,
+                color: theme.text.medium 
+              }}
+            >
+              {audios.length}
+            </span>
+          )}
+        </button>
       </div>
     </aside>
   );
