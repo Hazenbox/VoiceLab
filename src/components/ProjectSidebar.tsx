@@ -325,6 +325,6 @@ export const ProjectSidebar = memo(function ProjectSidebar() {
       </div>
     </aside>
   );
-};
+});
 
 export default ProjectSidebar;
