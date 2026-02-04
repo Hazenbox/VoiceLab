@@ -27,9 +27,10 @@ export interface TTSProvider {
    * Synthesize text to audio
    * @param text Text to synthesize
    * @param config Voice configuration
+   * @param signal Optional AbortSignal for cancellation
    * @returns AudioBuffer containing the synthesized audio
    */
-  synthesize(text: string, config: VoiceConfig): Promise<AudioBuffer>;
+  synthesize(text: string, config: VoiceConfig, signal?: AbortSignal): Promise<AudioBuffer>;
   
   /**
    * Get list of supported voices

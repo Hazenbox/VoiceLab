@@ -29,6 +29,12 @@ export class GeminiLiveProvider implements ConversationProvider {
   private nextStartTime = 0;
   private isPlaying = false;
 
+  // Heartbeat state
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  private lastMessageTime: number = Date.now();
+  private readonly HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds
+  private readonly HEARTBEAT_TIMEOUT_MS = 45000; // 45 seconds without message = dead
+
   get state(): ConversationState {
     return this._state;
   }
@@ -36,6 +42,65 @@ export class GeminiLiveProvider implements ConversationProvider {
   private setState(state: ConversationState): void {
     this._state = state;
     this.callbacks.onStateChange?.(state);
+  }
+
+  /**
+   * Start heartbeat to detect dead connections
+   */
+  private startHeartbeat(): void {
+    this.stopHeartbeat();
+    this.lastMessageTime = Date.now();
+
+    this.heartbeatInterval = setInterval(() => {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        this.stopHeartbeat();
+        return;
+      }
+
+      const timeSinceLastMessage = Date.now() - this.lastMessageTime;
+      if (timeSinceLastMessage > this.HEARTBEAT_TIMEOUT_MS) {
+        console.warn('[GeminiLive] Connection appears dead, reconnecting...');
+        this.handleDeadConnection();
+        return;
+      }
+
+      // Gemini Live doesn't have a specific ping - we rely on message traffic
+      // If no messages for a while, the connection might be dead
+      console.log('[GeminiLive] Heartbeat check - connection alive');
+    }, this.HEARTBEAT_INTERVAL_MS);
+  }
+
+  /**
+   * Stop heartbeat
+   */
+  private stopHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
+  /**
+   * Handle dead connection
+   */
+  private handleDeadConnection(): void {
+    console.warn('[GeminiLive] Detected dead connection');
+    this.stopHeartbeat();
+    
+    if (this.ws) {
+      this.ws.close(4000, 'Heartbeat timeout');
+      this.ws = null;
+    }
+    
+    this.setState('error');
+    this.callbacks.onError?.(new Error('Connection lost - no response from server'));
+  }
+
+  /**
+   * Update last message time (called when any message is received)
+   */
+  private updateLastMessageTime(): void {
+    this.lastMessageTime = Date.now();
   }
 
   /**
@@ -75,10 +140,14 @@ export class GeminiLiveProvider implements ConversationProvider {
           // Send setup message
           this.sendSetupMessage();
           this.setState('connected');
+          // Start heartbeat
+          this.startHeartbeat();
           resolve();
         };
 
         this.ws.onmessage = (event) => {
+          // Update heartbeat - any message means connection is alive
+          this.updateLastMessageTime();
           this.handleMessage(event);
         };
 
@@ -325,6 +394,9 @@ export class GeminiLiveProvider implements ConversationProvider {
    * Disconnect and cleanup
    */
   disconnect(): void {
+    // Stop heartbeat first
+    this.stopHeartbeat();
+    
     // Close WebSocket
     if (this.ws) {
       if (this.ws.readyState === WebSocket.OPEN) {

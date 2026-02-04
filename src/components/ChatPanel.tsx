@@ -1,101 +1,214 @@
-import { useState, useRef, useEffect } from 'react';
+/**
+ * ChatPanel Component
+ * 
+ * Unified chat interface supporting both text and audio messages.
+ * 
+ * Features:
+ * - Mixed content (text + audio in same conversation)
+ * - ARIA roles for accessibility
+ * - Keyboard navigation
+ * - Auto-scroll to bottom
+ * - Loading indicators
+ */
+
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Button, TextArea } from '@marcelinodzn/ds-react';
-import type { ChatMessage } from '../types';
+import type { ChatMessage, ChatMode } from '../types';
 import { useThemeColors } from '../theme';
 import { MessageContent } from './MessageContent';
+import { AudioBubble } from './AudioBubble';
+
+// =============================================================================
+// Types
+// =============================================================================
 
 interface ChatPanelProps {
   messages: ChatMessage[];
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  /** Current chat mode for styling */
+  mode?: ChatMode;
+  /** Placeholder text for input */
+  placeholder?: string;
+  /** Callback when user wants to save an audio message */
+  onSaveAudio?: (messageId: string) => void;
+  /** Whether to show empty state */
+  showEmptyState?: boolean;
+  /** Custom empty state message */
+  emptyStateMessage?: string;
+  /** Whether input is disabled */
+  inputDisabled?: boolean;
+  /** ID for ARIA panel reference */
+  id?: string;
 }
 
-export function ChatPanel({ messages, onSendMessage, isLoading }: ChatPanelProps) {
+// =============================================================================
+// Component
+// =============================================================================
+
+export const ChatPanel = memo(function ChatPanel({ 
+  messages, 
+  onSendMessage, 
+  isLoading,
+  mode = 'copy',
+  placeholder = 'Type your prompt here...',
+  onSaveAudio,
+  showEmptyState = true,
+  emptyStateMessage = 'Start a conversation to generate copy',
+  inputDisabled = false,
+  id,
+}: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSubmit = () => {
-    if (inputValue.trim() && !isLoading) {
+  // Handle form submission
+  const handleSubmit = useCallback(() => {
+    if (inputValue.trim() && !isLoading && !inputDisabled) {
       onSendMessage(inputValue.trim());
       setInputValue('');
     }
-  };
+  }, [inputValue, isLoading, inputDisabled, onSendMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  // Handle keyboard shortcuts
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
-  };
+  }, [handleSubmit]);
+
+  // Handle save audio
+  const handleSaveAudio = useCallback((messageId: string) => {
+    onSaveAudio?.(messageId);
+  }, [onSaveAudio]);
+
+  // Render individual message
+  const renderMessage = useCallback((message: ChatMessage) => {
+    const isUser = message.role === 'user';
+    
+    // Audio message
+    if (message.type === 'audio' && message.audioData) {
+      return (
+        <AudioBubble
+          key={message.id}
+          messageId={message.id}
+          audioData={message.audioData}
+          sampleRate={message.audioSampleRate || 24000}
+          duration={message.audioDuration || 0}
+          transcript={message.content}
+          role={message.role}
+          onSave={onSaveAudio ? () => handleSaveAudio(message.id) : undefined}
+          showTranscript={true}
+        />
+      );
+    }
+    
+    // Text message
+    return (
+      <div
+        key={message.id}
+        className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+        role="listitem"
+      >
+        <div
+          className={`max-w-[80%] rounded-lg px-3 py-2 ${
+            isUser ? 'rounded-br-sm' : 'rounded-bl-sm'
+          }`}
+          style={{
+            backgroundColor: isUser 
+              ? theme.accent 
+              : theme.isLight ? '#f5f5f5' : '#27272a',
+            color: isUser 
+              ? '#ffffff' 
+              : theme.text.high,
+          }}
+        >
+          <MessageContent content={message.content} role={message.role} />
+          <p 
+            className="text-xs mt-1 opacity-70"
+            aria-label={`Sent at ${new Date(message.timestamp).toLocaleTimeString()}`}
+          >
+            {new Date(message.timestamp).toLocaleTimeString([], { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            })}
+          </p>
+        </div>
+      </div>
+    );
+  }, [theme, onSaveAudio, handleSaveAudio]);
 
   return (
     <div 
       className="flex flex-col h-full"
       style={{ backgroundColor: theme.background.ghost }}
+      role="region"
+      aria-label="Chat conversation"
+      id={id}
     >
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-3"
+        role="log"
+        aria-live="polite"
+        aria-atomic="false"
+        aria-relevant="additions"
+        tabIndex={0}
+      >
+        {messages.length === 0 && showEmptyState ? (
+          <div 
+            className="flex items-center justify-center h-full"
+            role="status"
+          >
             <p 
-              className="text-sm"
+              className="text-sm text-center max-w-xs"
               style={{ color: theme.text.low }}
             >
-              Start a conversation to generate copy
+              {emptyStateMessage}
             </p>
           </div>
         ) : (
-          <>
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className="max-w-[80%] rounded-lg px-3 py-2"
-                  style={{
-                    backgroundColor: message.role === 'user' 
-                      ? '#f97316' 
-                      : theme.isLight ? '#f5f5f5' : '#27272a',
-                    color: message.role === 'user' 
-                      ? '#ffffff' 
-                      : theme.text.high,
-                  }}
-                >
-                  <MessageContent content={message.content} role={message.role} />
-                  <p 
-                    className="text-xs mt-1 opacity-70"
-                  >
-                    {new Date(message.timestamp).toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </p>
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </>
+          <div role="list" aria-label="Messages">
+            {messages.map(renderMessage)}
+            <div ref={messagesEndRef} aria-hidden="true" />
+          </div>
         )}
       </div>
 
       {/* Loading Indicator */}
       {isLoading && (
-        <div className="px-4 py-2">
+        <div 
+          className="px-4 py-2"
+          role="status"
+          aria-live="polite"
+          aria-label="Generating response"
+        >
           <div 
             className="flex items-center gap-2 text-sm"
             style={{ color: theme.text.medium }}
           >
-            <div className="flex gap-1">
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="flex gap-1" aria-hidden="true">
+              <span 
+                className="w-2 h-2 rounded-full animate-bounce" 
+                style={{ backgroundColor: theme.accent, animationDelay: '0ms' }} 
+              />
+              <span 
+                className="w-2 h-2 rounded-full animate-bounce" 
+                style={{ backgroundColor: theme.accent, animationDelay: '150ms' }} 
+              />
+              <span 
+                className="w-2 h-2 rounded-full animate-bounce" 
+                style={{ backgroundColor: theme.accent, animationDelay: '300ms' }} 
+              />
             </div>
             <span>Generating...</span>
           </div>
@@ -110,17 +223,27 @@ export function ChatPanel({ messages, onSendMessage, isLoading }: ChatPanelProps
         <div className="flex gap-2">
           <div className="flex-1">
             <TextArea
+              ref={inputRef}
               value={inputValue}
               onChange={(value: string) => setInputValue(value)}
-              placeholder="Type your prompt here..."
+              placeholder={placeholder}
               rows={2}
               size="S"
-              onKeyDown={handleKeyPress}
+              onKeyDown={handleKeyDown}
+              isDisabled={inputDisabled}
+              aria-label="Message input"
+              aria-describedby="input-hint"
             />
+            <p 
+              id="input-hint" 
+              className="sr-only"
+            >
+              Press Enter to send, Shift+Enter for new line
+            </p>
           </div>
           <Button
             onPress={handleSubmit}
-            isDisabled={!inputValue.trim() || isLoading}
+            isDisabled={!inputValue.trim() || isLoading || inputDisabled}
             appearance="primary"
             size="S"
             aria-label="Send message"
@@ -128,7 +251,18 @@ export function ChatPanel({ messages, onSendMessage, isLoading }: ChatPanelProps
             Send
           </Button>
         </div>
+        
+        {/* Keyboard hint */}
+        <p 
+          className="text-xs mt-2 opacity-60"
+          style={{ color: theme.text.low }}
+          aria-hidden="true"
+        >
+          Press Enter to send, Shift+Enter for new line
+        </p>
       </div>
     </div>
   );
-}
+});
+
+export default ChatPanel;

@@ -17,3 +17,5 @@ export { UsageDashboard, UsageStatsBar } from './UsageDashboard';
 export { ProviderHealthMonitor, ProviderStatusDot, ProviderHealthBar } from './ProviderHealthMonitor';
 export { MessageContent } from './MessageContent';
 export { CodeBlock, InlineCode } from './CodeBlock';
+export { ModeToggle, ModeToggleCompact } from './ModeToggle';
+export { AudioBubble } from './AudioBubble';

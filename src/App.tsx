@@ -1,12 +1,17 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { 
   ActiveView, 
-  ActiveTab, 
   ColorMode,
   AppError,
-  ChatMessage
+  ChatMessage,
+  ChatMode,
 } from './types';
-import { VoiceGender, AppState } from './types';
+import { 
+  VoiceGender, 
+  AppState,
+  createTextMessage,
+  createAudioMessage,
+} from './types';
 import { getSystemInstruction, AUDIO_CONFIG, getCopySystemPrompt } from './constants';
 import { 
   ConfigPanel, 
@@ -21,16 +26,17 @@ import {
   ModelSelector,
   TTSProviderSelector,
   UsageStatsBar,
+  ModeToggle,
 } from './components';
 import type { TTSProviderType } from './components';
+import { useChatPersistence, useNetworkStatus } from './hooks';
+import { audioBufferManager } from './services/audioBufferManager';
 import {
   TwConfigPanel,
   TwAudioPlayer,
   TwDocumentationPanel,
   TwButton,
   TwTextArea,
-  TwSegmentedControl,
-  TwSegmentedControlItem,
   TwChatPanel
 } from './components/tailwind';
 import { 
@@ -48,7 +54,7 @@ import { useDesignSystem } from './context/DesignSystemContext';
 import { useProject } from './context/ProjectContext';
 import { useAudioLibrary } from './context/AudioLibraryContext';
 import { useAbortController } from './hooks';
-import { TextArea, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
+import { TextArea, Button } from '@marcelinodzn/ds-react';
 
 interface AppProps {
   colorMode: ColorMode;
@@ -67,12 +73,13 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const { saveAudio } = useAudioLibrary();
   
   // UI State
-  const [activeTab, setActiveTab] = useState<ActiveTab>('tts');
+  const [chatMode, setChatMode] = useState<ChatMode>('copy');
   const [activeView, setActiveView] = useState<ActiveView>('main');
   const [error, setError] = useState<AppError | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [audioToSave, setAudioToSave] = useState<{ messageId: string; audioData: string; transcript: string } | null>(null);
 
-  // TTS State
+  // TTS State (for standalone TTS generation within voice mode)
   const [ttsText, setTtsText] = useState('');
   const [isTtsLoading, setIsTtsLoading] = useState(false);
   const [generatedAudio, setGeneratedAudio] = useState<AudioBuffer | null>(null);
@@ -82,12 +89,32 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [transcript, setTranscript] = useState('');
 
-  // Copy Generation State
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  // Chat Persistence - automatically syncs with localStorage
+  const {
+    messages: chatMessages,
+    setMessages: setChatMessages,
+    addMessage,
+    storageWarning,
+    isLoaded: isChatLoaded,
+    forceSave,
+  } = useChatPersistence(activeProject?.id || null);
+  
+  // Network status for offline detection
+  const { isOnline, offlineDuration } = useNetworkStatus({
+    onReconnect: () => console.log('[App] Network reconnected'),
+    onDisconnect: () => console.log('[App] Network disconnected'),
+  });
+
+  // Chat/Generation State
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [selectedLLMProvider, setSelectedLLMProvider] = useState<LLMProviderType>(getDefaultLLMProviderType());
   const [selectedTTSProvider, setSelectedTTSProvider] = useState<TTSProviderType>('dashscope');
   const [selectedTalkLLMProvider, setSelectedTalkLLMProvider] = useState<LLMProviderType>('qwen-text');
+  
+  // Filter messages by current mode
+  const filteredMessages = useMemo(() => {
+    return chatMessages.filter(m => m.sourceMode === chatMode);
+  }, [chatMessages, chatMode]);
 
   // Request cancellation - use getSignal() to get fresh signal after reset
   const { abort: abortChat, reset: resetChatAbort, getSignal: getChatAbortSignal } = useAbortController();
@@ -98,6 +125,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const inputAudioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  
+  // Refs for conversation turn tracking (to link user message to AI response)
+  const currentTurnRef = useRef<{
+    userMessageId: string | null;
+    responseText: string;
+  }>({ userMessageId: null, responseText: '' });
 
   // Inject CSS variables for local tokens
   useEffect(() => {
@@ -123,28 +156,26 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   }, []);
 
   // Handle sending chat message via LLM Orchestrator
-  const handleSendChatMessage = async (message: string) => {
+  const handleSendChatMessage = useCallback(async (message: string) => {
     // Reset abort controller for new request
     resetChatAbort();
 
-    // Add user message to chat
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: message,
-      timestamp: Date.now(),
-    };
-
-    setChatMessages(prev => [...prev, userMessage]);
+    // Create user message with new format
+    const userMessage = createTextMessage('user', message, chatMode);
+    addMessage(userMessage);
     setIsChatLoading(true);
     setError(null);
 
     try {
-      // Build messages with system prompt and history
+      // Build messages with system prompt and history (use all messages for context, not filtered)
       const systemPrompt = getCopySystemPrompt();
+      const contextMessages = chatMessages
+        .filter(m => m.type === 'text') // Only use text messages for context
+        .slice(-20); // Limit context to last 20 messages
+      
       const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
         { role: 'system', content: systemPrompt },
-        ...chatMessages.map(m => ({
+        ...contextMessages.map(m => ({
           role: m.role as 'user' | 'assistant',
           content: m.content,
         })),
@@ -164,15 +195,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         createLLMProvider
       );
 
-      // Add AI response to chat
-      const aiMessage: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        role: 'assistant',
-        content: result.content,
-        timestamp: Date.now(),
-      };
-
-      setChatMessages(prev => [...prev, aiMessage]);
+      // Create AI response with new format
+      const aiMessage = createTextMessage('assistant', result.content, chatMode, userMessage.id);
+      addMessage(aiMessage);
     } catch (err) {
       // Don't show error if request was cancelled
       if ((err as Error).name === 'AbortError' || (err as Error).message?.includes('cancelled')) {
@@ -188,7 +213,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     } finally {
       setIsChatLoading(false);
     }
-  };
+  }, [resetChatAbort, chatMode, addMessage, chatMessages, selectedLLMProvider, getChatAbortSignal]);
 
   // Cancel ongoing chat request
   const handleCancelChat = useCallback(() => {
@@ -260,23 +285,47 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     }
   };
 
-  // Handle save audio to library
-  const handleSaveAudio = (name: string) => {
-    if (!generatedAudio || !activeProject) return;
+  // Handle save audio to library (from TTS generation or chat audio message)
+  const handleSaveAudio = useCallback(async (name: string) => {
+    if (!activeProject) return;
 
     try {
-      saveAudio(
-        activeProject.id,
-        name,
-        ttsText,
-        generatedAudio,
-        {
-          gender: activeProject.voiceGender,
-          voice: lastGeneratedVoice,
-        }
-      );
+      // If saving from chat message
+      if (audioToSave) {
+        // Convert base64 to AudioBuffer
+        const buffer = await audioBufferManager.fromBase64(
+          audioToSave.audioData,
+          24000,
+          `save-${audioToSave.messageId}`
+        );
+        
+        saveAudio(
+          activeProject.id,
+          name,
+          audioToSave.transcript,
+          buffer,
+          {
+            gender: activeProject.voiceGender,
+            voice: lastGeneratedVoice || 'default',
+          }
+        );
+        setAudioToSave(null);
+      } 
+      // If saving from TTS generation
+      else if (generatedAudio) {
+        saveAudio(
+          activeProject.id,
+          name,
+          ttsText,
+          generatedAudio,
+          {
+            gender: activeProject.voiceGender,
+            voice: lastGeneratedVoice,
+          }
+        );
+      }
+      
       setShowSaveModal(false);
-      // Don't clear the generated audio so user can still play it
     } catch (err) {
       console.error('Error saving audio:', err);
       setError({
@@ -284,7 +333,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         message: 'Failed to save audio to library',
       });
     }
-  };
+  }, [activeProject, audioToSave, generatedAudio, ttsText, lastGeneratedVoice, saveAudio]);
+
+  // Handle save audio from chat message
+  const handleSaveAudioFromChat = useCallback((messageId: string) => {
+    const message = chatMessages.find(m => m.id === messageId);
+    if (message?.audioData) {
+      setAudioToSave({
+        messageId: message.id,
+        audioData: message.audioData,
+        transcript: message.content,
+      });
+      setShowSaveModal(true);
+    }
+  }, [chatMessages]);
 
   // Handle microphone access and start conversation
   const handleStartConversation = async () => {
@@ -340,6 +402,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             switch (state) {
               case 'listening':
                 setAppState(AppState.LISTENING);
+                // Reset turn tracking when starting to listen
+                currentTurnRef.current = { userMessageId: null, responseText: '' };
                 break;
               case 'speaking':
                 setAppState(AppState.SPEAKING);
@@ -356,12 +420,40 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           },
           onTranscript: (text, isFinal) => {
             setTranscript(text);
-            if (isFinal) {
+            if (isFinal && text.trim()) {
               console.log('Final transcript:', text);
+              // Add user message to chat history
+              const userMessage = createTextMessage('user', text, 'voice');
+              addMessage(userMessage);
+              currentTurnRef.current.userMessageId = userMessage.id;
+              // Clear transcript display after adding to history
+              setTimeout(() => setTranscript(''), 500);
             }
           },
           onResponse: (text) => {
             console.log('AI response:', text);
+            // Store response text to attach to audio message
+            currentTurnRef.current.responseText = text;
+          },
+          onAudioReceived: (audioBuffer) => {
+            console.log('Audio received:', audioBuffer.duration, 'seconds');
+            // Convert AudioBuffer to base64 for persistence
+            const base64 = audioBufferManager.toBase64(audioBuffer);
+            
+            // Create audio message with the response text
+            const aiMessage = createAudioMessage(
+              'assistant',
+              currentTurnRef.current.responseText || '(Audio response)',
+              base64,
+              audioBuffer.duration,
+              audioBuffer.sampleRate,
+              'voice',
+              currentTurnRef.current.userMessageId || undefined
+            );
+            addMessage(aiMessage);
+            
+            // Reset turn tracking
+            currentTurnRef.current = { userMessageId: null, responseText: '' };
           },
           onError: (err) => {
             console.error('Conversation error:', err);
@@ -481,11 +573,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
   // Render main view
   const ConfigPanelComponent = designSystem === 'jio' ? ConfigPanel : TwConfigPanel;
-  const ButtonComponent = designSystem === 'jio' ? Button : TwButton;
-  const TextAreaComponent = designSystem === 'jio' ? TextArea : TwTextArea;
-  const SegmentedControlComponent = designSystem === 'jio' ? SegmentedControl : TwSegmentedControl;
-  const SegmentedControlItemComponent = designSystem === 'jio' ? SegmentedControlItem : TwSegmentedControlItem;
-  const AudioPlayerComponent = designSystem === 'jio' ? AudioPlayer : TwAudioPlayer;
   const ChatPanelComponent = designSystem === 'jio' ? ChatPanel : TwChatPanel;
   
   return (
@@ -498,42 +585,63 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Tab Navigation with Usage Stats */}
+        {/* Mode Navigation with Usage Stats */}
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex-1" />
-          <SegmentedControlComponent
-            value={activeTab}
-            onChange={(value) => setActiveTab(value as ActiveTab)}
-            size="S"
-            aria-label="Mode selection"
-          >
-            <SegmentedControlItemComponent value="tts">Text-to-Speech</SegmentedControlItemComponent>
-            <SegmentedControlItemComponent value="talk">Tap-to-Talk</SegmentedControlItemComponent>
-            <SegmentedControlItemComponent value="copy">Copy generation</SegmentedControlItemComponent>
-          </SegmentedControlComponent>
+          <div className="flex-1">
+            {/* Offline indicator */}
+            {!isOnline && (
+              <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-xs text-amber-700 dark:text-amber-400">
+                  Offline {offlineDuration > 0 ? `(${offlineDuration}s)` : ''}
+                </span>
+              </div>
+            )}
+            {storageWarning && (
+              <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                <span className="text-xs text-amber-700 dark:text-amber-400">{storageWarning}</span>
+              </div>
+            )}
+          </div>
+          <ModeToggle
+            mode={chatMode}
+            onChange={setChatMode}
+            disabled={appState !== AppState.IDLE && appState !== AppState.ERROR}
+          />
           <div className="flex-1 flex justify-end">
             <UsageStatsBar />
           </div>
         </div>
 
-        {/* Tab Content */}
+        {/* Mode Content */}
         <div className="flex-1 overflow-hidden">
-          {activeTab === 'copy' ? (
-            /* Copy Generation Mode */
-            <ErrorBoundary>
-              <div className="h-full flex flex-col">
-                {/* LLM Selector Header */}
-                <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: theme.stroke.low }}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs" style={{ color: theme.text.low }}>Model:</span>
-                    <ModelSelector
-                      value={selectedLLMProvider}
-                      onChange={setSelectedLLMProvider}
-                      showHealth
-                      size="sm"
-                      disabled={isChatLoading}
-                    />
-                  </div>
+          <ErrorBoundary>
+            <div className="h-full flex flex-col">
+              {/* Header with Mode-specific Controls */}
+              <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: theme.stroke.low }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs" style={{ color: theme.text.low }}>Model:</span>
+                  <ModelSelector
+                    value={chatMode === 'copy' ? selectedLLMProvider : selectedTalkLLMProvider}
+                    onChange={chatMode === 'copy' ? setSelectedLLMProvider : setSelectedTalkLLMProvider}
+                    showHealth
+                    size="sm"
+                    disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
+                  />
+                  {chatMode === 'voice' && (
+                    <>
+                      <span className="text-xs ml-3" style={{ color: theme.text.low }}>TTS:</span>
+                      <TTSProviderSelector
+                        value={selectedTTSProvider}
+                        onChange={setSelectedTTSProvider}
+                        size="sm"
+                        disabled={appState !== AppState.IDLE}
+                      />
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {chatMode === 'voice' && <StatusIndicator state={appState} />}
                   {isChatLoading && (
                     <button
                       onClick={handleCancelChat}
@@ -543,235 +651,123 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                     </button>
                   )}
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <ChatPanelComponent
-                    messages={chatMessages}
-                    onSendMessage={handleSendChatMessage}
-                    isLoading={isChatLoading}
-                  />
-                </div>
               </div>
-            </ErrorBoundary>
-          ) : (
-            <div className="h-full overflow-y-auto p-4">
-              <div className="max-w-3xl mx-auto">
-                {activeTab === 'tts' ? (
-              /* TTS Mode */
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ padding: '16px' }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 
-                      style={{ 
-                        color: theme.text.high,
-                        fontSize: '16px',
-                        fontWeight: 600,
-                        lineHeight: '24px',
-                      }}
-                    >
-                      Generate Speech
-                    </h2>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs" style={{ color: theme.text.low }}>TTS Provider:</span>
-                      <TTSProviderSelector
-                        value={selectedTTSProvider}
-                        onChange={setSelectedTTSProvider}
-                        size="sm"
-                        disabled={isTtsLoading}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Text input */}
-                  <div className={designSystem === 'jio' ? 'scaled-textarea-wrapper' : ''}>
-                    <TextAreaComponent
-                      value={ttsText}
-                      onChange={(value: string) => setTtsText(value)}
-                      placeholder="Enter text to convert to speech..."
-                      rows={3}
-                      size="S"
-                    />
-                  </div>
 
-                  {/* Generate button */}
-                  <div style={{ marginTop: '12px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                    <ButtonComponent
-                      onPress={handleGenerateTTS}
-                      isDisabled={isTtsLoading || !ttsText.trim()}
-                      appearance="primary"
-                      size="S"
-                      aria-label="Generate speech from text"
-                    >
-                      {isTtsLoading ? 'Generating...' : 'Generate'}
-                    </ButtonComponent>
-                  </div>
-                </div>
-
-                {/* Audio Player */}
-                <div style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <h2 
-                      style={{ 
-                        color: theme.text.high,
-                        fontSize: '16px',
-                        fontWeight: 600,
-                        lineHeight: '24px',
-                      }}
-                    >
-                      Audio Output
-                    </h2>
-                    {generatedAudio && (
-                      <button
-                        onClick={() => setShowSaveModal(true)}
-                        className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors hover:opacity-80"
-                        style={{
-                          backgroundColor: '#f97316',
-                          color: 'white',
-                        }}
-                      >
-                        Save to Library
-                      </button>
-                    )}
-                  </div>
-                  <AudioPlayerComponent audioBuffer={generatedAudio} />
-                </div>
-              </div>
-            ) : (
-              /* Talk Mode */
-              <div className="space-y-4">
+              {/* Voice Mode: Microphone Control + Chat History */}
+              {chatMode === 'voice' && (
                 <div 
-                  className="rounded-xl p-4"
-                  style={{ 
-                    backgroundColor: theme.isLight ? '#f5f5f5' : '#18181b',
-                    border: `1px solid ${theme.stroke.low}`
-                  }}
+                  className="px-4 py-3 border-b flex items-center justify-center gap-4"
+                  style={{ borderColor: theme.stroke.low, backgroundColor: theme.background.subtle }}
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 
-                      className="text-base font-semibold"
-                      style={{ color: theme.text.high }}
-                    >
-                      Voice Conversation
-                    </h2>
-                    <div className="flex items-center gap-3">
-                      {/* LLM Selector for Talk mode */}
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px]" style={{ color: theme.text.low }}>LLM:</span>
-                        <ModelSelector
-                          value={selectedTalkLLMProvider}
-                          onChange={setSelectedTalkLLMProvider}
-                          size="sm"
-                          disabled={appState !== AppState.IDLE}
-                        />
-                      </div>
-                      {/* TTS Selector for Talk mode */}
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px]" style={{ color: theme.text.low }}>TTS:</span>
-                        <TTSProviderSelector
-                          value={selectedTTSProvider}
-                          onChange={setSelectedTTSProvider}
-                          size="sm"
-                          disabled={appState !== AppState.IDLE}
-                        />
-                      </div>
-                      <StatusIndicator state={appState} />
-                    </div>
-                  </div>
-
                   {/* Microphone button */}
-                  <div className="flex flex-col items-center py-6">
-                    <button
-                      onClick={handleToggleConversation}
-                      className="w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 transform"
-                      style={{
-                        backgroundColor: appState === AppState.IDLE || appState === AppState.ERROR
-                          ? (theme.isLight ? '#f5f5f5' : '#27272a')
-                          : appState === AppState.LISTENING
-                          ? '#f97316'
-                          : appState === AppState.SPEAKING
-                          ? '#fb923c'
-                          : '#3b82f6',
-                        border: appState === AppState.IDLE || appState === AppState.ERROR
-                          ? `2px solid ${theme.isLight ? '#e4e4e7' : '#3f3f46'}`
-                          : appState === AppState.LISTENING
-                          ? '4px solid #fdba74'
-                          : appState === AppState.SPEAKING
-                          ? '4px solid #fed7aa'
-                          : '4px solid #93c5fd',
-                        transform: appState === AppState.LISTENING ? 'scale(1.1)' : 'scale(1)',
-                        ...(appState === AppState.ERROR && { borderColor: '#ef4444' })
-                      }}
-                    >
-                      {appState === AppState.CONNECTING ? (
-                        <svg className="w-8 h-8 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                      ) : appState === AppState.IDLE || appState === AppState.ERROR ? (
-                        <svg 
-                          className="w-8 h-8" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                          style={{ color: appState === AppState.ERROR ? '#ef4444' : theme.text.medium }}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                        </svg>
-                      ) : (
-                        <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <rect x="6" y="4" width="4" height="16" rx="1" />
-                          <rect x="14" y="4" width="4" height="16" rx="1" />
-                        </svg>
-                      )}
-                    </button>
-
-                    {/* Sound wave animation */}
-                    <div className="mt-4 h-8">
-                      <SoundWave state={appState} />
-                    </div>
-
-                    {/* Instructions */}
-                    <p 
-                      className="mt-3 text-xs text-center"
-                      style={{ color: theme.text.low }}
-                    >
-                      {appState === AppState.IDLE
-                        ? 'Tap the microphone to start a conversation'
-                        : appState === AppState.CONNECTING
-                        ? 'Connecting...'
+                  <button
+                    onClick={handleToggleConversation}
+                    className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 transform"
+                    style={{
+                      backgroundColor: appState === AppState.IDLE || appState === AppState.ERROR
+                        ? (theme.isLight ? '#f5f5f5' : '#27272a')
                         : appState === AppState.LISTENING
-                        ? 'Listening... speak now'
+                        ? '#f97316'
                         : appState === AppState.SPEAKING
-                        ? 'AI is responding...'
-                        : 'An error occurred. Tap to retry.'}
-                    </p>
+                        ? '#fb923c'
+                        : '#3b82f6',
+                      border: appState === AppState.IDLE || appState === AppState.ERROR
+                        ? `2px solid ${theme.isLight ? '#e4e4e7' : '#3f3f46'}`
+                        : appState === AppState.LISTENING
+                        ? '3px solid #fdba74'
+                        : appState === AppState.SPEAKING
+                        ? '3px solid #fed7aa'
+                        : '3px solid #93c5fd',
+                      transform: appState === AppState.LISTENING ? 'scale(1.05)' : 'scale(1)',
+                      ...(appState === AppState.ERROR && { borderColor: '#ef4444' })
+                    }}
+                    aria-label={
+                      appState === AppState.IDLE ? 'Start voice conversation' :
+                      appState === AppState.CONNECTING ? 'Connecting...' :
+                      appState === AppState.LISTENING ? 'Listening - tap to stop' :
+                      appState === AppState.SPEAKING ? 'AI speaking - tap to stop' :
+                      'Error - tap to retry'
+                    }
+                  >
+                    {appState === AppState.CONNECTING ? (
+                      <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    ) : appState === AppState.IDLE || appState === AppState.ERROR ? (
+                      <svg 
+                        className="w-6 h-6" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                        style={{ color: appState === AppState.ERROR ? '#ef4444' : theme.text.medium }}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <rect x="6" y="4" width="4" height="16" rx="1" />
+                        <rect x="14" y="4" width="4" height="16" rx="1" />
+                      </svg>
+                    )}
+                  </button>
+
+                  {/* Sound wave animation */}
+                  <div className="w-24">
+                    <SoundWave state={appState} />
                   </div>
 
-                  {/* Transcript */}
+                  {/* Status text */}
+                  <p 
+                    className="text-xs"
+                    style={{ color: theme.text.medium }}
+                  >
+                    {appState === AppState.IDLE
+                      ? 'Tap mic to talk'
+                      : appState === AppState.CONNECTING
+                      ? 'Connecting...'
+                      : appState === AppState.LISTENING
+                      ? 'Listening...'
+                      : appState === AppState.SPEAKING
+                      ? 'Speaking...'
+                      : 'Error'}
+                  </p>
+
+                  {/* Live transcript */}
                   {transcript && (
                     <div 
-                      className="mt-3 p-3 rounded-lg"
-                      style={{ backgroundColor: theme.isLight ? '#ffffff' : '#09090b' }}
+                      className="flex-1 max-w-xs px-3 py-1.5 rounded-lg text-sm truncate"
+                      style={{ 
+                        backgroundColor: theme.background.ghost,
+                        color: theme.text.high,
+                      }}
                     >
-                      <p 
-                        className="text-xs mb-1"
-                        style={{ color: theme.text.low }}
-                      >
-                        You said:
-                      </p>
-                      <p 
-                        className="text-sm"
-                        style={{ color: theme.text.high }}
-                      >
-                        {transcript}
-                      </p>
+                      {transcript}
                     </div>
                   )}
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Chat Panel (shared for both modes) */}
+              <div className="flex-1 overflow-hidden">
+                <ChatPanelComponent
+                  messages={filteredMessages}
+                  onSendMessage={handleSendChatMessage}
+                  isLoading={isChatLoading}
+                  mode={chatMode}
+                  placeholder={chatMode === 'copy' 
+                    ? 'Type your prompt here...' 
+                    : 'Type a message or use the microphone...'}
+                  onSaveAudio={handleSaveAudioFromChat}
+                  emptyStateMessage={chatMode === 'copy'
+                    ? 'Start a conversation to generate copy'
+                    : 'Start a voice conversation or type a message'}
+                  inputDisabled={chatMode === 'voice' && appState !== AppState.IDLE && appState !== AppState.ERROR}
+                  id={`${chatMode}-panel`}
+                />
               </div>
             </div>
-          )}
+          </ErrorBoundary>
         </div>
       </main>
 
@@ -784,15 +780,22 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         colorMode={colorMode}
         onColorModeChange={onColorModeChange}
         onShowDocs={() => setActiveView('docs')}
-        disabled={appState !== AppState.IDLE && activeTab === 'talk'}
+        disabled={appState !== AppState.IDLE && chatMode === 'voice'}
       />
 
       {/* Save Audio Modal */}
       <SaveAudioModal
         isOpen={showSaveModal}
-        onClose={() => setShowSaveModal(false)}
+        onClose={() => {
+          setShowSaveModal(false);
+          setAudioToSave(null);
+        }}
         onSave={handleSaveAudio}
-        defaultName={ttsText.slice(0, 30) + (ttsText.length > 30 ? '...' : '')}
+        defaultName={
+          audioToSave 
+            ? audioToSave.transcript.slice(0, 30) + (audioToSave.transcript.length > 30 ? '...' : '')
+            : ttsText.slice(0, 30) + (ttsText.length > 30 ? '...' : '')
+        }
       />
 
       {/* Error Toast */}

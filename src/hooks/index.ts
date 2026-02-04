@@ -10,3 +10,7 @@ export {
 } from './useAbortController';
 
 export { useCopyToClipboard } from './useCopyToClipboard';
+
+export { useChatPersistence } from './useChatPersistence';
+export { useAudioRecorder } from './useAudioRecorder';
+export { useNetworkStatus, useOfflineBanner } from './useNetworkStatus';

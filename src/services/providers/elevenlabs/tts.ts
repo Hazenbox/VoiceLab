@@ -80,20 +80,28 @@ export class ElevenLabsTTSProvider implements TTSProvider {
 
   /**
    * Synthesize text to audio using ElevenLabs API
+   * @param text Text to synthesize
+   * @param voiceConfig Voice configuration
+   * @param signal Optional AbortSignal for cancellation
    */
-  async synthesize(text: string, voiceConfig: VoiceConfig): Promise<AudioBuffer> {
+  async synthesize(text: string, voiceConfig: VoiceConfig, signal?: AbortSignal): Promise<AudioBuffer> {
     if (!this.isReady()) {
       throw new Error('ElevenLabs provider is not configured. Please set VITE_ELEVENLABS_API_KEY.');
     }
 
+    // Check if already aborted
+    if (signal?.aborted) {
+      throw new DOMException('TTS request aborted', 'AbortError');
+    }
+
     // Use REST API for synthesis (more reliable for standard TTS)
-    return this.synthesizeViaREST(text, voiceConfig);
+    return this.synthesizeViaREST(text, voiceConfig, signal);
   }
 
   /**
    * Synthesize text to audio using ElevenLabs REST API
    */
-  private async synthesizeViaREST(text: string, voiceConfig: VoiceConfig): Promise<AudioBuffer> {
+  private async synthesizeViaREST(text: string, voiceConfig: VoiceConfig, signal?: AbortSignal): Promise<AudioBuffer> {
     const voiceId = voiceConfig.voice || this.config.defaultVoiceId;
     const url = `${this.apiBaseUrl}/text-to-speech/${voiceId}`;
 
@@ -117,12 +125,18 @@ export class ElevenLabsTTSProvider implements TTSProvider {
             use_speaker_boost: true
           }
         }),
+        signal, // Pass AbortSignal to fetch
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[ElevenLabs] API Error:', response.status, errorText);
         throw new Error(`ElevenLabs API error: ${response.status} - ${errorText}`);
+      }
+
+      // Check if aborted before processing response
+      if (signal?.aborted) {
+        throw new DOMException('TTS request aborted', 'AbortError');
       }
 
       // Get audio data as ArrayBuffer
@@ -137,6 +151,10 @@ export class ElevenLabsTTSProvider implements TTSProvider {
       return audioBuffer;
 
     } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        console.log('[ElevenLabs] Request aborted');
+        throw error;
+      }
       console.error('[ElevenLabs] Synthesis error:', error);
       throw error;
     }

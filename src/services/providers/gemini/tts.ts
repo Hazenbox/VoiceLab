@@ -25,67 +25,89 @@ export class GeminiTTSProvider implements TTSProvider {
 
   /**
    * Synthesize text to audio using Gemini API
+   * @param text Text to synthesize
+   * @param voiceConfig Voice configuration
+   * @param signal Optional AbortSignal for cancellation
    */
-  async synthesize(text: string, voiceConfig: VoiceConfig): Promise<AudioBuffer> {
+  async synthesize(text: string, voiceConfig: VoiceConfig, signal?: AbortSignal): Promise<AudioBuffer> {
     if (!this.isReady()) {
       throw new Error('Gemini provider is not configured. Please set VITE_GEMINI_API_KEY.');
     }
 
+    // Check if already aborted
+    if (signal?.aborted) {
+      throw new DOMException('TTS request aborted', 'AbortError');
+    }
+
     const systemInstruction = getTTSInstruction();
     
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${this.config.ttsModel}:generateContent?key=${this.config.apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text }],
-            },
-          ],
-          generationConfig: {
-            responseModalities: ['AUDIO'],
-            speechConfig: {
-              voiceConfig: {
-                prebuiltVoiceConfig: {
-                  voiceName: voiceConfig.voice,
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${this.config.ttsModel}:generateContent?key=${this.config.apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text }],
+              },
+            ],
+            generationConfig: {
+              responseModalities: ['AUDIO'],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: {
+                    voiceName: voiceConfig.voice,
+                  },
                 },
               },
             },
-          },
-          systemInstruction: {
-            parts: [{ text: systemInstruction }],
-          },
-        }),
+            systemInstruction: {
+              parts: [{ text: systemInstruction }],
+            },
+          }),
+          signal, // Pass AbortSignal to fetch
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Gemini TTS request failed: ${error}`);
       }
-    );
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Gemini TTS request failed: ${error}`);
+      // Check if aborted before processing response
+      if (signal?.aborted) {
+        throw new DOMException('TTS request aborted', 'AbortError');
+      }
+
+      const data = await response.json();
+
+      // Extract audio data from response
+      const audioData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (!audioData) {
+        throw new Error('No audio data in Gemini response');
+      }
+
+      // Decode base64 audio data (PCM16)
+      const pcmData = decode(audioData);
+      const audioBuffer = decodeAudioData(
+        pcmData,
+        this.getAudioContext(),
+        voiceConfig.sampleRate || 24000,
+        1
+      );
+
+      return audioBuffer;
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        console.log('[GeminiTTS] Request aborted');
+        throw error;
+      }
+      throw error;
     }
-
-    const data = await response.json();
-
-    // Extract audio data from response
-    const audioData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!audioData) {
-      throw new Error('No audio data in Gemini response');
-    }
-
-    // Decode base64 audio data (PCM16)
-    const pcmData = decode(audioData);
-    const audioBuffer = decodeAudioData(
-      pcmData,
-      this.getAudioContext(),
-      voiceConfig.sampleRate || 24000,
-      1
-    );
-
-    return audioBuffer;
   }
 
   getSupportedVoices(): Voice[] {

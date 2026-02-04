@@ -62,16 +62,24 @@ export class CosyVoiceTTSProvider implements TTSProvider {
   }
 
   /**
-   * Synthesize text to audio using CosyVoice WebSocket API
+   * Synthesize text to audio using CosyVoice API
+   * @param text Text to synthesize
+   * @param voiceConfig Voice configuration
+   * @param signal Optional AbortSignal for cancellation
    */
-  async synthesize(text: string, voiceConfig: VoiceConfig): Promise<AudioBuffer> {
+  async synthesize(text: string, voiceConfig: VoiceConfig, signal?: AbortSignal): Promise<AudioBuffer> {
     if (!this.isReady()) {
       throw new Error('CosyVoice provider is not configured. Please set VITE_DASHSCOPE_API_KEY.');
     }
 
+    // Check if already aborted
+    if (signal?.aborted) {
+      throw new DOMException('TTS request aborted', 'AbortError');
+    }
+
     // Since browser WebSocket doesn't support custom headers for Authorization,
     // we'll use the HTTP API approach which is more reliable for TTS
-    return this.synthesizeViaHTTP(text, voiceConfig);
+    return this.synthesizeViaHTTP(text, voiceConfig, signal);
   }
 
   /**
@@ -257,60 +265,74 @@ export class CosyVoiceTTSProvider implements TTSProvider {
    * Use HTTP/REST API for TTS synthesis through proxy server
    * The proxy server adds the Authorization header and handles CORS
    */
-  private async synthesizeViaHTTP(text: string, voiceConfig: VoiceConfig): Promise<AudioBuffer> {
+  private async synthesizeViaHTTP(text: string, voiceConfig: VoiceConfig, signal?: AbortSignal): Promise<AudioBuffer> {
     // Use proxy server to avoid CORS issues
     const proxyUrl = `${this.proxyConfig.httpProxyUrl}/api/tts`;
     
-    const response = await fetch(proxyUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: this.config.ttsModel,
-        input: {
-          text: text,
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        parameters: {
-          voice: voiceConfig.voice,
-          format: voiceConfig.format || 'mp3',
-          sample_rate: voiceConfig.sampleRate || 22050,
-          volume: voiceConfig.volume || 50,
-          rate: voiceConfig.rate || 1,
-          pitch: voiceConfig.pitch || 1,
-        },
-      }),
-    });
+        body: JSON.stringify({
+          model: this.config.ttsModel,
+          input: {
+            text: text,
+          },
+          parameters: {
+            voice: voiceConfig.voice,
+            format: voiceConfig.format || 'mp3',
+            sample_rate: voiceConfig.sampleRate || 22050,
+            volume: voiceConfig.volume || 50,
+            rate: voiceConfig.rate || 1,
+            pitch: voiceConfig.pitch || 1,
+          },
+        }),
+        signal, // Pass AbortSignal to fetch
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorMessage = `TTS request failed with status ${response.status}`;
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorMessage = errorJson.message || errorJson.error?.message || errorMessage;
-      } catch {
-        errorMessage = errorText || errorMessage;
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = `TTS request failed with status ${response.status}`;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorJson.error?.message || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
-      throw new Error(errorMessage);
-    }
 
-    // Check content type - could be JSON with audio URL or direct audio
-    const contentType = response.headers.get('content-type') || '';
-    
-    if (contentType.includes('application/json')) {
-      // Response contains JSON with audio URL
-      const json = await response.json();
-      if (json.output?.audio) {
-        // Fetch the audio from the URL
-        const audioResponse = await fetch(json.output.audio);
-        const audioData = await audioResponse.arrayBuffer();
+      // Check if aborted before processing response
+      if (signal?.aborted) {
+        throw new DOMException('TTS request aborted', 'AbortError');
+      }
+
+      // Check content type - could be JSON with audio URL or direct audio
+      const contentType = response.headers.get('content-type') || '';
+      
+      if (contentType.includes('application/json')) {
+        // Response contains JSON with audio URL
+        const json = await response.json();
+        if (json.output?.audio) {
+          // Fetch the audio from the URL
+          const audioResponse = await fetch(json.output.audio, { signal });
+          const audioData = await audioResponse.arrayBuffer();
+          return await decodeMP3(audioData, this.getAudioContext());
+        }
+        throw new Error('No audio in response');
+      } else {
+        // Direct audio response
+        const audioData = await response.arrayBuffer();
         return await decodeMP3(audioData, this.getAudioContext());
       }
-      throw new Error('No audio in response');
-    } else {
-      // Direct audio response
-      const audioData = await response.arrayBuffer();
-      return await decodeMP3(audioData, this.getAudioContext());
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        console.log('[CosyVoice] Request aborted');
+        throw error;
+      }
+      throw error;
     }
   }
 

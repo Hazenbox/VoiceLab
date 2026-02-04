@@ -57,9 +57,84 @@ export class QwenASRClient {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 3;
   private enableServerVad = true; // Use server-side VAD by default
+  
+  // Heartbeat state
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  private lastPongTime: number = Date.now();
+  private readonly HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds
+  private readonly HEARTBEAT_TIMEOUT_MS = 10000; // 10 seconds to receive pong
 
   constructor(callbacks: ASRCallbacks = {}) {
     this.callbacks = callbacks;
+  }
+
+  /**
+   * Start heartbeat to keep connection alive
+   */
+  private startHeartbeat(): void {
+    this.stopHeartbeat();
+    this.lastPongTime = Date.now();
+    
+    this.heartbeatInterval = setInterval(() => {
+      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+        this.stopHeartbeat();
+        return;
+      }
+      
+      // Check if we received a pong recently
+      const timeSinceLastPong = Date.now() - this.lastPongTime;
+      if (timeSinceLastPong > this.HEARTBEAT_INTERVAL_MS + this.HEARTBEAT_TIMEOUT_MS) {
+        console.warn('[QwenASR] Heartbeat timeout - connection may be dead');
+        this.handleZombieConnection();
+        return;
+      }
+      
+      // Send ping (as a session.update with no changes to act as keepalive)
+      try {
+        const pingEvent = {
+          event_id: `ping_${generateUUID()}`,
+          type: 'input_audio_buffer.commit', // Empty commit acts as keepalive
+        };
+        this.ws.send(JSON.stringify(pingEvent));
+        console.log('[QwenASR] Heartbeat sent');
+      } catch (error) {
+        console.error('[QwenASR] Failed to send heartbeat:', error);
+      }
+    }, this.HEARTBEAT_INTERVAL_MS);
+  }
+
+  /**
+   * Stop heartbeat
+   */
+  private stopHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
+  /**
+   * Handle zombie connection (no response to heartbeat)
+   */
+  private handleZombieConnection(): void {
+    console.warn('[QwenASR] Detected zombie connection, reconnecting...');
+    this.stopHeartbeat();
+    
+    // Force close the WebSocket
+    if (this.ws) {
+      this.ws.close(4000, 'Heartbeat timeout');
+      this.ws = null;
+    }
+    
+    this.isConnected = false;
+    this.handleReconnect();
+  }
+
+  /**
+   * Update last pong time (called when any message is received)
+   */
+  private updateLastPong(): void {
+    this.lastPongTime = Date.now();
   }
 
   /**
@@ -96,6 +171,9 @@ export class QwenASRClient {
         };
 
         this.ws.onmessage = (event) => {
+          // Update heartbeat - any message counts as a "pong"
+          this.updateLastPong();
+          
           this.handleMessage(event.data);
           
           // Resolve on first successful message (session.created)
@@ -108,6 +186,10 @@ export class QwenASRClient {
                 this.reconnectAttempts = 0;
                 this.callbacks.onStateChange?.('listening');
                 console.log('[QwenASR] Session created:', this.sessionId);
+                
+                // Start heartbeat once connected
+                this.startHeartbeat();
+                
                 resolve();
               }
             } catch {
@@ -326,6 +408,9 @@ export class QwenASRClient {
    * Disconnect from ASR service
    */
   disconnect(): void {
+    // Stop heartbeat first
+    this.stopHeartbeat();
+    
     if (this.ws) {
       if (this.ws.readyState === WebSocket.OPEN) {
         this.finishSession();
