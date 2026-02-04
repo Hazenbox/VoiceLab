@@ -26,6 +26,8 @@ import {
   ModelSelector,
   TTSProviderSelector,
   UsageStatsBar,
+  ModeToggle,
+  DesignSystemLibrary,
 } from './components';
 import type { TTSProviderType } from './components';
 import { useChatPersistence, useNetworkStatus } from './hooks';
@@ -641,7 +643,23 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           colorMode={colorMode}
           onColorModeChange={onColorModeChange}
           onShowDocs={() => setActiveView('docs')}
+          onShowDesignSystem={() => setActiveView('design-system')}
           disabled={appState !== AppState.IDLE}
+        />
+      </div>
+    );
+  }
+
+  // Render design system library view
+  if (activeView === 'design-system') {
+    return (
+      <div 
+        className="flex h-screen"
+        style={{ backgroundColor: theme.background.ghost }}
+      >
+        <DesignSystemLibrary 
+          onBack={() => setActiveView('main')} 
+          colorMode={colorMode}
         />
       </div>
     );
@@ -880,6 +898,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         colorMode={colorMode}
         onColorModeChange={onColorModeChange}
         onShowDocs={() => setActiveView('docs')}
+        onShowDesignSystem={() => setActiveView('design-system')}
         disabled={appState !== AppState.IDLE && chatMode === 'voice'}
       />
 
