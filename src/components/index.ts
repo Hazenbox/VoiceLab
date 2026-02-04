@@ -8,3 +8,4 @@ export { SoundWave } from './SoundWave';
 export { ConfigPanel } from './ConfigPanel';
 export { ProjectSidebar } from './ProjectSidebar';
 export { SaveAudioModal } from './SaveAudioModal';
+export { ChatPanel } from './ChatPanel';

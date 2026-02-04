@@ -9,3 +9,4 @@ export { TwLabeledSlider } from './TwLabeledSlider';
 export { TwAudioPlayer } from './TwAudioPlayer';
 export { TwConfigPanel } from './TwConfigPanel';
 export { TwDocumentationPanel } from './TwDocumentationPanel';
+export { TwChatPanel } from './TwChatPanel';

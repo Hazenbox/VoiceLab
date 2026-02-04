@@ -3,7 +3,8 @@ import type {
   ActiveView, 
   ActiveTab, 
   ColorMode,
-  AppError 
+  AppError,
+  ChatMessage
 } from './types';
 import { VoiceGender, AppState } from './types';
 import { getSystemInstruction, AUDIO_CONFIG } from './constants';
@@ -14,7 +15,8 @@ import {
   DocumentationPanel,
   SoundWave,
   ProjectSidebar,
-  SaveAudioModal
+  SaveAudioModal,
+  ChatPanel
 } from './components';
 import {
   TwConfigPanel,
@@ -23,7 +25,8 @@ import {
   TwButton,
   TwTextArea,
   TwSegmentedControl,
-  TwSegmentedControlItem
+  TwSegmentedControlItem,
+  TwChatPanel
 } from './components/tailwind';
 import { 
   createTTSProvider, 
@@ -31,6 +34,7 @@ import {
   type TTSProvider,
   type ConversationProvider 
 } from './services/providers';
+import { createInworldService, type InworldService } from './services/providers/inworld';
 import { createAudioContext } from './services/audioUtils';
 import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
@@ -71,9 +75,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [transcript, setTranscript] = useState('');
 
+  // Copy Generation State
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+
   // Refs for audio handling
   const ttsProviderRef = useRef<TTSProvider | null>(null);
   const conversationProviderRef = useRef<ConversationProvider | null>(null);
+  const inworldServiceRef = useRef<InworldService | null>(null);
   const inputAudioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
@@ -100,6 +109,66 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       }
     };
   }, []);
+
+  // Initialize Inworld service
+  const getInworldService = useCallback((): InworldService | null => {
+    if (!inworldServiceRef.current) {
+      try {
+        inworldServiceRef.current = createInworldService();
+      } catch (err) {
+        console.error('Failed to initialize Inworld service:', err);
+        return null;
+      }
+    }
+    return inworldServiceRef.current;
+  }, []);
+
+  // Handle sending chat message
+  const handleSendChatMessage = async (message: string) => {
+    const service = getInworldService();
+    if (!service) {
+      setError({
+        code: 'INWORLD_ERROR',
+        message: 'Inworld service is not configured. Please check your environment variables.',
+      });
+      return;
+    }
+
+    // Add user message to chat
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: message,
+      timestamp: Date.now(),
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setIsChatLoading(true);
+    setError(null);
+
+    try {
+      // Send message to Inworld and get response
+      const response = await service.sendText(message);
+
+      // Add AI response to chat
+      const aiMessage: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        role: 'assistant',
+        content: response,
+        timestamp: Date.now(),
+      };
+
+      setChatMessages(prev => [...prev, aiMessage]);
+    } catch (err) {
+      console.error('Chat error:', err);
+      setError({
+        code: 'CHAT_ERROR',
+        message: err instanceof Error ? err.message : 'Failed to send message',
+      });
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
 
   // Auto-dismiss error
   useEffect(() => {
@@ -391,6 +460,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const SegmentedControlComponent = designSystem === 'jio' ? SegmentedControl : TwSegmentedControl;
   const SegmentedControlItemComponent = designSystem === 'jio' ? SegmentedControlItem : TwSegmentedControlItem;
   const AudioPlayerComponent = designSystem === 'jio' ? AudioPlayer : TwAudioPlayer;
+  const ChatPanelComponent = designSystem === 'jio' ? ChatPanel : TwChatPanel;
   
   return (
     <div 
@@ -412,13 +482,23 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           >
             <SegmentedControlItemComponent value="tts">Text-to-Speech</SegmentedControlItemComponent>
             <SegmentedControlItemComponent value="talk">Tap-to-Talk</SegmentedControlItemComponent>
+            <SegmentedControlItemComponent value="copy">Copy generation</SegmentedControlItemComponent>
           </SegmentedControlComponent>
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-3xl mx-auto">
-            {activeTab === 'tts' ? (
+        <div className="flex-1 overflow-hidden">
+          {activeTab === 'copy' ? (
+            /* Copy Generation Mode */
+            <ChatPanelComponent
+              messages={chatMessages}
+              onSendMessage={handleSendChatMessage}
+              isLoading={isChatLoading}
+            />
+          ) : (
+            <div className="h-full overflow-y-auto p-4">
+              <div className="max-w-3xl mx-auto">
+                {activeTab === 'tts' ? (
               /* TTS Mode */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ padding: '16px' }}>
@@ -600,7 +680,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 </div>
               </div>
             )}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

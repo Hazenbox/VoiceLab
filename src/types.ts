@@ -92,7 +92,7 @@ export interface AppError {
 export type ActiveView = 'main' | 'docs';
 
 // Active tab type
-export type ActiveTab = 'tts' | 'talk';
+export type ActiveTab = 'tts' | 'talk' | 'copy';
 
 // Color mode
 export type ColorMode = 'Light' | 'Dark';
@@ -127,4 +127,19 @@ export interface SavedAudio {
   duration: number;
   createdAt: number;
   voiceConfig: { gender: string; voice: string };
+}
+
+// Chat message for copy generation
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+}
+
+// Inworld configuration
+export interface InworldConfig {
+  apiKey: string;
+  character: string;
+  workspaceId?: string;
 }
