@@ -24,7 +24,7 @@ import {
 import { createAudioContext } from './services/audioUtils';
 import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
-import { TextArea, Button } from '@marcelinodzn/ds-react';
+import { TextArea, Button, RadioGroup, Radio } from '@marcelinodzn/ds-react';
 
 interface AppProps {
   colorMode: ColorMode;
@@ -340,33 +340,17 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Tab Navigation */}
         <div className="flex items-center justify-center p-3">
-          <div 
-            className="inline-flex rounded-full p-0.5"
-            style={{ backgroundColor: theme.background.subtle }}
+          <RadioGroup
+            name="tab-navigation"
+            value={activeTab}
+            onChange={(value) => setActiveTab(value as ActiveTab)}
+            orientation="horizontal"
+            size="S"
+            appearance="secondary"
           >
-            <button
-              onClick={() => setActiveTab('tts')}
-              className="px-3 py-1 text-xs font-medium rounded-full transition-colors"
-              style={{ 
-                backgroundColor: activeTab === 'tts' ? theme.background.subtle : 'transparent',
-                color: activeTab === 'tts' ? theme.text.high : theme.text.medium,
-                boxShadow: activeTab === 'tts' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
-              }}
-            >
-              Text-to-Speech
-            </button>
-            <button
-              onClick={() => setActiveTab('talk')}
-              className="px-3 py-1 text-xs font-medium rounded-full transition-colors"
-              style={{ 
-                backgroundColor: activeTab === 'talk' ? theme.background.subtle : 'transparent',
-                color: activeTab === 'talk' ? theme.text.high : theme.text.medium,
-                boxShadow: activeTab === 'talk' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
-              }}
-            >
-              Tap-to-Talk
-            </button>
-          </div>
+            <Radio value="tts" label="Text-to-Speech" />
+            <Radio value="talk" label="Tap-to-Talk" />
+          </RadioGroup>
         </div>
 
         {/* Tab Content */}
