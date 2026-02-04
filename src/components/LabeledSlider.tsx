@@ -50,23 +50,45 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
       <div className="space-y-0.5">
         {/* Slider track */}
         <div className="relative pt-0.5 -mr-0.5">
-          <input
-            type="range"
-            min={0}
-            max={options.length - 1}
-            step={1}
-            value={currentIndex}
-            onChange={(e) => onChange(options[parseInt(e.target.value)])}
-            disabled={disabled}
-            data-at-zero={currentIndex === 0 ? "true" : "false"}
-            className={`
-              w-full h-3 rounded-full appearance-none cursor-pointer
-              ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-            style={{
-              background: `linear-gradient(to right, ${activeBg} 0%, ${activeBg} ${(currentIndex / (options.length - 1)) * 100}%, ${inactiveBg} ${(currentIndex / (options.length - 1)) * 100}%, ${inactiveBg} 100%)`,
-            }}
-          />
+          <div className="relative">
+            {/* Background track - inactive color */}
+            <div 
+              className="absolute inset-0 rounded-full pointer-events-none"
+              style={{
+                background: inactiveBg,
+                height: '12px',
+              }}
+            />
+            
+            {/* Active portion overlay - rounded at both ends */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 rounded-full pointer-events-none"
+              style={{
+                width: `${(currentIndex / (options.length - 1)) * 100}%`,
+                background: activeBg,
+                height: '12px',
+              }}
+            />
+            
+            {/* Actual range input - transparent background */}
+            <input
+              type="range"
+              min={0}
+              max={options.length - 1}
+              step={1}
+              value={currentIndex}
+              onChange={(e) => onChange(options[parseInt(e.target.value)])}
+              disabled={disabled}
+              data-at-zero={currentIndex === 0 ? "true" : "false"}
+              className={`
+                relative w-full h-3 rounded-full appearance-none cursor-pointer
+                ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+              `}
+              style={{
+                background: 'transparent',
+              }}
+            />
+          </div>
         </div>
 
         {/* Option labels */}
