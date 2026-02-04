@@ -107,15 +107,17 @@ input[type="range"] {
   border-radius: 9999px;  /* Pill shape for the entire input */
 }
 
-/* Ensure track has rounded corners */
+/* Ensure track has rounded corners and explicit height */
 input[type="range"]::-webkit-slider-runnable-track {
   border-radius: 9999px;
   overflow: hidden;
+  height: 12px;
 }
 
 input[type="range"]::-moz-range-track {
   border-radius: 9999px;
   overflow: hidden;
+  height: 12px;
 }
 
 /* Custom slider thumb styling - 8px white knob */
@@ -127,8 +129,8 @@ input[type="range"]::-webkit-slider-thumb {
   background: var(--local-white, #ffffff);
   cursor: pointer;
   border: none;
-  margin-top: 0;
-  margin-left: 0;
+  margin-top: -2px;
+  margin-left: -4px;
   transition: none;
 }
 
@@ -147,8 +149,8 @@ input[type="range"]::-moz-range-thumb {
   background: var(--local-white, #ffffff);
   cursor: pointer;
   border: none;
-  margin-top: 0;
-  margin-left: 0;
+  margin-top: -2px;
+  margin-left: -4px;
   transition: none;
 }
 
