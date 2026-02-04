@@ -62,22 +62,22 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
             
             {/* Active portion overlay with knob at right edge */}
             <div 
-              className="absolute left-0 top-0 rounded-full pointer-events-none"
+              className="absolute left-0 top-0 rounded-full pointer-events-none flex items-center justify-end"
               style={{
                 width: `${(currentIndex / (options.length - 1)) * 100}%`,
-                minWidth: '8px',
+                minWidth: '12px',
                 background: activeBg,
                 height: '12px',
               }}
             >
-              {/* Knob positioned at right edge of active track */}
+              {/* Knob positioned inside at right edge of active track */}
               <div 
-                className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2"
                 style={{
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
                   backgroundColor: 'white',
+                  marginRight: '2px',
                 }}
               />
             </div>
