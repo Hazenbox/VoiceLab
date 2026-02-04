@@ -33,8 +33,8 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
   const currentIndex = options.indexOf(value);
   const theme = useThemeColors();
   
-  // Surface-Minimal fallback: #F5F5F5 (light) / #262626 (dark)
-  const inactiveBg = theme.background.minimal || (theme.isLight ? '#F5F5F5' : '#262626');
+  // Surface-Minimal: Always use #F5F5F5 for light mode, #262626 for dark mode
+  const inactiveBg = theme.isLight ? '#F5F5F5' : '#262626';
 
   return (
     <div className="space-y-1.5">
