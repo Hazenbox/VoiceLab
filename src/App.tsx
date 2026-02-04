@@ -494,7 +494,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 <div 
                   className="rounded-xl p-4"
                   style={{ 
-                    backgroundColor: theme.background.minimal,
+                    backgroundColor: theme.isLight ? '#f5f5f5' : '#18181b',
                     border: `1px solid ${theme.stroke.low}`
                   }}
                 >
@@ -515,14 +515,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       className="w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 transform"
                       style={{
                         backgroundColor: appState === AppState.IDLE || appState === AppState.ERROR
-                          ? theme.background.minimal
+                          ? (theme.isLight ? '#f5f5f5' : '#27272a')
                           : appState === AppState.LISTENING
                           ? '#f97316'
                           : appState === AppState.SPEAKING
                           ? '#fb923c'
                           : '#3b82f6',
                         border: appState === AppState.IDLE || appState === AppState.ERROR
-                          ? `2px solid ${theme.stroke.medium}`
+                          ? `2px solid ${theme.isLight ? '#e4e4e7' : '#3f3f46'}`
                           : appState === AppState.LISTENING
                           ? '4px solid #fdba74'
                           : appState === AppState.SPEAKING
@@ -581,7 +581,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   {transcript && (
                     <div 
                       className="mt-3 p-3 rounded-lg"
-                      style={{ backgroundColor: theme.background.minimal }}
+                      style={{ backgroundColor: theme.isLight ? '#ffffff' : '#09090b' }}
                     >
                       <p 
                         className="text-xs mb-1"
