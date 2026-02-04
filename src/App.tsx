@@ -385,13 +385,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   </h2>
                   
                   {/* Text input */}
-                  <TextArea
-                    value={ttsText}
-                    onChange={(value: string) => setTtsText(value)}
-                    placeholder="Enter text to convert to speech..."
-                    rows={3}
-                    size="S"
-                  />
+                  <div style={{ transform: 'scale(0.85)', transformOrigin: 'left top', width: '117.6%' }}>
+                    <TextArea
+                      value={ttsText}
+                      onChange={(value: string) => setTtsText(value)}
+                      placeholder="Enter text to convert to speech..."
+                      rows={3}
+                      size="S"
+                    />
+                  </div>
 
                   {/* Generate button */}
                   <button
