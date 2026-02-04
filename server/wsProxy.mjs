@@ -43,8 +43,8 @@ const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 // Claude endpoint
 const CLAUDE_API_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
-// HuggingFace endpoint
-const HUGGINGFACE_API_BASE = 'https://api-inference.huggingface.co';
+// HuggingFace endpoint (using router.huggingface.co as per HF API update)
+const HUGGINGFACE_API_BASE = 'https://router.huggingface.co';
 
 if (!DASHSCOPE_API_KEY) {
   console.error('Error: VITE_DASHSCOPE_API_KEY is not set in .env file');
@@ -446,8 +446,9 @@ async function handleHuggingFaceProxy(req, res) {
       return;
     }
     
-    const modelId = requestData.model || 'Qwen/Qwen2.5-7B-Instruct';
-    const huggingfaceUrl = `${HUGGINGFACE_API_BASE}/models/${modelId}/v1/chat/completions`;
+    // HuggingFace router uses OpenAI-compatible endpoint at /v1/chat/completions
+    // Model is specified in the request body, not the URL
+    const huggingfaceUrl = `${HUGGINGFACE_API_BASE}/v1/chat/completions`;
     const postData = JSON.stringify(requestData);
     
     // Prepare request options

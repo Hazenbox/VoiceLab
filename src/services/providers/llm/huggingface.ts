@@ -93,7 +93,8 @@ export class HuggingFaceProvider implements LLMProvider {
       return this.config.proxyUrl;
     }
     // Direct API access for server-side or when no proxy is configured
-    return `${this.config.baseUrl}/models/${this.modelConfig.id}/v1/chat/completions`;
+    // HuggingFace router uses OpenAI-compatible endpoint at /v1/chat/completions
+    return `${this.config.baseUrl}/v1/chat/completions`;
   }
 
   /**
@@ -408,7 +409,7 @@ export function createHuggingFaceProvider(config?: Partial<HuggingFaceConfig>): 
   return new HuggingFaceProvider({
     apiKey: config?.apiKey || import.meta.env.VITE_HUGGINGFACE_API_KEY || '',
     model: validModel,
-    baseUrl: config?.baseUrl || import.meta.env.VITE_HUGGINGFACE_BASE_URL || 'https://api-inference.huggingface.co',
+    baseUrl: config?.baseUrl || import.meta.env.VITE_HUGGINGFACE_BASE_URL || 'https://router.huggingface.co',
     proxyUrl,
   });
 }
