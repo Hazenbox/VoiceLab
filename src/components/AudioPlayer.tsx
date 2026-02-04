@@ -228,11 +228,14 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     return (
       <div 
         className="flex items-center justify-center h-16 rounded-lg"
-        style={{ backgroundColor: theme.background.subtle }}
+        style={{ 
+          backgroundColor: theme.isLight ? theme.background.subtle : 'rgba(39, 39, 42, 0.5)',
+          border: `1px solid ${theme.stroke.low}`
+        }}
       >
         <p 
           className="text-xs"
-          style={{ color: theme.text.low }}
+          style={{ color: theme.text.medium }}
         >
           No audio generated yet
         </p>
