@@ -189,6 +189,6 @@ input[type="range"][data-at-zero="true"]::-moz-range-thumb {
 .scaled-textarea-wrapper [role="textbox"],
 .scaled-textarea-wrapper input,
 .scaled-textarea-wrapper * {
-  font-size: 0.75rem !important;  /* Smaller explicit size */
-  line-height: 1.4 !important;    /* Tighter line spacing */
+  font-size: 0.875rem !important;  /* ~14px text size */
+  line-height: 1.4 !important;     /* Tighter line spacing */
 }
