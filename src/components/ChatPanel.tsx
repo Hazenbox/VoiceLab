@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button, TextArea } from '@marcelinodzn/ds-react';
 import type { ChatMessage } from '../types';
 import { useThemeColors } from '../theme';
+import { MessageContent } from './MessageContent';
 
 interface ChatPanelProps {
   messages: ChatMessage[];
@@ -67,9 +68,7 @@ export function ChatPanel({ messages, onSendMessage, isLoading }: ChatPanelProps
                       : theme.text.high,
                   }}
                 >
-                  <p className="text-sm whitespace-pre-wrap break-words">
-                    {message.content}
-                  </p>
+                  <MessageContent content={message.content} role={message.role} />
                   <p 
                     className="text-xs mt-1 opacity-70"
                   >

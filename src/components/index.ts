@@ -15,3 +15,5 @@ export { TTSProviderSelector, TTSProviderSelectorInline, getConfiguredTTSProvide
 export type { TTSProviderType } from './TTSProviderSelector';
 export { UsageDashboard, UsageStatsBar } from './UsageDashboard';
 export { ProviderHealthMonitor, ProviderStatusDot, ProviderHealthBar } from './ProviderHealthMonitor';
+export { MessageContent } from './MessageContent';
+export { CodeBlock, InlineCode } from './CodeBlock';

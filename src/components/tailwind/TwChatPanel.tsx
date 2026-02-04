@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { ChatMessage } from '../../types';
 import { useThemeColors } from '../../theme';
 import { TwButton } from './TwButton';
+import { MessageContent } from '../MessageContent';
 
 interface TwChatPanelProps {
   messages: ChatMessage[];
@@ -76,9 +77,7 @@ export function TwChatPanel({ messages, onSendMessage, isLoading }: TwChatPanelP
                       : theme.text.high,
                   }}
                 >
-                  <p className="text-sm whitespace-pre-wrap break-words">
-                    {message.content}
-                  </p>
+                  <MessageContent content={message.content} role={message.role} />
                   <p 
                     className="text-xs mt-1 opacity-70"
                   >
