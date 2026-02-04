@@ -127,8 +127,8 @@ input[type="range"]::-webkit-slider-thumb {
   background: var(--local-white, #ffffff);
   cursor: pointer;
   border: none;
-  margin-top: 2px;    /* Center vertically in 12px track */
-  margin-left: -4px;  /* Adjust for layered structure */
+  margin-top: 0;
+  margin-left: 0;
   transition: none;
 }
 
@@ -147,8 +147,8 @@ input[type="range"]::-moz-range-thumb {
   background: var(--local-white, #ffffff);
   cursor: pointer;
   border: none;
-  margin-top: 2px;    /* Center vertically in 12px track */
-  margin-left: -4px;  /* Adjust for layered structure */
+  margin-top: 0;
+  margin-left: 0;
   transition: none;
 }
 
