@@ -7,7 +7,7 @@ import type {
   ChatMessage
 } from './types';
 import { VoiceGender, AppState } from './types';
-import { getSystemInstruction, AUDIO_CONFIG } from './constants';
+import { getSystemInstruction, AUDIO_CONFIG, getCopySystemPrompt } from './constants';
 import { 
   ConfigPanel, 
   AudioPlayer, 
@@ -16,8 +16,13 @@ import {
   SoundWave,
   ProjectSidebar,
   SaveAudioModal,
-  ChatPanel
+  ChatPanel,
+  ErrorBoundary,
+  ModelSelector,
+  TTSProviderSelector,
+  UsageStatsBar,
 } from './components';
+import type { TTSProviderType } from './components';
 import {
   TwConfigPanel,
   TwAudioPlayer,
@@ -34,13 +39,15 @@ import {
   type TTSProvider,
   type ConversationProvider 
 } from './services/providers';
-import { createInworldService, type InworldService } from './services/providers/inworld';
+import { getOrchestratorInstance } from './services/llm/orchestrator';
+import { getDefaultLLMProviderType, createLLMProvider, type LLMProviderType } from './services/providers/llm';
 import { createAudioContext } from './services/audioUtils';
 import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
 import { useDesignSystem } from './context/DesignSystemContext';
 import { useProject } from './context/ProjectContext';
 import { useAudioLibrary } from './context/AudioLibraryContext';
+import { useAbortController } from './hooks';
 import { TextArea, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
 
 interface AppProps {
@@ -78,11 +85,16 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Copy Generation State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
+  const [selectedLLMProvider, setSelectedLLMProvider] = useState<LLMProviderType>(getDefaultLLMProviderType());
+  const [selectedTTSProvider, setSelectedTTSProvider] = useState<TTSProviderType>('dashscope');
+  const [selectedTalkLLMProvider, setSelectedTalkLLMProvider] = useState<LLMProviderType>('qwen-text');
+
+  // Request cancellation
+  const { abort: abortChat, reset: resetChatAbort, signal: chatAbortSignal } = useAbortController();
 
   // Refs for audio handling
   const ttsProviderRef = useRef<TTSProvider | null>(null);
   const conversationProviderRef = useRef<ConversationProvider | null>(null);
-  const inworldServiceRef = useRef<InworldService | null>(null);
   const inputAudioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
@@ -110,29 +122,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     };
   }, []);
 
-  // Initialize Inworld service
-  const getInworldService = useCallback((): InworldService | null => {
-    if (!inworldServiceRef.current) {
-      try {
-        inworldServiceRef.current = createInworldService();
-      } catch (err) {
-        console.error('Failed to initialize Inworld service:', err);
-        return null;
-      }
-    }
-    return inworldServiceRef.current;
-  }, []);
-
-  // Handle sending chat message
+  // Handle sending chat message via LLM Orchestrator
   const handleSendChatMessage = async (message: string) => {
-    const service = getInworldService();
-    if (!service) {
-      setError({
-        code: 'INWORLD_ERROR',
-        message: 'Inworld service is not configured. Please check your environment variables.',
-      });
-      return;
-    }
+    // Reset abort controller for new request
+    resetChatAbort();
 
     // Add user message to chat
     const userMessage: ChatMessage = {
@@ -147,19 +140,46 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     setError(null);
 
     try {
-      // Send message to Inworld and get response
-      const response = await service.sendText(message);
+      // Build messages with system prompt and history
+      const systemPrompt = getCopySystemPrompt();
+      const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+        { role: 'system', content: systemPrompt },
+        ...chatMessages.map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+        })),
+        { role: 'user', content: message },
+      ];
+
+      // Use the orchestrator for generation with retry and fallback
+      const orchestrator = getOrchestratorInstance();
+      const result = await orchestrator.generate(
+        selectedLLMProvider,
+        {
+          messages,
+          maxTokens: 1000,
+          temperature: 0.7,
+          signal: chatAbortSignal,
+        },
+        createLLMProvider
+      );
 
       // Add AI response to chat
       const aiMessage: ChatMessage = {
         id: `ai-${Date.now()}`,
         role: 'assistant',
-        content: response,
+        content: result.content,
         timestamp: Date.now(),
       };
 
       setChatMessages(prev => [...prev, aiMessage]);
     } catch (err) {
+      // Don't show error if request was cancelled
+      if ((err as Error).name === 'AbortError' || (err as Error).message?.includes('cancelled')) {
+        console.log('Chat request cancelled');
+        return;
+      }
+      
       console.error('Chat error:', err);
       setError({
         code: 'CHAT_ERROR',
@@ -169,6 +189,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       setIsChatLoading(false);
     }
   };
+
+  // Cancel ongoing chat request
+  const handleCancelChat = useCallback(() => {
+    abortChat();
+    setIsChatLoading(false);
+  }, [abortChat]);
 
   // Auto-dismiss error
   useEffect(() => {
@@ -472,8 +498,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Tab Navigation */}
-        <div className="flex items-center justify-center p-3">
+        {/* Tab Navigation with Usage Stats */}
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex-1" />
           <SegmentedControlComponent
             value={activeTab}
             onChange={(value) => setActiveTab(value as ActiveTab)}
@@ -484,17 +511,47 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             <SegmentedControlItemComponent value="talk">Tap-to-Talk</SegmentedControlItemComponent>
             <SegmentedControlItemComponent value="copy">Copy generation</SegmentedControlItemComponent>
           </SegmentedControlComponent>
+          <div className="flex-1 flex justify-end">
+            <UsageStatsBar />
+          </div>
         </div>
 
         {/* Tab Content */}
         <div className="flex-1 overflow-hidden">
           {activeTab === 'copy' ? (
             /* Copy Generation Mode */
-            <ChatPanelComponent
-              messages={chatMessages}
-              onSendMessage={handleSendChatMessage}
-              isLoading={isChatLoading}
-            />
+            <ErrorBoundary>
+              <div className="h-full flex flex-col">
+                {/* LLM Selector Header */}
+                <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: theme.stroke.low }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs" style={{ color: theme.text.low }}>Model:</span>
+                    <ModelSelector
+                      value={selectedLLMProvider}
+                      onChange={setSelectedLLMProvider}
+                      showHealth
+                      size="sm"
+                      disabled={isChatLoading}
+                    />
+                  </div>
+                  {isChatLoading && (
+                    <button
+                      onClick={handleCancelChat}
+                      className="text-xs px-2 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <ChatPanelComponent
+                    messages={chatMessages}
+                    onSendMessage={handleSendChatMessage}
+                    isLoading={isChatLoading}
+                  />
+                </div>
+              </div>
+            </ErrorBoundary>
           ) : (
             <div className="h-full overflow-y-auto p-4">
               <div className="max-w-3xl mx-auto">
@@ -502,17 +559,27 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               /* TTS Mode */
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ padding: '16px' }}>
-                  <h2 
-                    style={{ 
-                      color: theme.text.high,
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      lineHeight: '24px',
-                      marginBottom: '12px'
-                    }}
-                  >
-                    Generate Speech
-                  </h2>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 
+                      style={{ 
+                        color: theme.text.high,
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        lineHeight: '24px',
+                      }}
+                    >
+                      Generate Speech
+                    </h2>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs" style={{ color: theme.text.low }}>TTS Provider:</span>
+                      <TTSProviderSelector
+                        value={selectedTTSProvider}
+                        onChange={setSelectedTTSProvider}
+                        size="sm"
+                        disabled={isTtsLoading}
+                      />
+                    </div>
+                  </div>
                   
                   {/* Text input */}
                   <div className={designSystem === 'jio' ? 'scaled-textarea-wrapper' : ''}>
@@ -585,7 +652,29 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                     >
                       Voice Conversation
                     </h2>
-                    <StatusIndicator state={appState} />
+                    <div className="flex items-center gap-3">
+                      {/* LLM Selector for Talk mode */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px]" style={{ color: theme.text.low }}>LLM:</span>
+                        <ModelSelector
+                          value={selectedTalkLLMProvider}
+                          onChange={setSelectedTalkLLMProvider}
+                          size="sm"
+                          disabled={appState !== AppState.IDLE}
+                        />
+                      </div>
+                      {/* TTS Selector for Talk mode */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px]" style={{ color: theme.text.low }}>TTS:</span>
+                        <TTSProviderSelector
+                          value={selectedTTSProvider}
+                          onChange={setSelectedTTSProvider}
+                          size="sm"
+                          disabled={appState !== AppState.IDLE}
+                        />
+                      </div>
+                      <StatusIndicator state={appState} />
+                    </div>
                   </div>
 
                   {/* Microphone button */}
