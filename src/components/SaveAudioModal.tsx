@@ -1,7 +1,7 @@
 /**
  * SaveAudioModal Component
  * 
- * Accessible modal for saving audio to the library.
+ * Accessible modal for saving audio to the library using Jio Design System.
  * 
  * Features:
  * - Focus trap (Tab/Shift+Tab cycles within modal)
@@ -9,9 +9,11 @@
  * - Returns focus to trigger element on close
  * - Escape key to close
  * - Click outside to close
+ * - Uses Jio DS Button and TextInput components
  */
 
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { Button } from '@marcelinodzn/ds-react';
 import { useThemeColors } from '../theme';
 
 // =============================================================================
@@ -146,8 +148,9 @@ export const SaveAudioModal = memo(function SaveAudioModal({
   const handleSave = useCallback(() => {
     if (name.trim()) {
       onSave(name.trim());
+      onClose();
     }
-  }, [name, onSave]);
+  }, [name, onSave, onClose]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -166,7 +169,7 @@ export const SaveAudioModal = memo(function SaveAudioModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
       onClick={handleBackdropClick}
       role="presentation"
@@ -177,15 +180,15 @@ export const SaveAudioModal = memo(function SaveAudioModal({
         aria-modal="true"
         aria-labelledby="save-audio-title"
         aria-describedby="save-audio-description"
-        className="w-full max-w-md rounded-lg shadow-xl p-6 space-y-4"
+        className="w-full max-w-md rounded-xl shadow-xl p-6 space-y-6"
         style={{
           backgroundColor: theme.background.ghost,
-          border: `1px solid ${theme.stroke.medium}`,
+          border: `1px solid ${theme.stroke.low}`,
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           <h2 
             id="save-audio-title"
             className="text-lg font-semibold"
@@ -206,8 +209,8 @@ export const SaveAudioModal = memo(function SaveAudioModal({
         <div className="space-y-2">
           <label 
             htmlFor="audio-name-input"
-            className="block text-xs font-medium"
-            style={{ color: theme.text.medium }}
+            className="block text-sm font-medium"
+            style={{ color: theme.text.high }}
           >
             Audio Name
           </label>
@@ -218,46 +221,36 @@ export const SaveAudioModal = memo(function SaveAudioModal({
             onChange={(e) => setName(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Enter audio name..."
-            className="w-full px-3 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2"
+            className="w-full px-3 py-2.5 text-sm rounded-lg border focus:outline-none focus:ring-2 transition-colors"
             style={{
               backgroundColor: theme.background.ghost,
               borderColor: theme.stroke.medium,
               color: theme.text.high,
-              '--tw-ring-color': theme.accent,
-            } as React.CSSProperties}
+            }}
             aria-required="true"
+            autoFocus
           />
         </div>
 
         {/* Actions */}
         <div className="flex gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors hover:opacity-80 focus:outline-none focus:ring-2"
-            style={{
-              backgroundColor: theme.background.subtle,
-              border: `1px solid ${theme.stroke.medium}`,
-              color: theme.text.high,
-              '--tw-ring-color': theme.accent,
-            } as React.CSSProperties}
+          <Button
+            onPress={onClose}
+            appearance="secondary"
+            size="M"
+            style={{ flex: 1 }}
           >
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={!name.trim()}
-            className="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-1"
-            style={{
-              backgroundColor: theme.accent,
-              color: 'white',
-              '--tw-ring-color': theme.accent,
-            } as React.CSSProperties}
-            aria-disabled={!name.trim()}
+          </Button>
+          <Button
+            onPress={handleSave}
+            appearance="primary"
+            size="M"
+            isDisabled={!name.trim()}
+            style={{ flex: 1 }}
           >
             Save to Library
-          </button>
+          </Button>
         </div>
       </div>
     </div>
