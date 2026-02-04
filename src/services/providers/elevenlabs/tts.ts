@@ -145,8 +145,9 @@ export class ElevenLabsTTSProvider implements TTSProvider {
   /**
    * Synthesize text to audio using ElevenLabs WebSocket API
    * This is for streaming/real-time synthesis (future enhancement)
+   * Currently unused - kept for future implementation
    */
-  private async synthesizeViaWebSocket(text: string, voiceConfig: VoiceConfig): Promise<AudioBuffer> {
+  /* private async _synthesizeViaWebSocket(text: string, voiceConfig: VoiceConfig): Promise<AudioBuffer> {
     return new Promise((resolve, reject) => {
       const voiceId = voiceConfig.voice || this.config.defaultVoiceId;
       const wsUrl = `wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-input?model_id=eleven_multilingual_v2`;
@@ -251,7 +252,7 @@ export class ElevenLabsTTSProvider implements TTSProvider {
         reject(new Error('ElevenLabs WebSocket connection failed'));
       };
     });
-  }
+  } */
 
   /**
    * Get list of supported voices

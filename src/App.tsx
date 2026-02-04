@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import type { 
   ConversationConfig, 
   ActiveView, 
@@ -21,7 +21,7 @@ import {
   type TTSProvider,
   type ConversationProvider 
 } from './services/providers';
-import { createAudioContext, createBlob } from './services/audioUtils';
+import { createAudioContext } from './services/audioUtils';
 import { validateConfig, getTTSProviderType, getConversationProviderType } from './config/providers';
 
 interface AppProps {

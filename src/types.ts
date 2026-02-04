@@ -1,17 +1,21 @@
 // Voice gender options
-export enum VoiceGender {
-  FEMALE = 'female',
-  MALE = 'male',
-}
+export const VoiceGender = {
+  FEMALE: 'female',
+  MALE: 'male',
+} as const;
+
+export type VoiceGender = typeof VoiceGender[keyof typeof VoiceGender];
 
 // Application states for the conversation mode
-export enum AppState {
-  IDLE = 'idle',
-  CONNECTING = 'connecting',
-  LISTENING = 'listening',
-  SPEAKING = 'speaking',
-  ERROR = 'error',
-}
+export const AppState = {
+  IDLE: 'idle',
+  CONNECTING: 'connecting',
+  LISTENING: 'listening',
+  SPEAKING: 'speaking',
+  ERROR: 'error',
+} as const;
+
+export type AppState = typeof AppState[keyof typeof AppState];
 
 // Vibe options for the voice persona
 export type Vibe = 'calm' | 'warm' | 'energetic' | 'professional';

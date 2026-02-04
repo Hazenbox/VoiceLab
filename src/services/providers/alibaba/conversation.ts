@@ -11,7 +11,7 @@ import { ALIBABA_VOICES, getAlibabaVoiceByGender, RESPONSE_LENGTH_WORDS } from '
 import { getAlibabaConfig, isAlibabaConfigured, getProxyConfig } from '../../../config/providers';
 import { QwenASRClient } from './qwenASR';
 import { createTTSProvider } from '../index';
-import { createAudioContext, decodeAudioData } from '../../audioUtils';
+import { createAudioContext } from '../../audioUtils';
 
 /**
  * Alibaba Conversation Provider
@@ -35,7 +35,7 @@ export class AlibabaConversationProvider implements ConversationProvider {
 
   // Conversation state
   private conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
-  private currentTranscript = '';
+  // private _currentTranscript = '';
   private isProcessing = false;
 
   get state(): ConversationState {
@@ -61,7 +61,7 @@ export class AlibabaConversationProvider implements ConversationProvider {
     this.sessionConfig = sessionConfig;
     this.callbacks = callbacks;
     this.conversationHistory = [];
-    this.currentTranscript = '';
+    // this._currentTranscript = '';
 
     this.setState('connecting');
 
@@ -140,8 +140,8 @@ export class AlibabaConversationProvider implements ConversationProvider {
   /**
    * Handle transcription results from ASR
    */
-  private async handleTranscript(text: string, isFinal: boolean): void {
-    this.currentTranscript = text;
+  private async handleTranscript(text: string, isFinal: boolean): Promise<void> {
+    // this._currentTranscript = text;
     this.callbacks.onTranscript?.(text, isFinal);
 
     if (isFinal && text.trim().length > 0) {
@@ -189,7 +189,7 @@ export class AlibabaConversationProvider implements ConversationProvider {
   /**
    * Generate response using Qwen LLM via HTTP API
    */
-  private async generateResponse(userMessage: string): Promise<string> {
+  private async generateResponse(_userMessage: string): Promise<string> {
     const maxWords = this.sessionConfig 
       ? RESPONSE_LENGTH_WORDS[this.sessionConfig.maxResponseLength]
       : 30;
@@ -327,7 +327,7 @@ export class AlibabaConversationProvider implements ConversationProvider {
 
     // Clear state
     this.conversationHistory = [];
-    this.currentTranscript = '';
+    // this._currentTranscript = '';
     this.isProcessing = false;
     this.sessionConfig = null;
     this.callbacks = {};

@@ -72,7 +72,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ state }) => {
         transition-colors duration-300
       `}
     >
-      {React.cloneElement(config.icon as React.ReactElement, {
+      {React.cloneElement(config.icon as React.ReactElement<{ className?: string }>, {
         className: 'w-3 h-3'
       })}
       <span className="text-xs font-medium">{config.label}</span>

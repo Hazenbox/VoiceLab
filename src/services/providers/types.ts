@@ -1,4 +1,4 @@
-import type { Voice, ConversationConfig, PersonaConfig, ResponseLength } from '../../types';
+import type { Voice, PersonaConfig, ResponseLength } from '../../types';
 
 /**
  * Voice configuration for TTS synthesis

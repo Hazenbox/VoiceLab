@@ -241,16 +241,17 @@ export class CosyVoiceTTSProvider implements TTSProvider {
    * Create a WebSocket with authorization header
    * Note: Standard WebSocket API doesn't support custom headers,
    * so we need to pass the API key in the URL or use a different approach
+   * Currently unused - kept for future WebSocket implementation
    */
-  private createAuthorizedWebSocket(): WebSocket {
-    // For DashScope, we need to add Authorization header
-    // Since browser WebSocket doesn't support custom headers directly,
-    // we'll need to include auth in the connection process
-    const ws = new WebSocket(this.config.ttsEndpoint, [
-      `bearer-${this.config.apiKey}`,
-    ]);
-    return ws;
-  }
+  // private _createAuthorizedWebSocket(): WebSocket {
+  //   // For DashScope, we need to add Authorization header
+  //   // Since browser WebSocket doesn't support custom headers directly,
+  //   // we'll need to include auth in the connection process
+  //   const ws = new WebSocket(this.config.ttsEndpoint, [
+  //     `bearer-${this.config.apiKey}`,
+  //   ]);
+  //   return ws;
+  // }
 
   /**
    * Use HTTP/REST API for TTS synthesis through proxy server

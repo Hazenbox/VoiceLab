@@ -4,7 +4,6 @@ import { VoiceSelector } from './VoiceSelector';
 import { CustomSelect } from './CustomSelect';
 import { LabeledSlider } from './LabeledSlider';
 import { VIBE_OPTIONS } from '../constants';
-import { getTTSProviderType, getProviderDisplayName } from '../config/providers';
 
 interface ConfigPanelProps {
   voiceGender: VoiceGender;
@@ -30,9 +29,6 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   onShowDocs,
   disabled = false,
 }) => {
-  const currentProvider = getTTSProviderType();
-  const providerName = getProviderDisplayName(currentProvider);
-
   // Helper to update nested config
   const updatePersona = (key: string, value: unknown) => {
     onConfigChange({
