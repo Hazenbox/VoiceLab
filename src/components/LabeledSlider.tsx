@@ -32,7 +32,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
       </label>
       <div className="space-y-0.5">
         {/* Slider track */}
-        <div className="relative pt-0.5">
+        <div className="relative pt-0.5 -mr-0.5">
           <input
             type="range"
             min={0}
