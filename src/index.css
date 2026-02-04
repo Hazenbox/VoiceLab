@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode (Tailwind v4 requires explicit config) */
+@custom-variant dark (&&:where(.dark, .dark *));
+
 /* Custom JioVarType font */
 @font-face {
   font-family: 'JioVarType';

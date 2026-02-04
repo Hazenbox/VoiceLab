@@ -1,6 +1,7 @@
 import React from 'react';
 import { RadioGroup, Radio } from '@marcelinodzn/ds-react';
 import { VoiceGender } from '../types';
+import { useThemeColors } from '../theme';
 
 interface VoiceSelectorProps {
   value: VoiceGender;
@@ -16,13 +17,18 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
   onChange,
   disabled = false,
 }) => {
+  const theme = useThemeColors();
+  
   const handleChange = (val: string) => {
     onChange(val as VoiceGender);
   };
 
   return (
     <div className="space-y-1.5">
-      <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+      <label 
+        className="block text-xs font-medium"
+        style={{ color: theme.text.medium }}
+      >
         Voice Model
       </label>
       <RadioGroup

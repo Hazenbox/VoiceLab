@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DOCUMENTATION_SECTIONS } from '../constants';
+import { useThemeColors } from '../theme';
 
 interface DocumentationPanelProps {
   onBack: () => void;
@@ -10,6 +11,7 @@ interface DocumentationPanelProps {
  */
 export const DocumentationPanel: React.FC<DocumentationPanelProps> = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const theme = useThemeColors();
 
   // Filter sections based on search query
   const filteredSections = useMemo(() => {
@@ -31,10 +33,11 @@ export const DocumentationPanel: React.FC<DocumentationPanelProps> = ({ onBack }
       <div className="flex items-center gap-4 p-4">
         <button
           onClick={onBack}
-          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          className="p-2 rounded-lg transition-colors"
+          style={{ color: theme.text.medium }}
         >
           <svg
-            className="w-5 h-5 text-zinc-600 dark:text-zinc-400"
+            className="w-5 h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -47,7 +50,10 @@ export const DocumentationPanel: React.FC<DocumentationPanelProps> = ({ onBack }
             />
           </svg>
         </button>
-        <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">
+        <h1 
+          className="text-xl font-semibold"
+          style={{ color: theme.text.high }}
+        >
           Documentation
         </h1>
       </div>
@@ -56,10 +62,11 @@ export const DocumentationPanel: React.FC<DocumentationPanelProps> = ({ onBack }
       <div className="p-4">
         <div className="relative">
           <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            style={{ color: theme.text.low }}
           >
             <path
               strokeLinecap="round"
@@ -73,7 +80,11 @@ export const DocumentationPanel: React.FC<DocumentationPanelProps> = ({ onBack }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search documentation..."
-            className="w-full pl-10 pr-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-0 rounded-lg text-zinc-900 dark:text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full pl-10 pr-4 py-2 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            style={{
+              backgroundColor: theme.background.moderate,
+              color: theme.text.high,
+            }}
           />
         </div>
       </div>
@@ -81,19 +92,32 @@ export const DocumentationPanel: React.FC<DocumentationPanelProps> = ({ onBack }
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {filteredSections.length === 0 ? (
-          <div className="text-center py-8 text-zinc-500 dark:text-zinc-400">
+          <div 
+            className="text-center py-8"
+            style={{ color: theme.text.low }}
+          >
             No results found for "{searchQuery}"
           </div>
         ) : (
           filteredSections.map((section) => (
             <div
               key={section.id}
-              className="bg-white dark:bg-zinc-800 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700"
+              className="rounded-lg p-4"
+              style={{
+                backgroundColor: theme.background.subtle,
+                border: `1px solid ${theme.stroke.low}`,
+              }}
             >
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white mb-2">
+              <h2 
+                className="text-lg font-semibold mb-2"
+                style={{ color: theme.text.high }}
+              >
                 {section.title}
               </h2>
-              <div className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-pre-line">
+              <div 
+                className="text-sm whitespace-pre-line"
+                style={{ color: theme.text.medium }}
+              >
                 {section.content}
               </div>
             </div>

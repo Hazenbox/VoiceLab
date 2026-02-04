@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { formatTime, getWaveformData } from '../services/audioUtils';
+import { useThemeColors } from '../theme';
 
 interface AudioPlayerProps {
   audioBuffer: AudioBuffer | null;
@@ -24,6 +25,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [waveformData, setWaveformData] = useState<number[]>([]);
+  
+  const theme = useThemeColors();
 
   // Initialize audio context
   useEffect(() => {
@@ -51,7 +54,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   }, [audioBuffer]);
 
-  // Draw waveform
+  // Draw waveform - uses theme colors
   const drawWaveform = useCallback((progress: number = 0) => {
     const canvas = canvasRef.current;
     if (!canvas || waveformData.length === 0) return;
@@ -78,18 +81,18 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       const barHeight = Math.max(4, value * height * 0.8);
       const y = (height - barHeight) / 2;
 
-      // Color based on progress
+      // Color based on progress - use theme stroke color for unplayed
       if (x < progressX) {
         ctx.fillStyle = '#f97316'; // Orange for played portion
       } else {
-        ctx.fillStyle = document.body.classList.contains('dark') ? '#52525b' : '#d4d4d8'; // Zinc for remaining
+        ctx.fillStyle = theme.stroke.low; // Theme color for remaining
       }
 
       ctx.beginPath();
       ctx.roundRect(x + 1, y, barWidth - 2, barHeight, 2);
       ctx.fill();
     });
-  }, [waveformData]);
+  }, [waveformData, theme.stroke.low]);
 
   // Animation loop for playback progress
   const animate = useCallback(() => {
@@ -223,8 +226,14 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
   if (!audioBuffer) {
     return (
-      <div className="flex items-center justify-center h-16 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
-        <p className="text-zinc-500 dark:text-zinc-400 text-xs">
+      <div 
+        className="flex items-center justify-center h-16 rounded-lg"
+        style={{ backgroundColor: theme.background.moderate }}
+      >
+        <p 
+          className="text-xs"
+          style={{ color: theme.text.low }}
+        >
           No audio generated yet
         </p>
       </div>
@@ -237,7 +246,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       <canvas
         ref={canvasRef}
         onClick={seek}
-        className="w-full h-14 cursor-pointer rounded-lg bg-zinc-100 dark:bg-zinc-800"
+        className="w-full h-14 cursor-pointer rounded-lg"
+        style={{ backgroundColor: theme.background.moderate }}
       />
 
       {/* Controls */}
@@ -263,7 +273,11 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           {/* Restart button */}
           <button
             onClick={restart}
-            className="p-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 hover:bg-zinc-300 dark:hover:bg-zinc-600 text-zinc-700 dark:text-zinc-300 transition-colors"
+            className="p-1.5 rounded-full transition-colors"
+            style={{ 
+              backgroundColor: theme.background.moderate,
+              color: theme.text.medium,
+            }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -272,7 +286,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         </div>
 
         {/* Time display */}
-        <div className="text-xs font-mono text-zinc-600 dark:text-zinc-400">
+        <div 
+          className="text-xs font-mono"
+          style={{ color: theme.text.medium }}
+        >
           {formatTime(currentTime)} / {formatTime(duration)}
         </div>
       </div>
