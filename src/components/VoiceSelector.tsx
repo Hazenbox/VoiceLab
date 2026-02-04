@@ -31,20 +31,18 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
       >
         Voice Model
       </label>
-      <div style={{ transform: 'scale(0.85)', transformOrigin: 'left top' }}>
-        <RadioGroup
-          name="voice-gender"
-          value={value}
-          onChange={handleChange}
-          orientation="vertical"
-          size="S"
-          appearance="secondary"
-          isDisabled={disabled}
-        >
-          <Radio value={VoiceGender.FEMALE} label="Female" />
-          <Radio value={VoiceGender.MALE} label="Male" />
-        </RadioGroup>
-      </div>
+      <RadioGroup
+        name="voice-gender"
+        value={value}
+        onChange={handleChange}
+        orientation="vertical"
+        size="S"
+        appearance="secondary"
+        isDisabled={disabled}
+      >
+        <Radio value={VoiceGender.FEMALE} label="Female" />
+        <Radio value={VoiceGender.MALE} label="Male" />
+      </RadioGroup>
     </div>
   );
 };

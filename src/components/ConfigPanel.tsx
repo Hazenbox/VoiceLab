@@ -1,11 +1,10 @@
 import React from 'react';
 import type { ConversationConfig, VoiceGender, ColorMode, Pace, ResponseLength, Vibe } from '../types';
 import { VoiceSelector } from './VoiceSelector';
-import { CustomSelect } from './CustomSelect';
 import { LabeledSlider } from './LabeledSlider';
 import { VIBE_OPTIONS } from '../constants';
 import { useThemeColors } from '../theme';
-import { Button, TextArea } from '@marcelinodzn/ds-react';
+import { Button, TextArea, Select } from '@marcelinodzn/ds-react';
 
 interface ConfigPanelProps {
   voiceGender: VoiceGender;
@@ -101,28 +100,25 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           >
             Tone Definition
           </label>
-          <div style={{ transform: 'scale(0.85)', transformOrigin: 'left top', width: '117.6%' }}>
-            <TextArea
-              value={config.persona.tone}
-              onChange={(value: string) => updatePersona('tone', value)}
-              isDisabled={disabled}
-              rows={2}
-              size="S"
-              placeholder="Describe the personality..."
-            />
-          </div>
+          <TextArea
+            value={config.persona.tone}
+            onChange={(value: string) => updatePersona('tone', value)}
+            isDisabled={disabled}
+            rows={2}
+            size="S"
+            placeholder="Describe the personality..."
+          />
         </div>
 
         {/* Vibe Select */}
-        <div style={{ transform: 'scale(0.85)', transformOrigin: 'left top', width: '117.6%' }}>
-          <CustomSelect
-            label="Vibe"
-            value={config.persona.vibe}
-            options={VIBE_OPTIONS}
-            onChange={(value) => updatePersona('vibe', value as Vibe)}
-            disabled={disabled}
-          />
-        </div>
+        <Select
+          label="Vibe"
+          value={config.persona.vibe}
+          options={VIBE_OPTIONS}
+          onChange={(value: string) => updatePersona('vibe', value as Vibe)}
+          isDisabled={disabled}
+          size="S"
+        />
 
         {/* Greeting */}
         <div className="space-y-1.5">

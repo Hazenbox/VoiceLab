@@ -1,5 +1,4 @@
 export { VoiceSelector } from './VoiceSelector';
-export { CustomSelect } from './CustomSelect';
 export { LabeledSlider } from './LabeledSlider';
 export { StatusIndicator } from './StatusIndicator';
 export { AudioPlayer } from './AudioPlayer';
