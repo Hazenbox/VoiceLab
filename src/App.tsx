@@ -446,7 +446,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   </div>
 
                   {/* Generate button */}
-                  <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+                  <div style={{ marginTop: '12px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                     <ButtonComponent
                       onPress={handleGenerateTTS}
                       isDisabled={isTtsLoading || !ttsText.trim()}
