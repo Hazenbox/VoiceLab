@@ -130,19 +130,16 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           >
             Greeting
           </label>
-          <input
-            type="text"
-            value={config.greeting}
-            onChange={(e) => onConfigChange({ ...config, greeting: e.target.value })}
-            disabled={disabled}
-            className="w-full px-2.5 py-1.5 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
-            style={{
-              backgroundColor: theme.background.ghost,
-              border: `1px solid ${theme.stroke.low}`,
-              color: theme.text.high,
-            }}
-            placeholder="Initial greeting message..."
-          />
+          <div style={{ transform: 'scale(0.85)', transformOrigin: 'left top', width: '117.6%' }}>
+            <TextArea
+              value={config.greeting}
+              onChange={(value: string) => onConfigChange({ ...config, greeting: value })}
+              isDisabled={disabled}
+              rows={2}
+              size="S"
+              placeholder="Initial greeting message..."
+            />
+          </div>
         </div>
 
         {/* Pace Slider */}
