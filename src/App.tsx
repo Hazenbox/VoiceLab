@@ -356,11 +356,16 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           <div className="max-w-3xl mx-auto">
             {activeTab === 'tts' ? (
               /* TTS Mode */
-              <div className="space-y-4">
-                <div className="p-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ padding: '16px' }}>
                   <h2 
-                    className="text-base font-semibold mb-3"
-                    style={{ color: theme.text.high }}
+                    style={{ 
+                      color: theme.text.high,
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      lineHeight: '24px',
+                      marginBottom: '12px'
+                    }}
                   >
                     Generate Speech
                   </h2>
@@ -377,7 +382,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   </div>
 
                   {/* Generate button */}
-                  <div className="mt-3">
+                  <div style={{ marginTop: '12px' }}>
                     <Button
                       onPress={handleGenerateTTS}
                       isDisabled={isTtsLoading || !ttsText.trim()}
@@ -391,10 +396,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 </div>
 
                 {/* Audio Player */}
-                <div className="p-4">
+                <div style={{ padding: '16px' }}>
                   <h2 
-                    className="text-base font-semibold mb-3"
-                    style={{ color: theme.text.high }}
+                    style={{ 
+                      color: theme.text.high,
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      lineHeight: '24px',
+                      marginBottom: '12px'
+                    }}
                   >
                     Audio Output
                   </h2>

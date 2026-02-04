@@ -81,18 +81,18 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       const barHeight = Math.max(4, value * height * 0.8);
       const y = (height - barHeight) / 2;
 
-      // Color based on progress - use theme stroke color for unplayed
+      // Color based on progress - use theme accent for played, stroke for unplayed
       if (x < progressX) {
-        ctx.fillStyle = theme.isLight ? '#f97316' : '#fb923c'; // Brighter orange in dark mode
+        ctx.fillStyle = theme.accent; // DS accent color
       } else {
-        ctx.fillStyle = theme.stroke.low; // Theme color for remaining
+        ctx.fillStyle = theme.stroke.low; // DS stroke color for remaining
       }
 
       ctx.beginPath();
       ctx.roundRect(x + 1, y, barWidth - 2, barHeight, 2);
       ctx.fill();
     });
-  }, [waveformData, theme.stroke.low, theme.isLight]);
+  }, [waveformData, theme.stroke.low, theme.accent]);
 
   // Animation loop for playback progress
   const animate = useCallback(() => {
@@ -227,15 +227,20 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   if (!audioBuffer) {
     return (
       <div 
-        className="flex items-center justify-center h-16 rounded-lg"
+        className="flex items-center justify-center rounded-lg"
         style={{ 
-          backgroundColor: theme.isLight ? theme.background.subtle : 'rgba(39, 39, 42, 0.5)',
-          border: `1px solid ${theme.stroke.low}`
+          backgroundColor: theme.background.subtle,
+          border: `1px solid ${theme.stroke.low}`,
+          minHeight: '64px',
+          padding: '16px'
         }}
       >
         <p 
-          className="text-xs"
-          style={{ color: theme.text.medium }}
+          style={{ 
+            color: theme.text.medium,
+            fontSize: '12px',
+            lineHeight: '16px'
+          }}
         >
           No audio generated yet
         </p>
@@ -244,30 +249,47 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   }
 
   return (
-    <div className="space-y-2">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {/* Waveform canvas */}
       <canvas
         ref={canvasRef}
         onClick={seek}
-        className="w-full h-14 cursor-pointer rounded-lg"
-        style={{ backgroundColor: theme.background.subtle }}
+        className="w-full cursor-pointer"
+        style={{ 
+          backgroundColor: theme.background.subtle,
+          height: '56px',
+          borderRadius: '8px'
+        }}
       />
 
       {/* Controls */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center" style={{ gap: '6px' }}>
           {/* Play/Pause button */}
           <button
             onClick={togglePlayPause}
-            className="p-1.5 rounded-full bg-orange-500 hover:bg-orange-600 text-white transition-colors"
+            className="transition-colors"
+            style={{
+              padding: '6px',
+              borderRadius: '50%',
+              backgroundColor: theme.accent,
+              color: theme.local.white,
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
             {isPlaying ? (
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 24 24">
                 <rect x="6" y="4" width="4" height="16" rx="1" />
                 <rect x="14" y="4" width="4" height="16" rx="1" />
               </svg>
             ) : (
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             )}
@@ -276,14 +298,22 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           {/* Restart button */}
           <button
             onClick={restart}
-            className="p-1.5 rounded-lg transition-colors hover:opacity-80"
+            className="transition-colors"
             style={{ 
-              backgroundColor: theme.background.bold,
-              border: `2px solid ${theme.stroke.medium}`,
+              padding: '6px',
+              borderRadius: '8px',
+              backgroundColor: theme.background.subtle,
+              border: `1px solid ${theme.stroke.medium}`,
               color: theme.text.high,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </button>
@@ -291,8 +321,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
         {/* Time display */}
         <div 
-          className="text-xs font-mono"
-          style={{ color: theme.text.medium }}
+          style={{ 
+            color: theme.text.medium,
+            fontSize: '12px',
+            lineHeight: '16px',
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
+          }}
         >
           {formatTime(currentTime)} / {formatTime(duration)}
         </div>
