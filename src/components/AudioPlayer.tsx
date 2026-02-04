@@ -229,7 +229,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       <div 
         className="flex items-center justify-center rounded-lg"
         style={{ 
-          backgroundColor: theme.background.subtle,
+          backgroundColor: theme.isLight ? '#f5f5f5' : '#18181b',
           border: `1px solid ${theme.stroke.low}`,
           minHeight: '64px',
           padding: '16px'

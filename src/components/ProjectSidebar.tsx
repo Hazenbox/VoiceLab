@@ -156,7 +156,7 @@ export const ProjectSidebar: React.FC = () => {
                     onClick={() => setActiveProject(project.id)}
                     className="w-full px-2.5 py-2 flex items-center justify-between group transition-all rounded-lg hover:scale-[0.98]"
                     style={{
-                      backgroundColor: activeProject?.id === project.id ? theme.background.minimal : 'transparent',
+                      backgroundColor: activeProject?.id === project.id ? theme.background.subtle : 'transparent',
                     }}
                   >
                     <div className="flex-1 text-left">
