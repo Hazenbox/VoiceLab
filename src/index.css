@@ -181,11 +181,14 @@ input[type="range"][data-at-zero="true"]::-moz-range-thumb {
 
 /* TextArea wrapper - NO transform scale to preserve borders */
 .scaled-textarea-wrapper {
-  /* Remove transform - rely on component's native size prop instead */
   width: 100%;
 }
 
-/* Apply font-size reduction only to text content, not borders */
-.scaled-textarea-wrapper {
-  font-size: 85%;
+/* Target text content specifically - reduce size without affecting borders */
+.scaled-textarea-wrapper textarea,
+.scaled-textarea-wrapper [role="textbox"],
+.scaled-textarea-wrapper input,
+.scaled-textarea-wrapper * {
+  font-size: 0.75rem !important;  /* Smaller explicit size */
+  line-height: 1.4 !important;    /* Tighter line spacing */
 }
