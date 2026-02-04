@@ -61,6 +61,7 @@ export interface HuggingFaceConfig {
   apiKey: string;
   model: HFModelKey;
   baseUrl: string;
+  proxyUrl?: string; // Proxy URL for browser environments to bypass CORS
 }
 
 export class HuggingFaceProvider implements LLMProvider {
@@ -76,6 +77,41 @@ export class HuggingFaceProvider implements LLMProvider {
     this.modelConfig = HF_MODELS[config.model] || HF_MODELS['qwen25-7b'];
   }
 
+  /**
+   * Check if running in browser environment
+   */
+  private isBrowser(): boolean {
+    return typeof window !== 'undefined';
+  }
+
+  /**
+   * Get the appropriate API URL (proxy for browser, direct for server)
+   */
+  private getApiUrl(): string {
+    // Use proxy in browser environments to bypass CORS
+    if (this.isBrowser() && this.config.proxyUrl) {
+      return this.config.proxyUrl;
+    }
+    // Direct API access for server-side or when no proxy is configured
+    return `${this.config.baseUrl}/models/${this.modelConfig.id}/v1/chat/completions`;
+  }
+
+  /**
+   * Get headers for API request (no auth header when using proxy)
+   */
+  private getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Only include auth header for direct API calls (not through proxy)
+    if (!this.isBrowser() || !this.config.proxyUrl) {
+      headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+    }
+    
+    return headers;
+  }
+
   get maxTokens(): number {
     return this.modelConfig.maxTokens;
   }
@@ -88,13 +124,15 @@ export class HuggingFaceProvider implements LLMProvider {
     const startTime = Date.now();
 
     try {
-      // Use OpenAI-compatible endpoint for chat models
-      const response = await fetch(`${this.config.baseUrl}/models/${this.modelConfig.id}/v1/chat/completions`, {
+      // Use proxy in browser or direct API in server
+      const apiUrl = this.getApiUrl();
+      const headers = this.getHeaders();
+      
+      console.log(`[HuggingFace] Making request to: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
-        },
+        headers,
         body: JSON.stringify({
           model: this.modelConfig.id,
           messages: options.messages.map(m => ({
@@ -155,12 +193,15 @@ export class HuggingFaceProvider implements LLMProvider {
     let totalTokens = 0;
 
     try {
-      const response = await fetch(`${this.config.baseUrl}/models/${this.modelConfig.id}/v1/chat/completions`, {
+      // Use proxy in browser or direct API in server
+      const apiUrl = this.getApiUrl();
+      const headers = this.getHeaders();
+      
+      console.log(`[HuggingFace] Making streaming request to: ${apiUrl}`);
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
-        },
+        headers,
         body: JSON.stringify({
           model: this.modelConfig.id,
           messages: options.messages.map(m => ({
@@ -359,9 +400,15 @@ export function createHuggingFaceProvider(config?: Partial<HuggingFaceConfig>): 
   // Validate model key
   const validModel = modelKey in HF_MODELS ? modelKey : 'qwen25-7b';
 
+  // Build proxy URL from environment variables for browser CORS bypass
+  const proxyHost = import.meta.env.VITE_WS_PROXY_HOST || 'localhost';
+  const proxyPort = import.meta.env.VITE_WS_PROXY_PORT || '3001';
+  const proxyUrl = config?.proxyUrl || `http://${proxyHost}:${proxyPort}/api/huggingface`;
+
   return new HuggingFaceProvider({
     apiKey: config?.apiKey || import.meta.env.VITE_HUGGINGFACE_API_KEY || '',
     model: validModel,
     baseUrl: config?.baseUrl || import.meta.env.VITE_HUGGINGFACE_BASE_URL || 'https://api-inference.huggingface.co',
+    proxyUrl,
   });
 }

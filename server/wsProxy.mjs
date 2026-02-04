@@ -24,6 +24,7 @@ const DASHSCOPE_API_KEY = process.env.VITE_DASHSCOPE_API_KEY;
 const INWORLD_API_KEY = process.env.VITE_INWORLD_API_KEY;
 const OPENAI_API_KEY = process.env.VITE_OPENAI_API_KEY;
 const CLAUDE_API_KEY = process.env.VITE_CLAUDE_API_KEY;
+const HUGGINGFACE_API_KEY = process.env.VITE_HUGGINGFACE_API_KEY;
 const PROXY_PORT = process.env.WS_PROXY_PORT || 3001;
 
 // DashScope endpoints
@@ -41,6 +42,9 @@ const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
 // Claude endpoint
 const CLAUDE_API_ENDPOINT = 'https://api.anthropic.com/v1/messages';
+
+// HuggingFace endpoint
+const HUGGINGFACE_API_BASE = 'https://api-inference.huggingface.co';
 
 if (!DASHSCOPE_API_KEY) {
   console.error('Error: VITE_DASHSCOPE_API_KEY is not set in .env file');
@@ -394,6 +398,103 @@ async function handleClaudeProxy(req, res) {
 }
 
 /**
+ * HTTP Proxy Handler for HuggingFace requests
+ * Supports OpenAI-compatible chat completions endpoint
+ */
+async function handleHuggingFaceProxy(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+  
+  if (req.method !== 'POST') {
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Method not allowed' }));
+    return;
+  }
+  
+  if (!HUGGINGFACE_API_KEY) {
+    res.writeHead(503, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'HuggingFace API key not configured' }));
+    return;
+  }
+  
+  // Read request body
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString();
+  });
+  
+  req.on('end', () => {
+    console.log('[Proxy] HuggingFace request received');
+    
+    // Parse request body
+    let requestData;
+    try {
+      requestData = JSON.parse(body);
+      console.log('[Proxy] HuggingFace Request model:', requestData.model);
+    } catch (error) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Invalid JSON' }));
+      return;
+    }
+    
+    const modelId = requestData.model || 'Qwen/Qwen2.5-7B-Instruct';
+    const huggingfaceUrl = `${HUGGINGFACE_API_BASE}/models/${modelId}/v1/chat/completions`;
+    const postData = JSON.stringify(requestData);
+    
+    // Prepare request options
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${HUGGINGFACE_API_KEY}`,
+        'Content-Length': Buffer.byteLength(postData),
+      },
+    };
+    
+    console.log('[Proxy] Forwarding to HuggingFace API:', huggingfaceUrl);
+    
+    // Forward request to HuggingFace
+    const proxyReq = https.request(huggingfaceUrl, options, (proxyRes) => {
+      console.log('[Proxy] HuggingFace response status:', proxyRes.statusCode);
+      
+      // Forward all headers from HuggingFace response
+      const contentType = proxyRes.headers['content-type'] || 'application/json';
+      res.setHeader('Content-Type', contentType);
+      
+      // Handle streaming responses
+      if (requestData.stream) {
+        res.setHeader('Transfer-Encoding', 'chunked');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+      }
+      
+      res.writeHead(proxyRes.statusCode);
+      
+      // Pipe the response back to the client
+      proxyRes.pipe(res);
+    });
+    
+    proxyReq.on('error', (error) => {
+      console.error('[Proxy] HuggingFace request error:', error.message);
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Proxy request failed', details: error.message }));
+    });
+    
+    proxyReq.write(postData);
+    proxyReq.end();
+  });
+}
+
+/**
  * HTTP Proxy Handler for TTS requests
  */
 async function handleTTSProxy(req, res) {
@@ -517,6 +618,12 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  // HuggingFace proxy endpoint
+  if (req.url === '/api/huggingface') {
+    handleHuggingFaceProxy(req, res);
+    return;
+  }
+  
   res.writeHead(404);
   res.end();
 });
@@ -630,10 +737,11 @@ server.listen(PROXY_PORT, () => {
 ║    Inworld:        http://localhost:${PROXY_PORT}/api/inworld/...         ║
 ║    OpenAI:         http://localhost:${PROXY_PORT}/api/openai              ║
 ║    Claude:         http://localhost:${PROXY_PORT}/api/claude              ║
+║    HuggingFace:    http://localhost:${PROXY_PORT}/api/huggingface         ║
 ║  ─────────────────────────────────────────────────────────────────║
 ║  Health Check:  http://localhost:${PROXY_PORT}/health                     ║
 ╠═══════════════════════════════════════════════════════════════════╣
-║  API Keys: DashScope=${DASHSCOPE_API_KEY ? '✓' : '✗'} OpenAI=${OPENAI_API_KEY ? '✓' : '✗'} Claude=${CLAUDE_API_KEY ? '✓' : '✗'} Inworld=${INWORLD_API_KEY ? '✓' : '✗'}  ║
+║  API Keys: DashScope=${DASHSCOPE_API_KEY ? '✓' : '✗'} OpenAI=${OPENAI_API_KEY ? '✓' : '✗'} Claude=${CLAUDE_API_KEY ? '✓' : '✗'} HF=${HUGGINGFACE_API_KEY ? '✓' : '✗'} Inworld=${INWORLD_API_KEY ? '✓' : '✗'}  ║
 ╚═══════════════════════════════════════════════════════════════════╝
   `);
 });
