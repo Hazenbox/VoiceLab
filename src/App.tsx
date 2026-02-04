@@ -24,7 +24,7 @@ import {
 import { createAudioContext } from './services/audioUtils';
 import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
-import { TextArea, Button, RadioGroup, Radio } from '@marcelinodzn/ds-react';
+import { TextArea, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
 
 interface AppProps {
   colorMode: ColorMode;
@@ -340,17 +340,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Tab Navigation */}
         <div className="flex items-center justify-center p-3">
-          <RadioGroup
-            name="tab-navigation"
+          <SegmentedControl
             value={activeTab}
             onChange={(value) => setActiveTab(value as ActiveTab)}
-            orientation="horizontal"
             size="S"
-            appearance="secondary"
+            aria-label="Mode selection"
           >
-            <Radio value="tts" label="Text-to-Speech" />
-            <Radio value="talk" label="Tap-to-Talk" />
-          </RadioGroup>
+            <SegmentedControlItem value="tts">Text-to-Speech</SegmentedControlItem>
+            <SegmentedControlItem value="talk">Tap-to-Talk</SegmentedControlItem>
+          </SegmentedControl>
         </div>
 
         {/* Tab Content */}
