@@ -108,9 +108,17 @@ export const AudioLibraryProvider: React.FC<AudioLibraryProviderProps> = ({ chil
       pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
     }
     
-    const audioData = btoa(
-      String.fromCharCode(...Array.from(new Uint8Array(pcm16.buffer)))
-    );
+    // Convert to base64 in chunks to avoid call stack size exceeded error
+    const uint8Array = new Uint8Array(pcm16.buffer);
+    const chunkSize = 8192; // Process 8KB at a time
+    let binaryString = '';
+    
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
+      binaryString += String.fromCharCode(...Array.from(chunk));
+    }
+    
+    const audioData = btoa(binaryString);
 
     const newAudio: SavedAudio = {
       id: generateId(),
