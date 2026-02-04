@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+// Test setup for Node environment with browser API mocks
 import { vi, beforeAll, afterAll, afterEach } from 'vitest';
 
 // =============================================================================
@@ -308,13 +308,19 @@ const mockMatchMedia = vi.fn().mockImplementation((query: string) => ({
 // =============================================================================
 
 const navigatorMock = {
-  ...navigator,
   mediaDevices: mockMediaDevices,
   onLine: true,
   clipboard: {
     writeText: vi.fn().mockResolvedValue(undefined),
     readText: vi.fn().mockResolvedValue(''),
   },
+  userAgent: 'vitest',
+  language: 'en-US',
+  languages: ['en-US', 'en'],
+  platform: 'test',
+  connection: undefined,
+  mozConnection: undefined,
+  webkitConnection: undefined,
 };
 
 // =============================================================================
@@ -322,6 +328,20 @@ const navigatorMock = {
 // =============================================================================
 
 beforeAll(() => {
+  // Create global window object for Node environment
+  const windowMock = {
+    AudioContext: MockAudioContext,
+    webkitAudioContext: MockAudioContext,
+    navigator: navigatorMock,
+    localStorage: localStorageMock,
+    matchMedia: mockMatchMedia,
+    dispatchEvent: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  };
+  
+  vi.stubGlobal('window', windowMock);
+  
   // Install mocks
   vi.stubGlobal('AudioContext', MockAudioContext);
   vi.stubGlobal('webkitAudioContext', MockAudioContext);
@@ -333,10 +353,16 @@ beforeAll(() => {
   vi.stubGlobal('ResizeObserver', MockResizeObserver);
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
   vi.stubGlobal('matchMedia', mockMatchMedia);
+  vi.stubGlobal('navigator', navigatorMock);
   
-  Object.defineProperty(window, 'navigator', {
-    value: navigatorMock,
-    writable: true,
+  // Mock document
+  vi.stubGlobal('document', {
+    body: { style: { overflow: '' } },
+    activeElement: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    querySelector: vi.fn(),
+    querySelectorAll: vi.fn().mockReturnValue([]),
   });
 
   // Mock requestAnimationFrame
@@ -349,6 +375,10 @@ beforeAll(() => {
     createObjectURL: vi.fn().mockReturnValue('blob:mock-url'),
     revokeObjectURL: vi.fn(),
   });
+  
+  // Mock btoa and atob for base64 encoding
+  vi.stubGlobal('btoa', (str: string) => Buffer.from(str, 'binary').toString('base64'));
+  vi.stubGlobal('atob', (str: string) => Buffer.from(str, 'base64').toString('binary'));
 });
 
 afterEach(() => {

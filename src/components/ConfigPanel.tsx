@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import type { ConversationConfig, VoiceGender, ColorMode, Pace, ResponseLength, Vibe } from '../types';
 import { VoiceSelector } from './VoiceSelector';
 import { CustomSelect } from './CustomSelect';
@@ -21,8 +21,9 @@ interface ConfigPanelProps {
 
 /**
  * Left sidebar configuration panel
+ * Memoized to prevent unnecessary re-renders
  */
-export const ConfigPanel: React.FC<ConfigPanelProps> = ({
+export const ConfigPanel = memo(function ConfigPanel({
   voiceGender,
   onVoiceGenderChange,
   config,

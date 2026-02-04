@@ -5,7 +5,8 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'jsdom',
+    // Use node environment - we mock browser APIs in setup file
+    environment: 'node',
     setupFiles: ['./src/test/setup.ts'],
     globals: true,
     coverage: {

@@ -1,11 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useAudioLibrary } from '../context/AudioLibraryContext';
 import { useThemeColors } from '../theme';
 
 type SidebarView = 'projects' | 'library';
 
-export const ProjectSidebar: React.FC = () => {
+/**
+ * Left sidebar for projects and audio library
+ * Memoized to prevent unnecessary re-renders
+ */
+export const ProjectSidebar = memo(function ProjectSidebar() {
   const theme = useThemeColors();
   const { projects, activeProject, setActiveProject, createProject, deleteProject } = useProject();
   const { getAudiosByProject, playAudio, deleteAudio, playingAudioId, stopAudio } = useAudioLibrary();
@@ -16,29 +20,29 @@ export const ProjectSidebar: React.FC = () => {
 
   const audios = activeProject ? getAudiosByProject(activeProject.id) : [];
 
-  const handleCreateProject = () => {
+  const handleCreateProject = useCallback(() => {
     if (newProjectName.trim()) {
       createProject(newProjectName.trim());
       setNewProjectName('');
       setIsCreatingProject(false);
     }
-  };
+  }, [newProjectName, createProject]);
 
-  const handleDeleteProject = (id: string, e: React.MouseEvent) => {
+  const handleDeleteProject = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm('Are you sure you want to delete this project? All associated audios will be deleted.')) {
       deleteProject(id);
     }
-  };
+  }, [deleteProject]);
 
-  const handleDeleteAudio = (id: string, e: React.MouseEvent) => {
+  const handleDeleteAudio = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm('Delete this audio?')) {
       deleteAudio(id);
     }
-  };
+  }, [deleteAudio]);
 
-  const handlePlayAudio = async (id: string, e: React.MouseEvent) => {
+  const handlePlayAudio = useCallback(async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (playingAudioId === id) {
       stopAudio();
@@ -49,7 +53,7 @@ export const ProjectSidebar: React.FC = () => {
         console.error('Error playing audio:', error);
       }
     }
-  };
+  }, [playingAudioId, stopAudio, playAudio]);
 
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
