@@ -32,6 +32,9 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
 }) => {
   const currentIndex = options.indexOf(value);
   const theme = useThemeColors();
+  
+  // Surface-Minimal fallback: #F5F5F5 (light) / #262626 (dark)
+  const inactiveBg = theme.background.minimal || (theme.isLight ? '#F5F5F5' : '#262626');
 
   return (
     <div className="space-y-1.5">
@@ -58,7 +61,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}
             style={{
-              background: `linear-gradient(to right, ${theme.accent} 0%, ${theme.accent} ${(currentIndex / (options.length - 1)) * 100}%, ${theme.background.minimal} ${(currentIndex / (options.length - 1)) * 100}%, ${theme.background.minimal} 100%)`,
+              background: `linear-gradient(to right, ${theme.accent} 0%, ${theme.accent} ${(currentIndex / (options.length - 1)) * 100}%, ${inactiveBg} ${(currentIndex / (options.length - 1)) * 100}%, ${inactiveBg} 100%)`,
             }}
           />
         </div>

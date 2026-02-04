@@ -78,7 +78,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           `}
           style={{
             backgroundColor: theme.background.ghost,
-            border: `2px solid ${theme.stroke.low}`,
+            border: `2px solid ${theme.stroke.medium}`,
           }}
         >
           <span style={{ color: theme.text.high }}>
@@ -97,10 +97,10 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
         {isOpen && (
           <div 
-            className="absolute z-10 w-full mt-1 rounded-lg overflow-hidden"
+            className="absolute z-50 w-full mt-1 rounded-lg overflow-hidden shadow-lg"
             style={{
-              backgroundColor: theme.background.ghost,
-              border: `2px solid ${theme.stroke.low}`,
+              backgroundColor: theme.background.subtle,
+              border: `2px solid ${theme.stroke.medium}`,
             }}
           >
             {options.map((option) => (
@@ -111,10 +111,10 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className="w-full px-2.5 py-1.5 text-sm text-left transition-colors duration-150"
+                className="w-full px-2.5 py-1.5 text-sm text-left transition-colors duration-150 hover:opacity-80"
                 style={{
-                  backgroundColor: option.value === value ? '#fff7ed' : 'transparent',
-                  color: option.value === value ? '#c2410c' : theme.text.high,
+                  backgroundColor: option.value === value ? (theme.isLight ? '#fff7ed' : '#431407') : 'transparent',
+                  color: option.value === value ? (theme.isLight ? '#c2410c' : '#fdba74') : theme.text.high,
                 }}
               >
                 {option.label}

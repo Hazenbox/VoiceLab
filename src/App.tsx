@@ -375,13 +375,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             {activeTab === 'tts' ? (
               /* TTS Mode */
               <div className="space-y-4">
-                <div 
-                  className="rounded-xl p-4"
-                  style={{ 
-                    backgroundColor: theme.background.subtle,
-                    border: `1px solid ${theme.stroke.low}`
-                  }}
-                >
+                <div className="p-4">
                   <h2 
                     className="text-base font-semibold mb-3"
                     style={{ color: theme.text.high }}
@@ -426,13 +420,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 </div>
 
                 {/* Audio Player */}
-                <div 
-                  className="rounded-xl p-4"
-                  style={{ 
-                    backgroundColor: theme.background.subtle,
-                    border: `1px solid ${theme.stroke.low}`
-                  }}
-                >
+                <div className="p-4">
                   <h2 
                     className="text-base font-semibold mb-3"
                     style={{ color: theme.text.high }}

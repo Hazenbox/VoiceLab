@@ -5,7 +5,7 @@ import { CustomSelect } from './CustomSelect';
 import { LabeledSlider } from './LabeledSlider';
 import { VIBE_OPTIONS } from '../constants';
 import { useThemeColors } from '../theme';
-import { Button, TextArea } from '@marcelinodzn/ds-react';
+import { TextArea } from '@marcelinodzn/ds-react';
 
 interface ConfigPanelProps {
   voiceGender: VoiceGender;
@@ -55,37 +55,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
     >
       {/* Header */}
       <div className="p-3">
-        <div className="flex items-center justify-between">
-          <img 
-            src="/jio-voice-lab.svg" 
-            alt="Jio Voice Lab" 
-            className="h-8"
-          />
-          <button
-            onClick={onShowDocs}
-            className="p-1.5 rounded-full transition-colors"
-            style={{ color: theme.text.medium }}
-            title="Documentation"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </button>
-        </div>
+        <img 
+          src="/jio-voice-lab.svg" 
+          alt="Jio Voice Lab" 
+          className="h-8"
+        />
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-6">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {/* Voice Selection */}
         <VoiceSelector
           value={voiceGender}
@@ -162,11 +140,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
       </div>
 
       {/* Footer - Theme Toggle */}
-      <div className="p-3 flex items-center justify-end">
-        <Button
-          appearance="ghost"
-          size="S"
-          onPress={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
+      <div className="p-3 flex items-center justify-start">
+        <button
+          onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+          style={{
+            backgroundColor: theme.background.subtle,
+            border: `1px solid ${theme.stroke.low}`,
+            color: theme.text.medium,
+          }}
           aria-label={`Switch to ${colorMode === 'Light' ? 'dark' : 'light'} mode`}
         >
           {colorMode === 'Light' ? (
@@ -180,7 +162,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
             </svg>
           )}
-        </Button>
+        </button>
       </div>
     </aside>
   );
