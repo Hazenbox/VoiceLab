@@ -130,7 +130,6 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   border: none;
   margin-top: -4px;
-  margin-left: -2px;
   transition: none;
 }
 
@@ -150,7 +149,6 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   border: none;
   margin-top: -4px;
-  margin-left: -2px;
   transition: none;
 }
 
