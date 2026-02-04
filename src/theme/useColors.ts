@@ -125,10 +125,22 @@ export function useThemeColors() {
   const dsContext = useDsContext();
   const isLight = dsContext.colorMode === 'Light';
   
-  // Get background colors - only valid SurfaceEmphasis levels: 'ghost' | 'subtle' | 'bold'
+  // Get background colors - valid SurfaceEmphasis levels
   const bgGhost = useBackgroundColor('ghost');
   const bgSubtle = useBackgroundColor('subtle');
   const bgBold = useBackgroundColor('bold');
+  
+  // Try to get minimal background - fallback to ghost if not available
+  let bgMinimal: string;
+  try {
+    bgMinimal = useSurfaceBackground({
+      appearance: 'neutral',
+      emphasis: 'minimal' as any,
+      state: 'idle',
+    }).hex;
+  } catch {
+    bgMinimal = bgGhost;
+  }
   
   // Get text colors
   const textHigh = useTextColor('high');
@@ -147,6 +159,7 @@ export function useThemeColors() {
       ghost: bgGhost,
       subtle: bgSubtle,
       bold: bgBold,
+      minimal: bgMinimal,
     },
     text: {
       high: textHigh,
