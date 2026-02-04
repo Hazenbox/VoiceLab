@@ -48,7 +48,10 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   return (
     <aside 
       className="w-[320px] h-full flex flex-col overflow-hidden"
-      style={{ backgroundColor: theme.background.subtle }}
+      style={{ 
+        backgroundColor: '#ffffff',
+        borderRight: `1px solid ${theme.stroke.low}`
+      }}
     >
       {/* Header */}
       <div className="p-3">
@@ -105,7 +108,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
             rows={2}
             className="w-full px-2.5 py-1.5 text-sm rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
             style={{
-              backgroundColor: theme.background.moderate,
+              backgroundColor: '#ffffff',
               border: `1px solid ${theme.stroke.low}`,
               color: theme.text.high,
             }}
@@ -137,7 +140,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
             disabled={disabled}
             className="w-full px-2.5 py-1.5 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
             style={{
-              backgroundColor: theme.background.moderate,
+              backgroundColor: '#ffffff',
               border: `1px solid ${theme.stroke.low}`,
               color: theme.text.high,
             }}

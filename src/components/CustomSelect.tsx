@@ -77,7 +77,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             }
           `}
           style={{
-            backgroundColor: theme.background.moderate,
+            backgroundColor: '#ffffff',
             border: `1px solid ${theme.stroke.low}`,
           }}
         >
