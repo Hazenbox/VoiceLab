@@ -43,7 +43,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
             disabled={disabled}
             data-at-zero={currentIndex === 0 ? "true" : "false"}
             className={`
-              w-full h-2.5 rounded-full appearance-none cursor-pointer
+              w-full h-3 rounded-full appearance-none cursor-pointer
               accent-orange-500
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
             `}
