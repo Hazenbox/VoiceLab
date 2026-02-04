@@ -89,7 +89,7 @@ export interface AppError {
 }
 
 // Active view type
-export type ActiveView = 'main' | 'docs' | 'design-system';
+export type ActiveView = 'main' | 'docs' | 'design-system' | 'library';
 
 // Active tab type
 export type ActiveTab = 'tts' | 'talk' | 'copy';

@@ -3,6 +3,51 @@ import type { SavedAudio } from '../types';
 import { storageAudios, generateId } from '../services/storage';
 import { createAudioContext } from '../services/audioUtils';
 
+// Helper function to create WAV buffer from PCM16 data
+function createWavBuffer(pcm16: Int16Array, sampleRate: number): ArrayBuffer {
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+  const blockAlign = numChannels * (bitsPerSample / 8);
+  const dataSize = pcm16.length * 2;
+  const bufferSize = 44 + dataSize;
+  
+  const buffer = new ArrayBuffer(bufferSize);
+  const view = new DataView(buffer);
+  
+  // RIFF header
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, bufferSize - 8, true);
+  writeString(view, 8, 'WAVE');
+  
+  // fmt chunk
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // chunk size
+  view.setUint16(20, 1, true); // audio format (PCM)
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  
+  // data chunk
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataSize, true);
+  
+  // PCM data
+  for (let i = 0; i < pcm16.length; i++) {
+    view.setInt16(44 + i * 2, pcm16[i], true);
+  }
+  
+  return buffer;
+}
+
+function writeString(view: DataView, offset: number, str: string) {
+  for (let i = 0; i < str.length; i++) {
+    view.setUint8(offset + i, str.charCodeAt(i));
+  }
+}
+
 interface AudioLibraryContextValue {
   audios: SavedAudio[];
   saveAudio: (
@@ -17,6 +62,8 @@ interface AudioLibraryContextValue {
   stopAudio: () => void;
   playingAudioId: string | null;
   getAudiosByProject: (projectId: string) => SavedAudio[];
+  updateAudioName: (id: string, name: string) => void;
+  downloadAudio: (id: string) => void;
 }
 
 const AudioLibraryContext = createContext<AudioLibraryContextValue | null>(null);
@@ -167,6 +214,44 @@ export const AudioLibraryProvider: React.FC<AudioLibraryProviderProps> = ({ chil
     return audios.filter(a => a.projectId === projectId);
   }, [audios]);
 
+  const updateAudioName = useCallback((id: string, name: string) => {
+    storageAudios.update(id, { name });
+    setAudios(prev => prev.map(a => a.id === id ? { ...a, name } : a));
+  }, []);
+
+  const downloadAudio = useCallback((id: string) => {
+    const audio = audios.find(a => a.id === id);
+    if (!audio) return;
+
+    try {
+      // Decode base64 to PCM16 bytes
+      const binaryString = atob(audio.audioData);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      const pcm16 = new Int16Array(bytes.buffer);
+      const sampleRate = 24000; // Default sample rate used in TTS
+      
+      // Create WAV file
+      const wavBuffer = createWavBuffer(pcm16, sampleRate);
+      const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+      
+      // Trigger download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${audio.name.replace(/[^a-z0-9]/gi, '_')}.wav`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading audio:', error);
+    }
+  }, [audios]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -185,6 +270,8 @@ export const AudioLibraryProvider: React.FC<AudioLibraryProviderProps> = ({ chil
     stopAudio,
     playingAudioId,
     getAudiosByProject,
+    updateAudioName,
+    downloadAudio,
   };
 
   return (

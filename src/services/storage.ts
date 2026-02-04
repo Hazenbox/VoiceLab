@@ -127,6 +127,14 @@ export const storageAudios = {
       throw error;
     }
   },
+
+  update: (id: string, updates: Partial<SavedAudio>): void => {
+    const audio = storageAudios.getById(id);
+    if (audio) {
+      const updated = { ...audio, ...updates };
+      storageAudios.save(updated);
+    }
+  },
 };
 
 // Active project operations

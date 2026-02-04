@@ -28,6 +28,7 @@ import {
   UsageStatsBar,
   ModeToggle,
   DesignSystemLibrary,
+  LibraryPage,
 } from './components';
 import type { TTSProviderType } from './components';
 import { useChatPersistence, useNetworkStatus } from './hooks';
@@ -631,7 +632,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         className="flex h-screen"
         style={{ backgroundColor: theme.background.ghost }}
       >
-        <ProjectSidebar />
+        <ProjectSidebar 
+          onNavigateToLibrary={() => setActiveView('library')}
+          isLibraryActive={false}
+        />
         <main className="flex-1 overflow-hidden">
           <DocPanelComponent onBack={() => setActiveView('main')} />
         </main>
@@ -665,6 +669,37 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     );
   }
 
+  // Render audio library view
+  if (activeView === 'library') {
+    const ConfigPanelComponent = designSystem === 'jio' ? ConfigPanel : TwConfigPanel;
+    
+    return (
+      <div 
+        className="flex h-screen"
+        style={{ backgroundColor: theme.background.ghost }}
+      >
+        <ProjectSidebar 
+          onNavigateToLibrary={() => setActiveView('library')}
+          isLibraryActive={true}
+        />
+        <main className="flex-1 overflow-hidden">
+          <LibraryPage onBack={() => setActiveView('main')} />
+        </main>
+        <ConfigPanelComponent
+          voiceGender={activeProject.voiceGender}
+          onVoiceGenderChange={updateProjectVoiceGender}
+          config={activeProject.config}
+          onConfigChange={updateProjectConfig}
+          colorMode={colorMode}
+          onColorModeChange={onColorModeChange}
+          onShowDocs={() => setActiveView('docs')}
+          onShowDesignSystem={() => setActiveView('design-system')}
+          disabled={appState !== AppState.IDLE}
+        />
+      </div>
+    );
+  }
+
   // Render main view
   const ConfigPanelComponent = designSystem === 'jio' ? ConfigPanel : TwConfigPanel;
   const ChatPanelComponent = designSystem === 'jio' ? ChatPanel : TwChatPanel;
@@ -675,7 +710,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       style={{ backgroundColor: theme.background.ghost }}
     >
       {/* Left Sidebar - Projects */}
-      <ProjectSidebar />
+      <ProjectSidebar 
+        onNavigateToLibrary={() => setActiveView('library')}
+        isLibraryActive={false}
+      />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">

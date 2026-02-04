@@ -20,3 +20,4 @@ export { CodeBlock, InlineCode } from './CodeBlock';
 export { ModeToggle, ModeToggleCompact } from './ModeToggle';
 export { AudioBubble } from './AudioBubble';
 export { DesignSystemLibrary } from './DesignSystemLibrary';
+export { LibraryPage } from './LibraryPage';
