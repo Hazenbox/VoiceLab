@@ -106,3 +106,25 @@ export interface DocSection {
   title: string;
   content: string;
 }
+
+// Project management
+export interface Project {
+  id: string;
+  name: string;
+  createdAt: number;
+  updatedAt: number;
+  config: ConversationConfig;
+  voiceGender: VoiceGender;
+}
+
+// Saved audio in library
+export interface SavedAudio {
+  id: string;
+  projectId: string;
+  name: string;
+  prompt: string;
+  audioData: string; // base64 encoded
+  duration: number;
+  createdAt: number;
+  voiceConfig: { gender: string; voice: string };
+}

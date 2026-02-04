@@ -2,6 +2,8 @@ import { StrictMode, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import { DsProvider } from '@marcelinodzn/ds-react'
 import { DesignSystemProvider } from './context/DesignSystemContext'
+import { ProjectProvider } from './context/ProjectContext'
+import { AudioLibraryProvider } from './context/AudioLibraryContext'
 import './index.css'
 import App from './App.tsx'
 import type { ColorMode } from './types'
@@ -25,7 +27,11 @@ function Root() {
         colorMode={colorMode}
         density="Default"
       >
-        <App colorMode={colorMode} onColorModeChange={setColorMode} />
+        <ProjectProvider>
+          <AudioLibraryProvider>
+            <App colorMode={colorMode} onColorModeChange={setColorMode} />
+          </AudioLibraryProvider>
+        </ProjectProvider>
       </DsProvider>
     </DesignSystemProvider>
   );

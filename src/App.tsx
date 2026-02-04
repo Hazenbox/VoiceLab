@@ -1,19 +1,20 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { 
-  ConversationConfig, 
   ActiveView, 
   ActiveTab, 
   ColorMode,
   AppError 
 } from './types';
 import { VoiceGender, AppState } from './types';
-import { DEFAULT_CONFIG, getSystemInstruction, AUDIO_CONFIG } from './constants';
+import { getSystemInstruction, AUDIO_CONFIG } from './constants';
 import { 
   ConfigPanel, 
   AudioPlayer, 
   StatusIndicator, 
   DocumentationPanel,
-  SoundWave 
+  SoundWave,
+  ProjectSidebar,
+  SaveAudioModal
 } from './components';
 import {
   TwConfigPanel,
@@ -34,6 +35,8 @@ import { createAudioContext } from './services/audioUtils';
 import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
 import { useDesignSystem } from './context/DesignSystemContext';
+import { useProject } from './context/ProjectContext';
+import { useAudioLibrary } from './context/AudioLibraryContext';
 import { TextArea, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
 
 interface AppProps {
@@ -48,19 +51,21 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Theme colors from DS tokens
   const theme = useThemeColors();
   
+  // Project context
+  const { activeProject, updateProjectConfig, updateProjectVoiceGender } = useProject();
+  const { saveAudio } = useAudioLibrary();
+  
   // UI State
   const [activeTab, setActiveTab] = useState<ActiveTab>('tts');
   const [activeView, setActiveView] = useState<ActiveView>('main');
   const [error, setError] = useState<AppError | null>(null);
-
-  // Configuration State
-  const [voiceGender, setVoiceGender] = useState<VoiceGender>(VoiceGender.FEMALE);
-  const [config, setConfig] = useState<ConversationConfig>(DEFAULT_CONFIG);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   // TTS State
   const [ttsText, setTtsText] = useState('');
   const [isTtsLoading, setIsTtsLoading] = useState(false);
   const [generatedAudio, setGeneratedAudio] = useState<AudioBuffer | null>(null);
+  const [lastGeneratedVoice, setLastGeneratedVoice] = useState<string>('');
 
   // Conversation State
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -119,6 +124,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       return;
     }
 
+    if (!activeProject) {
+      setError({ code: 'NO_PROJECT', message: 'No active project' });
+      return;
+    }
+
     // Validate config
     const configValidation = validateConfig();
     if (!configValidation.valid) {
@@ -134,7 +144,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
     try {
       const provider = getTTSProvider();
-      const voice = provider.getDefaultVoice(voiceGender === VoiceGender.FEMALE ? 'female' : 'male');
+      const voice = provider.getDefaultVoice(activeProject.voiceGender === VoiceGender.FEMALE ? 'female' : 'male');
       
       const audioBuffer = await provider.synthesize(ttsText, {
         voice,
@@ -143,6 +153,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       });
 
       setGeneratedAudio(audioBuffer);
+      setLastGeneratedVoice(voice);
     } catch (err) {
       console.error('TTS generation error:', err);
       setError({
@@ -151,6 +162,32 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       });
     } finally {
       setIsTtsLoading(false);
+    }
+  };
+
+  // Handle save audio to library
+  const handleSaveAudio = (name: string) => {
+    if (!generatedAudio || !activeProject) return;
+
+    try {
+      saveAudio(
+        activeProject.id,
+        name,
+        ttsText,
+        generatedAudio,
+        {
+          gender: activeProject.voiceGender,
+          voice: lastGeneratedVoice,
+        }
+      );
+      setShowSaveModal(false);
+      // Don't clear the generated audio so user can still play it
+    } catch (err) {
+      console.error('Error saving audio:', err);
+      setError({
+        code: 'SAVE_ERROR',
+        message: 'Failed to save audio to library',
+      });
     }
   };
 
@@ -191,17 +228,17 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
       // Get voice from TTS provider (not conversation provider) to ensure correct voice IDs
       const ttsProvider = createTTSProvider();
-      const voice = ttsProvider.getDefaultVoice(voiceGender === VoiceGender.FEMALE ? 'female' : 'male');
-      const systemPrompt = getSystemInstruction(config);
+      const voice = ttsProvider.getDefaultVoice(activeProject?.voiceGender === VoiceGender.FEMALE ? 'female' : 'male');
+      const systemPrompt = getSystemInstruction(activeProject?.config || { persona: { tone: '', pace: 'medium', confidence: 'medium', vibe: 'warm', language: 'english' }, greeting: '', maxResponseLength: 'short' });
 
       // Connect to conversation service
       await provider.connect(
         {
           voice,
           systemPrompt,
-          persona: config.persona,
-          greeting: config.greeting,
-          maxResponseLength: config.maxResponseLength,
+          persona: activeProject?.config.persona || { tone: '', pace: 'medium', confidence: 'medium', vibe: 'warm', language: 'english' },
+          greeting: activeProject?.config.greeting || '',
+          maxResponseLength: activeProject?.config.maxResponseLength || 'short',
         },
         {
           onStateChange: (state) => {
@@ -307,6 +344,18 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     }
   };
 
+  // Don't render until we have an active project
+  if (!activeProject) {
+    return (
+      <div 
+        className="flex h-screen items-center justify-center"
+        style={{ backgroundColor: theme.background.ghost }}
+      >
+        <p style={{ color: theme.text.medium }}>Loading...</p>
+      </div>
+    );
+  }
+
   // Render documentation view
   if (activeView === 'docs') {
     const ConfigPanelComponent = designSystem === 'jio' ? ConfigPanel : TwConfigPanel;
@@ -317,19 +366,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         className="flex h-screen"
         style={{ backgroundColor: theme.background.ghost }}
       >
+        <ProjectSidebar />
+        <main className="flex-1 overflow-hidden">
+          <DocPanelComponent onBack={() => setActiveView('main')} />
+        </main>
         <ConfigPanelComponent
-          voiceGender={voiceGender}
-          onVoiceGenderChange={setVoiceGender}
-          config={config}
-          onConfigChange={setConfig}
+          voiceGender={activeProject.voiceGender}
+          onVoiceGenderChange={updateProjectVoiceGender}
+          config={activeProject.config}
+          onConfigChange={updateProjectConfig}
           colorMode={colorMode}
           onColorModeChange={onColorModeChange}
           onShowDocs={() => setActiveView('docs')}
           disabled={appState !== AppState.IDLE}
         />
-        <main className="flex-1 overflow-hidden">
-          <DocPanelComponent onBack={() => setActiveView('main')} />
-        </main>
       </div>
     );
   }
@@ -347,17 +397,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       className="flex h-screen"
       style={{ backgroundColor: theme.background.ghost }}
     >
-      {/* Config Panel */}
-      <ConfigPanelComponent
-        voiceGender={voiceGender}
-        onVoiceGenderChange={setVoiceGender}
-        config={config}
-        onConfigChange={setConfig}
-        colorMode={colorMode}
-        onColorModeChange={onColorModeChange}
-        onShowDocs={() => setActiveView('docs')}
-        disabled={appState !== AppState.IDLE && activeTab === 'talk'}
-      />
+      {/* Left Sidebar - Projects */}
+      <ProjectSidebar />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
@@ -405,7 +446,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   </div>
 
                   {/* Generate button */}
-                  <div style={{ marginTop: '12px' }}>
+                  <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
                     <ButtonComponent
                       onPress={handleGenerateTTS}
                       isDisabled={isTtsLoading || !ttsText.trim()}
@@ -420,17 +461,30 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
                 {/* Audio Player */}
                 <div style={{ padding: '16px' }}>
-                  <h2 
-                    style={{ 
-                      color: theme.text.high,
-                      fontSize: '16px',
-                      fontWeight: 600,
-                      lineHeight: '24px',
-                      marginBottom: '12px'
-                    }}
-                  >
-                    Audio Output
-                  </h2>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <h2 
+                      style={{ 
+                        color: theme.text.high,
+                        fontSize: '16px',
+                        fontWeight: 600,
+                        lineHeight: '24px',
+                      }}
+                    >
+                      Audio Output
+                    </h2>
+                    {generatedAudio && (
+                      <button
+                        onClick={() => setShowSaveModal(true)}
+                        className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors hover:opacity-80"
+                        style={{
+                          backgroundColor: '#f97316',
+                          color: 'white',
+                        }}
+                      >
+                        Save to Library
+                      </button>
+                    )}
+                  </div>
                   <AudioPlayerComponent audioBuffer={generatedAudio} />
                 </div>
               </div>
@@ -549,6 +603,26 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           </div>
         </div>
       </main>
+
+      {/* Right Sidebar - Config Panel */}
+      <ConfigPanelComponent
+        voiceGender={activeProject.voiceGender}
+        onVoiceGenderChange={updateProjectVoiceGender}
+        config={activeProject.config}
+        onConfigChange={updateProjectConfig}
+        colorMode={colorMode}
+        onColorModeChange={onColorModeChange}
+        onShowDocs={() => setActiveView('docs')}
+        disabled={appState !== AppState.IDLE && activeTab === 'talk'}
+      />
+
+      {/* Save Audio Modal */}
+      <SaveAudioModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveAudio}
+        defaultName={ttsText.slice(0, 30) + (ttsText.length > 30 ? '...' : '')}
+      />
 
       {/* Error Toast */}
       {error && (
