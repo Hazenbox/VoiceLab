@@ -21,11 +21,11 @@ import {
   SoundWave,
   ProjectSidebar,
   SaveAudioModal,
+  UsageModal,
   ChatPanel,
   ErrorBoundary,
   ModelSelector,
   TTSProviderSelector,
-  UsageStatsBar,
   ModeToggle,
   DesignSystemLibrary,
   LibraryPage,
@@ -90,6 +90,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [error, setError] = useState<AppError | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [audioToSave, setAudioToSave] = useState<{ messageId: string; audioData: string; transcript: string } | null>(null);
+  const [isConfigPanelCollapsed, setIsConfigPanelCollapsed] = useState(true);
+  const [showUsageModal, setShowUsageModal] = useState(false);
   
   // Voice feature support detection
   const [voiceSupported, setVoiceSupported] = useState<boolean | null>(null);
@@ -635,6 +637,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         <ProjectSidebar 
           onNavigateToLibrary={() => setActiveView('library')}
           isLibraryActive={false}
+          onNavigateToUsage={() => setShowUsageModal(true)}
         />
         <main className="flex-1 overflow-hidden">
           <DocPanelComponent onBack={() => setActiveView('main')} />
@@ -649,6 +652,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           onShowDocs={() => setActiveView('docs')}
           onShowDesignSystem={() => setActiveView('design-system')}
           disabled={appState !== AppState.IDLE}
+          isCollapsed={isConfigPanelCollapsed}
+          onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
         />
       </div>
     );
@@ -681,6 +686,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         <ProjectSidebar 
           onNavigateToLibrary={() => setActiveView('library')}
           isLibraryActive={true}
+          onNavigateToUsage={() => setShowUsageModal(true)}
         />
         <main className="flex-1 overflow-hidden">
           <LibraryPage onBack={() => setActiveView('main')} />
@@ -695,6 +701,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           onShowDocs={() => setActiveView('docs')}
           onShowDesignSystem={() => setActiveView('design-system')}
           disabled={appState !== AppState.IDLE}
+          isCollapsed={isConfigPanelCollapsed}
+          onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
         />
       </div>
     );
@@ -713,12 +721,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       <ProjectSidebar 
         onNavigateToLibrary={() => setActiveView('library')}
         isLibraryActive={false}
+        onNavigateToUsage={() => setShowUsageModal(true)}
       />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Header with Status and Usage Stats */}
-        <div className="flex items-center justify-between px-4 py-3">
+      <main className="flex-1 flex flex-col overflow-hidden items-center">
+        <div className="w-full max-w-[1200px] flex flex-col h-full">
+          {/* Header with Status and Usage Stats */}
+          <div className="flex items-center justify-between px-4 py-3">
           <div className="flex-1 flex items-center gap-2">
             {/* Offline indicator */}
             {!isOnline && (
@@ -734,9 +744,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 <span className="text-xs text-amber-700 dark:text-amber-400">{storageWarning}</span>
               </div>
             )}
-          </div>
-          <div className="flex-1 flex justify-end">
-            <UsageStatsBar />
           </div>
         </div>
 
@@ -912,6 +919,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               </div>
             </div>
           </ErrorBoundary>
+          </div>
         </div>
       </main>
 
@@ -926,6 +934,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         onShowDocs={() => setActiveView('docs')}
         onShowDesignSystem={() => setActiveView('design-system')}
         disabled={appState !== AppState.IDLE && chatMode === 'voice'}
+        isCollapsed={isConfigPanelCollapsed}
+        onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
       />
 
       {/* Save Audio Modal */}
@@ -941,6 +951,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             ? audioToSave.transcript.slice(0, 30) + (audioToSave.transcript.length > 30 ? '...' : '')
             : ttsText.slice(0, 30) + (ttsText.length > 30 ? '...' : '')
         }
+      />
+
+      {/* Usage Modal */}
+      <UsageModal
+        isOpen={showUsageModal}
+        onClose={() => setShowUsageModal(false)}
       />
 
       {/* Error Toast */}

@@ -18,6 +18,8 @@ interface ConfigPanelProps {
   onShowDocs: () => void;
   onShowDesignSystem?: () => void;
   disabled?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 /**
@@ -34,6 +36,8 @@ export const ConfigPanel = memo(function ConfigPanel({
   onShowDocs: _onShowDocs, // Prefix with _ to indicate intentionally unused
   onShowDesignSystem,
   disabled = false,
+  isCollapsed = false,
+  onToggleCollapse,
 }: ConfigPanelProps) {
   // Theme colors from DS tokens
   const theme = useThemeColors();
@@ -52,14 +56,38 @@ export const ConfigPanel = memo(function ConfigPanel({
 
   return (
     <aside 
-      className="w-[320px] h-full flex flex-col overflow-hidden"
+      className="h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out relative"
       style={{ 
+        width: isCollapsed ? '48px' : '320px',
         backgroundColor: theme.background.ghost,
-        borderRight: `1px solid ${theme.stroke.low}`
+        borderLeft: `2px solid ${theme.stroke.medium}`,
       }}
     >
+      {/* Toggle Button */}
+      {onToggleCollapse && (
+        <button
+          onClick={onToggleCollapse}
+          className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70"
+          style={{
+            backgroundColor: theme.background.subtle,
+            border: `2px solid ${theme.stroke.medium}`,
+            color: theme.text.high,
+          }}
+          aria-label={isCollapsed ? 'Expand config panel' : 'Collapse config panel'}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            {isCollapsed ? (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            )}
+          </svg>
+        </button>
+      )}
+
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      {!isCollapsed && (
+        <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {/* Voice Selection */}
         <VoiceSelector
           value={voiceGender}
@@ -133,10 +161,12 @@ export const ConfigPanel = memo(function ConfigPanel({
           onChange={(value) => onConfigChange({ ...config, maxResponseLength: value as ResponseLength })}
           disabled={disabled}
         />
-      </div>
+        </div>
+      )}
 
       {/* Footer - Theme & Design System Toggles */}
-      <div className="p-3 space-y-2">
+      {!isCollapsed && (
+        <div className="p-3 space-y-2">
         {/* Design System Library Link */}
         {onShowDesignSystem && (
           <button
@@ -195,7 +225,8 @@ export const ConfigPanel = memo(function ConfigPanel({
             )}
           </button>
         </div>
-      </div>
+        </div>
+      )}
     </aside>
   );
 });

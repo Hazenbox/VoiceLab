@@ -8,6 +8,7 @@ export { SoundWave } from './SoundWave';
 export { ConfigPanel } from './ConfigPanel';
 export { ProjectSidebar } from './ProjectSidebar';
 export { SaveAudioModal } from './SaveAudioModal';
+export { UsageModal } from './UsageModal';
 export { ChatPanel } from './ChatPanel';
 export { ErrorBoundary, ErrorFallback } from './ErrorBoundary';
 export { ModelSelector, ModelSelectorInline } from './ModelSelector';

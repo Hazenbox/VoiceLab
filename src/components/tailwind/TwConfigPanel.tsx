@@ -17,6 +17,8 @@ interface TwConfigPanelProps {
   onShowDocs: () => void;
   onShowDesignSystem?: () => void;
   disabled?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 /**
@@ -32,6 +34,8 @@ export const TwConfigPanel: React.FC<TwConfigPanelProps> = ({
   onShowDocs: _onShowDocs, // Prefix with _ to indicate intentionally unused
   onShowDesignSystem,
   disabled = false,
+  isCollapsed = false,
+  onToggleCollapse,
 }) => {
   const { toggleDesignSystem, designSystem } = useDesignSystem();
   
@@ -47,9 +51,30 @@ export const TwConfigPanel: React.FC<TwConfigPanelProps> = ({
   };
 
   return (
-    <aside className="w-[320px] h-full flex flex-col overflow-hidden bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800">
+    <aside 
+      className="h-full flex flex-col overflow-hidden bg-white dark:bg-zinc-950 border-l-2 border-zinc-400 dark:border-zinc-600 transition-all duration-300 ease-in-out relative"
+      style={{ width: isCollapsed ? '48px' : '320px' }}
+    >
+      {/* Toggle Button */}
+      {onToggleCollapse && (
+        <button
+          onClick={onToggleCollapse}
+          className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70 bg-zinc-100 dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-zinc-50"
+          aria-label={isCollapsed ? 'Expand config panel' : 'Collapse config panel'}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            {isCollapsed ? (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            )}
+          </svg>
+        </button>
+      )}
+
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      {!isCollapsed && (
+        <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {/* Voice Selection */}
         <TwVoiceSelector
           value={voiceGender}
@@ -113,10 +138,12 @@ export const TwConfigPanel: React.FC<TwConfigPanelProps> = ({
           onChange={(value) => onConfigChange({ ...config, maxResponseLength: value as ResponseLength })}
           disabled={disabled}
         />
-      </div>
+        </div>
+      )}
 
       {/* Footer - Theme & Design System Toggles */}
-      <div className="p-3 space-y-2 border-t border-zinc-200 dark:border-zinc-800">
+      {!isCollapsed && (
+        <div className="p-3 space-y-2 border-t border-zinc-200 dark:border-zinc-800">
         {/* Design System Library Link */}
         {onShowDesignSystem && (
           <button
@@ -158,7 +185,8 @@ export const TwConfigPanel: React.FC<TwConfigPanelProps> = ({
             )}
           </button>
         </div>
-      </div>
+        </div>
+      )}
     </aside>
   );
 };
