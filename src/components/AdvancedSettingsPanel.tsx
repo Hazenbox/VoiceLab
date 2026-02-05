@@ -235,6 +235,9 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
     });
   }, [trustSettings, onTrustSettingsChange]);
   
+  // Don't render if collapsed
+  if (isCollapsed) return null;
+  
   return (
     <aside
       className="h-full flex flex-col overflow-hidden relative"
