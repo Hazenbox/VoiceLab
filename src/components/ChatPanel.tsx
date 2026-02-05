@@ -46,6 +46,12 @@ interface ChatPanelProps {
   voiceSupported?: boolean;
   /** Model selector component to render inside the input bar */
   modelSelector?: React.ReactNode;
+  /** Mode toggle component to render below input */
+  modeToggle?: React.ReactNode;
+  /** Channel selector component to render below input */
+  channelSelector?: React.ReactNode;
+  /** Platform selector component to render below input */
+  platformSelector?: React.ReactNode;
 }
 
 // =============================================================================
@@ -66,6 +72,9 @@ export const ChatPanel = memo(function ChatPanel({
   onVoiceClick,
   voiceSupported = true,
   modelSelector,
+  modeToggle,
+  channelSelector,
+  platformSelector,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -163,92 +172,146 @@ export const ChatPanel = memo(function ChatPanel({
       aria-label="Chat conversation"
       id={id}
     >
-      {/* Messages Area */}
-      <div 
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-3"
-        role="log"
-        aria-live="polite"
-        aria-atomic="false"
-        aria-relevant="additions"
-        tabIndex={0}
-      >
-        {messages.length === 0 && showEmptyState ? (
-          <div 
-            className="flex items-center justify-center h-full"
-            role="status"
-          >
-            <p 
-              className="text-sm text-center max-w-xs"
-              style={{ color: theme.text.low }}
+      {/* Centered container with 75% max-width on medium+ screens */}
+      <div className="w-full md:max-w-[75%] mx-auto h-full flex flex-col">
+        {/* Messages Area */}
+        <div 
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto p-4 space-y-3"
+          role="log"
+          aria-live="polite"
+          aria-atomic="false"
+          aria-relevant="additions"
+          tabIndex={0}
+        >
+          {messages.length === 0 && showEmptyState ? (
+            <div 
+              className="flex items-center justify-center h-full"
+              role="status"
             >
-              {emptyStateMessage}
-            </p>
-          </div>
-        ) : (
-          <div role="list" aria-label="Messages">
-            {messages.map(renderMessage)}
-            <div ref={messagesEndRef} aria-hidden="true" />
+              <p 
+                className="text-sm text-center max-w-xs"
+                style={{ color: theme.text.low }}
+              >
+                {emptyStateMessage}
+              </p>
+            </div>
+          ) : (
+            <div role="list" aria-label="Messages">
+              {messages.map(renderMessage)}
+              <div ref={messagesEndRef} aria-hidden="true" />
+            </div>
+          )}
+        </div>
+
+        {/* Loading Indicator */}
+        {isLoading && (
+          <div 
+            className="px-4 py-2"
+            role="status"
+            aria-live="polite"
+            aria-label="Generating response"
+          >
+            <div 
+              className="flex items-center gap-2 text-sm"
+              style={{ color: theme.text.medium }}
+            >
+              <div className="flex gap-1" aria-hidden="true">
+                <span 
+                  className="w-2 h-2 rounded-full animate-bounce" 
+                  style={{ backgroundColor: theme.accent, animationDelay: '0ms' }} 
+                />
+                <span 
+                  className="w-2 h-2 rounded-full animate-bounce" 
+                  style={{ backgroundColor: theme.accent, animationDelay: '150ms' }} 
+                />
+                <span 
+                  className="w-2 h-2 rounded-full animate-bounce" 
+                  style={{ backgroundColor: theme.accent, animationDelay: '300ms' }} 
+                />
+              </div>
+              <span>Generating...</span>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Loading Indicator */}
-      {isLoading && (
-        <div 
-          className="px-4 py-2"
-          role="status"
-          aria-live="polite"
-          aria-label="Generating response"
-        >
+        {/* Input Area - Grok-style pill-shaped input */}
+        <div className="p-4">
           <div 
-            className="flex items-center gap-2 text-sm"
-            style={{ color: theme.text.medium }}
+            className="rounded-full flex items-center px-2 py-1.5 gap-1"
+            style={{ 
+              backgroundColor: theme.stroke.low,
+            }}
           >
-            <div className="flex gap-1" aria-hidden="true">
-              <span 
-                className="w-2 h-2 rounded-full animate-bounce" 
-                style={{ backgroundColor: theme.accent, animationDelay: '0ms' }} 
-              />
-              <span 
-                className="w-2 h-2 rounded-full animate-bounce" 
-                style={{ backgroundColor: theme.accent, animationDelay: '150ms' }} 
-              />
-              <span 
-                className="w-2 h-2 rounded-full animate-bounce" 
-                style={{ backgroundColor: theme.accent, animationDelay: '300ms' }} 
-              />
-            </div>
-            <span>Generating...</span>
-          </div>
-        </div>
-      )}
+            {/* Mic button - pill shaped, on the left */}
+            {onVoiceClick && (
+              <button
+                onClick={onVoiceClick}
+                disabled={!voiceSupported}
+                aria-label={!voiceSupported 
+                  ? "Voice chat not supported in this browser" 
+                  : "Switch to voice chat"}
+                title={!voiceSupported 
+                  ? "Voice chat not supported in this browser" 
+                  : "Voice chat (speak with AI)"}
+                className={`p-2 rounded-full transition-colors flex-shrink-0 ${
+                  !voiceSupported 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:opacity-70'
+                }`}
+                style={{ 
+                  color: theme.text.medium,
+                }}
+              >
+                <svg 
+                  width="18" 
+                  height="18" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="22" />
+                </svg>
+              </button>
+            )}
 
-      {/* Input Area - Grok-style pill-shaped input */}
-      <div className="p-4">
-        <div 
-          className="rounded-full flex items-center px-2 py-1.5 gap-1"
-          style={{ 
-            backgroundColor: theme.stroke.low,
-          }}
-        >
-          {/* Mic button - pill shaped, on the left */}
-          {onVoiceClick && (
+            {/* Single-line text input */}
+            <input
+              ref={inputRef}
+              data-chat-input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              disabled={inputDisabled}
+              aria-label="Message input"
+              className="flex-1 bg-transparent outline-none text-sm px-2"
+              style={{ 
+                color: theme.text.high,
+              }}
+            />
+
+            {/* Model selector - rendered inside input bar */}
+            {modelSelector}
+
+            {/* Arrow send button - pill shaped */}
             <button
-              onClick={onVoiceClick}
-              disabled={!voiceSupported}
-              aria-label={!voiceSupported 
-                ? "Voice chat not supported in this browser" 
-                : "Switch to voice chat"}
-              title={!voiceSupported 
-                ? "Voice chat not supported in this browser" 
-                : "Voice chat (speak with AI)"}
+              onClick={handleSubmit}
+              disabled={!inputValue.trim() || isLoading || inputDisabled}
+              aria-label="Send message"
               className={`p-2 rounded-full transition-colors flex-shrink-0 ${
-                !voiceSupported 
-                  ? 'opacity-50 cursor-not-allowed' 
+                !inputValue.trim() || isLoading || inputDisabled
+                  ? 'opacity-40 cursor-not-allowed'
                   : 'hover:opacity-70'
               }`}
               style={{ 
+                backgroundColor: theme.background.ghost,
                 color: theme.text.medium,
               }}
             >
@@ -262,62 +325,20 @@ export const ChatPanel = memo(function ChatPanel({
                 strokeLinecap="round" 
                 strokeLinejoin="round"
               >
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="22" />
+                <path d="M12 19V5" />
+                <path d="M5 12l7-7 7 7" />
               </svg>
             </button>
+          </div>
+
+          {/* Mode toggle + Channel/Platform selectors - below input */}
+          {(modeToggle || channelSelector || platformSelector) && (
+            <div className="flex items-center justify-center gap-3 mt-3">
+              {modeToggle}
+              {channelSelector}
+              {platformSelector}
+            </div>
           )}
-
-          {/* Single-line text input */}
-          <input
-            ref={inputRef}
-            data-chat-input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            disabled={inputDisabled}
-            aria-label="Message input"
-            className="flex-1 bg-transparent outline-none text-sm px-2"
-            style={{ 
-              color: theme.text.high,
-            }}
-          />
-
-          {/* Model selector - rendered inside input bar */}
-          {modelSelector}
-
-          {/* Arrow send button - pill shaped */}
-          <button
-            onClick={handleSubmit}
-            disabled={!inputValue.trim() || isLoading || inputDisabled}
-            aria-label="Send message"
-            className={`p-2 rounded-full transition-colors flex-shrink-0 ${
-              !inputValue.trim() || isLoading || inputDisabled
-                ? 'opacity-40 cursor-not-allowed'
-                : 'hover:opacity-70'
-            }`}
-            style={{ 
-              backgroundColor: theme.background.ghost,
-              color: theme.text.medium,
-            }}
-          >
-            <svg 
-              width="18" 
-              height="18" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M12 19V5" />
-              <path d="M5 12l7-7 7 7" />
-            </svg>
-          </button>
         </div>
       </div>
     </div>

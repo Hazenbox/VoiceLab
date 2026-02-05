@@ -22,3 +22,5 @@ export { ModeToggle, ModeToggleCompact } from './ModeToggle';
 export { AudioBubble } from './AudioBubble';
 export { DesignSystemLibrary } from './DesignSystemLibrary';
 export { LibraryPage } from './LibraryPage';
+export { ChannelSelector } from './ChannelSelector';
+export { PlatformSelector } from './PlatformSelector';

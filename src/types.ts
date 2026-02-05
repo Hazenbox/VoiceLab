@@ -29,6 +29,12 @@ export type ResponseLength = 'short' | 'medium' | 'long';
 // Language options
 export type Language = 'english' | 'hindi' | 'hinglish';
 
+// Channel options for copy generation
+export type Channel = 'sms' | 'whatsapp' | 'email';
+
+// Platform options for copy generation
+export type Platform = 'notifications' | 'banner' | 'ads';
+
 // Persona configuration
 export interface PersonaConfig {
   tone: string;
@@ -115,6 +121,8 @@ export interface Project {
   updatedAt: number;
   config: ConversationConfig;
   voiceGender: VoiceGender;
+  channel?: Channel;    // Optional for backward compatibility
+  platform?: Platform;  // Optional for backward compatibility
 }
 
 // Saved audio in library

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useAudioLibrary } from '../context/AudioLibraryContext';
 import { useThemeColors } from '../theme';
@@ -20,11 +20,38 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   onNavigateToUsage,
 }: ProjectSidebarProps) {
   const theme = useThemeColors();
-  const { projects, activeProject, setActiveProject, createProject, deleteProject } = useProject();
+  const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
   const { audios } = useAudioLibrary();
   
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
+  
+  // More menu state
+  const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
+  const [renamingProject, setRenamingProject] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const menuRef = useRef<HTMLDivElement>(null);
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpenFor(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Focus rename input when renaming starts
+  useEffect(() => {
+    if (renamingProject && renameInputRef.current) {
+      renameInputRef.current.focus();
+      renameInputRef.current.select();
+    }
+  }, [renamingProject]);
 
   const handleCreateProject = useCallback(() => {
     if (newProjectName.trim()) {
@@ -34,12 +61,32 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     }
   }, [newProjectName, createProject]);
 
-  const handleDeleteProject = useCallback((id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDeleteProject = useCallback((id: string) => {
     if (confirm('Are you sure you want to delete this project? All associated audios will be deleted.')) {
       deleteProject(id);
     }
+    setMenuOpenFor(null);
   }, [deleteProject]);
+
+  const handleStartRename = useCallback((project: { id: string; name: string }) => {
+    setRenamingProject(project.id);
+    setRenameValue(project.name);
+    setMenuOpenFor(null);
+  }, []);
+
+  const handleRenameSubmit = useCallback((id: string) => {
+    const trimmed = renameValue.trim();
+    if (trimmed && trimmed.length > 0) {
+      updateProject(id, { name: trimmed });
+    }
+    setRenamingProject(null);
+    setRenameValue('');
+  }, [renameValue, updateProject]);
+
+  const handleRenameCancel = useCallback(() => {
+    setRenamingProject(null);
+    setRenameValue('');
+  }, []);
 
   return (
     <aside 
@@ -135,35 +182,101 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 
           <div className="space-y-0.5">
             {projects.map((project) => (
-              <button
+              <div
                 key={project.id}
-                onClick={() => setActiveProject(project.id)}
-                className="w-full px-2 py-1.5 flex items-center justify-between group transition-colors rounded-lg"
-                style={{
-                  backgroundColor: activeProject?.id === project.id ? theme.stroke.low : 'transparent',
-                }}
+                className="relative"
               >
-                <div className="flex-1 text-left">
+                {renamingProject === project.id ? (
+                  // Rename input mode
                   <div 
-                    className="text-xs font-medium truncate"
-                    style={{ color: theme.text.high }}
+                    className="w-full px-2 py-1 flex items-center rounded-lg"
+                    style={{ backgroundColor: theme.stroke.low }}
                   >
-                    {project.name}
+                    <input
+                      ref={renameInputRef}
+                      type="text"
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleRenameSubmit(project.id);
+                        if (e.key === 'Escape') handleRenameCancel();
+                      }}
+                      onBlur={() => handleRenameSubmit(project.id)}
+                      className="flex-1 text-xs font-medium bg-transparent outline-none"
+                      style={{ color: theme.text.high }}
+                    />
                   </div>
-                </div>
-                
-                {projects.length > 1 && (
+                ) : (
+                  // Normal project item
                   <button
-                    onClick={(e) => handleDeleteProject(project.id, e)}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity"
-                    style={{ color: theme.text.low }}
+                    onClick={() => setActiveProject(project.id)}
+                    className="w-full px-2 py-1 flex items-center justify-between group transition-colors rounded-lg"
+                    style={{
+                      backgroundColor: activeProject?.id === project.id ? theme.stroke.low : 'transparent',
+                      height: '32px',
+                    }}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
+                    <div className="flex-1 text-left">
+                      <div 
+                        className="text-xs font-medium truncate"
+                        style={{ color: theme.text.high }}
+                      >
+                        {project.name}
+                      </div>
+                    </div>
+                    
+                    {/* More menu button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpenFor(menuOpenFor === project.id ? null : project.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity hover:opacity-70"
+                      style={{ color: theme.text.low }}
+                      aria-label="Project options"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                      </svg>
+                    </button>
                   </button>
                 )}
-              </button>
+
+                {/* Dropdown menu */}
+                {menuOpenFor === project.id && (
+                  <div 
+                    ref={menuRef}
+                    className="absolute right-0 top-full mt-1 z-50 min-w-[120px] rounded-lg shadow-lg overflow-hidden"
+                    style={{
+                      backgroundColor: theme.background.ghost,
+                      border: `1px solid ${theme.stroke.medium}`,
+                    }}
+                  >
+                    <button
+                      onClick={() => handleStartRename(project)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:opacity-80"
+                      style={{ color: theme.text.high }}
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Rename
+                    </button>
+                    {projects.length > 1 && (
+                      <button
+                        onClick={() => handleDeleteProject(project.id)}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:opacity-80"
+                        style={{ color: '#ef4444' }}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -200,7 +313,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             <span 
               className="ml-auto text-xs px-2 py-0.5 rounded-full"
               style={{ 
-                backgroundColor: theme.background.subtle,
+                backgroundColor: theme.stroke.low,
                 color: theme.text.medium 
               }}
             >

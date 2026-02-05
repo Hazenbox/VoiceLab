@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { Project, ConversationConfig, VoiceGender } from '../types';
+import type { Project, ConversationConfig, VoiceGender, Channel, Platform } from '../types';
 import { DEFAULT_CONFIG } from '../constants';
 import { 
   storageProjects, 
@@ -17,6 +17,8 @@ interface ProjectContextValue {
   setActiveProject: (id: string) => void;
   updateProjectConfig: (config: ConversationConfig) => void;
   updateProjectVoiceGender: (gender: VoiceGender) => void;
+  updateProjectChannel: (channel: Channel) => void;
+  updateProjectPlatform: (platform: Platform) => void;
 }
 
 const ProjectContext = createContext<ProjectContextValue | null>(null);
@@ -144,6 +146,18 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     }
   }, [activeProjectId, updateProject]);
 
+  const updateProjectChannel = useCallback((channel: Channel) => {
+    if (activeProjectId) {
+      updateProject(activeProjectId, { channel });
+    }
+  }, [activeProjectId, updateProject]);
+
+  const updateProjectPlatform = useCallback((platform: Platform) => {
+    if (activeProjectId) {
+      updateProject(activeProjectId, { platform });
+    }
+  }, [activeProjectId, updateProject]);
+
   const activeProject = projects.find(p => p.id === activeProjectId) || null;
 
   const value: ProjectContextValue = {
@@ -155,6 +169,8 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     setActiveProject,
     updateProjectConfig,
     updateProjectVoiceGender,
+    updateProjectChannel,
+    updateProjectPlatform,
   };
 
   return (

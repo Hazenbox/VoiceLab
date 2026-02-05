@@ -29,6 +29,8 @@ import {
   ModeToggle,
   DesignSystemLibrary,
   LibraryPage,
+  ChannelSelector,
+  PlatformSelector,
 } from './components';
 import type { TTSProviderType } from './components';
 import { useChatPersistence, useNetworkStatus } from './hooks';
@@ -74,7 +76,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const theme = useThemeColors();
   
   // Project context
-  const { activeProject, updateProjectConfig, updateProjectVoiceGender } = useProject();
+  const { activeProject, updateProjectConfig, updateProjectVoiceGender, updateProjectChannel, updateProjectPlatform } = useProject();
   const { saveAudio } = useAudioLibrary();
   
   // UI State - chatMode persisted to localStorage
@@ -913,6 +915,29 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       showHealth={false}
                       size="sm"
                       disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
+                    />
+                  }
+                  modeToggle={
+                    <ModeToggle
+                      mode={chatMode}
+                      onChange={handleModeChange}
+                      disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
+                    />
+                  }
+                  channelSelector={
+                    <ChannelSelector
+                      value={activeProject.channel || 'sms'}
+                      onChange={updateProjectChannel}
+                      size="sm"
+                      disabled={isChatLoading}
+                    />
+                  }
+                  platformSelector={
+                    <PlatformSelector
+                      value={activeProject.platform || 'notifications'}
+                      onChange={updateProjectPlatform}
+                      size="sm"
+                      disabled={isChatLoading}
                     />
                   }
                 />

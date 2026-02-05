@@ -3,7 +3,7 @@
  * Dropdown for selecting LLM provider with status indicators
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { getAvailableLLMProviders, type LLMProviderType } from '../services/providers/llm';
 import { getOrchestratorInstance } from '../services/llm/orchestrator';
 
@@ -34,6 +34,7 @@ export function ModelSelector({
 }: ModelSelectorProps) {
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadProviders = async () => {
@@ -58,6 +59,20 @@ export function ModelSelector({
     loadProviders();
   }, [showHealth]);
 
+  // Close dropdown on escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   const selectedProvider = useMemo(
     () => providers.find(p => p.type === value),
     [providers, value]
@@ -73,7 +88,7 @@ export function ModelSelector({
     : 'text-sm py-2 px-3';
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} ref={containerRef}>
       {/* Trigger Button */}
       <button
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -87,6 +102,8 @@ export function ModelSelector({
           ${sizeClasses}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
       >
         {/* Status indicator */}
         {showHealth && selectedProvider && (
@@ -116,7 +133,7 @@ export function ModelSelector({
         </svg>
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu - Opens Upward */}
       {isOpen && (
         <>
           {/* Backdrop */}
@@ -125,8 +142,8 @@ export function ModelSelector({
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Menu */}
-          <div className="absolute top-full left-0 mt-1 z-20 min-w-[180px] bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 py-1 overflow-hidden">
+          {/* Menu - Opens upward */}
+          <div className="absolute bottom-full left-0 mb-1 z-20 min-w-[180px] bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 py-1 overflow-hidden" role="listbox">
             {providers.map(provider => (
               <button
                 key={provider.type}

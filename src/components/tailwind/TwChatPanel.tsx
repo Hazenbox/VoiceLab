@@ -27,6 +27,12 @@ interface TwChatPanelProps {
   voiceSupported?: boolean;
   /** Model selector component to render inside the input bar */
   modelSelector?: React.ReactNode;
+  /** Mode toggle component to render below input */
+  modeToggle?: React.ReactNode;
+  /** Channel selector component to render below input */
+  channelSelector?: React.ReactNode;
+  /** Platform selector component to render below input */
+  platformSelector?: React.ReactNode;
 }
 
 export function TwChatPanel({ 
@@ -39,6 +45,9 @@ export function TwChatPanel({
   onVoiceClick,
   voiceSupported = true,
   modelSelector,
+  modeToggle,
+  channelSelector,
+  platformSelector,
 }: TwChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -69,94 +78,148 @@ export function TwChatPanel({
       className="flex flex-col h-full"
       style={{ backgroundColor: theme.background.ghost }}
     >
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p 
-              className="text-sm"
-              style={{ color: theme.text.low }}
-            >
-              {emptyStateMessage}
-            </p>
-          </div>
-        ) : (
-          <>
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+      {/* Centered container with 75% max-width on medium+ screens */}
+      <div className="w-full md:max-w-[75%] mx-auto h-full flex flex-col">
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <p 
+                className="text-sm"
+                style={{ color: theme.text.low }}
               >
-                <div
-                  className="max-w-[80%] rounded-lg px-3 py-2"
-                  style={{
-                    backgroundColor: message.role === 'user' 
-                      ? '#f97316' 
-                      : theme.isLight ? '#f5f5f5' : '#27272a',
-                    color: message.role === 'user' 
-                      ? '#ffffff' 
-                      : theme.text.high,
-                  }}
-                >
-                  <MessageContent content={message.content} role={message.role} />
-                  <p 
-                    className="text-xs mt-1 opacity-70"
-                  >
-                    {new Date(message.timestamp).toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </p>
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </>
-        )}
-      </div>
-
-      {/* Loading Indicator */}
-      {isLoading && (
-        <div className="px-4 py-2">
-          <div 
-            className="flex items-center gap-2 text-sm"
-            style={{ color: theme.text.medium }}
-          >
-            <div className="flex gap-1">
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                {emptyStateMessage}
+              </p>
             </div>
-            <span>Generating...</span>
-          </div>
+          ) : (
+            <>
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className="max-w-[80%] rounded-lg px-3 py-2"
+                    style={{
+                      backgroundColor: message.role === 'user' 
+                        ? '#f97316' 
+                        : theme.isLight ? '#f5f5f5' : '#27272a',
+                      color: message.role === 'user' 
+                        ? '#ffffff' 
+                        : theme.text.high,
+                    }}
+                  >
+                    <MessageContent content={message.content} role={message.role} />
+                    <p 
+                      className="text-xs mt-1 opacity-70"
+                    >
+                      {new Date(message.timestamp).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </>
+          )}
         </div>
-      )}
 
-      {/* Input Area - Grok-style pill-shaped input */}
-      <div className="p-4">
-        <div 
-          className="rounded-full flex items-center px-2 py-1.5 gap-1"
-          style={{ 
-            backgroundColor: theme.stroke.low,
-          }}
-        >
-          {/* Mic button - pill shaped, on the left */}
-          {onVoiceClick && (
+        {/* Loading Indicator */}
+        {isLoading && (
+          <div className="px-4 py-2">
+            <div 
+              className="flex items-center gap-2 text-sm"
+              style={{ color: theme.text.medium }}
+            >
+              <div className="flex gap-1">
+                <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+              </div>
+              <span>Generating...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Input Area - Grok-style pill-shaped input */}
+        <div className="p-4">
+          <div 
+            className="rounded-full flex items-center px-2 py-1.5 gap-1"
+            style={{ 
+              backgroundColor: theme.stroke.low,
+            }}
+          >
+            {/* Mic button - pill shaped, on the left */}
+            {onVoiceClick && (
+              <button
+                onClick={onVoiceClick}
+                disabled={!voiceSupported}
+                aria-label={!voiceSupported 
+                  ? "Voice chat not supported in this browser" 
+                  : "Switch to voice chat"}
+                title={!voiceSupported 
+                  ? "Voice chat not supported in this browser" 
+                  : "Voice chat (speak with AI)"}
+                className={`p-2 rounded-full transition-colors flex-shrink-0 ${
+                  !voiceSupported 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:opacity-70'
+                }`}
+                style={{ 
+                  color: theme.text.medium,
+                }}
+              >
+                <svg 
+                  width="18" 
+                  height="18" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="22" />
+                </svg>
+              </button>
+            )}
+
+            {/* Single-line text input */}
+            <input
+              ref={inputRef}
+              data-chat-input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder={placeholder}
+              disabled={inputDisabled}
+              aria-label="Message input"
+              className="flex-1 bg-transparent outline-none text-sm px-2"
+              style={{ 
+                color: theme.text.high,
+              }}
+            />
+
+            {/* Model selector - rendered inside input bar */}
+            {modelSelector}
+
+            {/* Arrow send button - pill shaped */}
             <button
-              onClick={onVoiceClick}
-              disabled={!voiceSupported}
-              aria-label={!voiceSupported 
-                ? "Voice chat not supported in this browser" 
-                : "Switch to voice chat"}
-              title={!voiceSupported 
-                ? "Voice chat not supported in this browser" 
-                : "Voice chat (speak with AI)"}
+              onClick={handleSubmit}
+              disabled={!inputValue.trim() || isLoading || inputDisabled}
+              aria-label="Send message"
               className={`p-2 rounded-full transition-colors flex-shrink-0 ${
-                !voiceSupported 
-                  ? 'opacity-50 cursor-not-allowed' 
+                !inputValue.trim() || isLoading || inputDisabled
+                  ? 'opacity-40 cursor-not-allowed'
                   : 'hover:opacity-70'
               }`}
               style={{ 
+                backgroundColor: theme.background.ghost,
                 color: theme.text.medium,
               }}
             >
@@ -170,62 +233,20 @@ export function TwChatPanel({
                 strokeLinecap="round" 
                 strokeLinejoin="round"
               >
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="22" />
+                <path d="M12 19V5" />
+                <path d="M5 12l7-7 7 7" />
               </svg>
             </button>
+          </div>
+
+          {/* Mode toggle + Channel/Platform selectors - below input */}
+          {(modeToggle || channelSelector || platformSelector) && (
+            <div className="flex items-center justify-center gap-3 mt-3">
+              {modeToggle}
+              {channelSelector}
+              {platformSelector}
+            </div>
           )}
-
-          {/* Single-line text input */}
-          <input
-            ref={inputRef}
-            data-chat-input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder={placeholder}
-            disabled={inputDisabled}
-            aria-label="Message input"
-            className="flex-1 bg-transparent outline-none text-sm px-2"
-            style={{ 
-              color: theme.text.high,
-            }}
-          />
-
-          {/* Model selector - rendered inside input bar */}
-          {modelSelector}
-
-          {/* Arrow send button - pill shaped */}
-          <button
-            onClick={handleSubmit}
-            disabled={!inputValue.trim() || isLoading || inputDisabled}
-            aria-label="Send message"
-            className={`p-2 rounded-full transition-colors flex-shrink-0 ${
-              !inputValue.trim() || isLoading || inputDisabled
-                ? 'opacity-40 cursor-not-allowed'
-                : 'hover:opacity-70'
-            }`}
-            style={{ 
-              backgroundColor: theme.background.ghost,
-              color: theme.text.medium,
-            }}
-          >
-            <svg 
-              width="18" 
-              height="18" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M12 19V5" />
-              <path d="M5 12l7-7 7 7" />
-            </svg>
-          </button>
         </div>
       </div>
     </div>

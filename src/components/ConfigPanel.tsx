@@ -60,26 +60,34 @@ export const ConfigPanel = memo(function ConfigPanel({
       style={{ 
         width: isCollapsed ? '48px' : '320px',
         backgroundColor: theme.background.ghost,
-        borderLeft: `2px solid ${theme.stroke.medium}`,
+        borderLeft: `1px solid ${theme.stroke.low}`,
       }}
     >
-      {/* Toggle Button */}
+      {/* Toggle Button - Positioned right when expanded, left when collapsed */}
       {onToggleCollapse && (
         <button
           onClick={onToggleCollapse}
-          className="absolute top-3 left-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70"
+          className={`absolute top-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70 ${isCollapsed ? 'left-2' : 'right-3'}`}
           style={{
-            backgroundColor: theme.background.subtle,
-            border: `2px solid ${theme.stroke.medium}`,
+            backgroundColor: theme.stroke.low,
             color: theme.text.high,
           }}
           aria-label={isCollapsed ? 'Expand config panel' : 'Collapse config panel'}
         >
+          {/* Sidebar toggle icon */}
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             {isCollapsed ? (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              // Panel left icon (expand)
+              <>
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="9" y1="3" x2="9" y2="21" strokeLinecap="round" strokeLinejoin="round" />
+              </>
             ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              // Panel right icon (collapse)
+              <>
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="15" y1="3" x2="15" y2="21" strokeLinecap="round" strokeLinejoin="round" />
+              </>
             )}
           </svg>
         </button>
@@ -167,19 +175,18 @@ export const ConfigPanel = memo(function ConfigPanel({
       {/* Footer - Theme & Design System Toggles */}
       {!isCollapsed && (
         <div className="p-3 space-y-2">
-        {/* Design System Library Link */}
+        {/* Design System Library Link - Text Link Style */}
         {onShowDesignSystem && (
           <button
             onClick={onShowDesignSystem}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
+            className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-70"
             style={{
-              backgroundColor: theme.background.subtle,
-              border: `2px solid ${theme.stroke.medium}`,
-              color: theme.text.high,
+              color: theme.text.medium,
+              backgroundColor: 'transparent',
             }}
             aria-label="Open Design System Library"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z" />
             </svg>
             <span>Design System</span>
@@ -187,18 +194,17 @@ export const ConfigPanel = memo(function ConfigPanel({
         )}
         
         <div className="flex items-center justify-between">
-          {/* Design System Toggle */}
+          {/* Design System Toggle - Text Link Style */}
           <button
             onClick={toggleDesignSystem}
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-80"
+            className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-70"
             style={{
-              backgroundColor: theme.background.subtle,
-              border: `2px solid ${theme.stroke.medium}`,
-              color: theme.text.high,
+              color: theme.text.medium,
+              backgroundColor: 'transparent',
             }}
             aria-label={`Switch to ${designSystem === 'jio' ? 'Tailwind' : 'Jio DS'}`}
           >
-            <span>{designSystem === 'jio' ? '🎨 Jio DS' : '💨 Tailwind'}</span>
+            <span>{designSystem === 'jio' ? 'Jio DS' : 'Tailwind'}</span>
           </button>
 
           {/* Theme Toggle */}
@@ -206,8 +212,7 @@ export const ConfigPanel = memo(function ConfigPanel({
             onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
             className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
             style={{
-              backgroundColor: theme.isLight ? theme.background.subtle : '#27272a',
-              border: `2px solid ${theme.stroke.medium}`,
+              backgroundColor: theme.stroke.low,
               color: theme.text.high,
             }}
             aria-label={`Switch to ${colorMode === 'Light' ? 'dark' : 'light'} mode`}
