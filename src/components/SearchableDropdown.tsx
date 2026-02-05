@@ -58,6 +58,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [dropdownDirection, setDropdownDirection] = useState<'down' | 'up'>('down');
   
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -121,6 +122,24 @@ export const SearchableDropdown = memo(function SearchableDropdown({
       setSearchQuery('');
     }
   }, [isOpen, shouldShowSearch, value, flatOptions]);
+
+  // Determine dropdown direction based on viewport space
+  useEffect(() => {
+    if (isOpen && containerRef.current && menuRef.current) {
+      const triggerRect = containerRef.current.getBoundingClientRect();
+      const menuHeight = menuRef.current.offsetHeight || 320; // fallback to max-h
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - triggerRect.bottom;
+      const spaceAbove = triggerRect.top;
+      
+      // Open downward by default, upward only if insufficient space below
+      if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+        setDropdownDirection('up');
+      } else {
+        setDropdownDirection('down');
+      }
+    }
+  }, [isOpen]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -226,7 +245,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
         </svg>
       </button>
 
-      {/* Dropdown Menu - Opens upward with solid background */}
+      {/* Dropdown Menu - Smart positioning (up/down based on viewport) */}
       {isOpen && (
         <>
           {/* Backdrop */}
@@ -238,13 +257,16 @@ export const SearchableDropdown = memo(function SearchableDropdown({
             }}
           />
 
-          {/* Menu - no shadow, matches ModelSelector */}
+          {/* Menu - smart positioning (up/down) */}
           <div
             ref={menuRef}
-            className="absolute z-[100] bottom-full mb-1 left-0 min-w-[200px] max-h-[320px] rounded-lg overflow-hidden flex flex-col"
+            className={`absolute z-[100] left-0 min-w-[200px] max-h-[320px] rounded-lg overflow-hidden flex flex-col ${
+              dropdownDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'
+            }`}
             style={{
               backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
               border: `1px solid ${theme.stroke.low}`,
+              maxWidth: 'calc(100vw - 32px)',
             }}
             role="listbox"
           >
