@@ -105,11 +105,11 @@ export const AIOrb = memo(function AIOrb({
   useEffect(() => {
     if (!webGLSupported || !containerRef.current) return;
 
+    // Abort flag to prevent race conditions with React StrictMode
+    let isMounted = true;
+    
     const sceneContainer = containerRef.current.querySelector('.ai-orb-scene');
     if (!sceneContainer) return;
-
-    // Prevent multiple initializations
-    if (sceneRef.current) return;
 
     const initScene = async () => {
       try {
@@ -117,19 +117,15 @@ export const AIOrb = memo(function AIOrb({
         
         if (!UnicornStudio) {
           console.error('[AIOrb] UnicornStudio SDK not loaded. Check if the script tag is present in index.html');
-          setIsSceneLoaded(false);
+          if (isMounted) setIsSceneLoaded(false);
           return;
         }
 
         if (!UnicornStudio.addScene) {
           console.error('[AIOrb] UnicornStudio.addScene not available. SDK version may be incompatible.');
-          setIsSceneLoaded(false);
+          if (isMounted) setIsSceneLoaded(false);
           return;
         }
-
-        // Clear any existing canvas elements in the container
-        const existingCanvases = sceneContainer.querySelectorAll('canvas');
-        existingCanvases.forEach(canvas => canvas.remove());
 
         console.log('[AIOrb] Initializing Unicorn Studio scene...');
         const scene = await UnicornStudio.addScene({
@@ -138,10 +134,17 @@ export const AIOrb = memo(function AIOrb({
           scale: 1,
           dpi: window.devicePixelRatio || 1.5,
           filePath: '/scenes/ai-orb.json',
-          interactivity: {
-            mouse: { disableMobile: true },
-          },
+          // Disable all mouse interactivity (top-level parameter)
+          disableMouse: true,
         });
+        
+        // CRITICAL: Check if component is still mounted before using result
+        // This prevents duplicate scenes from React StrictMode double-invocation
+        if (!isMounted) {
+          console.log('[AIOrb] Component unmounted during init, destroying stale scene');
+          scene?.destroy?.();
+          return;
+        }
         
         if (scene) {
           sceneRef.current = scene;
@@ -153,35 +156,27 @@ export const AIOrb = memo(function AIOrb({
         }
       } catch (error) {
         console.error('[AIOrb] Failed to initialize Unicorn Studio scene:', error);
-        setIsSceneLoaded(false);
+        if (isMounted) setIsSceneLoaded(false);
       }
     };
 
     initScene();
 
     return () => {
-      if (sceneRef.current) {
+      // Mark as unmounted to abort any pending async operations
+      isMounted = false;
+      
+      // Destroy only this specific scene instance (not all scenes globally)
+      if (sceneRef.current?.destroy) {
         try {
-          const UnicornStudio = (window as any).UnicornStudio;
-          // Destroy the specific scene if it has a destroy method
-          if (sceneRef.current.destroy) {
-            sceneRef.current.destroy();
-          } else if (UnicornStudio?.destroy) {
-            // Fallback to global destroy
-            UnicornStudio.destroy();
-          }
-          // Clear any remaining canvas elements
-          const sceneContainer = containerRef.current?.querySelector('.ai-orb-scene');
-          if (sceneContainer) {
-            const canvases = sceneContainer.querySelectorAll('canvas');
-            canvases.forEach(canvas => canvas.remove());
-          }
+          sceneRef.current.destroy();
+          console.log('[AIOrb] Scene destroyed on cleanup');
         } catch {
           // Ignore cleanup errors
         }
-        sceneRef.current = null;
-        setIsSceneLoaded(false);
       }
+      sceneRef.current = null;
+      setIsSceneLoaded(false);
     };
   }, [webGLSupported]);
 
@@ -248,10 +243,7 @@ export const AIOrb = memo(function AIOrb({
         {webGLSupported ? (
           <div 
             className="ai-orb-scene" 
-            style={{ 
-              opacity: isSceneLoaded ? 1 : 0,
-              display: isSceneLoaded ? 'block' : 'none'
-            }}
+            style={{ opacity: isSceneLoaded ? 1 : 0 }}
           />
         ) : (
           <FallbackOrb />
