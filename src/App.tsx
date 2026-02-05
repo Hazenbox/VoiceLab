@@ -4,6 +4,11 @@ import type {
   ColorMode,
   AppError,
   ChatMode,
+  // Content Trust System types
+  EcosystemType,
+  ContentChannelType,
+  TrustSettings,
+  TrustScore,
 } from './types';
 import { 
   VoiceGender, 
@@ -11,7 +16,7 @@ import {
   createTextMessage,
   createAudioMessage,
 } from './types';
-import { getSystemInstruction, AUDIO_CONFIG, getCopySystemPrompt } from './constants';
+import { getSystemInstruction, AUDIO_CONFIG } from './constants';
 import { 
   ConfigPanel, 
   StatusIndicator, 
@@ -24,11 +29,19 @@ import {
   ModelSelector,
   DesignSystemLibrary,
   LibraryPage,
-  ChannelSelector,
-  PlatformSelector,
   AIOrb,
+  // Content Trust System components
+  ContentContextSelector,
+  TrustContextPanel,
+  AdvancedSettingsPanel,
 } from './components';
 import type { TTSProviderType } from './components';
+// Content Trust System services
+import { buildPrompt } from './services/prompt';
+import { buildGenerationContext } from './services/context';
+import { runValidationPipeline } from './services/validation';
+import { calculateTrustScore } from './services/trust';
+import { storageTrustSettings, storageProjectDefaults, DEFAULT_PROJECT_DEFAULTS } from './services/trustStorage';
 import { useChatPersistence, useNetworkStatus } from './hooks';
 import { audioBufferManager } from './services/audioBufferManager';
 import {
@@ -68,7 +81,16 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const theme = useThemeColors();
   
   // Project context
-  const { activeProject, updateProjectConfig, updateProjectVoiceGender, updateProjectChannel, updateProjectPlatform } = useProject();
+  const { 
+    activeProject, 
+    updateProjectConfig, 
+    updateProjectVoiceGender, 
+    // New Content Trust methods
+    updateProjectDefaultChannel,
+    updateProjectDefaultEcosystem,
+    updateProjectDefaultLanguage,
+    updateProjectDefaultRegion,
+  } = useProject();
   const { saveAudio } = useAudioLibrary();
   
   // UI State - chatMode persisted to localStorage
@@ -86,6 +108,74 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [audioToSave, setAudioToSave] = useState<{ messageId: string; audioData: string; transcript: string } | null>(null);
   const [isConfigPanelCollapsed, setIsConfigPanelCollapsed] = useState(true);
   const [showUsageModal, setShowUsageModal] = useState(false);
+  
+  // ==========================================================================
+  // Content Trust System State
+  // ==========================================================================
+  
+  // Ecosystem and Channel - with migration from old project fields
+  const [ecosystem, setEcosystem] = useState<EcosystemType>(() => {
+    // Priority: project.defaultEcosystem > storage > default
+    if (activeProject?.defaultEcosystem) return activeProject.defaultEcosystem;
+    return storageProjectDefaults.get()?.ecosystem || 'connectivity';
+  });
+  
+  const [contentChannel, setContentChannel] = useState<ContentChannelType>(() => {
+    // Priority: project.defaultChannel > storage > default
+    if (activeProject?.defaultChannel) return activeProject.defaultChannel;
+    return storageProjectDefaults.get()?.channel || 'push_notification';
+  });
+  
+  // Trust settings
+  const [trustSettings, setTrustSettings] = useState<TrustSettings>(() => 
+    storageTrustSettings.get()
+  );
+  
+  // Trust panel state
+  const [showTrustPanel, setShowTrustPanel] = useState(false);
+  const [selectedMessageForTrust, setSelectedMessageForTrust] = useState<string | null>(null);
+  
+  // Advanced settings panel toggle
+  const [useAdvancedSettings, setUseAdvancedSettings] = useState(false);
+  
+  // Sync ecosystem/channel changes to storage
+  useEffect(() => {
+    const currentDefaults = storageProjectDefaults.get() || DEFAULT_PROJECT_DEFAULTS;
+    storageProjectDefaults.save({ 
+      ...currentDefaults, 
+      ecosystem, 
+      channel: contentChannel,
+    });
+  }, [ecosystem, contentChannel]);
+  
+  // Sync trust settings to storage
+  useEffect(() => {
+    storageTrustSettings.save(trustSettings);
+  }, [trustSettings]);
+  
+  // Sync ecosystem/channel with active project changes
+  useEffect(() => {
+    if (activeProject?.defaultEcosystem) {
+      setEcosystem(activeProject.defaultEcosystem);
+    }
+    if (activeProject?.defaultChannel) {
+      setContentChannel(activeProject.defaultChannel);
+    }
+  }, [activeProject?.id, activeProject?.defaultEcosystem, activeProject?.defaultChannel]);
+  
+  // Keyboard shortcut for advanced settings (Ctrl/Cmd+Shift+A)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        setUseAdvancedSettings(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+  
+  // ==========================================================================
   
   // Voice feature support detection
   const [voiceSupported, setVoiceSupported] = useState<boolean | null>(null);
@@ -194,13 +284,24 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     setError(null);
 
     try {
-      // Build messages with system prompt and history (use all messages for context, not filtered)
-      // Include channel and platform context from active project
-      const systemPrompt = getCopySystemPrompt(
-        undefined, 
-        activeProject?.channel, 
-        activeProject?.platform
+      // =======================================================================
+      // Content Trust System: Build Generation Context
+      // =======================================================================
+      const generationContext = buildGenerationContext({
+        ecosystem,
+        channel: contentChannel,
+        userMessage: message,
+        // Optional: add profile/timing if available from project
+        userProfile: activeProject?.defaultUserProfile,
+      });
+
+      // Build comprehensive prompt using Content Trust System
+      const { system: systemPrompt, context: finalContext } = buildPrompt(
+        generationContext,
+        message
       );
+
+      // Build messages with system prompt and history
       const contextMessages = chatMessages
         .filter(m => m.type === 'text') // Only use text messages for context
         .slice(-20); // Limit context to last 20 messages
@@ -227,8 +328,42 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         createLLMProvider
       );
 
-      // Create AI response with new format
-      const aiMessage = createTextMessage('assistant', result.content, chatMode, userMessage.id);
+      // =======================================================================
+      // Content Trust System: Validate and Score Content
+      // =======================================================================
+      let trustScore: TrustScore | undefined;
+      let validationSummary: { passedCount: number; warningCount: number; errorCount: number; autoFixesApplied: number } | undefined;
+
+      try {
+        // Run validation on generated content
+        const validationResult = await runValidationPipeline(result.content, finalContext);
+        
+        // Calculate trust score
+        trustScore = calculateTrustScore(validationResult, trustSettings);
+        
+        // Create validation summary for quick display
+        validationSummary = {
+          passedCount: validationResult.agentResults.filter(r => r.passed).length,
+          warningCount: validationResult.agentResults
+            .flatMap(r => r.violations)
+            .filter(v => v.severity === 'warning').length,
+          errorCount: validationResult.agentResults
+            .flatMap(r => r.violations)
+            .filter(v => v.severity === 'error').length,
+          autoFixesApplied: 0, // No auto-fixes applied by default
+        };
+      } catch (validationError) {
+        // Log validation error but don't block message
+        console.warn('Content validation failed:', validationError);
+      }
+
+      // Create AI response with trust data attached
+      const aiMessage = {
+        ...createTextMessage('assistant', result.content, chatMode, userMessage.id),
+        trustScore,
+        generationContext: finalContext,
+        validationSummary,
+      };
       addMessage(aiMessage);
     } catch (err) {
       // Don't show error if request was cancelled
@@ -245,7 +380,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     } finally {
       setIsChatLoading(false);
     }
-  }, [resetChatAbort, chatMode, addMessage, chatMessages, selectedLLMProvider, getChatAbortSignal]);
+  }, [resetChatAbort, chatMode, addMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings]);
 
   // Cancel ongoing chat request
   const handleCancelChat = useCallback(() => {
@@ -379,6 +514,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       setShowSaveModal(true);
     }
   }, [chatMessages]);
+
+  // Handle trust badge click - opens trust context panel
+  const handleTrustBadgeClick = useCallback((messageId: string) => {
+    setSelectedMessageForTrust(messageId);
+    setShowTrustPanel(true);
+  }, []);
+
+  // Get selected message for trust panel
+  const selectedMessageForTrustPanel = useMemo(() => 
+    selectedMessageForTrust 
+      ? chatMessages.find(m => m.id === selectedMessageForTrust) 
+      : null,
+    [selectedMessageForTrust, chatMessages]
+  );
 
   // Handle microphone access and start conversation
   const handleStartConversation = async () => {
@@ -884,22 +1033,25 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
                     />
                   }
-                  channelSelector={
-                    <ChannelSelector
-                      value={activeProject.channel || 'sms'}
-                      onChange={updateProjectChannel}
-                      size="sm"
+                  // Content Trust System: New context selector
+                  contextSelector={
+                    <ContentContextSelector
+                      ecosystem={ecosystem}
+                      channel={contentChannel}
+                      onEcosystemChange={(eco) => {
+                        setEcosystem(eco);
+                        updateProjectDefaultEcosystem(eco);
+                      }}
+                      onChannelChange={(ch) => {
+                        setContentChannel(ch);
+                        updateProjectDefaultChannel(ch);
+                      }}
+                      compact={true}
                       disabled={isChatLoading}
                     />
                   }
-                  platformSelector={
-                    <PlatformSelector
-                      value={activeProject.platform || 'notifications'}
-                      onChange={updateProjectPlatform}
-                      size="sm"
-                      disabled={isChatLoading}
-                    />
-                  }
+                  // Content Trust System: Trust badge click handler
+                  onTrustBadgeClick={handleTrustBadgeClick}
                 />
               </div>
             </div>
@@ -908,19 +1060,58 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         </div>
       </main>
 
-      {/* Right Sidebar - Config Panel */}
-      <ConfigPanelComponent
-        voiceGender={activeProject.voiceGender}
-        onVoiceGenderChange={updateProjectVoiceGender}
-        config={activeProject.config}
-        onConfigChange={updateProjectConfig}
-        colorMode={colorMode}
-        onColorModeChange={onColorModeChange}
-        onShowDocs={() => setActiveView('docs')}
-        onShowDesignSystem={() => setActiveView('design-system')}
-        disabled={appState !== AppState.IDLE && chatMode === 'voice'}
-        isCollapsed={isConfigPanelCollapsed}
-        onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
+      {/* Right Sidebar - Config Panel / Advanced Settings */}
+      {useAdvancedSettings ? (
+        <AdvancedSettingsPanel
+          voiceGender={activeProject.voiceGender}
+          onVoiceGenderChange={updateProjectVoiceGender}
+          defaultEcosystem={ecosystem}
+          defaultChannel={contentChannel}
+          defaultLanguage={activeProject.defaultLanguage || 'english'}
+          defaultRegion={activeProject.defaultRegion || 'pan_india'}
+          onDefaultEcosystemChange={(eco) => {
+            setEcosystem(eco);
+            updateProjectDefaultEcosystem(eco);
+          }}
+          onDefaultChannelChange={(ch) => {
+            setContentChannel(ch);
+            updateProjectDefaultChannel(ch);
+          }}
+          onDefaultLanguageChange={updateProjectDefaultLanguage}
+          onDefaultRegionChange={updateProjectDefaultRegion}
+          trustSettings={trustSettings}
+          onTrustSettingsChange={setTrustSettings}
+          colorMode={colorMode}
+          onColorModeChange={onColorModeChange}
+          isCollapsed={isConfigPanelCollapsed}
+          onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
+          onShowDesignSystem={() => setActiveView('design-system')}
+        />
+      ) : (
+        <ConfigPanelComponent
+          voiceGender={activeProject.voiceGender}
+          onVoiceGenderChange={updateProjectVoiceGender}
+          config={activeProject.config}
+          onConfigChange={updateProjectConfig}
+          colorMode={colorMode}
+          onColorModeChange={onColorModeChange}
+          onShowDocs={() => setActiveView('docs')}
+          onShowDesignSystem={() => setActiveView('design-system')}
+          disabled={appState !== AppState.IDLE && chatMode === 'voice'}
+          isCollapsed={isConfigPanelCollapsed}
+          onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
+        />
+      )}
+
+      {/* Trust Context Panel - Slide-out */}
+      <TrustContextPanel
+        isOpen={showTrustPanel}
+        onClose={() => {
+          setShowTrustPanel(false);
+          setSelectedMessageForTrust(null);
+        }}
+        trustScore={selectedMessageForTrustPanel?.trustScore}
+        generationContext={selectedMessageForTrustPanel?.generationContext}
       />
 
       {/* Save Audio Modal */}

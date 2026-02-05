@@ -17,6 +17,7 @@ import type { ChatMessage, ChatMode } from '../types';
 import { useThemeColors } from '../theme';
 import { MessageContent } from './MessageContent';
 import { AudioBubble } from './AudioBubble';
+import { TrustBadge } from './ContentTrust';
 
 // =============================================================================
 // Types
@@ -46,10 +47,16 @@ interface ChatPanelProps {
   voiceSupported?: boolean;
   /** Model selector component to render below input */
   modelSelector?: React.ReactNode;
-  /** Channel selector component to render below input */
+  /** @deprecated Use contextSelector instead */
   channelSelector?: React.ReactNode;
-  /** Platform selector component to render below input */
+  /** @deprecated Use contextSelector instead */
   platformSelector?: React.ReactNode;
+  
+  // Content Trust System props
+  /** Combined Ecosystem + Channel selector component (replaces channelSelector + platformSelector) */
+  contextSelector?: React.ReactNode;
+  /** Callback when user clicks trust badge to view details */
+  onTrustBadgeClick?: (messageId: string) => void;
 }
 
 // =============================================================================
@@ -72,6 +79,9 @@ export const ChatPanel = memo(function ChatPanel({
   modelSelector,
   channelSelector,
   platformSelector,
+  // Content Trust System props
+  contextSelector,
+  onTrustBadgeClick,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -147,6 +157,19 @@ export const ChatPanel = memo(function ChatPanel({
           }}
         >
           <MessageContent content={message.content} role={message.role} />
+          
+          {/* Trust Badge for assistant messages */}
+          {!isUser && message.trustScore && (
+            <div className="flex items-center gap-2 mt-1.5">
+              <TrustBadge
+                trustScore={message.trustScore}
+                onClick={() => onTrustBadgeClick?.(message.id)}
+                size="sm"
+                showScore={true}
+              />
+            </div>
+          )}
+          
           <p 
             className="text-xs mt-1 opacity-70"
             aria-label={`Sent at ${new Date(message.timestamp).toLocaleTimeString()}`}
@@ -159,7 +182,7 @@ export const ChatPanel = memo(function ChatPanel({
         </div>
       </div>
     );
-  }, [theme, onSaveAudio, handleSaveAudio]);
+  }, [theme, onSaveAudio, handleSaveAudio, onTrustBadgeClick]);
 
   return (
     <div 
@@ -325,12 +348,17 @@ export const ChatPanel = memo(function ChatPanel({
             </button>
           </div>
 
-          {/* Model + Channel/Platform selectors - below input, aligned left */}
-          {(modelSelector || channelSelector || platformSelector) && (
+          {/* Model + Context selectors - below input, aligned left */}
+          {(modelSelector || contextSelector || channelSelector || platformSelector) && (
             <div className="flex items-center justify-start gap-3 mt-3">
               {modelSelector}
-              {channelSelector}
-              {platformSelector}
+              {/* Prefer new contextSelector, fallback to legacy channel + platform */}
+              {contextSelector || (
+                <>
+                  {channelSelector}
+                  {platformSelector}
+                </>
+              )}
             </div>
           )}
         </div>

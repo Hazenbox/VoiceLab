@@ -28,3 +28,9 @@ export { Dropdown } from './Dropdown';
 export type { DropdownOption, DropdownProps } from './Dropdown';
 export { AIOrb } from './AIOrb';
 export type { AIOrbProps } from './AIOrb';
+
+// Content Trust System Components
+export { ContentContextSelector } from './ContentTrust';
+export { TrustBadge, InlineTrustBadge, TrustBadgeLoading } from './ContentTrust';
+export { TrustContextPanel } from './ContentTrust';
+export { AdvancedSettingsPanel } from './AdvancedSettingsPanel';
