@@ -166,13 +166,16 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Keyboard shortcut for advanced settings (Ctrl/Cmd+Shift+A)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'A') {
+      // Check both uppercase and lowercase for cross-browser compatibility
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
         e.preventDefault();
+        e.stopPropagation(); // Prevent event bubbling
         setUseAdvancedSettings(prev => !prev);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    // Use capture phase for priority handling
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, []);
   
   // ==========================================================================

@@ -120,10 +120,14 @@ export const TrustContextPanel = memo(function TrustContextPanel({
   
   return (
     <>
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
+      {/* Backdrop overlay - higher z-index */}
+      <div className="fixed inset-0 bg-black/50 z-[60]" onClick={onClose} />
       
-      <div className="fixed right-0 top-0 bottom-0 w-[380px] z-50 shadow-2xl overflow-hidden flex flex-col"
-        style={{ backgroundColor: theme.background.ghost }}>
+      {/* Panel - solid white bg, higher z-index, proper isolation */}
+      <div 
+        className="fixed right-0 top-0 bottom-0 w-[380px] z-[70] shadow-2xl overflow-hidden flex flex-col"
+        style={{ backgroundColor: theme.isLight ? '#ffffff' : '#1a1a1a' }}
+      >
         
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: theme.stroke.low }}>

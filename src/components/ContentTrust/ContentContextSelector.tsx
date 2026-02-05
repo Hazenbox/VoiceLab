@@ -61,12 +61,13 @@ function Dropdown({ value, onChange, options, label, disabled = false, compact =
   
   return (
     <div ref={dropdownRef} className="relative">
+      {/* Trigger button - transparent/naked background */}
       <button
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80 cursor-pointer'}`}
-        style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}`}
+        style={{ backgroundColor: 'transparent', color: theme.text.medium }}
       >
         <span className="truncate max-w-[100px]">
           {compact ? selectedOption?.label?.split(' ')[0] : selectedOption?.label || label}
@@ -77,20 +78,36 @@ function Dropdown({ value, onChange, options, label, disabled = false, compact =
         </svg>
       </button>
       
+      {/* Dropdown menu - opens upwards, white background, high z-index */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 min-w-[220px] max-h-[300px] overflow-auto rounded-lg shadow-lg"
-          style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.low}` }}>
+        <div 
+          className="absolute z-[100] bottom-full mb-1 min-w-[220px] max-h-[300px] overflow-auto rounded-lg shadow-xl"
+          style={{ 
+            backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
+            border: `1px solid ${theme.stroke.low}`,
+          }}
+        >
           {Object.entries(groups).map(([group, groupOptions]) => (
             <div key={group}>
               {Object.keys(groups).length > 1 && (
-                <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.text.low }}>
+                <div 
+                  className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider sticky top-0"
+                  style={{ 
+                    color: theme.text.low,
+                    backgroundColor: theme.isLight ? '#f5f5f5' : '#2a2a2a',
+                  }}
+                >
                   {group}
                 </div>
               )}
               {groupOptions.map(option => (
                 <button key={option.value}
                   onClick={() => { onChange(option.value); setIsOpen(false); }}
-                  className={`w-full text-left px-3 py-2 text-sm transition-colors ${option.value === value ? 'bg-orange-500/10' : 'hover:bg-white/5'}`}
+                  className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                    option.value === value 
+                      ? 'bg-orange-500/10' 
+                      : theme.isLight ? 'hover:bg-gray-100' : 'hover:bg-white/5'
+                  }`}
                   style={{ color: option.value === value ? theme.accent : theme.text.high }}>
                   {option.label}
                 </button>
