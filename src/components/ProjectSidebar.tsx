@@ -162,7 +162,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           </h2>
           <button
             onClick={() => createProject()}
-            className="p-1.5 rounded-full transition-colors hover:opacity-70 cursor-pointer"
+            className="p-1.5 rounded-full transition-colors hover:opacity-70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
             style={{
               backgroundColor: theme.stroke.low,
               color: theme.text.medium,
@@ -177,7 +177,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 
         {/* Projects List */}
         <div className="flex-1 overflow-y-auto px-1.5 py-1.5">
-          <div className="space-y-0.5">
+          <div className="space-y-0.5" role="listbox" aria-label="Projects list">
             {projects.map((project) => (
               <div
                 key={project.id}
@@ -210,11 +210,20 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                       setActiveProject(project.id);
                       onProjectSelect?.();
                     }}
-                    className="w-full px-2 py-1 flex items-center justify-between group transition-colors rounded-lg cursor-pointer"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setActiveProject(project.id);
+                        onProjectSelect?.();
+                      }
+                    }}
+                    className="w-full px-2 py-1 flex items-center justify-between group transition-colors rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
                     style={{
                       backgroundColor: activeProject?.id === project.id ? theme.stroke.low : 'transparent',
                       height: '32px',
                     }}
+                    aria-selected={activeProject?.id === project.id}
+                    role="option"
                   >
                     <div className="flex-1 text-left">
                       <div 
@@ -295,11 +304,12 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       >
         <button
           onClick={onNavigateToLibrary}
-          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors group cursor-pointer"
+          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors group cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
           style={{
             backgroundColor: isLibraryActive ? theme.stroke.low : 'transparent',
             height: '32px',
           }}
+          aria-current={isLibraryActive ? 'page' : undefined}
           onMouseEnter={(e) => {
             if (!isLibraryActive) {
               e.currentTarget.style.backgroundColor = theme.stroke.low;
@@ -342,11 +352,12 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         {onNavigateToUsage && (
           <button
             onClick={onNavigateToUsage}
-            className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer"
+            className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
             style={{
               backgroundColor: 'transparent',
               height: '32px',
             }}
+            aria-label="View usage statistics"
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = theme.stroke.low;
             }}

@@ -251,10 +251,10 @@ export const ChatPanel = memo(function ChatPanel({
                 title={!voiceSupported 
                   ? "Voice chat not supported in this browser" 
                   : "Voice chat (speak with AI)"}
-                className={`p-2 rounded-full transition-colors flex-shrink-0 ${
+                className={`p-2 rounded-full transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
                   !voiceSupported 
                     ? 'opacity-50 cursor-not-allowed' 
-                    : 'hover:opacity-70'
+                    : 'hover:opacity-70 cursor-pointer'
                 }`}
                 style={{ 
                   color: theme.text.medium,
@@ -299,10 +299,10 @@ export const ChatPanel = memo(function ChatPanel({
               onClick={handleSubmit}
               disabled={!inputValue.trim() || isLoading || inputDisabled}
               aria-label="Send message"
-              className={`p-2 rounded-full transition-colors flex-shrink-0 ${
+              className={`p-2 rounded-full transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
                 !inputValue.trim() || isLoading || inputDisabled
                   ? 'opacity-40 cursor-not-allowed'
-                  : 'hover:opacity-70'
+                  : 'hover:opacity-70 cursor-pointer'
               }`}
               style={{ 
                 backgroundColor: theme.background.ghost,

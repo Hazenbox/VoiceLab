@@ -179,7 +179,7 @@ export const UsageModal = memo(function UsageModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full transition-colors hover:opacity-70 cursor-pointer"
+            className="p-2 rounded-full transition-colors hover:opacity-70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
             style={{
               backgroundColor: theme.stroke.low,
               color: theme.text.medium,

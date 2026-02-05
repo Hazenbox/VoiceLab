@@ -67,7 +67,7 @@ export const ConfigPanel = memo(function ConfigPanel({
       {onToggleCollapse && (
         <button
           onClick={onToggleCollapse}
-          className={`absolute top-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70 cursor-pointer ${isCollapsed ? 'left-2' : 'right-3'}`}
+          className={`absolute top-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1 ${isCollapsed ? 'left-2' : 'right-3'}`}
           style={{
             backgroundColor: theme.stroke.low,
             color: theme.text.high,
@@ -210,7 +210,7 @@ export const ConfigPanel = memo(function ConfigPanel({
           {/* Theme Toggle */}
           <button
             onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-80 cursor-pointer"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-80 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
             style={{
               backgroundColor: theme.stroke.low,
               color: theme.text.high,
