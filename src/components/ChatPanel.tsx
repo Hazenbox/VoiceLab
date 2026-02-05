@@ -57,6 +57,10 @@ interface ChatPanelProps {
   contextSelector?: React.ReactNode;
   /** Callback when user clicks trust badge to view details */
   onTrustBadgeClick?: (messageId: string) => void;
+  
+  // Settings trigger
+  /** Settings icon to render below input at the end of dropdowns */
+  settingsTrigger?: React.ReactNode;
 }
 
 // =============================================================================
@@ -82,6 +86,7 @@ export const ChatPanel = memo(function ChatPanel({
   // Content Trust System props
   contextSelector,
   onTrustBadgeClick,
+  settingsTrigger,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -398,7 +403,7 @@ export const ChatPanel = memo(function ChatPanel({
           </div>
 
           {/* Model + Context selectors - below input, centered */}
-          {(modelSelector || contextSelector || channelSelector || platformSelector) && (
+          {(modelSelector || contextSelector || channelSelector || platformSelector || settingsTrigger) && (
             <div className="flex items-center justify-center gap-3 mt-3">
               {modelSelector}
               {/* Prefer new contextSelector, fallback to legacy channel + platform */}
@@ -408,6 +413,7 @@ export const ChatPanel = memo(function ChatPanel({
                   {platformSelector}
                 </>
               )}
+              {settingsTrigger}
             </div>
           )}
         </div>

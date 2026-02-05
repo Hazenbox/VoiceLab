@@ -26,6 +26,7 @@ import type {
 } from '../types';
 import { VoiceSelector } from './VoiceSelector';
 import { LabeledSlider } from './LabeledSlider';
+import { SearchableDropdown } from './SearchableDropdown';
 import { useThemeColors } from '../theme';
 // Design system context removed - now using single Jio DS
 import { getEcosystemOptions, getChannelOptions, getLanguageOptions, getRegionOptions } from '../services/guidelines';
@@ -62,6 +63,14 @@ interface AdvancedSettingsPanelProps {
   colorMode: ColorMode;
   onColorModeChange: (mode: ColorMode) => void;
   
+  // Chat generation settings
+  temperature?: number;
+  maxTokens?: number;
+  streamResponse?: boolean;
+  onTemperatureChange?: (value: number) => void;
+  onMaxTokensChange?: (value: number) => void;
+  onStreamResponseChange?: (checked: boolean) => void;
+  
   // UI state
   disabled?: boolean;
   isCollapsed?: boolean;
@@ -85,10 +94,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
   const [isOpen, setIsOpen] = useState(defaultOpen);
   
   return (
-    <div
-      className="rounded-lg overflow-hidden"
-      style={{ backgroundColor: theme.stroke.low }}
-    >
+    <div className="overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors hover:opacity-80"
@@ -117,55 +123,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
   );
 };
 
-// =============================================================================
-// Select Component (Styled)
-// =============================================================================
-
-interface SelectProps<T extends string> {
-  label: string;
-  value: T;
-  options: Array<{ value: T; label: string }>;
-  onChange: (value: T) => void;
-  disabled?: boolean;
-}
-
-function Select<T extends string>({
-  label,
-  value,
-  options,
-  onChange,
-  disabled = false,
-}: SelectProps<T>) {
-  const theme = useThemeColors();
-  
-  return (
-    <div className="space-y-1">
-      <label
-        className="block text-[10px] font-medium uppercase tracking-wider"
-        style={{ color: theme.text.low }}
-      >
-        {label}
-      </label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as T)}
-        disabled={disabled}
-        className="w-full px-2 py-1.5 rounded text-xs appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500"
-        style={{
-          backgroundColor: theme.background.ghost,
-          color: theme.text.high,
-          border: `1px solid ${theme.stroke.low}`,
-        }}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
+// Select component removed - replaced with SearchableDropdown
 
 // =============================================================================
 // Slider Component (for thresholds)
@@ -176,6 +134,7 @@ interface SliderProps {
   value: number;
   min: number;
   max: number;
+  step?: number;
   onChange: (value: number) => void;
   disabled?: boolean;
 }
@@ -185,17 +144,18 @@ const Slider: React.FC<SliderProps> = ({
   value,
   min,
   max,
+  step = 1,
   onChange,
   disabled = false,
 }) => {
   const theme = useThemeColors();
   
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <label
-          className="text-[10px] font-medium uppercase tracking-wider"
-          style={{ color: theme.text.low }}
+          className="text-xs font-medium"
+          style={{ color: theme.text.medium }}
         >
           {label}
         </label>
@@ -210,6 +170,7 @@ const Slider: React.FC<SliderProps> = ({
         type="range"
         min={min}
         max={max}
+        step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         disabled={disabled}
@@ -245,8 +206,8 @@ const Toggle: React.FC<ToggleProps> = ({
   return (
     <div className="flex items-center justify-between">
       <label
-        className="text-[10px] font-medium uppercase tracking-wider"
-        style={{ color: theme.text.low }}
+        className="text-xs font-medium"
+        style={{ color: theme.text.medium }}
       >
         {label}
       </label>
@@ -304,6 +265,12 @@ const ConversationIcon = () => (
   </svg>
 );
 
+const ChatIcon = () => (
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+  </svg>
+);
+
 // AppearanceIcon removed - no longer needed after removing Appearance section
 
 // =============================================================================
@@ -327,6 +294,12 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
   onTrustSettingsChange,
   colorMode: _colorMode, // Prefix with _ to indicate intentionally unused
   onColorModeChange: _onColorModeChange, // Prefix with _ to indicate intentionally unused
+  temperature = 0.7,
+  maxTokens = 2000,
+  streamResponse = true,
+  onTemperatureChange,
+  onMaxTokensChange,
+  onStreamResponseChange,
   disabled = false,
   isCollapsed = false,
   onToggleCollapse,
@@ -417,7 +390,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       {/* Header */}
       {!isCollapsed && (
         <div
-          className="px-3 py-3 border-b"
+          className="px-3 py-3 border-b flex items-center justify-between"
           style={{ borderColor: theme.stroke.low }}
         >
           <h2
@@ -426,34 +399,38 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           >
             Advanced Settings
           </h2>
-          <p
-            className="text-[10px] mt-0.5"
-            style={{ color: theme.text.low }}
+          <button
+            onClick={onToggleCollapse}
+            className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:opacity-70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+            style={{
+              backgroundColor: theme.stroke.low,
+              color: theme.text.high,
+            }}
+            aria-label="Close settings panel"
           >
-            Project & trust configuration
-          </p>
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
       
       {/* Scrollable content */}
       {!isCollapsed && (
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
-          {/* Voice & TTS Section */}
-          <Section title="Voice & TTS" icon={<VoiceIcon />} defaultOpen>
+        <div className="flex-1 overflow-y-auto p-3 space-y-0">
+          {/* Voice Settings Section - Merged Voice & TTS with Conversation Settings */}
+          <Section title="Voice Settings" icon={<VoiceIcon />} defaultOpen>
             <VoiceSelector
               value={voiceGender}
               onChange={onVoiceGenderChange}
               disabled={disabled}
             />
-          </Section>
-          
-          {/* Conversation Settings Section */}
-          <Section title="Conversation Settings" icon={<ConversationIcon />}>
+            
             {/* Greeting */}
             <div className="space-y-1.5">
               <label 
-                className="block text-[10px] font-medium uppercase tracking-wider"
-                style={{ color: theme.text.low }}
+                className="block text-xs font-medium"
+                style={{ color: theme.text.medium }}
               >
                 Greeting
               </label>
@@ -488,37 +465,109 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
             />
           </Section>
           
-          {/* Project Defaults Section */}
-          <Section title="Project Defaults" icon={<ProjectIcon />}>
-            <Select
-              label="Default Ecosystem"
-              value={defaultEcosystem}
-              options={ecosystemOptions}
-              onChange={onDefaultEcosystemChange}
+          {/* Separator */}
+          <div className="py-3">
+            <div style={{ borderBottom: `1px solid ${theme.stroke.low}` }} />
+          </div>
+          
+          {/* Chat Settings Section */}
+          <Section title="Chat Settings" icon={<ChatIcon />}>
+            {/* Temperature */}
+            <Slider
+              label="Temperature"
+              value={temperature}
+              min={0}
+              max={1}
+              step={0.1}
+              onChange={(value) => onTemperatureChange?.(value)}
               disabled={disabled}
             />
-            <Select
-              label="Default Channel"
-              value={defaultChannel}
-              options={channelOptions}
-              onChange={onDefaultChannelChange}
+            
+            {/* Max Tokens */}
+            <Slider
+              label="Max Tokens"
+              value={maxTokens}
+              min={100}
+              max={4000}
+              step={100}
+              onChange={(value) => onMaxTokensChange?.(value)}
               disabled={disabled}
             />
-            <Select
-              label="Default Language"
-              value={defaultLanguage}
-              options={languageOptions}
-              onChange={onDefaultLanguageChange}
-              disabled={disabled}
-            />
-            <Select
-              label="Default Region"
-              value={defaultRegion}
-              options={regionOptions}
-              onChange={onDefaultRegionChange}
+            
+            {/* Stream Response */}
+            <Toggle
+              label="Stream Response"
+              checked={streamResponse}
+              onChange={(checked) => onStreamResponseChange?.(checked)}
               disabled={disabled}
             />
           </Section>
+          
+          {/* Separator */}
+          <div className="py-3">
+            <div style={{ borderBottom: `1px solid ${theme.stroke.low}` }} />
+          </div>
+          
+          {/* Project Defaults Section */}
+          <Section title="Project Defaults" icon={<ProjectIcon />}>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium" style={{ color: theme.text.medium }}>
+                Default Ecosystem
+              </label>
+              <SearchableDropdown
+                value={defaultEcosystem}
+                onChange={(v) => onDefaultEcosystemChange(v as EcosystemType)}
+                options={ecosystemOptions}
+                placeholder="Select ecosystem"
+                disabled={disabled}
+                compact={true}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium" style={{ color: theme.text.medium }}>
+                Default Channel
+              </label>
+              <SearchableDropdown
+                value={defaultChannel}
+                onChange={(v) => onDefaultChannelChange(v as ContentChannelType)}
+                options={channelOptions}
+                placeholder="Select channel"
+                disabled={disabled}
+                compact={true}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium" style={{ color: theme.text.medium }}>
+                Default Language
+              </label>
+              <SearchableDropdown
+                value={defaultLanguage}
+                onChange={(v) => onDefaultLanguageChange(v as SupportedLanguage)}
+                options={languageOptions}
+                placeholder="Select language"
+                disabled={disabled}
+                compact={true}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium" style={{ color: theme.text.medium }}>
+                Default Region
+              </label>
+              <SearchableDropdown
+                value={defaultRegion}
+                onChange={(v) => onDefaultRegionChange(v as IndianRegion)}
+                options={regionOptions}
+                placeholder="Select region"
+                disabled={disabled}
+                compact={true}
+              />
+            </div>
+          </Section>
+          
+          {/* Separator */}
+          <div className="py-3">
+            <div style={{ borderBottom: `1px solid ${theme.stroke.low}` }} />
+          </div>
           
           {/* Trust Settings Section */}
           <Section title="Trust Settings" icon={<TrustIcon />}>
@@ -530,13 +579,19 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               onChange={(value) => updateTrustSetting('minimumScore', value)}
               disabled={disabled}
             />
-            <Select
-              label="Validation Strictness"
-              value={trustSettings.validationStrictness}
-              options={strictnessOptions}
-              onChange={(v) => updateTrustSetting('validationStrictness', v as ValidationStrictness)}
-              disabled={disabled}
-            />
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium" style={{ color: theme.text.medium }}>
+                Validation Strictness
+              </label>
+              <SearchableDropdown
+                value={trustSettings.validationStrictness}
+                onChange={(v) => updateTrustSetting('validationStrictness', v as ValidationStrictness)}
+                options={strictnessOptions}
+                placeholder="Select strictness"
+                disabled={disabled}
+                compact={true}
+              />
+            </div>
             <Toggle
               label="Block Below Threshold"
               checked={trustSettings.blockBelowThreshold}
@@ -544,7 +599,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               disabled={disabled}
             />
             <Toggle
-              label="Auto-Fix Minor Issues"
+              label="Auto-fix Minor Issues"
               checked={trustSettings.autoFixMinorIssues}
               onChange={(checked) => updateTrustSetting('autoFixMinorIssues', checked)}
               disabled={disabled}
