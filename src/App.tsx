@@ -15,21 +15,19 @@ import {
 import { getSystemInstruction, AUDIO_CONFIG, getCopySystemPrompt } from './constants';
 import { 
   ConfigPanel, 
-  AudioPlayer, 
   StatusIndicator, 
   DocumentationPanel,
-  SoundWave,
   ProjectSidebar,
   SaveAudioModal,
   UsageModal,
   ChatPanel,
   ErrorBoundary,
   ModelSelector,
-  TTSProviderSelector,
   DesignSystemLibrary,
   LibraryPage,
   ChannelSelector,
   PlatformSelector,
+  AIOrb,
 } from './components';
 import type { TTSProviderType } from './components';
 import { useChatPersistence, useNetworkStatus } from './hooks';
@@ -143,6 +141,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const inputAudioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const audioAnalyzerRef = useRef<AnalyserNode | null>(null);
   
   // Refs for conversation turn tracking (to link user message to AI response)
   const currentTurnRef = useRef<{
@@ -425,6 +424,16 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       // Create audio context for input
       inputAudioContextRef.current = createAudioContext(AUDIO_CONFIG.inputSampleRate);
 
+      // Create audio analyzer for the AI Orb visualization
+      const analyzer = inputAudioContextRef.current.createAnalyser();
+      analyzer.fftSize = 256;
+      analyzer.smoothingTimeConstant = 0.8;
+      audioAnalyzerRef.current = analyzer;
+
+      // Connect stream to analyzer for visualization
+      const analyzerSource = inputAudioContextRef.current.createMediaStreamSource(stream);
+      analyzerSource.connect(analyzer);
+
       // Create conversation provider
       const provider = createConversationProvider();
       conversationProviderRef.current = provider;
@@ -568,6 +577,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     if (processorRef.current) {
       processorRef.current.disconnect();
       processorRef.current = null;
+    }
+
+    // Disconnect audio analyzer
+    if (audioAnalyzerRef.current) {
+      audioAnalyzerRef.current.disconnect();
+      audioAnalyzerRef.current = null;
     }
 
     // Close audio context
@@ -785,16 +800,16 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 </div>
               </div>
 
-              {/* Voice Mode: Microphone Control + Chat History */}
+              {/* Voice Mode: AI Orb Visualization + Chat History */}
               {chatMode === 'voice' && (
                 <div 
-                  className="px-4 py-3 border-b flex items-center justify-center gap-4 relative"
+                  className="voice-panel px-4 py-6 border-b flex flex-col items-center gap-4 relative"
                   style={{ borderColor: theme.stroke.low, backgroundColor: theme.background.subtle }}
                 >
                   {/* Close button - return to text mode */}
                   <button
                     onClick={() => handleModeChange('copy')}
-                    className="absolute top-2 right-2 p-2 rounded-full transition-colors hover:opacity-80"
+                    className="absolute top-3 right-3 p-2 rounded-full transition-colors hover:opacity-80 z-10"
                     style={{ 
                       backgroundColor: theme.background.ghost,
                       color: theme.text.medium,
@@ -807,88 +822,39 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                     </svg>
                   </button>
 
-                  {/* Microphone button */}
-                  <button
-                    data-voice-mic-button
+                  {/* AI Orb - Central interaction point */}
+                  <AIOrb
+                    state={appState}
+                    audioAnalyzer={audioAnalyzerRef.current}
                     onClick={handleToggleConversation}
-                    className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 transform"
-                    style={{
-                      backgroundColor: appState === AppState.IDLE || appState === AppState.ERROR
-                        ? (theme.isLight ? '#f5f5f5' : '#27272a')
-                        : appState === AppState.LISTENING
-                        ? '#f97316'
-                        : appState === AppState.SPEAKING
-                        ? '#fb923c'
-                        : '#3b82f6',
-                      border: appState === AppState.IDLE || appState === AppState.ERROR
-                        ? `2px solid ${theme.isLight ? '#e4e4e7' : '#3f3f46'}`
-                        : appState === AppState.LISTENING
-                        ? '3px solid #fdba74'
-                        : appState === AppState.SPEAKING
-                        ? '3px solid #fed7aa'
-                        : '3px solid #93c5fd',
-                      transform: appState === AppState.LISTENING ? 'scale(1.05)' : 'scale(1)',
-                      ...(appState === AppState.ERROR && { borderColor: '#ef4444' })
-                    }}
-                    aria-label={
-                      appState === AppState.IDLE ? 'Start voice conversation' :
-                      appState === AppState.CONNECTING ? 'Connecting...' :
-                      appState === AppState.LISTENING ? 'Listening - tap to stop' :
-                      appState === AppState.SPEAKING ? 'AI speaking - tap to stop' :
-                      'Error - tap to retry'
-                    }
-                  >
-                    {appState === AppState.CONNECTING ? (
-                      <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                    ) : appState === AppState.IDLE || appState === AppState.ERROR ? (
-                      <svg 
-                        className="w-6 h-6" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                        style={{ color: appState === AppState.ERROR ? '#ef4444' : theme.text.medium }}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                      </svg>
-                    ) : (
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <rect x="6" y="4" width="4" height="16" rx="1" />
-                        <rect x="14" y="4" width="4" height="16" rx="1" />
-                      </svg>
-                    )}
-                  </button>
-
-                  {/* Sound wave animation */}
-                  <div className="w-24">
-                    <SoundWave state={appState} />
-                  </div>
+                    size={140}
+                    disabled={false}
+                  />
 
                   {/* Status text */}
                   <p 
-                    className="text-xs"
+                    className="text-sm font-medium"
                     style={{ color: theme.text.medium }}
                   >
                     {appState === AppState.IDLE
-                      ? 'Tap mic to talk'
+                      ? 'Tap orb to talk'
                       : appState === AppState.CONNECTING
                       ? 'Connecting...'
                       : appState === AppState.LISTENING
                       ? 'Listening...'
                       : appState === AppState.SPEAKING
-                      ? 'Speaking...'
-                      : 'Error'}
+                      ? 'AI is speaking...'
+                      : 'Error - tap to retry'}
                   </p>
 
                   {/* Live transcript */}
                   {transcript && (
                     <div 
-                      className="flex-1 max-w-xs px-3 py-1.5 rounded-lg text-sm truncate"
+                      className="max-w-md px-4 py-2 rounded-full text-sm text-center"
                       style={{ 
                         backgroundColor: theme.background.ghost,
                         color: theme.text.high,
+                        border: `1px solid ${theme.stroke.low}`,
                       }}
                     >
                       {transcript}
