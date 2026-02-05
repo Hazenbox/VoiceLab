@@ -108,6 +108,9 @@ export const AIOrb = memo(function AIOrb({
     const sceneContainer = containerRef.current.querySelector('.ai-orb-scene');
     if (!sceneContainer) return;
 
+    // Prevent multiple initializations
+    if (sceneRef.current) return;
+
     const initScene = async () => {
       try {
         const UnicornStudio = (window as any).UnicornStudio;
@@ -123,6 +126,10 @@ export const AIOrb = memo(function AIOrb({
           setIsSceneLoaded(false);
           return;
         }
+
+        // Clear any existing canvas elements in the container
+        const existingCanvases = sceneContainer.querySelectorAll('canvas');
+        existingCanvases.forEach(canvas => canvas.remove());
 
         console.log('[AIOrb] Initializing Unicorn Studio scene...');
         const scene = await UnicornStudio.addScene({
@@ -156,13 +163,24 @@ export const AIOrb = memo(function AIOrb({
       if (sceneRef.current) {
         try {
           const UnicornStudio = (window as any).UnicornStudio;
-          if (UnicornStudio?.destroy) {
+          // Destroy the specific scene if it has a destroy method
+          if (sceneRef.current.destroy) {
+            sceneRef.current.destroy();
+          } else if (UnicornStudio?.destroy) {
+            // Fallback to global destroy
             UnicornStudio.destroy();
+          }
+          // Clear any remaining canvas elements
+          const sceneContainer = containerRef.current?.querySelector('.ai-orb-scene');
+          if (sceneContainer) {
+            const canvases = sceneContainer.querySelectorAll('canvas');
+            canvases.forEach(canvas => canvas.remove());
           }
         } catch {
           // Ignore cleanup errors
         }
         sceneRef.current = null;
+        setIsSceneLoaded(false);
       }
     };
   }, [webGLSupported]);
@@ -230,7 +248,10 @@ export const AIOrb = memo(function AIOrb({
         {webGLSupported ? (
           <div 
             className="ai-orb-scene" 
-            style={{ opacity: isSceneLoaded ? 1 : 0 }}
+            style={{ 
+              opacity: isSceneLoaded ? 1 : 0,
+              display: isSceneLoaded ? 'block' : 'none'
+            }}
           />
         ) : (
           <FallbackOrb />
