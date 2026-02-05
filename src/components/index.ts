@@ -26,6 +26,8 @@ export { ChannelSelector } from './ChannelSelector';
 export { PlatformSelector } from './PlatformSelector';
 export { Dropdown } from './Dropdown';
 export type { DropdownOption, DropdownProps } from './Dropdown';
+export { SearchableDropdown } from './SearchableDropdown';
+export type { SearchableDropdownOption, SearchableDropdownProps } from './SearchableDropdown';
 export { AIOrb } from './AIOrb';
 export type { AIOrbProps } from './AIOrb';
 

@@ -1036,22 +1036,43 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
                     />
                   }
-                  // Content Trust System: New context selector
+                  // Content Trust System: New context selector with settings toggle
                   contextSelector={
-                    <ContentContextSelector
-                      ecosystem={ecosystem}
-                      channel={contentChannel}
-                      onEcosystemChange={(eco) => {
-                        setEcosystem(eco);
-                        updateProjectDefaultEcosystem(eco);
-                      }}
-                      onChannelChange={(ch) => {
-                        setContentChannel(ch);
-                        updateProjectDefaultChannel(ch);
-                      }}
-                      compact={true}
-                      disabled={isChatLoading}
-                    />
+                    <div className="flex items-center gap-2">
+                      <ContentContextSelector
+                        ecosystem={ecosystem}
+                        channel={contentChannel}
+                        onEcosystemChange={(eco) => {
+                          setEcosystem(eco);
+                          updateProjectDefaultEcosystem(eco);
+                        }}
+                        onChannelChange={(ch) => {
+                          setContentChannel(ch);
+                          updateProjectDefaultChannel(ch);
+                        }}
+                        compact={true}
+                        disabled={isChatLoading}
+                      />
+                      {/* Settings toggle button */}
+                      <button
+                        onClick={() => setUseAdvancedSettings(prev => !prev)}
+                        className={`
+                          p-1.5 rounded-md transition-colors
+                          ${useAdvancedSettings 
+                            ? 'bg-orange-500/20 text-orange-500' 
+                            : 'hover:bg-white/10 text-current opacity-60 hover:opacity-100'
+                          }
+                        `}
+                        title={`${useAdvancedSettings ? 'Hide' : 'Show'} Advanced Settings (Ctrl+Shift+A)`}
+                        aria-label="Toggle Advanced Settings"
+                        aria-pressed={useAdvancedSettings}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </button>
+                    </div>
                   }
                   // Content Trust System: Trust badge click handler
                   onTrustBadgeClick={handleTrustBadgeClick}

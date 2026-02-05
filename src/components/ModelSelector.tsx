@@ -236,18 +236,18 @@ export function ModelSelector({
       {/* Dropdown Menu - Opens Upward */}
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - high z-index to catch clicks */}
           <div
-            className="fixed inset-0 z-10"
+            className="fixed inset-0 z-[90]"
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Menu - Opens upward */}
+          {/* Menu - Opens upward with solid background and high z-index */}
           <div 
-            className="absolute bottom-full left-0 mb-1 z-50 min-w-[180px] rounded-lg overflow-hidden py-1" 
+            className="absolute bottom-full left-0 mb-1 z-[100] min-w-[180px] rounded-lg overflow-hidden py-1 shadow-xl" 
             style={{
-              backgroundColor: theme.background.ghost,
-              border: `1px solid ${theme.stroke.medium}`,
+              backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
+              border: `1px solid ${theme.stroke.low}`,
             }}
             role="listbox"
           >
