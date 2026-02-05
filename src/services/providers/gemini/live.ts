@@ -35,6 +35,12 @@ export class GeminiLiveProvider implements ConversationProvider {
   private readonly HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds
   private readonly HEARTBEAT_TIMEOUT_MS = 45000; // 45 seconds without message = dead
 
+  // Session resumption state (for handling 10-min WebSocket resets and 15-min session limits)
+  private resumptionHandle: string | null = null;
+  private reconnectionScheduled: boolean = false;
+  private reconnectionTimeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly SESSION_WARNING_BUFFER_MS = 5000; // 5 seconds before disconnect, reconnect immediately
+
   get state(): ConversationState {
     return this._state;
   }
@@ -161,10 +167,26 @@ export class GeminiLiveProvider implements ConversationProvider {
 
         this.ws.onclose = (event) => {
           clearTimeout(timeout);
-          if (event.code !== 1000) {
-            this.callbacks.onError?.(new Error(`Connection closed: ${event.reason}`));
+          this.stopHeartbeat();
+          
+          console.log(`[GeminiLive] WebSocket closed. Code: ${event.code}, Reason: ${event.reason || 'none'}`);
+          
+          // If this is an unexpected disconnect and we have a resumption handle, attempt to reconnect
+          if (event.code !== 1000 && this.resumptionHandle && this.sessionConfig && !this.reconnectionScheduled) {
+            console.log('[GeminiLive] Unexpected disconnect - attempting to resume session');
+            this.reconnectionScheduled = true;
+            // Small delay before reconnecting to avoid rapid reconnection loops
+            this.reconnectionTimeout = setTimeout(() => {
+              this.reconnect();
+            }, 1000);
+          } else if (event.code !== 1000) {
+            // No resumption handle or explicit disconnect - report error
+            this.callbacks.onError?.(new Error(`Connection closed: ${event.reason || `code ${event.code}`}`));
+            this.setState('idle');
+          } else {
+            // Normal closure (code 1000)
+            this.setState('idle');
           }
-          this.setState('idle');
         };
 
       } catch (error) {
@@ -180,7 +202,7 @@ export class GeminiLiveProvider implements ConversationProvider {
   private sendSetupMessage(): void {
     if (!this.ws || !this.sessionConfig) return;
 
-    const setupMessage = {
+    const setupMessage: Record<string, unknown> = {
       setup: {
         model: `models/${this.config.liveModel}`,
         generation_config: {
@@ -196,9 +218,18 @@ export class GeminiLiveProvider implements ConversationProvider {
         system_instruction: {
           parts: [{ text: this.sessionConfig.systemPrompt }],
         },
+        // Enable context window compression for unlimited session time (removes 15-min limit)
+        context_window_compression: {
+          sliding_window: {},
+        },
+        // Enable session resumption to maintain conversation across WebSocket resets (~10-min limit)
+        session_resumption: this.resumptionHandle 
+          ? { handle: this.resumptionHandle }
+          : {},
       },
     };
 
+    console.log('[GeminiLive] Sending setup message', this.resumptionHandle ? '(resuming session)' : '(new session)');
     this.ws.send(JSON.stringify(setupMessage));
   }
 
@@ -209,12 +240,38 @@ export class GeminiLiveProvider implements ConversationProvider {
     try {
       const data = JSON.parse(event.data);
 
+      // Handle GoAway message (connection will terminate soon)
+      if (data.goAway) {
+        console.warn('[GeminiLive] GoAway message received. Time left:', data.goAway.timeLeft);
+        this.handleGoAway(data.goAway);
+        return;
+      }
+
+      // Handle API error responses
+      if (data.error) {
+        console.error('[GeminiLive] API error:', data.error);
+        this.setState('error');
+        this.callbacks.onError?.(new Error(data.error.message || 'Gemini API error'));
+        return;
+      }
+
+      // Handle session resumption updates (save token for reconnection)
+      if (data.sessionResumptionUpdate) {
+        const update = data.sessionResumptionUpdate;
+        if (update.resumable && update.newHandle) {
+          console.log('[GeminiLive] Received new resumption token');
+          this.resumptionHandle = update.newHandle;
+        }
+        // Don't return - there might be other content in the same message
+      }
+
       // Handle setup complete
       if (data.setupComplete) {
+        console.log('[GeminiLive] Setup complete', this.resumptionHandle ? '(session resumed)' : '(new session)');
         this.setState('listening');
         
-        // Send greeting if configured
-        if (this.sessionConfig?.greeting) {
+        // Send greeting if configured (only for new sessions, not resumed ones)
+        if (this.sessionConfig?.greeting && !this.resumptionHandle) {
           this.sendTextMessage(this.sessionConfig.greeting);
         }
         return;
@@ -245,11 +302,89 @@ export class GeminiLiveProvider implements ConversationProvider {
 
       // Handle tool calls (if any)
       if (data.toolCall) {
-        console.log('Tool call received:', data.toolCall);
+        console.log('[GeminiLive] Tool call received:', data.toolCall);
       }
 
     } catch (error) {
-      console.error('Failed to handle Gemini Live message:', error);
+      console.error('[GeminiLive] Failed to handle message:', error);
+    }
+  }
+
+  /**
+   * Handle GoAway message - server is about to terminate the connection
+   */
+  private handleGoAway(goAway: { timeLeft?: string }): void {
+    if (this.reconnectionScheduled) {
+      console.log('[GeminiLive] Reconnection already scheduled, ignoring GoAway');
+      return;
+    }
+
+    this.reconnectionScheduled = true;
+    console.log('[GeminiLive] Scheduling reconnection before connection terminates');
+
+    // Parse timeLeft (format: "60s" or "1m" or ISO duration)
+    let timeLeftMs = 60000; // Default 60 seconds
+    if (goAway.timeLeft) {
+      const match = goAway.timeLeft.match(/(\d+)([sm]?)/);
+      if (match) {
+        const value = parseInt(match[1], 10);
+        const unit = match[2] || 's';
+        timeLeftMs = unit === 'm' ? value * 60000 : value * 1000;
+      }
+    }
+
+    // Schedule reconnection before disconnect (with buffer)
+    const reconnectDelay = Math.max(0, timeLeftMs - this.SESSION_WARNING_BUFFER_MS);
+    console.log(`[GeminiLive] Will reconnect in ${reconnectDelay}ms (timeLeft: ${timeLeftMs}ms)`);
+    
+    this.reconnectionTimeout = setTimeout(() => {
+      this.reconnect();
+    }, reconnectDelay);
+  }
+
+  /**
+   * Seamlessly reconnect to maintain session continuity
+   */
+  private async reconnect(): Promise<void> {
+    if (!this.sessionConfig || !this.callbacks) {
+      console.warn('[GeminiLive] Cannot reconnect - no session config');
+      this.reconnectionScheduled = false;
+      return;
+    }
+
+    console.log('[GeminiLive] Reconnecting to maintain session...');
+
+    // Close current connection gracefully (don't clear resumption handle!)
+    if (this.ws) {
+      // Remove event handlers to prevent triggering onclose error handling
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+      
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        this.ws.close(1000, 'Reconnecting');
+      }
+      this.ws = null;
+    }
+
+    // Stop heartbeat (will restart on new connection)
+    this.stopHeartbeat();
+
+    // Reset reconnection flag
+    this.reconnectionScheduled = false;
+
+    // Don't clear audio - we want seamless playback continuation
+    // this.audioQueue = []; // Keep existing audio queue
+
+    // Reconnect with same config (will use resumption handle if available)
+    try {
+      await this.connect(this.sessionConfig, this.callbacks);
+      console.log('[GeminiLive] Reconnection successful');
+    } catch (error) {
+      console.error('[GeminiLive] Reconnection failed:', error);
+      // Clear resumption handle since reconnection failed
+      this.resumptionHandle = null;
+      this.setState('error');
+      this.callbacks.onError?.(new Error('Failed to reconnect to Gemini Live'));
     }
   }
 
@@ -394,12 +529,28 @@ export class GeminiLiveProvider implements ConversationProvider {
    * Disconnect and cleanup
    */
   disconnect(): void {
+    console.log('[GeminiLive] Disconnecting...');
+    
+    // Clear session resumption state (intentional disconnect = end session)
+    this.resumptionHandle = null;
+    this.reconnectionScheduled = false;
+    
+    // Clear any pending reconnection
+    if (this.reconnectionTimeout) {
+      clearTimeout(this.reconnectionTimeout);
+      this.reconnectionTimeout = null;
+    }
+    
     // Stop heartbeat first
     this.stopHeartbeat();
     
     // Close WebSocket
     if (this.ws) {
-      if (this.ws.readyState === WebSocket.OPEN) {
+      // Remove event handlers to prevent triggering error callbacks
+      this.ws.onclose = null;
+      this.ws.onerror = null;
+      
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
         this.ws.close(1000, 'Normal closure');
       }
       this.ws = null;
@@ -420,6 +571,8 @@ export class GeminiLiveProvider implements ConversationProvider {
     this.sessionConfig = null;
     this.callbacks = {};
     this.setState('idle');
+    
+    console.log('[GeminiLive] Disconnected successfully');
   }
 }
 
