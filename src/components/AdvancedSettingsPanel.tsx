@@ -96,7 +96,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
   const [isOpen, setIsOpen] = useState(defaultOpen);
   
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-visible">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between px-3 py-2 text-left transition-colors hover:opacity-80"

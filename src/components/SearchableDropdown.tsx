@@ -257,10 +257,10 @@ export const SearchableDropdown = memo(function SearchableDropdown({
             }}
           />
 
-          {/* Menu - smart positioning (up/down) */}
+          {/* Menu - smart positioning (up/down) anchored to right */}
           <div
             ref={menuRef}
-            className={`absolute z-[100] left-0 min-w-[200px] max-h-[320px] rounded-lg overflow-hidden flex flex-col ${
+            className={`absolute z-[100] right-0 min-w-[200px] max-h-[320px] rounded-lg overflow-hidden flex flex-col ${
               dropdownDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'
             }`}
             style={{
