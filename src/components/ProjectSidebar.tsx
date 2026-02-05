@@ -55,47 +55,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     }
   }, [menuOpenFor]);
 
-  // Keyboard navigation for more menu
-  useEffect(() => {
-    if (!menuOpenFor) return;
-    
-    const currentProject = projects.find(p => p.id === menuOpenFor);
-    const menuItemCount = projects.length > 1 ? 2 : 1; // Rename + Delete (if allowed)
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setMenuFocusIndex(prev => (prev + 1) % menuItemCount);
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setMenuFocusIndex(prev => (prev - 1 + menuItemCount) % menuItemCount);
-          break;
-        case 'Enter':
-        case ' ':
-          e.preventDefault();
-          if (menuFocusIndex === 0 && currentProject) {
-            handleStartRename(currentProject);
-          } else if (menuFocusIndex === 1 && menuOpenFor) {
-            handleDeleteProject(menuOpenFor);
-          }
-          break;
-        case 'Escape':
-          e.preventDefault();
-          setMenuOpenFor(null);
-          break;
-        case 'Tab':
-          e.preventDefault();
-          setMenuFocusIndex(prev => (prev + 1) % menuItemCount);
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [menuOpenFor, menuFocusIndex, projects, handleStartRename, handleDeleteProject]);
-
   // Focus rename input when renaming starts
   useEffect(() => {
     if (renamingProject && renameInputRef.current) {
@@ -138,6 +97,47 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     setRenamingProject(null);
     setRenameValue('');
   }, []);
+
+  // Keyboard navigation for more menu
+  useEffect(() => {
+    if (!menuOpenFor) return;
+    
+    const currentProject = projects.find(p => p.id === menuOpenFor);
+    const menuItemCount = projects.length > 1 ? 2 : 1; // Rename + Delete (if allowed)
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setMenuFocusIndex(prev => (prev + 1) % menuItemCount);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setMenuFocusIndex(prev => (prev - 1 + menuItemCount) % menuItemCount);
+          break;
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          if (menuFocusIndex === 0 && currentProject) {
+            handleStartRename(currentProject);
+          } else if (menuFocusIndex === 1 && menuOpenFor) {
+            handleDeleteProject(menuOpenFor);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setMenuOpenFor(null);
+          break;
+        case 'Tab':
+          e.preventDefault();
+          setMenuFocusIndex(prev => (prev + 1) % menuItemCount);
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpenFor, menuFocusIndex, projects, handleStartRename, handleDeleteProject]);
 
   return (
     <aside 
