@@ -27,3 +27,34 @@ export {
   type ContentChannel,
   type ChannelGroup,
 } from './channels';
+
+// User Profile Engine
+export {
+  LANGUAGES,
+  REGIONS,
+  getToneAdjustments,
+  getToneInstructions,
+  getLanguage,
+  getRegion,
+  getLanguageOptions,
+  getRegionOptions,
+  getAgeGroupOptions,
+  getLiteracyOptions,
+  createDefaultProfile,
+  DEFAULT_TONE_ADJUSTMENTS,
+  type ToneAdjustments,
+  type LanguageConfig,
+  type RegionConfig,
+} from './userProfile';
+
+// Navarasa Emotion Engine
+export {
+  NAVARASA_EMOTIONS,
+  detectEmotion,
+  getEmotion,
+  getEmotionInstructions,
+  getEmotionOptions,
+  isNegativeEmotion,
+  isPositiveEmotion,
+  type NavarasaEmotion,
+} from './navarasa';
