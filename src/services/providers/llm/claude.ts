@@ -9,6 +9,7 @@ import {
   type LLMGenerateResult,
   type LLMUsageMetrics,
   type LLMError,
+  type ErrorCode,
   ERROR_CODES,
   createLLMError,
 } from './types';
@@ -245,7 +246,7 @@ export class ClaudeProvider implements LLMProvider {
     );
   }
 
-  private mapErrorCode(status: number, type?: string): string {
+  private mapErrorCode(status: number, type?: string): ErrorCode {
     if (status === 429) return ERROR_CODES.RATE_LIMIT;
     if (status === 401) return ERROR_CODES.INVALID_API_KEY;
     if (status === 403) return ERROR_CODES.PERMISSION_DENIED;

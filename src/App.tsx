@@ -3,7 +3,6 @@ import type {
   ActiveView, 
   ColorMode,
   AppError,
-  ChatMessage,
   ChatMode,
 } from './types';
 import { 
@@ -34,10 +33,7 @@ import { useChatPersistence, useNetworkStatus } from './hooks';
 import { audioBufferManager } from './services/audioBufferManager';
 import {
   TwConfigPanel,
-  TwAudioPlayer,
   TwDocumentationPanel,
-  TwButton,
-  TwTextArea,
   TwChatPanel
 } from './components/tailwind';
 import { 
@@ -55,7 +51,6 @@ import { useDesignSystem } from './context/DesignSystemContext';
 import { useProject } from './context/ProjectContext';
 import { useAudioLibrary } from './context/AudioLibraryContext';
 import { useAbortController } from './hooks';
-import { TextArea, Button } from '@marcelinodzn/ds-react';
 
 // Storage key for chat mode persistence
 const CHAT_MODE_STORAGE_KEY = 'voiceDesigner_chatMode';
@@ -96,10 +91,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [voiceSupported, setVoiceSupported] = useState<boolean | null>(null);
 
   // TTS State (for standalone TTS generation within voice mode)
-  const [ttsText, setTtsText] = useState('');
-  const [isTtsLoading, setIsTtsLoading] = useState(false);
-  const [generatedAudio, setGeneratedAudio] = useState<AudioBuffer | null>(null);
-  const [lastGeneratedVoice, setLastGeneratedVoice] = useState<string>('');
+  const [ttsText] = useState('');
+  // const [isTtsLoading] = useState(false);
+  const [generatedAudio] = useState<AudioBuffer | null>(null);
+  const [lastGeneratedVoice] = useState<string>('');
 
   // Conversation State
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -108,11 +103,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Chat Persistence - automatically syncs with localStorage
   const {
     messages: chatMessages,
-    setMessages: setChatMessages,
     addMessage,
     storageWarning,
-    isLoaded: isChatLoaded,
-    forceSave,
   } = useChatPersistence(activeProject?.id || null);
   
   // Network status for offline detection
@@ -270,60 +262,60 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   }, [error]);
 
   // Get TTS provider
-  const getTTSProvider = useCallback((): TTSProvider => {
-    if (!ttsProviderRef.current) {
-      ttsProviderRef.current = createTTSProvider();
-    }
-    return ttsProviderRef.current;
-  }, []);
+  // const getTTSProvider = useCallback((): TTSProvider => {
+  //   if (!ttsProviderRef.current) {
+  //     ttsProviderRef.current = createTTSProvider();
+  //   }
+  //   return ttsProviderRef.current;
+  // }, []);
 
-  // Handle TTS generation
-  const handleGenerateTTS = async () => {
-    if (!ttsText.trim()) {
-      setError({ code: 'NO_TEXT', message: 'Please enter some text to generate' });
-      return;
-    }
+  // Handle TTS generation (disabled)
+  // const handleGenerateTTS = async () => {
+  //   if (!ttsText.trim()) {
+  //     setError({ code: 'NO_TEXT', message: 'Please enter some text to generate' });
+  //     return;
+  //   }
 
-    if (!activeProject) {
-      setError({ code: 'NO_PROJECT', message: 'No active project' });
-      return;
-    }
+  //   if (!activeProject) {
+  //     setError({ code: 'NO_PROJECT', message: 'No active project' });
+  //     return;
+  //   }
 
-    // Validate config
-    const configValidation = validateConfig();
-    if (!configValidation.valid) {
-      setError({ 
-        code: 'CONFIG_ERROR', 
-        message: configValidation.errors.join('. ')
-      });
-      return;
-    }
+  //   // Validate config
+  //   const configValidation = validateConfig();
+  //   if (!configValidation.valid) {
+  //     setError({ 
+  //       code: 'CONFIG_ERROR', 
+  //       message: configValidation.errors.join('. ')
+  //     });
+  //     return;
+  //   }
 
-    setIsTtsLoading(true);
-    setError(null);
+  //   setIsTtsLoading(true);
+  //   setError(null);
 
-    try {
-      const provider = getTTSProvider();
-      const voice = provider.getDefaultVoice(activeProject.voiceGender === VoiceGender.FEMALE ? 'female' : 'male');
+  //   try {
+  //     const provider = getTTSProvider();
+  //     const voice = provider.getDefaultVoice(activeProject.voiceGender === VoiceGender.FEMALE ? 'female' : 'male');
       
-      const audioBuffer = await provider.synthesize(ttsText, {
-        voice,
-        format: 'mp3',
-        sampleRate: AUDIO_CONFIG.alibabaOutputSampleRate,
-      });
+  //     const audioBuffer = await provider.synthesize(ttsText, {
+  //       voice,
+  //       format: 'mp3',
+  //       sampleRate: AUDIO_CONFIG.alibabaOutputSampleRate,
+  //     });
 
-      setGeneratedAudio(audioBuffer);
-      setLastGeneratedVoice(voice);
-    } catch (err) {
-      console.error('TTS generation error:', err);
-      setError({
-        code: 'TTS_ERROR',
-        message: err instanceof Error ? err.message : 'Failed to generate audio',
-      });
-    } finally {
-      setIsTtsLoading(false);
-    }
-  };
+  //     setGeneratedAudio(audioBuffer);
+  //     setLastGeneratedVoice(voice);
+  //   } catch (err) {
+  //     console.error('TTS generation error:', err);
+  //     setError({
+  //       code: 'TTS_ERROR',
+  //       message: err instanceof Error ? err.message : 'Failed to generate audio',
+  //     });
+  //   } finally {
+  //     setIsTtsLoading(false);
+  //   }
+  // };
 
   // Handle save audio to library (from TTS generation or chat audio message)
   const handleSaveAudio = useCallback(async (name: string) => {

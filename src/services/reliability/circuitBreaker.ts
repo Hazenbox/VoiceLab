@@ -19,10 +19,13 @@ export class CircuitBreaker {
   private openedAt?: number;
   private config: CircuitBreakerConfig;
 
+  private providerName: string;
+
   constructor(
-    private providerName: string,
+    providerName: string,
     config?: Partial<CircuitBreakerConfig>
   ) {
+    this.providerName = providerName;
     this.config = {
       failureThreshold: config?.failureThreshold ?? 5,
       successThreshold: config?.successThreshold ?? 2,

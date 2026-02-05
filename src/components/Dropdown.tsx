@@ -90,7 +90,7 @@ export const Dropdown = memo(function Dropdown({
   useEffect(() => {
     if (!isOpen) return;
 
-    const enabledOptions = options.filter(opt => !opt.disabled);
+    // const enabledOptions = options.filter(opt => !opt.disabled);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {

@@ -196,7 +196,7 @@ export function useNetworkStatus(
     const checkOnline = async () => {
       try {
         // Try to fetch a small resource to verify connectivity
-        const response = await fetch('/favicon.ico', {
+        await fetch('/favicon.ico', {
           method: 'HEAD',
           cache: 'no-cache',
           mode: 'no-cors',
@@ -234,7 +234,7 @@ export function useNetworkStatus(
   // Manual connection check
   const checkConnection = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch('/favicon.ico', {
+      await fetch('/favicon.ico', {
         method: 'HEAD',
         cache: 'no-cache',
         mode: 'no-cors',

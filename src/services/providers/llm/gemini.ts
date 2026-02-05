@@ -9,6 +9,7 @@ import {
   type LLMGenerateResult,
   type LLMUsageMetrics,
   type LLMError,
+  type ErrorCode,
   ERROR_CODES,
   createLLMError,
 } from './types';
@@ -250,7 +251,7 @@ export class GeminiTextProvider implements LLMProvider {
     );
   }
 
-  private mapErrorCode(status: number, errorCode?: number): string {
+  private mapErrorCode(status: number, _errorCode?: number): ErrorCode {
     if (status === 429) return ERROR_CODES.RATE_LIMIT;
     if (status === 401 || status === 403) return ERROR_CODES.INVALID_API_KEY;
     if (status === 400) return ERROR_CODES.INVALID_REQUEST;

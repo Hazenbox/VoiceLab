@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import type { ConversationConfig, VoiceGender, ColorMode, Pace, ResponseLength, Vibe } from '../types';
 import { VoiceSelector } from './VoiceSelector';
 import { CustomSelect } from './CustomSelect';

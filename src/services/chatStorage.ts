@@ -80,7 +80,7 @@ function debounce<T extends (...args: Parameters<T>) => void>(
   debounced.flush = () => {
     if (timeoutId && lastArgs) {
       clearTimeout(timeoutId);
-      fn(...lastArgs);
+      fn(...(lastArgs as Parameters<T>));
       timeoutId = null;
       lastArgs = null;
     }

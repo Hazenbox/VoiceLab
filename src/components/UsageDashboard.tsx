@@ -3,7 +3,7 @@
  * Displays LLM usage statistics, costs, and performance metrics
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { getOrchestratorInstance } from '../services/llm/orchestrator';
 import type { UsageStats } from '../services/monitoring/costTracker';
 
@@ -22,15 +22,15 @@ export function UsageDashboard({ compact = false, className = '' }: UsageDashboa
       const costStats = orchestrator.getCostStats();
       
       // Filter by time range
-      const now = Date.now();
-      const ranges: Record<string, number> = {
-        hour: 60 * 60 * 1000,
-        day: 24 * 60 * 60 * 1000,
-        week: 7 * 24 * 60 * 60 * 1000,
-        all: Infinity,
-      };
+      // const now = Date.now();
+      // const ranges: Record<string, number> = {
+      //   hour: 60 * 60 * 1000,
+      //   day: 24 * 60 * 60 * 1000,
+      //   week: 7 * 24 * 60 * 60 * 1000,
+      //   all: Infinity,
+      // };
       
-      const since = now - ranges[timeRange];
+      // const since = now - ranges[timeRange];
       
       if (timeRange === 'all') {
         setStats(costStats);
@@ -83,7 +83,7 @@ export function UsageDashboard({ compact = false, className = '' }: UsageDashboa
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
           <span className="text-zinc-600 dark:text-zinc-400">
-            {stats?.averageLatency?.toFixed(0) || 0}ms avg
+            {stats?.avgLatency?.toFixed(0) || 0}ms avg
           </span>
         </div>
       </div>
@@ -151,7 +151,7 @@ export function UsageDashboard({ compact = false, className = '' }: UsageDashboa
             <span className="text-xs text-purple-700 dark:text-purple-300">Avg Latency</span>
           </div>
           <div className="text-lg font-bold text-purple-800 dark:text-purple-200">
-            {stats?.averageLatency?.toFixed(0) || 0}ms
+            {stats?.avgLatency?.toFixed(0) || 0}ms
           </div>
         </div>
 
@@ -200,8 +200,8 @@ export function UsageDashboard({ compact = false, className = '' }: UsageDashboa
 
       {/* Request Count */}
       <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-700 flex justify-between text-xs text-zinc-500">
-        <span>{stats?.requestCount || 0} total requests</span>
-        <span>{stats?.errorCount || 0} errors</span>
+        <span>{stats?.totalRequests || 0} total requests</span>
+        <span>{((stats?.totalRequests || 0) - ((stats?.totalRequests || 0) * (stats?.successRate || 1))) || 0} errors</span>
       </div>
     </div>
   );
@@ -285,7 +285,7 @@ export function UsageStatsBar({ className = '' }: { className?: string }) {
             <svg className="w-3 h-3 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            <span className="text-zinc-600 dark:text-zinc-300">{stats?.averageLatency?.toFixed(0) || 0}ms avg</span>
+            <span className="text-zinc-600 dark:text-zinc-300">{stats?.avgLatency?.toFixed(0) || 0}ms avg</span>
           </div>
         </div>
       </div>

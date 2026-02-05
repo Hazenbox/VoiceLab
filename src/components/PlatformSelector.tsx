@@ -60,7 +60,7 @@ const PLATFORM_OPTIONS: PlatformOption[] = [
 export const PlatformSelector = memo(function PlatformSelector({
   value,
   onChange,
-  size = 'sm',
+  size: _size = 'sm',
   disabled = false,
   className = '',
 }: PlatformSelectorProps) {

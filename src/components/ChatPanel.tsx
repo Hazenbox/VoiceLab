@@ -60,7 +60,7 @@ export const ChatPanel = memo(function ChatPanel({
   messages, 
   onSendMessage, 
   isLoading,
-  mode = 'copy',
+  mode: _mode = 'copy',
   placeholder = 'What do you want to know?',
   onSaveAudio,
   showEmptyState = true,

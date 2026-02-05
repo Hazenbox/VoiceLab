@@ -2,7 +2,7 @@
  * Chat Storage Service Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { chatStorage } from './chatStorage';
 import type { ChatMessage } from '../types';
 

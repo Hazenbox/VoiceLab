@@ -21,12 +21,16 @@ export function MessageContent({ content, role }: MessageContentProps) {
   // Custom components for markdown elements
   const components: Components = {
     // Code blocks
-    code({ inline, className, children, ...props }) {
-      if (inline) {
+    code({ className, children }) {
+      const match = /language-(\w+)/.exec(className || '');
+      // If there's no language specified, treat as inline code
+      const isInline = !match;
+      
+      if (isInline) {
         return <InlineCode>{children}</InlineCode>;
       }
       return (
-        <CodeBlock className={className} inline={inline}>
+        <CodeBlock className={className}>
           {String(children)}
         </CodeBlock>
       );

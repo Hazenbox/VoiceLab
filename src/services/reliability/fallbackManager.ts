@@ -125,7 +125,7 @@ export class FallbackManager {
   }
 
   resetAllCircuitBreakers(): void {
-    this.circuitBreakers.forEach((breaker, provider) => {
+    this.circuitBreakers.forEach((breaker) => {
       breaker.reset();
     });
     console.log('[FallbackManager] Reset all circuit breakers');

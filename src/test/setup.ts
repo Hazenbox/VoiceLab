@@ -122,7 +122,7 @@ class MockAudioContext {
   }
 
   async decodeAudioData(
-    arrayBuffer: ArrayBuffer,
+    _arrayBuffer: ArrayBuffer,
     successCallback?: (buffer: MockAudioBuffer) => void
   ): Promise<MockAudioBuffer> {
     const buffer = new MockAudioBuffer({
@@ -377,8 +377,14 @@ beforeAll(() => {
   });
   
   // Mock btoa and atob for base64 encoding
-  vi.stubGlobal('btoa', (str: string) => Buffer.from(str, 'binary').toString('base64'));
-  vi.stubGlobal('atob', (str: string) => Buffer.from(str, 'base64').toString('binary'));
+  vi.stubGlobal('btoa', (str: string) => {
+    // Simple base64 encoding for browsers
+    return globalThis.btoa ? globalThis.btoa(str) : btoa(str);
+  });
+  vi.stubGlobal('atob', (str: string) => {
+    // Simple base64 decoding for browsers
+    return globalThis.atob ? globalThis.atob(str) : atob(str);
+  });
 });
 
 afterEach(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
+import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useAudioLibrary } from '../context/AudioLibraryContext';
 import { useThemeColors } from '../theme';

@@ -182,7 +182,7 @@ export const ModeToggle = memo(function ModeToggle({
         aria-hidden="true"
       />
       
-      {modes.map((modeOption, index) => {
+      {modes.map((modeOption) => {
         const isActive = mode === modeOption.value;
         
         return (

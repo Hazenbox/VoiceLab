@@ -56,7 +56,7 @@ const CHANNEL_OPTIONS: ChannelOption[] = [
 export const ChannelSelector = memo(function ChannelSelector({
   value,
   onChange,
-  size = 'sm',
+  size: _size = 'sm',
   disabled = false,
   className = '',
 }: ChannelSelectorProps) {

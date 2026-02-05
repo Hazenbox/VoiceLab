@@ -293,7 +293,7 @@ export async function getStorageStats(): Promise<StorageStats> {
     const transaction = db.transaction(STORE_NAME, 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     
-    const countRequest = store.count();
+    // const countRequest = store.count();
     const allRequest = store.getAll();
     
     allRequest.onsuccess = () => {

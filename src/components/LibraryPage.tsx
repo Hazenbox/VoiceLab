@@ -10,7 +10,7 @@ interface LibraryPageProps {
   onBack: () => void;
 }
 
-export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
+export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack: _onBack }) => {
   const theme = useThemeColors();
   const { audios, playAudio, stopAudio, playingAudioId, deleteAudio, updateAudioName, downloadAudio } = useAudioLibrary();
   const { projects } = useProject();
