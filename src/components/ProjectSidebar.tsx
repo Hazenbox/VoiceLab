@@ -25,8 +25,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
   const { audios } = useAudioLibrary();
   
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
-  const [newProjectName, setNewProjectName] = useState('');
   
   // More menu state
   const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
@@ -63,13 +61,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     }
   }, [renamingProject]);
 
-  const handleCreateProject = useCallback(() => {
-    if (newProjectName.trim()) {
-      createProject(newProjectName.trim());
-      setNewProjectName('');
-      setIsCreatingProject(false);
-    }
-  }, [newProjectName, createProject]);
 
   const handleDeleteProject = useCallback((id: string) => {
     if (confirm('Are you sure you want to delete this project? All associated audios will be deleted.')) {
@@ -170,7 +161,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             Projects
           </h2>
           <button
-            onClick={() => setIsCreatingProject(true)}
+            onClick={() => createProject()}
             className="p-1.5 rounded-full transition-colors hover:opacity-70"
             style={{
               backgroundColor: theme.stroke.low,
@@ -186,51 +177,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 
         {/* Projects List */}
         <div className="flex-1 overflow-y-auto px-1.5 py-1.5">
-          {isCreatingProject && (
-            <div className="mb-2 p-1.5 space-y-2 rounded-lg" style={{ backgroundColor: theme.background.minimal }}>
-              <input
-                type="text"
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreateProject();
-                  if (e.key === 'Escape') setIsCreatingProject(false);
-                }}
-                placeholder="Project name..."
-                autoFocus
-                className="w-full px-2 py-1.5 text-xs rounded-md border"
-                style={{
-                  backgroundColor: theme.background.ghost,
-                  borderColor: theme.stroke.medium,
-                  color: theme.text.high,
-                }}
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCreateProject}
-                  className="flex-1 px-1.5 py-0.5 text-xs rounded-md font-medium"
-                  style={{
-                    backgroundColor: '#f97316',
-                    color: 'white',
-                  }}
-                >
-                  Create
-                </button>
-                <button
-                  onClick={() => setIsCreatingProject(false)}
-                  className="flex-1 px-1.5 py-0.5 text-xs rounded-md font-medium"
-                  style={{
-                    backgroundColor: theme.background.minimal,
-                    border: `1px solid ${theme.stroke.medium}`,
-                    color: theme.text.high,
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-
           <div className="space-y-0.5">
             {projects.map((project) => (
               <div

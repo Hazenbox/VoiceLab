@@ -11,7 +11,7 @@ import {
 interface ProjectContextValue {
   projects: Project[];
   activeProject: Project | null;
-  createProject: (name: string) => Project;
+  createProject: (name?: string) => Project;
   updateProject: (id: string, updates: Partial<Omit<Project, 'id' | 'createdAt'>>) => void;
   deleteProject: (id: string) => void;
   setActiveProject: (id: string) => void;
@@ -73,10 +73,15 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     }
   }, []);
 
-  const createProject = useCallback((name: string): Project => {
+  const createProject = useCallback((name?: string): Project => {
+    // Generate name if not provided - count existing Untitled projects
+    const projectName = name?.trim() || `Untitled ${
+      projects.filter(p => p.name.startsWith('Untitled')).length + 1
+    }`;
+    
     const newProject: Project = {
       id: generateId(),
-      name,
+      name: projectName,
       createdAt: Date.now(),
       updatedAt: Date.now(),
       config: DEFAULT_CONFIG,
@@ -91,7 +96,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     storageActiveProject.set(newProject.id);
 
     return newProject;
-  }, []);
+  }, [projects]);
 
   const updateProject = useCallback((id: string, updates: Partial<Omit<Project, 'id' | 'createdAt'>>) => {
     storageProjects.update(id, updates);
