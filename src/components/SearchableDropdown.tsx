@@ -203,10 +203,10 @@ export const SearchableDropdown = memo(function SearchableDropdown({
         disabled={disabled}
         className={`
           flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80 cursor-pointer'}
         `}
         style={{ 
-          backgroundColor: 'transparent', 
+          backgroundColor: theme.stroke.low, 
           color: theme.text.medium 
         }}
         aria-haspopup="listbox"

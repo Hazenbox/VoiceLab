@@ -25,6 +25,7 @@ import type {
   ResponseLength,
 } from '../types';
 import { VoiceSelector } from './VoiceSelector';
+import { LabeledSlider } from './LabeledSlider';
 import { Slider } from './Slider';
 import { Toggle } from './Toggle';
 import { SearchableDropdown } from './SearchableDropdown';
@@ -98,7 +99,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
     <div className="overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2.5 pb-4 text-left transition-colors hover:opacity-80"
+        className="w-full flex items-center justify-between px-3 py-2.5 pb-2 text-left transition-colors hover:opacity-80"
         style={{ color: theme.text.high }}
       >
         <div className="flex items-center gap-2">
@@ -116,7 +117,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
       </button>
       
       {isOpen && (
-        <div className="px-3 pb-4 space-y-4">
+        <div className="px-3 pb-2 space-y-4">
           {children}
         </div>
       )}
@@ -238,47 +239,13 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
     <aside
       className="h-full flex flex-col overflow-hidden relative"
       style={{
-        width: isCollapsed ? '48px' : '320px',
-        backgroundColor: theme.stroke.low,
+        width: '320px',
+        backgroundColor: theme.background.ghost,
         borderLeft: `1px solid ${theme.stroke.low}`,
-        transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1), transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: isCollapsed ? 'translateX(0)' : 'translateX(0)',
       }}
     >
-      {/* Toggle Button */}
-      {onToggleCollapse && (
-        <button
-          onClick={onToggleCollapse}
-          className={`
-            absolute top-3 z-10 w-8 h-8 rounded-full flex items-center justify-center
-            transition-colors hover:opacity-70 cursor-pointer
-            focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1
-            ${isCollapsed ? 'left-2' : 'right-3'}
-          `}
-          style={{
-            backgroundColor: theme.stroke.low,
-            color: theme.text.high,
-          }}
-          aria-label={isCollapsed ? 'Expand settings panel' : 'Collapse settings panel'}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-            {isCollapsed ? (
-              <>
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <line x1="9" y1="3" x2="9" y2="21" />
-              </>
-            ) : (
-              <>
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <line x1="15" y1="3" x2="15" y2="21" />
-              </>
-            )}
-          </svg>
-        </button>
-      )}
-      
       {/* Header */}
-      {!isCollapsed && (
+      {(
         <div
           className="px-3 py-3 border-b flex items-center justify-between"
           style={{ borderColor: theme.stroke.low }}
@@ -306,8 +273,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       )}
       
       {/* Scrollable content */}
-      {!isCollapsed && (
-        <div className="flex-1 overflow-y-auto p-3 space-y-0">
+      <div className="flex-1 overflow-y-auto p-3 space-y-0">
           {/* Voice Settings Section - Merged Voice & TTS with Conversation Settings */}
           <Section title="Voice Settings" icon={<VoiceIcon />} defaultOpen>
             <VoiceSelector
@@ -337,38 +303,26 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
             </div>
             
             {/* Pace */}
-            <Slider
+            <LabeledSlider
               label="Pace"
-              value={['slow', 'medium', 'fast'].indexOf(config.persona.pace)}
-              min={0}
-              max={2}
-              step={1}
-              onChange={(value) => {
-                const paceOptions: Pace[] = ['slow', 'medium', 'fast'];
-                updatePersona('pace', paceOptions[value]);
-              }}
-              formatValue={(value) => ['Slow', 'Medium', 'Fast'][value]}
+              value={config.persona.pace}
+              options={['slow', 'medium', 'fast']}
+              onChange={(value) => updatePersona('pace', value as Pace)}
               disabled={disabled}
             />
             
             {/* Response Length */}
-            <Slider
+            <LabeledSlider
               label="Response Length"
-              value={['short', 'medium', 'long'].indexOf(config.maxResponseLength)}
-              min={0}
-              max={2}
-              step={1}
-              onChange={(value) => {
-                const lengthOptions: ResponseLength[] = ['short', 'medium', 'long'];
-                onConfigChange({ ...config, maxResponseLength: lengthOptions[value] });
-              }}
-              formatValue={(value) => ['Short', 'Medium', 'Long'][value]}
+              value={config.maxResponseLength}
+              options={['short', 'medium', 'long']}
+              onChange={(value) => onConfigChange({ ...config, maxResponseLength: value as ResponseLength })}
               disabled={disabled}
             />
           </Section>
           
           {/* Separator */}
-          <div className="py-3">
+          <div className="py-1.5">
             <div style={{ borderBottom: `1px solid ${theme.stroke.low}` }} />
           </div>
           
@@ -406,7 +360,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </Section>
           
           {/* Separator */}
-          <div className="py-3">
+          <div className="py-1.5">
             <div style={{ borderBottom: `1px solid ${theme.stroke.low}` }} />
           </div>
           
@@ -475,7 +429,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </Section>
           
           {/* Separator */}
-          <div className="py-3">
+          <div className="py-1.5">
             <div style={{ borderBottom: `1px solid ${theme.stroke.low}` }} />
           </div>
           
@@ -525,8 +479,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </Section>
           
           {/* Appearance Section removed - Theme and Design System moved to navigation */}
-        </div>
-      )}
+      </div>
     </aside>
   );
 });
