@@ -8,6 +8,14 @@
     <meta name="description" content="AI-powered voice prototyping tool for designing and testing Jio's voice assistant persona" />
   </head>
   <body>
+    <!-- Prevent flash of wrong theme on load -->
+    <script>
+      try {
+        if (localStorage.getItem('voiceDesigner_colorMode') === 'Dark') {
+          document.body.classList.add('dark');
+        }
+      } catch {}
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
