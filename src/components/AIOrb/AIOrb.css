@@ -1,68 +1,47 @@
 /**
- * AIOrb Component Styles
- * Audio-reactive CSS animations for the AI visualization orb
+ * AIOrb Styles
+ * Minimal styling - states communicated via animation speed and scale
  */
 
-/* Container with CSS variables for dynamic effects */
+/* Container - clickable area */
 .ai-orb-container {
-  --orb-glow-color: rgba(99, 102, 241, 0.3);
-  --orb-glow-intensity: 0;
-  --orb-scale: 1;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Focus styles for accessibility */
-.ai-orb-container:focus {
+  border-radius: 50%;
+  transition: transform 150ms ease-out;
   outline: none;
 }
 
-.ai-orb-container:focus-visible .ai-orb-focus-ring {
-  opacity: 1;
+.ai-orb-container[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
+/* Focus ring for accessibility - visible on focus */
 .ai-orb-focus-ring {
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 2px solid currentColor;
-  opacity: 0;
-  transition: opacity 150ms ease;
+  border: 2px solid transparent;
+  transition: border-color 150ms ease;
   pointer-events: none;
 }
 
-/* Glow layer - sits behind the orb canvas */
-.ai-orb-glow {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at center,
-    var(--orb-glow-color) 0%,
-    transparent 70%
-  );
-  box-shadow: 
-    0 0 calc(20px + var(--orb-glow-intensity) * 40px) var(--orb-glow-color),
-    0 0 calc(40px + var(--orb-glow-intensity) * 80px) var(--orb-glow-color);
-  transform: scale(var(--orb-scale));
-  transition: box-shadow 50ms ease-out, transform 50ms ease-out;
-  pointer-events: none;
+.ai-orb-container:focus-visible .ai-orb-focus-ring {
+  border-color: currentColor;
 }
 
-/* Orb canvas wrapper */
+/* Canvas container for Unicorn scene */
 .ai-orb-canvas {
   position: relative;
   width: 100%;
   height: 100%;
   border-radius: 50%;
   overflow: hidden;
-  transform: scale(var(--orb-scale));
-  transition: transform 100ms ease-out;
 }
 
 /* Unicorn scene container */
@@ -71,243 +50,18 @@
   height: 100%;
 }
 
-/* Fallback orb for browsers without WebGL */
-.ai-orb-fallback {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    rgba(99, 102, 241, 0.8) 0%,
-    rgba(139, 92, 246, 0.8) 50%,
-    rgba(59, 130, 246, 0.8) 100%
-  );
-  animation: fallback-gradient 4s ease-in-out infinite;
-}
-
-@keyframes fallback-gradient {
-  0%, 100% {
-    background-position: 0% 50%;
-    filter: brightness(1);
-  }
-  50% {
-    background-position: 100% 50%;
-    filter: brightness(1.1);
-  }
-}
-
-/* ============================================
-   State-specific animations
-   ============================================ */
-
-/* IDLE: Gentle breathing animation */
-.ai-orb--idle .ai-orb-glow {
-  animation: orb-breathe 4s ease-in-out infinite;
-}
-
-.ai-orb--idle .ai-orb-canvas {
-  animation: orb-breathe-scale 4s ease-in-out infinite;
-}
-
-@keyframes orb-breathe {
-  0%, 100% {
-    opacity: 0.7;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-@keyframes orb-breathe-scale {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.02);
-  }
-}
-
-/* CONNECTING: Wake-up pulse animation */
-.ai-orb--connecting .ai-orb-glow {
-  animation: orb-pulse 1.5s ease-in-out infinite;
-}
-
-.ai-orb--connecting .ai-orb-canvas {
-  animation: orb-wake 1s ease-out;
-}
-
-@keyframes orb-pulse {
-  0%, 100% {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-}
-
-@keyframes orb-wake {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* LISTENING: Active, ready state with subtle pulse */
-.ai-orb--listening .ai-orb-glow {
-  animation: orb-listen-glow 2s ease-in-out infinite;
-}
-
-@keyframes orb-listen-glow {
-  0%, 100% {
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-/* SPEAKING: More energetic animation */
-.ai-orb--speaking .ai-orb-glow {
-  animation: orb-speak-glow 1s ease-in-out infinite;
-}
-
-@keyframes orb-speak-glow {
-  0%, 100% {
-    opacity: 0.7;
-    transform: scale(var(--orb-scale));
-  }
-  50% {
-    opacity: 1;
-    transform: scale(calc(var(--orb-scale) * 1.05));
-  }
-}
-
-/* ERROR: Shake animation */
-.ai-orb--error .ai-orb-glow {
-  animation: orb-error-flash 0.5s ease-in-out;
-}
-
-.ai-orb--error .ai-orb-canvas {
-  animation: orb-shake 0.3s ease-in-out;
-}
-
-@keyframes orb-error-flash {
-  0%, 100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-@keyframes orb-shake {
-  0%, 100% {
-    transform: translateX(0) scale(var(--orb-scale));
-  }
-  25% {
-    transform: translateX(-4px) scale(var(--orb-scale));
-  }
-  75% {
-    transform: translateX(4px) scale(var(--orb-scale));
-  }
-}
-
-/* ============================================
-   Reduced motion preferences
-   ============================================ */
-
-@media (prefers-reduced-motion: reduce) {
-  .ai-orb-glow,
-  .ai-orb-canvas,
-  .ai-orb-fallback {
-    animation: none !important;
-    transition: none !important;
-  }
-  
-  /* Show static state indicators instead */
-  .ai-orb--listening .ai-orb-glow,
-  .ai-orb--speaking .ai-orb-glow {
-    opacity: 1;
-  }
-  
-  .ai-orb--idle .ai-orb-glow {
-    opacity: 0.7;
-  }
-  
-  .ai-orb--error .ai-orb-glow {
-    opacity: 0.8;
-  }
-}
-
-/* ============================================
-   Hover and interaction states
-   ============================================ */
-
-.ai-orb-container:hover .ai-orb-glow {
-  filter: brightness(1.1);
-}
-
-.ai-orb-container:active .ai-orb-canvas {
-  transform: scale(calc(var(--orb-scale) * 0.95));
-}
-
-/* Disabled state */
-.ai-orb-container[aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.ai-orb-container[aria-disabled="true"] .ai-orb-glow {
-  animation: none;
-}
-
-/* ============================================
-   Audio-reactive ring (outer visualization)
-   ============================================ */
-
-.ai-orb-audio-ring {
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  border: 2px solid var(--orb-glow-color);
-  opacity: calc(var(--orb-glow-intensity) * 0.5);
-  transform: scale(calc(1 + var(--orb-glow-intensity) * 0.2));
-  transition: all 50ms ease-out;
-  pointer-events: none;
-}
-
-.ai-orb--listening .ai-orb-audio-ring,
-.ai-orb--speaking .ai-orb-audio-ring {
-  display: block;
-}
-
-.ai-orb--idle .ai-orb-audio-ring,
-.ai-orb--connecting .ai-orb-audio-ring,
-.ai-orb--error .ai-orb-audio-ring {
-  display: none;
-}
-
-/* ============================================
-   Loading skeleton
-   ============================================ */
-
+/* Loading skeleton */
 .ai-orb-skeleton {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(99, 102, 241, 0.1) 0%,
-    rgba(99, 102, 241, 0.2) 50%,
-    rgba(99, 102, 241, 0.1) 100%
+    rgba(128, 128, 128, 0.1) 25%,
+    rgba(128, 128, 128, 0.2) 50%,
+    rgba(128, 128, 128, 0.1) 75%
   );
   background-size: 200% 100%;
+  border-radius: 50%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
 }
 
@@ -317,5 +71,81 @@
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+/* Error state - shake animation */
+.ai-orb--error {
+  animation: orb-shake 0.4s ease-in-out;
+}
+
+@keyframes orb-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Fallback orb for non-WebGL browsers */
+.ai-orb-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-orb-fallback-inner {
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(160, 160, 180, 0.8) 0%,
+    rgba(100, 100, 120, 0.6) 50%,
+    rgba(60, 60, 80, 0.4) 100%
+  );
+  animation: fallback-breathe 3s ease-in-out infinite;
+}
+
+@keyframes fallback-breathe {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .ai-orb-container {
+    transition: none;
+  }
+
+  .ai-orb--error {
+    animation: none;
+  }
+
+  .ai-orb-fallback-inner {
+    animation: none;
+    opacity: 0.9;
+  }
+
+  .ai-orb-skeleton {
+    animation: none;
   }
 }

@@ -1,25 +1,79 @@
 /**
  * useOrbState Hook
- * Maps AppState to visual properties for the AI Orb
+ * Maps AppState to animation speed and scale for the AI Orb
+ * 
+ * States are communicated through animation speed and size only,
+ * keeping the orb's native Unicorn Studio visuals.
  */
 
 import { useMemo } from 'react';
 import { AppState } from '../../types';
 
 export interface OrbVisualState {
-  glowColor: string;
-  glowIntensity: number;
-  baseScale: number;
+  /** Animation speed multiplier (0 = paused, 1 = normal) */
+  speed: number;
+  /** Base scale of the orb */
+  scale: number;
+  /** CSS class for special animations (e.g., shake on error) */
   animationClass: string;
+  /** Whether the animation should be paused */
   isPaused: boolean;
+  /** Accessibility label */
   ariaLabel: string;
+  /** Status text to display */
   statusText: string;
 }
 
+// Animation speed multipliers per state
+const SPEED_MAP: Record<AppState, number> = {
+  [AppState.IDLE]: 0.3,        // Slow, calm breathing
+  [AppState.CONNECTING]: 0.8,  // Building up energy
+  [AppState.LISTENING]: 1.0,   // Normal, attentive
+  [AppState.SPEAKING]: 1.5,    // Fast, energetic
+  [AppState.ERROR]: 0,         // Paused
+};
+
+// Base scale per state
+const SCALE_MAP: Record<AppState, number> = {
+  [AppState.IDLE]: 1.0,
+  [AppState.CONNECTING]: 1.0,
+  [AppState.LISTENING]: 1.0,
+  [AppState.SPEAKING]: 1.05,
+  [AppState.ERROR]: 1.0,
+};
+
+// Animation classes per state
+const ANIMATION_CLASS_MAP: Record<AppState, string> = {
+  [AppState.IDLE]: 'ai-orb--idle',
+  [AppState.CONNECTING]: 'ai-orb--connecting',
+  [AppState.LISTENING]: 'ai-orb--listening',
+  [AppState.SPEAKING]: 'ai-orb--speaking',
+  [AppState.ERROR]: 'ai-orb--error',
+};
+
+// ARIA labels per state
+const ARIA_LABEL_MAP: Record<AppState, string> = {
+  [AppState.IDLE]: 'Start voice conversation',
+  [AppState.CONNECTING]: 'Connecting to AI...',
+  [AppState.LISTENING]: 'Listening - tap to stop',
+  [AppState.SPEAKING]: 'AI speaking - tap to stop',
+  [AppState.ERROR]: 'Error occurred - tap to retry',
+};
+
+// Status text per state
+const STATUS_TEXT_MAP: Record<AppState, string> = {
+  [AppState.IDLE]: 'Tap orb to talk',
+  [AppState.CONNECTING]: 'Connecting...',
+  [AppState.LISTENING]: 'Listening...',
+  [AppState.SPEAKING]: 'AI is speaking...',
+  [AppState.ERROR]: 'Error - tap to retry',
+};
+
 interface UseOrbStateOptions {
+  /** Volume level for audio-reactive scaling (0-1) */
   volume?: number;
+  /** Bass level for additional scaling effect (0-1) */
   bassLevel?: number;
-  isLight?: boolean;
 }
 
 /**
@@ -29,95 +83,37 @@ export function useOrbState(
   state: AppState,
   options: UseOrbStateOptions = {}
 ): OrbVisualState {
-  const { volume = 0, bassLevel = 0, isLight = false } = options;
+  const { volume = 0, bassLevel = 0 } = options;
 
   return useMemo(() => {
-    // Base configurations for each state
-    const stateConfigs: Record<AppState, Omit<OrbVisualState, 'glowIntensity' | 'baseScale'>> = {
-      [AppState.IDLE]: {
-        glowColor: isLight 
-          ? 'rgba(99, 102, 241, 0.25)' 
-          : 'rgba(129, 140, 248, 0.3)',
-        animationClass: 'ai-orb--idle',
-        isPaused: false,
-        ariaLabel: 'Start voice conversation',
-        statusText: 'Tap to talk',
-      },
-      [AppState.CONNECTING]: {
-        glowColor: isLight 
-          ? 'rgba(59, 130, 246, 0.4)' 
-          : 'rgba(96, 165, 250, 0.5)',
-        animationClass: 'ai-orb--connecting',
-        isPaused: false,
-        ariaLabel: 'Connecting to AI...',
-        statusText: 'Connecting...',
-      },
-      [AppState.LISTENING]: {
-        glowColor: isLight 
-          ? 'rgba(249, 115, 22, 0.5)' 
-          : 'rgba(251, 146, 60, 0.6)',
-        animationClass: 'ai-orb--listening',
-        isPaused: false,
-        ariaLabel: 'Listening - tap to stop',
-        statusText: 'Listening...',
-      },
-      [AppState.SPEAKING]: {
-        glowColor: isLight 
-          ? 'rgba(251, 146, 60, 0.5)' 
-          : 'rgba(253, 186, 116, 0.7)',
-        animationClass: 'ai-orb--speaking',
-        isPaused: false,
-        ariaLabel: 'AI speaking - tap to stop',
-        statusText: 'Speaking...',
-      },
-      [AppState.ERROR]: {
-        glowColor: isLight 
-          ? 'rgba(239, 68, 68, 0.5)' 
-          : 'rgba(248, 113, 113, 0.6)',
-        animationClass: 'ai-orb--error',
-        isPaused: true,
-        ariaLabel: 'Error occurred - tap to retry',
-        statusText: 'Error - tap to retry',
-      },
-    };
+    const baseSpeed = SPEED_MAP[state];
+    const baseScale = SCALE_MAP[state];
+    const animationClass = ANIMATION_CLASS_MAP[state];
+    const ariaLabel = ARIA_LABEL_MAP[state];
+    const statusText = STATUS_TEXT_MAP[state];
+    const isPaused = state === AppState.ERROR;
 
-    const config = stateConfigs[state];
-
-    // Calculate dynamic values based on audio
-    let glowIntensity = 0;
-    let baseScale = 1;
-
-    switch (state) {
-      case AppState.IDLE:
-        glowIntensity = 0.2;
-        baseScale = 1;
-        break;
-      case AppState.CONNECTING:
-        glowIntensity = 0.4;
-        baseScale = 1.02;
-        break;
-      case AppState.LISTENING:
-        // Audio-reactive: glow and scale respond to volume
-        glowIntensity = 0.4 + volume * 0.6;
-        baseScale = 1 + volume * 0.1;
-        break;
-      case AppState.SPEAKING:
-        // Audio-reactive: respond to bass frequencies
-        glowIntensity = 0.5 + bassLevel * 0.5;
-        baseScale = 1.02 + bassLevel * 0.08;
-        break;
-      case AppState.ERROR:
-        glowIntensity = 0.6;
-        baseScale = 1;
-        break;
+    // Calculate audio-reactive scale adjustment
+    let audioScaleBoost = 0;
+    if (state === AppState.LISTENING) {
+      // React to volume when listening
+      audioScaleBoost = volume * 0.1;
+    } else if (state === AppState.SPEAKING) {
+      // React to bass when speaking
+      audioScaleBoost = bassLevel * 0.08;
     }
 
+    const finalScale = baseScale + audioScaleBoost;
+
     return {
-      ...config,
-      glowIntensity,
-      baseScale,
+      speed: baseSpeed,
+      scale: finalScale,
+      animationClass,
+      isPaused,
+      ariaLabel,
+      statusText,
     };
-  }, [state, volume, bassLevel, isLight]);
+  }, [state, volume, bassLevel]);
 }
 
 /**
