@@ -154,7 +154,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
           >
             <button
               onClick={() => setViewMode('list')}
-              className="p-1.5 transition-colors"
+              className="p-1.5 transition-colors cursor-pointer"
               style={{
                 backgroundColor: viewMode === 'list' ? theme.stroke.low : 'transparent',
                 color: theme.text.high
@@ -167,7 +167,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className="p-1.5 transition-colors"
+              className="p-1.5 transition-colors cursor-pointer"
               style={{
                 backgroundColor: viewMode === 'grid' ? theme.stroke.low : 'transparent',
                 color: theme.text.high
@@ -221,7 +221,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
                 {/* Play Button */}
                 <button
                   onClick={() => handlePlayAudio(audio.id)}
-                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer"
                   style={{
                     backgroundColor: playingAudioId === audio.id ? '#f97316' : theme.background.ghost,
                     color: playingAudioId === audio.id ? 'white' : theme.text.high,
@@ -301,7 +301,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => downloadAudio(audio.id)}
-                    className="p-1.5 rounded transition-colors hover:opacity-80"
+                    className="p-1.5 rounded transition-colors hover:opacity-80 cursor-pointer"
                     style={{ color: theme.text.medium }}
                     title="Download"
                   >
@@ -311,7 +311,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
                   </button>
                   <button
                     onClick={() => handleDeleteAudio(audio.id)}
-                    className="p-1.5 rounded transition-colors hover:opacity-80"
+                    className="p-1.5 rounded transition-colors hover:opacity-80 cursor-pointer"
                     style={{ color: theme.text.low }}
                     title="Delete"
                   >
@@ -356,7 +356,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
                   {/* Play overlay */}
                   <button
                     onClick={() => handlePlayAudio(audio.id)}
-                    className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   >
                     <div 
                       className="w-12 h-12 rounded-full flex items-center justify-center"
@@ -428,7 +428,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
                   <div className="flex items-center justify-end gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => downloadAudio(audio.id)}
-                      className="p-1 rounded transition-colors hover:opacity-80"
+                      className="p-1 rounded transition-colors hover:opacity-80 cursor-pointer"
                       style={{ color: theme.text.medium }}
                       title="Download"
                     >
@@ -438,7 +438,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
                     </button>
                     <button
                       onClick={() => handleDeleteAudio(audio.id)}
-                      className="p-1 rounded transition-colors hover:opacity-80"
+                      className="p-1 rounded transition-colors hover:opacity-80 cursor-pointer"
                       style={{ color: theme.text.low }}
                       title="Delete"
                     >

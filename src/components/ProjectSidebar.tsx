@@ -162,7 +162,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           </h2>
           <button
             onClick={() => createProject()}
-            className="p-1.5 rounded-full transition-colors hover:opacity-70"
+            className="p-1.5 rounded-full transition-colors hover:opacity-70 cursor-pointer"
             style={{
               backgroundColor: theme.stroke.low,
               color: theme.text.medium,
@@ -210,7 +210,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                       setActiveProject(project.id);
                       onProjectSelect?.();
                     }}
-                    className="w-full px-2 py-1 flex items-center justify-between group transition-colors rounded-lg"
+                    className="w-full px-2 py-1 flex items-center justify-between group transition-colors rounded-lg cursor-pointer"
                     style={{
                       backgroundColor: activeProject?.id === project.id ? theme.stroke.low : 'transparent',
                       height: '32px',
@@ -231,7 +231,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                         e.stopPropagation();
                         setMenuOpenFor(menuOpenFor === project.id ? null : project.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity hover:opacity-70"
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity hover:opacity-70 cursor-pointer"
                       style={{ color: theme.text.low }}
                       aria-label="Project options"
                     >
@@ -257,7 +257,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                     <button
                       onClick={() => handleStartRename(project)}
                       onMouseEnter={() => setMenuFocusIndex(0)}
-                      className="w-full px-3 py-1.5 text-left text-xs transition-colors mx-0"
+                      className="w-full px-3 py-1.5 text-left text-xs transition-colors mx-0 cursor-pointer"
                       style={{ 
                         color: theme.text.high,
                         backgroundColor: menuFocusIndex === 0 ? theme.stroke.low : 'transparent',
@@ -270,7 +270,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                       <button
                         onClick={() => handleDeleteProject(project.id)}
                         onMouseEnter={() => setMenuFocusIndex(1)}
-                        className="w-full px-3 py-1.5 text-left text-xs transition-colors mx-0"
+                        className="w-full px-3 py-1.5 text-left text-xs transition-colors mx-0 cursor-pointer"
                         style={{ 
                           color: theme.text.high,
                           backgroundColor: menuFocusIndex === 1 ? theme.stroke.low : 'transparent',
@@ -295,7 +295,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       >
         <button
           onClick={onNavigateToLibrary}
-          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors group"
+          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors group cursor-pointer"
           style={{
             backgroundColor: isLibraryActive ? theme.stroke.low : 'transparent',
             height: '32px',
@@ -342,7 +342,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         {onNavigateToUsage && (
           <button
             onClick={onNavigateToUsage}
-            className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors"
+            className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer"
             style={{
               backgroundColor: 'transparent',
               height: '32px',

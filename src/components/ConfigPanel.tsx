@@ -67,7 +67,7 @@ export const ConfigPanel = memo(function ConfigPanel({
       {onToggleCollapse && (
         <button
           onClick={onToggleCollapse}
-          className={`absolute top-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70 ${isCollapsed ? 'left-2' : 'right-3'}`}
+          className={`absolute top-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-70 cursor-pointer ${isCollapsed ? 'left-2' : 'right-3'}`}
           style={{
             backgroundColor: theme.stroke.low,
             color: theme.text.high,
@@ -179,7 +179,7 @@ export const ConfigPanel = memo(function ConfigPanel({
         {onShowDesignSystem && (
           <button
             onClick={onShowDesignSystem}
-            className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-70"
+            className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-70 cursor-pointer"
             style={{
               color: theme.text.medium,
               backgroundColor: 'transparent',
@@ -197,7 +197,7 @@ export const ConfigPanel = memo(function ConfigPanel({
           {/* Design System Toggle - Text Link Style */}
           <button
             onClick={toggleDesignSystem}
-            className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-70"
+            className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-70 cursor-pointer"
             style={{
               color: theme.text.medium,
               backgroundColor: 'transparent',
@@ -210,7 +210,7 @@ export const ConfigPanel = memo(function ConfigPanel({
           {/* Theme Toggle */}
           <button
             onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-80 cursor-pointer"
             style={{
               backgroundColor: theme.stroke.low,
               color: theme.text.high,
