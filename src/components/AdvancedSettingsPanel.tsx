@@ -273,7 +273,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       )}
       
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-0">
+      <div className="flex-1 overflow-y-auto py-3 space-y-0">
           {/* Voice Settings Section - Merged Voice & TTS with Conversation Settings */}
           <Section title="Voice Settings" icon={<VoiceIcon />} defaultOpen>
             <VoiceSelector
@@ -366,11 +366,11 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           
           {/* Project Defaults Section */}
           <Section title="Project Defaults" icon={<ProjectIcon />}>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium" style={{ color: theme.text.high }}>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium w-1/2" style={{ color: theme.text.high }}>
                 Default Ecosystem
               </label>
-              <div className="w-48">
+              <div className="w-1/2">
                 <SearchableDropdown
                   value={defaultEcosystem}
                   onChange={(v) => onDefaultEcosystemChange(v as EcosystemType)}
@@ -381,11 +381,11 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium" style={{ color: theme.text.high }}>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium w-1/2" style={{ color: theme.text.high }}>
                 Default Channel
               </label>
-              <div className="w-48">
+              <div className="w-1/2">
                 <SearchableDropdown
                   value={defaultChannel}
                   onChange={(v) => onDefaultChannelChange(v as ContentChannelType)}
@@ -396,11 +396,11 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium" style={{ color: theme.text.high }}>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium w-1/2" style={{ color: theme.text.high }}>
                 Default Language
               </label>
-              <div className="w-48">
+              <div className="w-1/2">
                 <SearchableDropdown
                   value={defaultLanguage}
                   onChange={(v) => onDefaultLanguageChange(v as SupportedLanguage)}
@@ -411,11 +411,11 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium" style={{ color: theme.text.high }}>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium w-1/2" style={{ color: theme.text.high }}>
                 Default Region
               </label>
-              <div className="w-48">
+              <div className="w-1/2">
                 <SearchableDropdown
                   value={defaultRegion}
                   onChange={(v) => onDefaultRegionChange(v as IndianRegion)}
@@ -443,11 +443,11 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               onChange={(value) => updateTrustSetting('minimumScore', value)}
               disabled={disabled}
             />
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium" style={{ color: theme.text.high }}>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium w-1/2" style={{ color: theme.text.high }}>
                 Validation Strictness
               </label>
-              <div className="w-48">
+              <div className="w-1/2">
                 <SearchableDropdown
                   value={trustSettings.validationStrictness}
                   onChange={(v) => updateTrustSetting('validationStrictness', v as ValidationStrictness)}
