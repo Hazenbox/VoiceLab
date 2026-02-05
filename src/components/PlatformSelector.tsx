@@ -129,40 +129,30 @@ export const PlatformSelector = memo(function PlatformSelector({
     setIsOpen(false);
   };
 
-  const sizeClasses = size === 'sm' 
-    ? 'text-xs py-1 px-2' 
-    : 'text-sm py-2 px-3';
-
   return (
     <div className={`relative ${className}`} ref={containerRef}>
-      {/* Trigger Button */}
+      {/* Trigger Button - Naked style (transparent bg, text + chevron only) */}
       <button
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`
-          flex items-center gap-1.5 rounded-md
+          flex items-center gap-1 text-xs
           transition-colors
-          ${sizeClasses}
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}
         `}
         style={{
-          backgroundColor: theme.stroke.low,
-          color: theme.text.high,
+          color: theme.text.medium,
         }}
         aria-label="Select platform"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
-        <span className="flex-shrink-0" style={{ color: theme.text.medium }}>
-          {selectedOption?.icon}
-        </span>
         <span className="truncate">{selectedOption?.label || 'Platform'}</span>
         <svg
           className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          style={{ color: theme.text.low }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>

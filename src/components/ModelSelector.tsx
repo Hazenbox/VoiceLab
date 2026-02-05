@@ -113,42 +113,23 @@ export function ModelSelector({
     setIsOpen(false);
   };
 
-  const sizeClasses = size === 'sm' 
-    ? 'text-xs py-1 px-2' 
-    : 'text-sm py-2 px-3';
-
   return (
     <div className={`relative ${className}`} ref={containerRef}>
-      {/* Trigger Button */}
+      {/* Trigger Button - Naked style (transparent bg, text + chevron only) */}
       <button
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`
-          flex items-center gap-1.5 rounded-md
+          flex items-center gap-1 text-xs
           transition-colors
-          ${sizeClasses}
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-80'}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}
         `}
         style={{
-          backgroundColor: theme.stroke.low,
-          color: theme.text.high,
+          color: theme.text.medium,
         }}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
-        {/* Status indicator */}
-        {showHealth && selectedProvider && (
-          <span
-            className={`w-2 h-2 rounded-full ${
-              selectedProvider.isHealthy === false
-                ? 'bg-red-500'
-                : selectedProvider.isConfigured
-                  ? 'bg-green-500'
-                  : 'bg-zinc-400'
-            }`}
-          />
-        )}
-        
         <span className="truncate">
           {selectedProvider?.displayName || 'Select Model'}
         </span>
@@ -159,7 +140,6 @@ export function ModelSelector({
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          style={{ color: theme.text.low }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
@@ -176,7 +156,7 @@ export function ModelSelector({
           
           {/* Menu - Opens upward */}
           <div 
-            className="absolute bottom-full left-0 mb-1 z-20 min-w-[160px] rounded-lg overflow-hidden py-1" 
+            className="absolute bottom-full left-0 mb-1 z-50 min-w-[160px] rounded-lg overflow-hidden py-1" 
             style={{
               backgroundColor: theme.background.ghost,
               border: `1px solid ${theme.stroke.medium}`,

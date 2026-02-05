@@ -235,7 +235,7 @@ export function TwChatPanel({
 
           {/* Model + Channel/Platform selectors - below input */}
           {(modelSelector || channelSelector || platformSelector) && (
-            <div className="flex items-center justify-center gap-3 mt-3">
+            <div className="flex items-center justify-start gap-3 mt-3">
               {modelSelector}
               {channelSelector}
               {platformSelector}

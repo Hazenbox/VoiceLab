@@ -325,9 +325,9 @@ export const ChatPanel = memo(function ChatPanel({
             </button>
           </div>
 
-          {/* Model + Channel/Platform selectors - below input */}
+          {/* Model + Channel/Platform selectors - below input, aligned left */}
           {(modelSelector || channelSelector || platformSelector) && (
-            <div className="flex items-center justify-center gap-3 mt-3">
+            <div className="flex items-center justify-start gap-3 mt-3">
               {modelSelector}
               {channelSelector}
               {platformSelector}
