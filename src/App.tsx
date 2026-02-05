@@ -205,7 +205,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
     try {
       // Build messages with system prompt and history (use all messages for context, not filtered)
-      const systemPrompt = getCopySystemPrompt();
+      // Include channel and platform context from active project
+      const systemPrompt = getCopySystemPrompt(
+        undefined, 
+        activeProject?.channel, 
+        activeProject?.platform
+      );
       const contextMessages = chatMessages
         .filter(m => m.type === 'text') // Only use text messages for context
         .slice(-20); // Limit context to last 20 messages

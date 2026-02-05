@@ -348,11 +348,82 @@ SUPPORT CONTENT FOCUS:
   },
 ];
 
-// Get system prompt by ID or default
-export const getCopySystemPrompt = (promptId?: string): string => {
-  if (!promptId) return COPY_GENERATION_SYSTEM_PROMPT;
-  const prompt = COPY_GENERATION_PROMPTS.find(p => p.id === promptId);
-  return prompt?.systemPrompt || COPY_GENERATION_SYSTEM_PROMPT;
+// Channel-specific guidelines
+const CHANNEL_GUIDELINES: Record<string, string> = {
+  sms: `
+CHANNEL: SMS
+- Maximum 160 characters per message (or 320 for multipart)
+- No emojis or special formatting
+- Clear, direct language
+- Include short URLs when needed
+- Front-load the key message`,
+  whatsapp: `
+CHANNEL: WhatsApp
+- Can use emojis sparingly for engagement
+- Rich text formatting available (*bold*, _italic_)
+- Can include images, videos, or documents
+- More conversational tone allowed
+- Can be slightly longer but keep it scannable`,
+  email: `
+CHANNEL: Email
+- Compelling subject line is critical
+- Use headers and bullet points for scannability
+- Include clear CTAs
+- Professional but friendly tone
+- Can include detailed information`,
+};
+
+// Platform-specific guidelines
+const PLATFORM_GUIDELINES: Record<string, string> = {
+  notifications: `
+PLATFORM: Push Notifications
+- Extremely brief (max 50 chars title, 100 chars body)
+- Urgent, action-oriented language
+- Create curiosity without clickbait
+- Personalize when possible
+- Clear value proposition`,
+  banner: `
+PLATFORM: Banner/Display Ads
+- Visual-first thinking
+- Minimal text (headline + CTA)
+- Bold, attention-grabbing headlines
+- Strong visual contrast suggestions
+- Single focused message`,
+  ads: `
+PLATFORM: Digital Ads
+- Platform-aware (social, search, display)
+- A/B test friendly variations
+- Strong hooks and CTAs
+- Benefit-driven headlines
+- Character limits awareness`,
+};
+
+// Get system prompt with channel and platform context
+export const getCopySystemPrompt = (
+  promptId?: string, 
+  channel?: string, 
+  platform?: string
+): string => {
+  let basePrompt = COPY_GENERATION_SYSTEM_PROMPT;
+  
+  if (promptId) {
+    const prompt = COPY_GENERATION_PROMPTS.find(p => p.id === promptId);
+    if (prompt) {
+      basePrompt = prompt.systemPrompt;
+    }
+  }
+  
+  // Add channel-specific guidelines
+  if (channel && CHANNEL_GUIDELINES[channel]) {
+    basePrompt += `\n${CHANNEL_GUIDELINES[channel]}`;
+  }
+  
+  // Add platform-specific guidelines
+  if (platform && PLATFORM_GUIDELINES[platform]) {
+    basePrompt += `\n${PLATFORM_GUIDELINES[platform]}`;
+  }
+  
+  return basePrompt;
 };
 
 // Conversation context prompt for Tap-to-Talk LLM
