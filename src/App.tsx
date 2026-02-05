@@ -919,6 +919,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                     <ModelSelector
                       value={chatMode === 'copy' ? selectedLLMProvider : selectedTalkLLMProvider}
                       onChange={chatMode === 'copy' ? setSelectedLLMProvider : setSelectedTalkLLMProvider}
+                      ttsValue={selectedTTSProvider}
+                      onTTSChange={setSelectedTTSProvider}
                       showHealth={false}
                       size="sm"
                       disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}

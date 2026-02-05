@@ -1,6 +1,6 @@
 /**
- * LLM Model Selector Component
- * Dropdown for selecting LLM provider with status indicators
+ * Unified Model Selector Component
+ * Dropdown for selecting both LLM and TTS providers with sections
  */
 
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -8,9 +8,15 @@ import { getAvailableLLMProviders, type LLMProviderType } from '../services/prov
 import { getOrchestratorInstance } from '../services/llm/orchestrator';
 import { useThemeColors } from '../theme';
 
+export type TTSProviderType = 'dashscope' | 'gemini' | 'elevenlabs';
+
 interface ModelSelectorProps {
   value: LLMProviderType;
   onChange: (provider: LLMProviderType) => void;
+  /** TTS provider value (optional - if provided, shows unified view) */
+  ttsValue?: TTSProviderType;
+  /** TTS provider change handler */
+  onTTSChange?: (provider: TTSProviderType) => void;
   showHealth?: boolean;
   size?: 'sm' | 'md';
   disabled?: boolean;
@@ -25,19 +31,58 @@ interface ProviderStatus {
   supportsStreaming: boolean;
 }
 
+interface TTSProvider {
+  type: TTSProviderType;
+  displayName: string;
+  isConfigured: boolean;
+}
+
+/**
+ * Get available TTS providers with configuration status
+ */
+function getAvailableTTSProviders(): TTSProvider[] {
+  return [
+    {
+      type: 'dashscope',
+      displayName: 'Alibaba DashScope',
+      isConfigured: Boolean(import.meta.env.VITE_DASHSCOPE_API_KEY),
+    },
+    {
+      type: 'gemini',
+      displayName: 'Google Gemini',
+      isConfigured: Boolean(import.meta.env.VITE_GEMINI_API_KEY),
+    },
+    {
+      type: 'elevenlabs',
+      displayName: 'ElevenLabs',
+      isConfigured: Boolean(import.meta.env.VITE_ELEVENLABS_API_KEY),
+    },
+  ];
+}
+
 export function ModelSelector({
   value,
   onChange,
+  ttsValue,
+  onTTSChange,
   showHealth = false,
-  size = 'sm',
   disabled = false,
   className = '',
 }: ModelSelectorProps) {
   const theme = useThemeColors();
-  const [providers, setProviders] = useState<ProviderStatus[]>([]);
+  const [llmProviders, setLlmProviders] = useState<ProviderStatus[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Get TTS providers (only if unified view is enabled)
+  const ttsProviders = useMemo(() => 
+    ttsValue !== undefined ? getAvailableTTSProviders() : [],
+    [ttsValue]
+  );
+
+  // Calculate total items for keyboard navigation
+  const totalItems = llmProviders.length + (ttsProviders.length > 0 ? ttsProviders.length + 1 : 0); // +1 for divider
 
   useEffect(() => {
     const loadProviders = async () => {
@@ -48,14 +93,14 @@ export function ModelSelector({
         const orchestrator = getOrchestratorInstance();
         const circuitStates = orchestrator.getCircuitStates();
         
-        setProviders(
+        setLlmProviders(
           available.map(p => ({
             ...p,
             isHealthy: circuitStates[p.type]?.state !== 'OPEN',
           }))
         );
       } else {
-        setProviders(available.map(p => ({ ...p, isHealthy: undefined })));
+        setLlmProviders(available.map(p => ({ ...p, isHealthy: undefined })));
       }
     };
 
@@ -65,12 +110,12 @@ export function ModelSelector({
   // Reset focus index when opening
   useEffect(() => {
     if (isOpen) {
-      const currentIndex = providers.findIndex(p => p.type === value);
+      const currentIndex = llmProviders.findIndex(p => p.type === value);
       setFocusedIndex(currentIndex >= 0 ? currentIndex : 0);
     } else {
       setFocusedIndex(-1);
     }
-  }, [isOpen, value, providers]);
+  }, [isOpen, value, llmProviders]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -83,17 +128,42 @@ export function ModelSelector({
           break;
         case 'ArrowDown':
           event.preventDefault();
-          setFocusedIndex(prev => (prev + 1) % providers.length);
+          setFocusedIndex(prev => {
+            let next = prev + 1;
+            // Skip divider index (llmProviders.length)
+            if (ttsProviders.length > 0 && next === llmProviders.length) {
+              next++;
+            }
+            return next >= totalItems ? 0 : next;
+          });
           break;
         case 'ArrowUp':
           event.preventDefault();
-          setFocusedIndex(prev => (prev - 1 + providers.length) % providers.length);
+          setFocusedIndex(prev => {
+            let next = prev - 1;
+            // Skip divider index (llmProviders.length)
+            if (ttsProviders.length > 0 && next === llmProviders.length) {
+              next--;
+            }
+            return next < 0 ? totalItems - 1 : next;
+          });
           break;
         case 'Enter':
         case ' ':
           event.preventDefault();
-          if (focusedIndex >= 0 && providers[focusedIndex]?.isConfigured) {
-            handleSelect(providers[focusedIndex].type);
+          if (focusedIndex >= 0) {
+            if (focusedIndex < llmProviders.length) {
+              const provider = llmProviders[focusedIndex];
+              if (provider?.isConfigured) {
+                handleSelectLLM(provider.type);
+              }
+            } else if (focusedIndex > llmProviders.length) {
+              const ttsIndex = focusedIndex - llmProviders.length - 1;
+              const provider = ttsProviders[ttsIndex];
+              if (provider?.isConfigured) {
+                handleSelectTTS(provider.type);
+              }
+            }
           }
           break;
       }
@@ -101,17 +171,35 @@ export function ModelSelector({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, focusedIndex, providers]);
+  }, [isOpen, focusedIndex, llmProviders, ttsProviders, totalItems]);
 
-  const selectedProvider = useMemo(
-    () => providers.find(p => p.type === value),
-    [providers, value]
+  const selectedLLMProvider = useMemo(
+    () => llmProviders.find(p => p.type === value),
+    [llmProviders, value]
   );
 
-  const handleSelect = (type: LLMProviderType) => {
+  const selectedTTSProvider = useMemo(
+    () => ttsProviders.find(p => p.type === ttsValue),
+    [ttsProviders, ttsValue]
+  );
+
+  const handleSelectLLM = (type: LLMProviderType) => {
     onChange(type);
     setIsOpen(false);
   };
+
+  const handleSelectTTS = (type: TTSProviderType) => {
+    onTTSChange?.(type);
+    setIsOpen(false);
+  };
+
+  // Determine display text - show both if TTS is enabled
+  const displayText = useMemo(() => {
+    if (ttsValue !== undefined && selectedTTSProvider) {
+      return `${selectedLLMProvider?.displayName || 'Model'} / ${selectedTTSProvider?.displayName || 'Voice'}`;
+    }
+    return selectedLLMProvider?.displayName || 'Select Model';
+  }, [selectedLLMProvider, selectedTTSProvider, ttsValue]);
 
   return (
     <div className={`relative ${className}`} ref={containerRef}>
@@ -131,7 +219,7 @@ export function ModelSelector({
         aria-haspopup="listbox"
       >
         <span className="truncate">
-          {selectedProvider?.displayName || 'Select Model'}
+          {displayText}
         </span>
         
         {/* Dropdown arrow */}
@@ -156,21 +244,31 @@ export function ModelSelector({
           
           {/* Menu - Opens upward */}
           <div 
-            className="absolute bottom-full left-0 mb-1 z-50 min-w-[160px] rounded-lg overflow-hidden py-1" 
+            className="absolute bottom-full left-0 mb-1 z-50 min-w-[180px] rounded-lg overflow-hidden py-1" 
             style={{
               backgroundColor: theme.background.ghost,
               border: `1px solid ${theme.stroke.medium}`,
             }}
             role="listbox"
           >
-            {providers.map((provider, index) => {
+            {/* Section: Chat Models */}
+            {ttsProviders.length > 0 && (
+              <div 
+                className="px-2 py-1 text-[10px] font-medium"
+                style={{ color: theme.text.low }}
+              >
+                Chat Models
+              </div>
+            )}
+            
+            {llmProviders.map((provider, index) => {
               const isSelected = provider.type === value;
               const isFocused = index === focusedIndex;
               
               return (
                 <button
                   key={provider.type}
-                  onClick={() => provider.isConfigured && handleSelect(provider.type)}
+                  onClick={() => provider.isConfigured && handleSelectLLM(provider.type)}
                   onMouseEnter={() => setFocusedIndex(index)}
                   disabled={!provider.isConfigured}
                   className="flex items-center gap-2 px-2 py-1.5 text-left text-xs transition-colors mx-1 rounded-md"
@@ -225,6 +323,74 @@ export function ModelSelector({
                 </button>
               );
             })}
+
+            {/* Divider and Voice Models Section */}
+            {ttsProviders.length > 0 && (
+              <>
+                {/* Divider */}
+                <div 
+                  className="my-1 mx-2 border-t"
+                  style={{ borderColor: theme.stroke.low }}
+                />
+                
+                {/* Section: Voice Models */}
+                <div 
+                  className="px-2 py-1 text-[10px] font-medium"
+                  style={{ color: theme.text.low }}
+                >
+                  Voice Models
+                </div>
+                
+                {ttsProviders.map((provider, index) => {
+                  const isSelected = provider.type === ttsValue;
+                  const globalIndex = llmProviders.length + 1 + index; // +1 for divider
+                  const isFocused = globalIndex === focusedIndex;
+                  
+                  return (
+                    <button
+                      key={provider.type}
+                      onClick={() => provider.isConfigured && handleSelectTTS(provider.type)}
+                      onMouseEnter={() => setFocusedIndex(globalIndex)}
+                      disabled={!provider.isConfigured}
+                      className="flex items-center gap-2 px-2 py-1.5 text-left text-xs transition-colors mx-1 rounded-md"
+                      style={{
+                        width: 'calc(100% - 8px)',
+                        backgroundColor: isSelected 
+                          ? (theme.isLight ? '#fff7ed' : '#431407')
+                          : isFocused && provider.isConfigured
+                            ? theme.stroke.low
+                            : 'transparent',
+                        color: !provider.isConfigured
+                          ? theme.text.low
+                          : isSelected 
+                            ? (theme.isLight ? '#c2410c' : '#fdba74')
+                            : theme.text.high,
+                        cursor: provider.isConfigured ? 'pointer' : 'not-allowed',
+                      }}
+                      role="option"
+                      aria-selected={isSelected}
+                    >
+                      {/* Config indicator */}
+                      <span
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                          provider.isConfigured
+                            ? 'bg-green-500'
+                            : 'bg-zinc-300 dark:bg-zinc-600'
+                        }`}
+                      />
+                      
+                      <span className="flex-1 truncate">{provider.displayName}</span>
+                      
+                      {!provider.isConfigured && (
+                        <span className="text-[10px]" style={{ color: theme.text.low }}>
+                          Not configured
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </>
+            )}
           </div>
         </>
       )}
