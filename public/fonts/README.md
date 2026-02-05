@@ -1,23 +1,33 @@
 # Fonts Directory
 
-This directory should contain the JioVarType custom font file.
+This directory is reserved for future font assets if needed.
 
-## Required Font File
+## Current Font Setup
 
-- **JioVarType.woff2** - Jio's variable type font
+The app uses a custom font configuration defined in `src/index.css`:
 
-## How to Add
+### Primary Font: JioType (JioTypeVar)
 
-1. Obtain the `JioVarType.woff2` font file from your design/brand assets
-2. Place it in this directory (`public/fonts/`)
-3. The app will automatically use it once the file is present
+**Variable font** supporting weights 100-900 in both regular and italic styles.
 
-## Fallback
+- **Location:** `/public/JioTypeVar.ttf` and `/public/JioTypeVar-Italic.ttf`
+- **Family name:** `JioType`
+- **Usage:** Applied globally to all text via `:root`
+- **Fallback chain:** Inter → system-ui → Avenir → Helvetica → Arial → sans-serif
 
-If the font file is not present, the app will gracefully fall back to:
-- Inter
-- system-ui
-- Avenir
-- Helvetica
-- Arial
-- sans-serif
+### Monospace Font: Geist Mono
+
+**Variable font** from Google Fonts supporting weights 100-900.
+
+- **Source:** Google Fonts CDN (linked in `index.html`)
+- **Usage:** Applied to all `font-mono` Tailwind classes and code/time displays
+- **Fallback chain:** ui-monospace → SFMono-Regular → Menlo → Monaco → Consolas → monospace
+
+## Font Weight Tokens
+
+The design system uses these font weights:
+- **400** - Regular (default)
+- **500** - Medium
+- **600** - Semibold
+
+All weights are supported by the variable fonts.

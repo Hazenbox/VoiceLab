@@ -3,17 +3,31 @@
 /* Enable class-based dark mode (Tailwind v4 requires explicit config) */
 @custom-variant dark (&&:where(.dark, .dark *));
 
-/* Custom JioVarType font */
+/* Tailwind v4 theme configuration */
+@theme {
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* JioTypeVar - Regular */
 @font-face {
-  font-family: 'JioVarType';
-  src: url('/fonts/JioVarType.woff2') format('woff2');
+  font-family: 'JioType';
+  src: url('/JioTypeVar.ttf') format('truetype');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
+/* JioTypeVar - Italic */
+@font-face {
+  font-family: 'JioType';
+  src: url('/JioTypeVar-Italic.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
-  font-family: 'JioVarType', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'JioType', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;

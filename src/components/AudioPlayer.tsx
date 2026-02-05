@@ -325,7 +325,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             color: theme.text.medium,
             fontSize: '12px',
             lineHeight: '16px',
-            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
+            fontFamily: "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
           }}
         >
           {formatTime(currentTime)} / {formatTime(duration)}
