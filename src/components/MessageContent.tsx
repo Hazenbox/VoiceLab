@@ -15,7 +15,7 @@ interface MessageContentProps {
   role: 'user' | 'assistant';
 }
 
-export function MessageContent({ content, role }: MessageContentProps) {
+export function MessageContent({ content }: MessageContentProps) {
   const theme = useThemeColors();
 
   // Custom components for markdown elements
