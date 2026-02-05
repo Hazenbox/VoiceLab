@@ -170,7 +170,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
         e.preventDefault();
         e.stopPropagation(); // Prevent event bubbling
-        setUseAdvancedSettings(prev => !prev);
+        setUseAdvancedSettings(prev => {
+          const newValue = !prev;
+          // Expand the panel when switching to Advanced Settings
+          if (newValue) {
+            setIsConfigPanelCollapsed(false);
+          }
+          return newValue;
+        });
       }
     };
     // Use capture phase for priority handling
@@ -1055,7 +1062,16 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       />
                       {/* Settings toggle button */}
                       <button
-                        onClick={() => setUseAdvancedSettings(prev => !prev)}
+                        onClick={() => {
+                          setUseAdvancedSettings(prev => {
+                            const newValue = !prev;
+                            // Expand the panel when switching to Advanced Settings
+                            if (newValue) {
+                              setIsConfigPanelCollapsed(false);
+                            }
+                            return newValue;
+                          });
+                        }}
                         className={`
                           p-1.5 rounded-md transition-colors
                           ${useAdvancedSettings 

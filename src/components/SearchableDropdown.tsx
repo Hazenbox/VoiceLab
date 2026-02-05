@@ -35,6 +35,8 @@ export interface SearchableDropdownProps {
   showSearch?: boolean; // auto-enabled when options > 5
   compact?: boolean;
   className?: string;
+  /** Title shown at top of dropdown menu */
+  title?: string;
 }
 
 // =============================================================================
@@ -50,6 +52,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
   showSearch,
   compact = false,
   className = '',
+  title,
 }: SearchableDropdownProps) {
   const theme = useThemeColors();
   const [isOpen, setIsOpen] = useState(false);
@@ -235,20 +238,30 @@ export const SearchableDropdown = memo(function SearchableDropdown({
             }}
           />
 
-          {/* Menu */}
+          {/* Menu - no shadow, matches ModelSelector */}
           <div
             ref={menuRef}
-            className="absolute z-[100] bottom-full mb-1 left-0 min-w-[200px] max-h-[320px] rounded-lg shadow-xl overflow-hidden flex flex-col"
+            className="absolute z-[100] bottom-full mb-1 left-0 min-w-[200px] max-h-[320px] rounded-lg overflow-hidden flex flex-col"
             style={{
               backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
               border: `1px solid ${theme.stroke.low}`,
             }}
             role="listbox"
           >
-            {/* Search Input */}
+            {/* Title Header */}
+            {title && (
+              <div
+                className="px-2 py-1 text-[10px] font-medium"
+                style={{ color: theme.text.low }}
+              >
+                {title}
+              </div>
+            )}
+            
+            {/* Search Input - compact */}
             {shouldShowSearch && (
               <div 
-                className="p-2 border-b"
+                className="px-2 py-1.5 border-b"
                 style={{ borderColor: theme.stroke.low }}
               >
                 <div className="relative">
@@ -269,7 +282,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                       setFocusedIndex(0);
                     }}
                     placeholder="Search..."
-                    className="w-full pl-7 pr-2 py-1.5 text-xs rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    className="w-full pl-7 pr-2 py-1 text-xs rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
                     style={{
                       backgroundColor: theme.isLight ? '#f5f5f5' : '#2a2a2a',
                       color: theme.text.high,

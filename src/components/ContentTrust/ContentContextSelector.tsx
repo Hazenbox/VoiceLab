@@ -57,6 +57,7 @@ export const ContentContextSelector: React.FC<ContentContextSelectorProps> = ({
         onChange={(v) => onEcosystemChange(v as EcosystemType)}
         options={ecosystemOptions}
         placeholder="Ecosystem"
+        title="Ecosystem"
         disabled={disabled}
         compact={compact}
       />
@@ -66,6 +67,7 @@ export const ContentContextSelector: React.FC<ContentContextSelectorProps> = ({
         onChange={(v) => onChannelChange(v as ContentChannelType)}
         options={channelOptions}
         placeholder="Channel"
+        title="Channel"
         disabled={disabled}
         compact={compact}
       />
