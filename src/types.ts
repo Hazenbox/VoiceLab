@@ -30,10 +30,333 @@ export type ResponseLength = 'short' | 'medium' | 'long';
 export type Language = 'english' | 'hindi' | 'hinglish';
 
 // Channel options for copy generation
+/** @deprecated Use ContentChannelType from Content Trust System instead */
 export type Channel = 'sms' | 'whatsapp' | 'email';
 
 // Platform options for copy generation
+/** @deprecated Use EcosystemType from Content Trust System instead */
 export type Platform = 'notifications' | 'banner' | 'ads';
+
+// =============================================================================
+// CONTENT TRUST SYSTEM TYPES (v2)
+// =============================================================================
+
+/**
+ * 10 Ecosystems - Business context for content generation
+ * Replaces old Platform type for copy generation
+ */
+export type EcosystemType = 
+  | 'connectivity'   // Jio mobile, fiber, network
+  | 'home'           // JioFiber, home entertainment
+  | 'entertainment'  // JioCinema, JioTV, music
+  | 'shopping'       // JioMart, retail
+  | 'finance'        // JioPayments, banking
+  | 'health'         // JioHealthHub, wellness
+  | 'business'       // Enterprise, B2B
+  | 'support'        // Customer care
+  | 'internal'       // Employee communications
+  | 'government';    // G2C services
+
+/**
+ * 18 Channels - Output format for content generation
+ * Replaces old Channel type with more granular options
+ */
+export type ContentChannelType = 
+  // Quick Messages
+  | 'push_notification'
+  | 'sms'
+  | 'whatsapp_alert'
+  // Support & Chat
+  | 'customer_care_chat'
+  | 'whatsapp_support'
+  | 'chatbot_faq'
+  // Voice
+  | 'ivr_voice_menu'
+  | 'voice_assistant'
+  | 'voice_prompts'
+  // Email
+  | 'marketing_email'
+  | 'transactional_email'
+  // Marketing & Ads
+  | 'social_media_post'
+  | 'digital_ads'
+  | 'tv_video_ad'
+  // In-App & Web
+  | 'app_notification'
+  | 'onboarding_screen'
+  // Internal
+  | 'internal_announcement'
+  | 'training_module';
+
+/**
+ * 9 Navarasa emotions - Indian emotional framework
+ * Replaces old Vibe type with culturally relevant emotions
+ */
+export type NavarasaType = 
+  | 'shringara'  // Joy, Love, Gratitude
+  | 'hasya'      // Humor, Playfulness
+  | 'karuna'     // Compassion, Empathy
+  | 'raudra'     // Frustration, Anger (calm response)
+  | 'vira'       // Courage, Pride, Ambition
+  | 'bhayanaka'  // Fear, Anxiety (reassuring response)
+  | 'bibhatsa'   // Disgust, Want to cancel (respectful)
+  | 'adbhuta'    // Wonder, Curiosity
+  | 'shanta';    // Peace, Calm, Neutral
+
+/**
+ * Content generation goal types
+ */
+export type ContentGoalType = 
+  | 'Action'        // Drive immediate action
+  | 'Alert'         // Urgent notification
+  | 'Support'       // Help and assistance
+  | 'Instructional' // Step-by-step guidance
+  | 'Engagement'    // Build relationship
+  | 'Confirmation'  // Acknowledge transaction
+  | 'Information';  // Share updates
+
+/**
+ * 15 Supported Indian languages
+ */
+export type SupportedLanguage = 
+  | 'english'
+  | 'hindi'
+  | 'hinglish'   // Hindi-English mix
+  | 'tamil'
+  | 'telugu'
+  | 'kannada'
+  | 'malayalam'
+  | 'marathi'
+  | 'gujarati'
+  | 'bengali'
+  | 'punjabi'
+  | 'odia'
+  | 'assamese'
+  | 'urdu'
+  | 'konkani';
+
+/**
+ * Indian regions for content localization
+ */
+export type IndianRegion = 
+  | 'pan_india'   // Neutral, all-India
+  | 'north'       // UP, Uttarakhand, HP, J&K
+  | 'south'       // TN, KA, KL, AP, TS
+  | 'east'        // WB, Bihar, Jharkhand, Odisha
+  | 'west'        // MH, Gujarat, Goa, Rajasthan
+  | 'northeast'   // Assam, Meghalaya, etc.
+  | 'delhi'       // Delhi NCR
+  | 'mumbai'      // Mumbai metro
+  | 'bangalore'   // Bangalore metro
+  | 'chennai'     // Chennai metro
+  | 'kolkata'     // Kolkata metro
+  | 'hyderabad';  // Hyderabad metro
+
+/**
+ * User age group affecting communication style
+ */
+export type AgeGroup = 'digital_confident' | 'digital_cautious';
+
+/**
+ * Literacy level affecting content complexity
+ */
+export type LiteracyLevel = 'low' | 'high';
+
+/**
+ * Validation strictness levels
+ */
+export type ValidationStrictness = 'lenient' | 'standard' | 'strict';
+
+/**
+ * Violation severity levels
+ */
+export type ViolationSeverity = 'error' | 'warning' | 'info';
+
+/**
+ * Trust certification status
+ */
+export type TrustCertification = 'certified' | 'review_recommended' | 'issues_found';
+
+// =============================================================================
+// TRUST SCORE & VALIDATION TYPES
+// =============================================================================
+
+/**
+ * Individual violation found during validation
+ */
+export interface Violation {
+  severity: ViolationSeverity;
+  rule: string;
+  text: string;           // The problematic text
+  suggestion: string;     // How to fix it
+  category: string;       // Which agent found it
+  position?: { 
+    start: number; 
+    end: number; 
+  };
+  autoFixable: boolean;
+}
+
+/**
+ * Auto-fix suggestion for a violation
+ */
+export interface AutoFix {
+  original: string;
+  replacement: string;
+  confidence: number;     // 0-1, higher = safer to auto-apply
+  rule: string;
+  violation: Violation;
+}
+
+/**
+ * Result from a single validation agent
+ */
+export interface ValidationResult {
+  agentName: string;
+  passed: boolean;
+  score: number;          // 0-100
+  violations: Violation[];
+  suggestions: string[];
+  autoFixes: AutoFix[];
+  processingTimeMs: number;
+  usedLLM: boolean;
+}
+
+/**
+ * Trust score breakdown by validation category
+ */
+export interface TrustScoreBreakdown {
+  genderNeutrality: number;
+  inclusivity: number;
+  culturalSensitivity: number;
+  accessibility: number;
+  compliance: number;
+  styleConsistency: number;
+  brandAlignment: number;
+}
+
+/**
+ * Complete trust score for content
+ */
+export interface TrustScore {
+  overall: number;        // 0-100
+  breakdown: TrustScoreBreakdown;
+  confidence: 'high' | 'medium' | 'low';
+  certified: boolean;     // True if score >= threshold
+  certification: TrustCertification;
+  validationResults: ValidationResult[];
+  totalViolations: number;
+  autoFixableCount: number;
+  processingTimeMs: number;
+}
+
+// =============================================================================
+// GENERATION CONTEXT TYPES
+// =============================================================================
+
+/**
+ * User profile for content personalization
+ */
+export interface UserProfile {
+  ageGroup: AgeGroup;
+  region: IndianRegion;
+  language: SupportedLanguage;
+  literacyLevel: LiteracyLevel;
+}
+
+/**
+ * Timing context for content delivery
+ */
+export interface TimingContext {
+  timeOfDay: 'morning' | 'afternoon' | 'evening' | 'late_night';
+  dayOfWeek: 'weekday' | 'weekend';
+  festival?: string;
+  specialEvent?: string;
+}
+
+/**
+ * Track which parameters were manually overridden
+ */
+export interface ContextOverrides {
+  warmthOverridden?: boolean;
+  detailOverridden?: boolean;
+  emotionOverridden?: boolean;
+  timingOverridden?: boolean;
+}
+
+/**
+ * Complete generation context - all parameters for content generation
+ */
+export interface GenerationContext {
+  // User Selection (from dropdowns)
+  ecosystem: EcosystemType;
+  channel: ContentChannelType;
+  
+  // Auto-derived from channel (can be overridden)
+  warmth: number;         // 1-10
+  detail: number;         // 1-10
+  goal: ContentGoalType;
+  
+  // User Profile
+  userProfile: UserProfile;
+  
+  // Emotion (auto-detected or manual)
+  emotion: NavarasaType;
+  
+  // Timing (auto-detected or manual)
+  timing: TimingContext;
+  
+  // Track overrides for display in TrustContextPanel
+  overrides?: ContextOverrides;
+}
+
+/**
+ * Default generation context
+ */
+export const DEFAULT_GENERATION_CONTEXT: GenerationContext = {
+  ecosystem: 'connectivity',
+  channel: 'push_notification',
+  warmth: 7,
+  detail: 2,
+  goal: 'Action',
+  userProfile: {
+    ageGroup: 'digital_confident',
+    region: 'pan_india',
+    language: 'english',
+    literacyLevel: 'high',
+  },
+  emotion: 'shanta',
+  timing: {
+    timeOfDay: 'morning',
+    dayOfWeek: 'weekday',
+  },
+};
+
+// =============================================================================
+// PROJECT TRUST SETTINGS
+// =============================================================================
+
+/**
+ * Trust and validation settings for a project
+ */
+export interface TrustSettings {
+  minimumScore: number;           // Default 90
+  blockBelowThreshold: boolean;   // Block content below minimumScore
+  autoFixMinorIssues: boolean;    // Auto-apply high-confidence fixes
+  validationStrictness: ValidationStrictness;
+  showDetailedBreakdown: boolean; // Show full agent scores
+}
+
+/**
+ * Default trust settings
+ */
+export const DEFAULT_TRUST_SETTINGS: TrustSettings = {
+  minimumScore: 90,
+  blockBelowThreshold: false,
+  autoFixMinorIssues: false,
+  validationStrictness: 'standard',
+  showDetailedBreakdown: true,
+};
 
 // Persona configuration
 export interface PersonaConfig {
@@ -121,8 +444,32 @@ export interface Project {
   updatedAt: number;
   config: ConversationConfig;
   voiceGender: VoiceGender;
+  /** @deprecated Use defaultChannel instead */
   channel?: Channel;    // Optional for backward compatibility
+  /** @deprecated Use defaultEcosystem instead */
   platform?: Platform;  // Optional for backward compatibility
+  
+  // ==========================================================================
+  // CONTENT TRUST SYSTEM DEFAULTS (v2)
+  // ==========================================================================
+  
+  /** Default ecosystem for new conversations */
+  defaultEcosystem?: EcosystemType;
+  
+  /** Default channel for new conversations */
+  defaultChannel?: ContentChannelType;
+  
+  /** Default language for content generation */
+  defaultLanguage?: SupportedLanguage;
+  
+  /** Default region for content localization */
+  defaultRegion?: IndianRegion;
+  
+  /** Default user profile for content personalization */
+  defaultUserProfile?: UserProfile;
+  
+  /** Trust and validation settings */
+  trustSettings?: TrustSettings;
 }
 
 // Saved audio in library
@@ -159,6 +506,24 @@ export interface ChatMessage {
   sourceMode: ChatMode;
   // For linking user question to AI response
   parentMessageId?: string;
+  
+  // ==========================================================================
+  // CONTENT TRUST SYSTEM FIELDS (v2)
+  // ==========================================================================
+  
+  /** Trust score for this message (assistant messages only) */
+  trustScore?: TrustScore;
+  
+  /** Generation context used to create this message */
+  generationContext?: GenerationContext;
+  
+  /** Summary of validation for quick display */
+  validationSummary?: {
+    passedCount: number;
+    warningCount: number;
+    errorCount: number;
+    autoFixesApplied: number;
+  };
 }
 
 // Inworld configuration
