@@ -100,7 +100,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between px-3 py-2 text-left transition-colors hover:opacity-80"
-        style={{ color: theme.text.high }}
+        style={{ color: theme.text.medium }}
       >
         <div className="flex items-center gap-2">
           <span className="w-4 h-4">{icon}</span>
