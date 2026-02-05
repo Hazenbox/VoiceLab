@@ -242,9 +242,9 @@ export function ModelSelector({
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Menu - Opens upward with solid background and high z-index */}
+          {/* Menu - Opens upward with solid background and high z-index, no shadow */}
           <div 
-            className="absolute bottom-full left-0 mb-1 z-[100] min-w-[180px] rounded-lg overflow-hidden py-1 shadow-xl" 
+            className="absolute bottom-full left-0 mb-1 z-[100] min-w-[180px] rounded-lg overflow-hidden py-1" 
             style={{
               backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
               border: `1px solid ${theme.stroke.low}`,

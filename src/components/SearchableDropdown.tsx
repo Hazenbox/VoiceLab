@@ -320,10 +320,10 @@ export const SearchableDropdown = memo(function SearchableDropdown({
               ) : (
                 Object.entries(groupedOptions).map(([group, groupOpts]) => (
                   <div key={group || '__ungrouped__'}>
-                    {/* Group Header */}
+                    {/* Group Header - match ModelSelector styling */}
                     {group && Object.keys(groupedOptions).length > 1 && (
                       <div
-                        className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider sticky top-0"
+                        className="px-2 py-1 text-[10px] font-medium"
                         style={{
                           color: theme.text.low,
                           backgroundColor: theme.isLight ? '#f5f5f5' : '#2a2a2a',
@@ -347,19 +347,20 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                           onClick={() => !option.disabled && handleSelect(option.value)}
                           onMouseEnter={() => setFocusedIndex(globalIndex)}
                           disabled={option.disabled}
-                          className={`
-                            w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors
-                            ${option.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                          `}
+                          className="flex items-center gap-2 px-2 py-1.5 text-left text-xs transition-colors mx-1 rounded-md"
                           style={{
+                            width: 'calc(100% - 8px)',
                             backgroundColor: isSelected
                               ? (theme.isLight ? '#fff7ed' : '#431407')
                               : isFocused && !option.disabled
-                                ? (theme.isLight ? '#f5f5f5' : '#2a2a2a')
+                                ? theme.stroke.low
                                 : 'transparent',
-                            color: isSelected
-                              ? (theme.isLight ? '#c2410c' : '#fdba74')
-                              : theme.text.high,
+                            color: !option.disabled
+                              ? (isSelected 
+                                  ? (theme.isLight ? '#c2410c' : '#fdba74')
+                                  : theme.text.high)
+                              : theme.text.low,
+                            cursor: option.disabled ? 'not-allowed' : 'pointer',
                           }}
                           role="option"
                           aria-selected={isSelected}

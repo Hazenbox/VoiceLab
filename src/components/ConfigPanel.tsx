@@ -5,7 +5,7 @@ import { CustomSelect } from './CustomSelect';
 import { LabeledSlider } from './LabeledSlider';
 import { VIBE_OPTIONS } from '../constants';
 import { useThemeColors } from '../theme';
-import { useDesignSystem } from '../context/DesignSystemContext';
+// Design system context removed - now using single Jio DS
 import { TextArea } from '@marcelinodzn/ds-react';
 
 interface ConfigPanelProps {
@@ -31,17 +31,17 @@ export const ConfigPanel = memo(function ConfigPanel({
   onVoiceGenderChange,
   config,
   onConfigChange,
-  colorMode,
-  onColorModeChange,
+  colorMode: _colorMode, // Prefix with _ to indicate intentionally unused
+  onColorModeChange: _onColorModeChange, // Prefix with _ to indicate intentionally unused
   onShowDocs: _onShowDocs, // Prefix with _ to indicate intentionally unused
-  onShowDesignSystem,
+  onShowDesignSystem: _onShowDesignSystem, // Prefix with _ to indicate intentionally unused
   disabled = false,
   isCollapsed = false,
   onToggleCollapse,
 }: ConfigPanelProps) {
   // Theme colors from DS tokens
   const theme = useThemeColors();
-  const { toggleDesignSystem, designSystem } = useDesignSystem();
+  // Design system toggle removed - moved to navigation
   
   // Helper to update nested config
   const updatePersona = useCallback((key: string, value: unknown) => {
@@ -172,66 +172,7 @@ export const ConfigPanel = memo(function ConfigPanel({
         </div>
       )}
 
-      {/* Footer - Theme & Design System Toggles */}
-      {!isCollapsed && (
-        <div className="p-3 space-y-2">
-        {/* Design System Library Link - Text Link Style */}
-        {onShowDesignSystem && (
-          <button
-            onClick={onShowDesignSystem}
-            className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-70 cursor-pointer"
-            style={{
-              color: theme.text.medium,
-              backgroundColor: 'transparent',
-            }}
-            aria-label="Open Design System Library"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z" />
-            </svg>
-            <span>Design System</span>
-          </button>
-        )}
-        
-        <div className="flex items-center justify-between">
-          {/* Design System Toggle - Text Link Style */}
-          <button
-            onClick={toggleDesignSystem}
-            className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-70 cursor-pointer"
-            style={{
-              color: theme.text.medium,
-              backgroundColor: 'transparent',
-            }}
-            aria-label={`Switch to ${designSystem === 'jio' ? 'Tailwind' : 'Jio DS'}`}
-          >
-            <span>{designSystem === 'jio' ? 'Jio DS' : 'Tailwind'}</span>
-          </button>
-
-          {/* Theme Toggle */}
-          <button
-            onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-80 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
-            style={{
-              backgroundColor: theme.stroke.low,
-              color: theme.text.high,
-            }}
-            aria-label={`Switch to ${colorMode === 'Light' ? 'dark' : 'light'} mode`}
-          >
-            {colorMode === 'Light' ? (
-              // Moon icon for dark mode
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
-              </svg>
-            ) : (
-              // Sun icon for light mode
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
-              </svg>
-            )}
-          </button>
-        </div>
-        </div>
-      )}
+      {/* Footer removed - Design System and Dark Mode moved to navigation */}
     </aside>
   );
 });

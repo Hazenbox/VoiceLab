@@ -23,7 +23,7 @@ import type {
 } from '../types';
 import { VoiceSelector } from './VoiceSelector';
 import { useThemeColors } from '../theme';
-import { useDesignSystem } from '../context/DesignSystemContext';
+// Design system context removed - now using single Jio DS
 import { getEcosystemOptions, getChannelOptions, getLanguageOptions, getRegionOptions } from '../services/guidelines';
 
 // =============================================================================
@@ -289,11 +289,7 @@ const TrustIcon = () => (
   </svg>
 );
 
-const AppearanceIcon = () => (
-  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-  </svg>
-);
+// AppearanceIcon removed - no longer needed after removing Appearance section
 
 // =============================================================================
 // Main Component
@@ -312,15 +308,15 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
   onDefaultRegionChange,
   trustSettings,
   onTrustSettingsChange,
-  colorMode,
-  onColorModeChange,
+  colorMode: _colorMode, // Prefix with _ to indicate intentionally unused
+  onColorModeChange: _onColorModeChange, // Prefix with _ to indicate intentionally unused
   disabled = false,
   isCollapsed = false,
   onToggleCollapse,
-  onShowDesignSystem,
+  onShowDesignSystem: _onShowDesignSystem, // Prefix with _ to indicate intentionally unused
 }: AdvancedSettingsPanelProps) {
   const theme = useThemeColors();
-  const { toggleDesignSystem, designSystem } = useDesignSystem();
+  // Design system toggle removed - moved to navigation
   
   // Get options
   const ecosystemOptions = getEcosystemOptions().map(o => ({ value: o.value, label: o.label }));
@@ -490,62 +486,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
             />
           </Section>
           
-          {/* Appearance Section */}
-          <Section title="Appearance" icon={<AppearanceIcon />}>
-            <div className="flex items-center justify-between">
-              <span
-                className="text-[10px] font-medium uppercase tracking-wider"
-                style={{ color: theme.text.low }}
-              >
-                Theme
-              </span>
-              <button
-                onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
-                className="flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors hover:opacity-80"
-                style={{
-                  backgroundColor: theme.background.ghost,
-                  color: theme.text.medium,
-                }}
-              >
-                {colorMode === 'Light' ? '🌙 Dark' : '☀️ Light'}
-              </button>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span
-                className="text-[10px] font-medium uppercase tracking-wider"
-                style={{ color: theme.text.low }}
-              >
-                Design System
-              </span>
-              <button
-                onClick={toggleDesignSystem}
-                className="flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors hover:opacity-80"
-                style={{
-                  backgroundColor: theme.background.ghost,
-                  color: theme.text.medium,
-                }}
-              >
-                {designSystem === 'jio' ? 'Jio DS' : 'Tailwind'}
-              </button>
-            </div>
-            
-            {onShowDesignSystem && (
-              <button
-                onClick={onShowDesignSystem}
-                className="w-full flex items-center justify-center gap-1.5 px-2 py-2 rounded text-xs font-medium transition-colors hover:opacity-80"
-                style={{
-                  backgroundColor: theme.stroke.low,
-                  color: theme.text.medium,
-                }}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
-                </svg>
-                Open Design System Library
-              </button>
-            )}
-          </Section>
+          {/* Appearance Section removed - Theme and Design System moved to navigation */}
         </div>
       )}
     </aside>

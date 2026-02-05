@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
 
 export type DesignSystem = 'jio' | 'tailwind';
@@ -16,23 +16,16 @@ interface DesignSystemProviderProps {
 }
 
 export const DesignSystemProvider: React.FC<DesignSystemProviderProps> = ({ children }) => {
-  // Initialize from localStorage or default to 'jio'
-  const [designSystem, setDesignSystemState] = useState<DesignSystem>(() => {
-    const stored = localStorage.getItem('designSystem');
-    return (stored === 'jio' || stored === 'tailwind') ? stored : 'jio';
-  });
-
-  // Persist to localStorage when changed
-  useEffect(() => {
-    localStorage.setItem('designSystem', designSystem);
-  }, [designSystem]);
-
-  const setDesignSystem = (system: DesignSystem) => {
-    setDesignSystemState(system);
+  // Always return 'jio' - tailwind support removed
+  const designSystem: DesignSystem = 'jio';
+  
+  // No-op functions for backward compatibility
+  const setDesignSystem = () => {
+    // No-op - design system is locked to Jio
   };
-
+  
   const toggleDesignSystem = () => {
-    setDesignSystemState(prev => prev === 'jio' ? 'tailwind' : 'jio');
+    // No-op - design system is locked to Jio
   };
 
   return (

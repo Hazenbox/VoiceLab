@@ -2,12 +2,17 @@ import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useAudioLibrary } from '../context/AudioLibraryContext';
 import { useThemeColors } from '../theme';
+import type { ColorMode } from '../types';
 
 interface ProjectSidebarProps {
   onNavigateToLibrary: () => void;
   isLibraryActive: boolean;
   onNavigateToUsage?: () => void;
   onProjectSelect?: () => void;
+  onNavigateToDesignSystem?: () => void;
+  isDesignSystemActive?: boolean;
+  colorMode: ColorMode;
+  onColorModeChange: (mode: ColorMode) => void;
 }
 
 /**
@@ -20,6 +25,10 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   isLibraryActive,
   onNavigateToUsage,
   onProjectSelect,
+  onNavigateToDesignSystem,
+  isDesignSystemActive = false,
+  colorMode,
+  onColorModeChange,
 }: ProjectSidebarProps) {
   const theme = useThemeColors();
   const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
@@ -382,6 +391,81 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             </span>
           </button>
         )}
+
+        {/* Design System Nav Item */}
+        {onNavigateToDesignSystem && (
+          <button
+            onClick={onNavigateToDesignSystem}
+            className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+            style={{
+              backgroundColor: isDesignSystemActive ? theme.stroke.low : 'transparent',
+              height: '32px',
+            }}
+            aria-label="Open design system library"
+            onMouseEnter={(e) => {
+              if (!isDesignSystemActive) {
+                e.currentTarget.style.backgroundColor = theme.stroke.low;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isDesignSystemActive) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            <svg 
+              className="w-4 h-4" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+              style={{ color: isDesignSystemActive ? theme.accent : theme.text.high }}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
+            </svg>
+            <span 
+              className="text-xs font-medium"
+              style={{ color: isDesignSystemActive ? theme.accent : theme.text.high }}
+            >
+              Design System
+            </span>
+          </button>
+        )}
+
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
+          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+          style={{
+            backgroundColor: 'transparent',
+            height: '32px',
+          }}
+          aria-label={`Switch to ${colorMode === 'Light' ? 'dark' : 'light'} mode`}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = theme.stroke.low;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+        >
+          {colorMode === 'Light' ? (
+            // Moon icon for dark mode
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" style={{ color: theme.text.high }}>
+              <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            // Sun icon for light mode
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.text.high }}>
+              <circle cx="12" cy="12" r="4" strokeWidth="2" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+            </svg>
+          )}
+          <span 
+            className="text-xs font-medium"
+            style={{ color: theme.text.high }}
+          >
+            {colorMode === 'Light' ? 'Dark' : 'Light'} Mode
+          </span>
+        </button>
       </div>
     </aside>
   );

@@ -44,11 +44,7 @@ import { calculateTrustScore } from './services/trust';
 import { storageTrustSettings, storageProjectDefaults, DEFAULT_PROJECT_DEFAULTS } from './services/trustStorage';
 import { useChatPersistence, useNetworkStatus } from './hooks';
 import { audioBufferManager } from './services/audioBufferManager';
-import {
-  TwConfigPanel,
-  TwDocumentationPanel,
-  TwChatPanel
-} from './components/tailwind';
+// Tailwind components removed - using single Jio DS
 import { 
   createTTSProvider, 
   createConversationProvider,
@@ -60,7 +56,7 @@ import { getDefaultLLMProviderType, createLLMProvider, type LLMProviderType } fr
 import { createAudioContext, checkAudioSupport } from './services/audioUtils';
 import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
-import { useDesignSystem } from './context/DesignSystemContext';
+// Design system context removed - locked to Jio only
 import { useProject } from './context/ProjectContext';
 import { useAudioLibrary } from './context/AudioLibraryContext';
 import { useAbortController } from './hooks';
@@ -75,7 +71,7 @@ interface AppProps {
 
 function App({ colorMode, onColorModeChange }: AppProps) {
   // Design system context
-  const { designSystem } = useDesignSystem();
+  // Design system fixed to 'jio' only
   
   // Theme colors from DS tokens
   const theme = useThemeColors();
@@ -798,8 +794,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
   // Render documentation view
   if (activeView === 'docs') {
-    const ConfigPanelComponent = designSystem === 'jio' ? ConfigPanel : TwConfigPanel;
-    const DocPanelComponent = designSystem === 'jio' ? DocumentationPanel : TwDocumentationPanel;
+    // Always use Jio components
+    const ConfigPanelComponent = ConfigPanel;
+    const DocPanelComponent = DocumentationPanel;
     
     return (
       <div 
@@ -811,6 +808,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           isLibraryActive={false}
           onNavigateToUsage={() => setShowUsageModal(true)}
           onProjectSelect={() => setActiveView('main')}
+          onNavigateToDesignSystem={() => setActiveView('design-system')}
+          isDesignSystemActive={false}
+          colorMode={colorMode}
+          onColorModeChange={onColorModeChange}
         />
         <main className="flex-1 overflow-hidden">
           <DocPanelComponent onBack={() => setActiveView('main')} />
@@ -849,7 +850,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
   // Render audio library view
   if (activeView === 'library') {
-    const ConfigPanelComponent = designSystem === 'jio' ? ConfigPanel : TwConfigPanel;
+    // Always use Jio components
+    const ConfigPanelComponent = ConfigPanel;
     
     return (
       <div 
@@ -861,6 +863,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           isLibraryActive={true}
           onNavigateToUsage={() => setShowUsageModal(true)}
           onProjectSelect={() => setActiveView('main')}
+          onNavigateToDesignSystem={() => setActiveView('design-system')}
+          isDesignSystemActive={false}
+          colorMode={colorMode}
+          onColorModeChange={onColorModeChange}
         />
         <main className="flex-1 overflow-hidden">
           <LibraryPage onBack={() => setActiveView('main')} />
@@ -882,9 +888,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     );
   }
 
-  // Render main view
-  const ConfigPanelComponent = designSystem === 'jio' ? ConfigPanel : TwConfigPanel;
-  const ChatPanelComponent = designSystem === 'jio' ? ChatPanel : TwChatPanel;
+  // Render main view - Always use Jio components
+  const ConfigPanelComponent = ConfigPanel;
+  const ChatPanelComponent = ChatPanel;
   
   return (
     <div 
@@ -897,6 +903,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         isLibraryActive={false}
         onNavigateToUsage={() => setShowUsageModal(true)}
         onProjectSelect={() => setActiveView('main')}
+          onNavigateToDesignSystem={() => setActiveView('design-system')}
+          isDesignSystemActive={activeView === 'design-system' as any}
+        colorMode={colorMode}
+        onColorModeChange={onColorModeChange}
       />
 
       {/* Main Content */}
