@@ -90,7 +90,7 @@ export function MessageContent({ content, role }: MessageContentProps) {
     p: ({ children }) => (
       <p 
         className="text-sm mb-2 leading-relaxed"
-        style={{ color: role === 'user' ? '#ffffff' : theme.text.high }}
+        style={{ color: theme.text.high }}
       >
         {children}
       </p>
@@ -100,7 +100,7 @@ export function MessageContent({ content, role }: MessageContentProps) {
     ul: ({ children }) => (
       <ul 
         className="list-disc list-inside mb-2 space-y-1"
-        style={{ color: role === 'user' ? '#ffffff' : theme.text.high }}
+        style={{ color: theme.text.high }}
       >
         {children}
       </ul>
@@ -108,7 +108,7 @@ export function MessageContent({ content, role }: MessageContentProps) {
     ol: ({ children }) => (
       <ol 
         className="list-decimal list-inside mb-2 space-y-1"
-        style={{ color: role === 'user' ? '#ffffff' : theme.text.high }}
+        style={{ color: theme.text.high }}
       >
         {children}
       </ol>
@@ -127,7 +127,7 @@ export function MessageContent({ content, role }: MessageContentProps) {
         rel="noopener noreferrer"
         className="underline hover:no-underline transition-colors"
         style={{ 
-          color: role === 'user' ? '#fef3c7' : '#f97316',
+          color: '#f97316',
         }}
       >
         {children}
@@ -151,10 +151,8 @@ export function MessageContent({ content, role }: MessageContentProps) {
       <blockquote
         className="border-l-4 pl-3 py-1 my-2 italic"
         style={{
-          borderColor: role === 'user' ? '#fed7aa' : '#f97316',
-          backgroundColor: role === 'user' 
-            ? 'rgba(255, 255, 255, 0.1)' 
-            : theme.isLight ? '#fef3c7' : '#451a03',
+          borderColor: '#f97316',
+          backgroundColor: theme.isLight ? '#fef3c7' : '#451a03',
         }}
       >
         {children}

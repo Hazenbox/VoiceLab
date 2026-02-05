@@ -18,8 +18,6 @@ import {
 } from './types';
 import { getSystemInstruction, AUDIO_CONFIG } from './constants';
 import { 
-  ConfigPanel, 
-  StatusIndicator, 
   DocumentationPanel,
   ProjectSidebar,
   SaveAudioModal,
@@ -42,7 +40,7 @@ import { buildGenerationContext } from './services/context';
 import { runValidationPipeline } from './services/validation';
 import { calculateTrustScore } from './services/trust';
 import { storageTrustSettings, storageProjectDefaults, DEFAULT_PROJECT_DEFAULTS } from './services/trustStorage';
-import { useChatPersistence, useNetworkStatus } from './hooks';
+import { useChatPersistence } from './hooks';
 import { audioBufferManager } from './services/audioBufferManager';
 // Tailwind components removed - using single Jio DS
 import { 
@@ -131,9 +129,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [showTrustPanel, setShowTrustPanel] = useState(false);
   const [selectedMessageForTrust, setSelectedMessageForTrust] = useState<string | null>(null);
   
-  // Advanced settings panel toggle
-  const [useAdvancedSettings, setUseAdvancedSettings] = useState(false);
-  
   // Sync ecosystem/channel changes to storage
   useEffect(() => {
     const currentDefaults = storageProjectDefaults.get() || DEFAULT_PROJECT_DEFAULTS;
@@ -159,28 +154,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     }
   }, [activeProject?.id, activeProject?.defaultEcosystem, activeProject?.defaultChannel]);
   
-  // Keyboard shortcut for advanced settings (Ctrl/Cmd+Shift+A)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Check both uppercase and lowercase for cross-browser compatibility
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
-        e.preventDefault();
-        e.stopPropagation(); // Prevent event bubbling
-        setUseAdvancedSettings(prev => {
-          const newValue = !prev;
-          // Expand the panel when switching to Advanced Settings
-          if (newValue) {
-            setIsConfigPanelCollapsed(false);
-          }
-          return newValue;
-        });
-      }
-    };
-    // Use capture phase for priority handling
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, []);
-  
   // ==========================================================================
   
   // Voice feature support detection
@@ -200,14 +173,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const {
     messages: chatMessages,
     addMessage,
-    storageWarning,
   } = useChatPersistence(activeProject?.id || null);
-  
-  // Network status for offline detection
-  const { isOnline, offlineDuration } = useNetworkStatus({
-    onReconnect: () => console.log('[App] Network reconnected'),
-    onDisconnect: () => console.log('[App] Network disconnected'),
-  });
 
   // Chat/Generation State
   const [isChatLoading, setIsChatLoading] = useState(false);
@@ -221,7 +187,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   }, [chatMessages, chatMode]);
 
   // Request cancellation - use getSignal() to get fresh signal after reset
-  const { abort: abortChat, reset: resetChatAbort, getSignal: getChatAbortSignal } = useAbortController();
+  const { reset: resetChatAbort, getSignal: getChatAbortSignal } = useAbortController();
 
   // Refs for audio handling
   const ttsProviderRef = useRef<TTSProvider | null>(null);
@@ -387,12 +353,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       setIsChatLoading(false);
     }
   }, [resetChatAbort, chatMode, addMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings]);
-
-  // Cancel ongoing chat request
-  const handleCancelChat = useCallback(() => {
-    abortChat();
-    setIsChatLoading(false);
-  }, [abortChat]);
 
   // Auto-dismiss error
   useEffect(() => {
@@ -794,8 +754,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
   // Render documentation view
   if (activeView === 'docs') {
-    // Always use Jio components
-    const ConfigPanelComponent = ConfigPanel;
     const DocPanelComponent = DocumentationPanel;
     
     return (
@@ -816,18 +774,33 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         <main className="flex-1 overflow-hidden">
           <DocPanelComponent onBack={() => setActiveView('main')} />
         </main>
-        <ConfigPanelComponent
+        <AdvancedSettingsPanel
           voiceGender={activeProject.voiceGender}
           onVoiceGenderChange={updateProjectVoiceGender}
           config={activeProject.config}
           onConfigChange={updateProjectConfig}
+          defaultEcosystem={ecosystem}
+          defaultChannel={contentChannel}
+          defaultLanguage={activeProject.defaultLanguage || 'english'}
+          defaultRegion={activeProject.defaultRegion || 'pan_india'}
+          onDefaultEcosystemChange={(eco) => {
+            setEcosystem(eco);
+            updateProjectDefaultEcosystem(eco);
+          }}
+          onDefaultChannelChange={(ch) => {
+            setContentChannel(ch);
+            updateProjectDefaultChannel(ch);
+          }}
+          onDefaultLanguageChange={updateProjectDefaultLanguage}
+          onDefaultRegionChange={updateProjectDefaultRegion}
+          trustSettings={trustSettings}
+          onTrustSettingsChange={setTrustSettings}
           colorMode={colorMode}
           onColorModeChange={onColorModeChange}
-          onShowDocs={() => setActiveView('docs')}
-          onShowDesignSystem={() => setActiveView('design-system')}
           disabled={appState !== AppState.IDLE}
           isCollapsed={isConfigPanelCollapsed}
           onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
+          onShowDesignSystem={() => setActiveView('design-system')}
         />
       </div>
     );
@@ -850,9 +823,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
   // Render audio library view
   if (activeView === 'library') {
-    // Always use Jio components
-    const ConfigPanelComponent = ConfigPanel;
-    
     return (
       <div 
         className="flex h-screen"
@@ -871,25 +841,39 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         <main className="flex-1 overflow-hidden">
           <LibraryPage onBack={() => setActiveView('main')} />
         </main>
-        <ConfigPanelComponent
+        <AdvancedSettingsPanel
           voiceGender={activeProject.voiceGender}
           onVoiceGenderChange={updateProjectVoiceGender}
           config={activeProject.config}
           onConfigChange={updateProjectConfig}
+          defaultEcosystem={ecosystem}
+          defaultChannel={contentChannel}
+          defaultLanguage={activeProject.defaultLanguage || 'english'}
+          defaultRegion={activeProject.defaultRegion || 'pan_india'}
+          onDefaultEcosystemChange={(eco) => {
+            setEcosystem(eco);
+            updateProjectDefaultEcosystem(eco);
+          }}
+          onDefaultChannelChange={(ch) => {
+            setContentChannel(ch);
+            updateProjectDefaultChannel(ch);
+          }}
+          onDefaultLanguageChange={updateProjectDefaultLanguage}
+          onDefaultRegionChange={updateProjectDefaultRegion}
+          trustSettings={trustSettings}
+          onTrustSettingsChange={setTrustSettings}
           colorMode={colorMode}
           onColorModeChange={onColorModeChange}
-          onShowDocs={() => setActiveView('docs')}
-          onShowDesignSystem={() => setActiveView('design-system')}
           disabled={appState !== AppState.IDLE}
           isCollapsed={isConfigPanelCollapsed}
           onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
+          onShowDesignSystem={() => setActiveView('design-system')}
         />
       </div>
     );
   }
 
   // Render main view - Always use Jio components
-  const ConfigPanelComponent = ConfigPanel;
   const ChatPanelComponent = ChatPanel;
   
   return (
@@ -912,26 +896,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden items-center">
         <div className="w-full max-w-[1200px] flex flex-col h-full">
-          {/* Header with Status and Usage Stats */}
-          <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex-1 flex items-center gap-2">
-            {/* Offline indicator */}
-            {!isOnline && (
-              <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                <span className="text-xs text-amber-700 dark:text-amber-400">
-                  Offline {offlineDuration > 0 ? `(${offlineDuration}s)` : ''}
-                </span>
-              </div>
-            )}
-            {storageWarning && (
-              <div className="flex items-center gap-2 px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30">
-                <span className="text-xs text-amber-700 dark:text-amber-400">{storageWarning}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Screen reader announcements for mode changes */}
         <div 
           role="status" 
@@ -946,42 +910,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         <div className="flex-1 overflow-hidden">
           <ErrorBoundary>
             <div className="h-full flex flex-col">
-              {/* Header with Mode-specific Controls */}
-              <div className="flex items-center justify-end px-4 py-2 border-b" style={{ borderColor: theme.stroke.low }}>
-                <div className="flex items-center gap-2">
-                  {chatMode === 'voice' && <StatusIndicator state={appState} />}
-                  {isChatLoading && (
-                    <button
-                      onClick={handleCancelChat}
-                      className="text-xs px-2 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              </div>
 
               {/* Voice Mode: AI Orb Visualization + Chat History */}
               {chatMode === 'voice' && (
                 <div 
-                  className="voice-panel px-4 py-6 border-b flex flex-col items-center gap-4 relative"
-                  style={{ borderColor: theme.stroke.low }}
+                  className="voice-panel px-4 py-6 flex flex-col items-center gap-4 relative"
                 >
-                  {/* Close button - return to text mode */}
-                  <button
-                    onClick={() => handleModeChange('copy')}
-                    className="absolute top-3 right-3 p-2 rounded-full transition-colors hover:opacity-80 z-10"
-                    style={{ 
-                      backgroundColor: theme.background.ghost,
-                      color: theme.text.medium,
-                    }}
-                    aria-label="Close voice chat and return to text input"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
 
                   {/* AI Orb - Central interaction point */}
                   <AIOrb
@@ -1033,14 +967,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   mode={chatMode}
                   placeholder={chatMode === 'copy' 
                     ? 'What do you want to know?' 
-                    : 'Type a message or use the microphone...'}
+                    : 'Type a message...'}
                   onSaveAudio={handleSaveAudioFromChat}
+                  showEmptyState={chatMode !== 'voice'}
                   emptyStateMessage={chatMode === 'copy'
                     ? 'Start a conversation to generate copy'
                     : 'Start a voice conversation or type a message'}
                   inputDisabled={chatMode === 'voice' && appState !== AppState.IDLE && appState !== AppState.ERROR}
                   id={`${chatMode}-panel`}
-                  onVoiceClick={chatMode === 'copy' ? () => handleModeChange('voice') : undefined}
+                  onVoiceClick={() => handleModeChange(chatMode === 'voice' ? 'copy' : 'voice')}
                   voiceSupported={voiceSupported ?? true}
                   modelSelector={
                     <ModelSelector
@@ -1070,34 +1005,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                         compact={true}
                         disabled={isChatLoading}
                       />
-                      {/* Settings toggle button */}
-                      <button
-                        onClick={() => {
-                          setUseAdvancedSettings(prev => {
-                            const newValue = !prev;
-                            // Expand the panel when switching to Advanced Settings
-                            if (newValue) {
-                              setIsConfigPanelCollapsed(false);
-                            }
-                            return newValue;
-                          });
-                        }}
-                        className={`
-                          p-1.5 rounded-md transition-colors
-                          ${useAdvancedSettings 
-                            ? 'bg-orange-500/20 text-orange-500' 
-                            : 'hover:bg-white/10 text-current opacity-60 hover:opacity-100'
-                          }
-                        `}
-                        title={`${useAdvancedSettings ? 'Hide' : 'Show'} Advanced Settings (Ctrl+Shift+A)`}
-                        aria-label="Toggle Advanced Settings"
-                        aria-pressed={useAdvancedSettings}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </button>
                     </div>
                   }
                   // Content Trust System: Trust badge click handler
@@ -1110,48 +1017,35 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         </div>
       </main>
 
-      {/* Right Sidebar - Config Panel / Advanced Settings */}
-      {useAdvancedSettings ? (
-        <AdvancedSettingsPanel
-          voiceGender={activeProject.voiceGender}
-          onVoiceGenderChange={updateProjectVoiceGender}
-          defaultEcosystem={ecosystem}
-          defaultChannel={contentChannel}
-          defaultLanguage={activeProject.defaultLanguage || 'english'}
-          defaultRegion={activeProject.defaultRegion || 'pan_india'}
-          onDefaultEcosystemChange={(eco) => {
-            setEcosystem(eco);
-            updateProjectDefaultEcosystem(eco);
-          }}
-          onDefaultChannelChange={(ch) => {
-            setContentChannel(ch);
-            updateProjectDefaultChannel(ch);
-          }}
-          onDefaultLanguageChange={updateProjectDefaultLanguage}
-          onDefaultRegionChange={updateProjectDefaultRegion}
-          trustSettings={trustSettings}
-          onTrustSettingsChange={setTrustSettings}
-          colorMode={colorMode}
-          onColorModeChange={onColorModeChange}
-          isCollapsed={isConfigPanelCollapsed}
-          onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
-          onShowDesignSystem={() => setActiveView('design-system')}
-        />
-      ) : (
-        <ConfigPanelComponent
-          voiceGender={activeProject.voiceGender}
-          onVoiceGenderChange={updateProjectVoiceGender}
-          config={activeProject.config}
-          onConfigChange={updateProjectConfig}
-          colorMode={colorMode}
-          onColorModeChange={onColorModeChange}
-          onShowDocs={() => setActiveView('docs')}
-          onShowDesignSystem={() => setActiveView('design-system')}
-          disabled={appState !== AppState.IDLE && chatMode === 'voice'}
-          isCollapsed={isConfigPanelCollapsed}
-          onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
-        />
-      )}
+      {/* Right Sidebar - Advanced Settings */}
+      <AdvancedSettingsPanel
+        voiceGender={activeProject.voiceGender}
+        onVoiceGenderChange={updateProjectVoiceGender}
+        config={activeProject.config}
+        onConfigChange={updateProjectConfig}
+        defaultEcosystem={ecosystem}
+        defaultChannel={contentChannel}
+        defaultLanguage={activeProject.defaultLanguage || 'english'}
+        defaultRegion={activeProject.defaultRegion || 'pan_india'}
+        onDefaultEcosystemChange={(eco) => {
+          setEcosystem(eco);
+          updateProjectDefaultEcosystem(eco);
+        }}
+        onDefaultChannelChange={(ch) => {
+          setContentChannel(ch);
+          updateProjectDefaultChannel(ch);
+        }}
+        onDefaultLanguageChange={updateProjectDefaultLanguage}
+        onDefaultRegionChange={updateProjectDefaultRegion}
+        trustSettings={trustSettings}
+        onTrustSettingsChange={setTrustSettings}
+        colorMode={colorMode}
+        onColorModeChange={onColorModeChange}
+        disabled={appState !== AppState.IDLE && chatMode === 'voice'}
+        isCollapsed={isConfigPanelCollapsed}
+        onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
+        onShowDesignSystem={() => setActiveView('design-system')}
+      />
 
       {/* Trust Context Panel - Slide-out */}
       <TrustContextPanel

@@ -112,69 +112,76 @@ export const TrustContextPanel = memo(function TrustContextPanel({
   const theme = useThemeColors();
   const [activeTab, setActiveTab] = useState<'score' | 'context' | 'violations'>('score');
   
-  if (!isOpen) return null;
-  
   const explanation = trustScore ? getScoreExplanation(trustScore) : null;
   const badge = trustScore ? getCertificationBadge(trustScore.certification) : null;
   const allViolations = trustScore?.validationResults.flatMap(vr => vr.violations) || [];
   
   return (
-    <>
-      {/* Backdrop overlay - higher z-index */}
-      <div className="fixed inset-0 bg-black/50 z-[60]" onClick={onClose} />
-      
-      {/* Panel - solid white bg, higher z-index, proper isolation */}
-      <div 
-        className="fixed right-0 top-0 bottom-0 w-[380px] z-[70] shadow-2xl overflow-hidden flex flex-col"
-        style={{ backgroundColor: theme.isLight ? '#ffffff' : '#1a1a1a' }}
-      >
+    <aside
+      className="h-full flex flex-col overflow-hidden relative"
+      style={{
+        width: isOpen ? '380px' : '0px',
+        backgroundColor: theme.background.ghost,
+        borderLeft: `1px solid ${theme.stroke.low}`,
+        transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1), transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+        opacity: isOpen ? 1 : 0,
+        overflow: isOpen ? 'visible' : 'hidden',
+      }}
+    >
         
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: theme.stroke.low }}>
-          <div className="flex items-center gap-3">
-            {trustScore && badge && (
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
-                style={{
-                  backgroundColor: `${badge.color === 'green' ? '#22c55e' : badge.color === 'yellow' ? '#eab308' : '#ef4444'}20`,
-                  color: badge.color === 'green' ? '#22c55e' : badge.color === 'yellow' ? '#eab308' : '#ef4444',
-                }}>
-                {formatScore(trustScore.overall)}
+        {isOpen && (
+          <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
+            <div className="flex items-center gap-3">
+              {trustScore && badge && (
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
+                  style={{
+                    backgroundColor: `${badge.color === 'green' ? '#22c55e' : badge.color === 'yellow' ? '#eab308' : '#ef4444'}20`,
+                    color: badge.color === 'green' ? '#22c55e' : badge.color === 'yellow' ? '#eab308' : '#ef4444',
+                  }}>
+                  {formatScore(trustScore.overall)}
+                </div>
+              )}
+              <div>
+                <h2 className="text-sm font-semibold" style={{ color: theme.text.high }}>Content Trust</h2>
+                {badge && <p className="text-xs" style={{ color: theme.text.medium }}>{badge.label}</p>}
               </div>
-            )}
-            <div>
-              <h2 className="text-sm font-semibold" style={{ color: theme.text.high }}>Content Trust</h2>
-              {badge && <p className="text-xs" style={{ color: theme.text.medium }}>{badge.label}</p>}
             </div>
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              style={{ color: theme.text.medium }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={theme.text.medium} strokeWidth="2">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        )}
         
         {/* Tabs */}
-        <div className="flex border-b" style={{ borderColor: theme.stroke.low }}>
-          {(['score', 'context', 'violations'] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
-              className="flex-1 px-4 py-2.5 text-xs font-medium capitalize"
-              style={{
-                color: activeTab === tab ? theme.accent : theme.text.medium,
-                borderBottom: activeTab === tab ? `2px solid ${theme.accent}` : '2px solid transparent',
-              }}>
-              {tab}
-              {tab === 'violations' && allViolations.length > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px]"
-                  style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-                  {allViolations.length}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        {isOpen && (
+          <div className="flex border-b flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
+            {(['score', 'context', 'violations'] as const).map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                className="flex-1 px-4 py-2.5 text-xs font-medium capitalize"
+                style={{
+                  color: activeTab === tab ? theme.accent : theme.text.medium,
+                  borderBottom: activeTab === tab ? `2px solid ${theme.accent}` : '2px solid transparent',
+                }}>
+                {tab}
+                {tab === 'violations' && allViolations.length > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px]"
+                    style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                    {allViolations.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
         
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        {isOpen && (
+          <div className="flex-1 overflow-y-auto p-4">
           {activeTab === 'score' && explanation && (
             <div className="space-y-4">
               <p className="text-sm p-3 rounded-lg" style={{ backgroundColor: theme.stroke.low, color: theme.text.high }}>
@@ -226,19 +233,19 @@ export const TrustContextPanel = memo(function TrustContextPanel({
               )}
             </div>
           )}
-        </div>
+          </div>
+        )}
         
         {/* Footer */}
-        {autoFixAvailable && trustScore && allViolations.length > 0 && (
-          <div className="px-4 py-3 border-t" style={{ borderColor: theme.stroke.low }}>
+        {isOpen && autoFixAvailable && trustScore && allViolations.length > 0 && (
+          <div className="px-4 py-3 border-t flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
             <button onClick={onAutoFix} className="w-full py-2.5 rounded-lg text-sm font-medium"
               style={{ backgroundColor: theme.accent, color: '#ffffff' }}>
               ✨ Auto-Fix ({trustScore.autoFixableCount} fixable)
             </button>
           </div>
         )}
-      </div>
-    </>
+      </aside>
   );
 });
 

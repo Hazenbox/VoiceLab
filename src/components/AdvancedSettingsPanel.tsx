@@ -20,11 +20,16 @@ import type {
   IndianRegion,
   TrustSettings,
   ValidationStrictness,
+  ConversationConfig,
+  Pace,
+  ResponseLength,
 } from '../types';
 import { VoiceSelector } from './VoiceSelector';
+import { LabeledSlider } from './LabeledSlider';
 import { useThemeColors } from '../theme';
 // Design system context removed - now using single Jio DS
 import { getEcosystemOptions, getChannelOptions, getLanguageOptions, getRegionOptions } from '../services/guidelines';
+import { TextArea } from '@marcelinodzn/ds-react';
 
 // =============================================================================
 // Types
@@ -34,6 +39,10 @@ interface AdvancedSettingsPanelProps {
   // Voice settings
   voiceGender: VoiceGender;
   onVoiceGenderChange: (gender: VoiceGender) => void;
+  
+  // Conversation config
+  config: ConversationConfig;
+  onConfigChange: (config: ConversationConfig) => void;
   
   // Project defaults
   defaultEcosystem: EcosystemType;
@@ -289,6 +298,12 @@ const TrustIcon = () => (
   </svg>
 );
 
+const ConversationIcon = () => (
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+  </svg>
+);
+
 // AppearanceIcon removed - no longer needed after removing Appearance section
 
 // =============================================================================
@@ -298,6 +313,8 @@ const TrustIcon = () => (
 export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
   voiceGender,
   onVoiceGenderChange,
+  config,
+  onConfigChange,
   defaultEcosystem,
   defaultChannel,
   defaultLanguage,
@@ -332,6 +349,17 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
     { value: 'strict' as ValidationStrictness, label: 'Strict' },
   ];
   
+  // Conversation config updater
+  const updatePersona = useCallback((key: string, value: unknown) => {
+    onConfigChange({
+      ...config,
+      persona: {
+        ...config.persona,
+        [key]: value,
+      },
+    });
+  }, [config, onConfigChange]);
+  
   // Trust settings updater
   const updateTrustSetting = useCallback(<K extends keyof TrustSettings>(
     key: K,
@@ -345,11 +373,13 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
   
   return (
     <aside
-      className="h-full flex flex-col overflow-hidden transition-all duration-300 ease-in-out relative"
+      className="h-full flex flex-col overflow-hidden relative"
       style={{
         width: isCollapsed ? '48px' : '320px',
         backgroundColor: theme.background.ghost,
         borderLeft: `1px solid ${theme.stroke.low}`,
+        transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1), transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: isCollapsed ? 'translateX(0)' : 'translateX(0)',
       }}
     >
       {/* Toggle Button */}
@@ -413,6 +443,47 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
             <VoiceSelector
               value={voiceGender}
               onChange={onVoiceGenderChange}
+              disabled={disabled}
+            />
+          </Section>
+          
+          {/* Conversation Settings Section */}
+          <Section title="Conversation Settings" icon={<ConversationIcon />}>
+            {/* Greeting */}
+            <div className="space-y-1.5">
+              <label 
+                className="block text-[10px] font-medium uppercase tracking-wider"
+                style={{ color: theme.text.low }}
+              >
+                Greeting
+              </label>
+              <div className="scaled-textarea-wrapper">
+                <TextArea
+                  value={config.greeting}
+                  onChange={(value: string) => onConfigChange({ ...config, greeting: value })}
+                  isDisabled={disabled}
+                  rows={2}
+                  size="S"
+                  placeholder="Initial greeting message..."
+                />
+              </div>
+            </div>
+            
+            {/* Pace */}
+            <LabeledSlider
+              label="Pace"
+              value={config.persona.pace}
+              options={['slow', 'medium', 'fast']}
+              onChange={(value) => updatePersona('pace', value as Pace)}
+              disabled={disabled}
+            />
+            
+            {/* Response Length */}
+            <LabeledSlider
+              label="Response Length"
+              value={config.maxResponseLength}
+              options={['short', 'medium', 'long']}
+              onChange={(value) => onConfigChange({ ...config, maxResponseLength: value as ResponseLength })}
               disabled={disabled}
             />
           </Section>

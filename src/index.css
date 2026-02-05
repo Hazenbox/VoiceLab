@@ -22,12 +22,24 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Prevent page-level scrollbars */
+html, body {
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
 /* Light mode defaults */
 body {
   @apply bg-white text-zinc-900;
   margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 0;
 }
 
 /* Dark mode */

@@ -43,9 +43,9 @@ const BADGE_COLORS: Record<TrustCertification, {
 };
 
 const SIZES = {
-  sm: { container: 'w-4 h-4', text: 'text-[10px]', score: 'text-[9px] ml-1' },
-  md: { container: 'w-5 h-5', text: 'text-xs', score: 'text-[10px] ml-1' },
-  lg: { container: 'w-6 h-6', text: 'text-sm', score: 'text-xs ml-1.5' },
+  sm: { container: 'h-4 px-1.5', text: 'text-[10px]', score: 'text-[9px] ml-1' },
+  md: { container: 'h-5 px-2', text: 'text-xs', score: 'text-[10px] ml-1' },
+  lg: { container: 'h-6 px-2.5', text: 'text-sm', score: 'text-xs ml-1.5' },
 };
 
 export const TrustBadge = memo(function TrustBadge({
