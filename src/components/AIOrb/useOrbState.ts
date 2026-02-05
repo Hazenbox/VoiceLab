@@ -27,18 +27,18 @@ export interface OrbVisualState {
 // Animation speed multipliers per state
 const SPEED_MAP: Record<AppState, number> = {
   [AppState.IDLE]: 0.3,        // Slow, calm breathing
-  [AppState.CONNECTING]: 0.8,  // Building up energy
+  [AppState.CONNECTING]: 0.9,  // Building up energy (increased from 0.8)
   [AppState.LISTENING]: 1.0,   // Normal, attentive
-  [AppState.SPEAKING]: 1.5,    // Fast, energetic
+  [AppState.SPEAKING]: 1.6,    // Fast, energetic (increased from 1.5)
   [AppState.ERROR]: 0,         // Paused
 };
 
 // Base scale per state
 const SCALE_MAP: Record<AppState, number> = {
-  [AppState.IDLE]: 1.0,
+  [AppState.IDLE]: 0.95,       // Slightly smaller at rest (decreased from 1.0)
   [AppState.CONNECTING]: 1.0,
   [AppState.LISTENING]: 1.0,
-  [AppState.SPEAKING]: 1.05,
+  [AppState.SPEAKING]: 1.08,   // Larger presence (increased from 1.05)
   [AppState.ERROR]: 1.0,
 };
 
@@ -96,11 +96,11 @@ export function useOrbState(
     // Calculate audio-reactive scale adjustment
     let audioScaleBoost = 0;
     if (state === AppState.LISTENING) {
-      // React to volume when listening
+      // React to volume when listening (0-10% boost)
       audioScaleBoost = volume * 0.1;
     } else if (state === AppState.SPEAKING) {
-      // React to bass when speaking
-      audioScaleBoost = bassLevel * 0.08;
+      // React to bass when speaking (0-12% boost, increased from 8%)
+      audioScaleBoost = bassLevel * 0.12;
     }
 
     const finalScale = baseScale + audioScaleBoost;

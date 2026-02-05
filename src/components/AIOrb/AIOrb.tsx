@@ -218,8 +218,8 @@ export const AIOrb = memo(function AIOrb({
       style={{
         width: size,
         height: size,
-        transform: `scale(${orbState.scale})`,
-      }}
+        '--orb-base-scale': orbState.scale,
+      } as React.CSSProperties}
       role="button"
       tabIndex={disabled ? -1 : 0}
       aria-label={orbState.ariaLabel}

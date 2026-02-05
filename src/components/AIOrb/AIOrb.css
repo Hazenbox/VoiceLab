@@ -12,8 +12,8 @@
   cursor: pointer;
   user-select: none;
   border-radius: 50%;
-  transition: transform 150ms ease-out;
   outline: none;
+  --orb-base-scale: 1; /* Default base scale, overridden by inline style */
 }
 
 .ai-orb-container[aria-disabled="true"] {
@@ -74,7 +74,78 @@
   }
 }
 
-/* Error state - shake animation */
+/* State-specific breathing/pulsing animations */
+
+/* IDLE - Calm, slow breathing (3s cycle) */
+@keyframes idle-breathe {
+  0%, 100% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 0.95)); 
+  }
+  40% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 1.0)); 
+  }
+  50% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 1.0)); 
+  }
+  90% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 0.95)); 
+  }
+}
+
+/* CONNECTING - Building energy (1.5s cycle) */
+@keyframes connecting-pulse {
+  0%, 100% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 0.98)); 
+  }
+  50% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 1.05)); 
+  }
+}
+
+/* LISTENING - Alert, responsive (1.2s cycle) */
+@keyframes listening-pulse {
+  0%, 100% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 1.0)); 
+  }
+  30% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 1.03)); 
+  }
+  60% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 1.02)); 
+  }
+}
+
+/* SPEAKING - Fast, energetic (0.8s cycle) */
+@keyframes speaking-pulse {
+  0%, 100% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 1.08)); 
+  }
+  35% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 1.15)); 
+  }
+  70% { 
+    transform: scale(calc(var(--orb-base-scale, 1) * 1.10)); 
+  }
+}
+
+/* State classes that apply animations */
+.ai-orb--idle {
+  animation: idle-breathe 3s ease-in-out infinite;
+}
+
+.ai-orb--connecting {
+  animation: connecting-pulse 1.5s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.ai-orb--listening {
+  animation: listening-pulse 1.2s ease-out infinite;
+}
+
+.ai-orb--speaking {
+  animation: speaking-pulse 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Error state - shake animation (one-shot, then static) */
 .ai-orb--error {
   animation: orb-shake 0.4s ease-in-out;
 }
@@ -132,10 +203,10 @@
 
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .ai-orb-container {
-    transition: none;
-  }
-
+  .ai-orb--idle,
+  .ai-orb--connecting,
+  .ai-orb--listening,
+  .ai-orb--speaking,
   .ai-orb--error {
     animation: none;
   }
