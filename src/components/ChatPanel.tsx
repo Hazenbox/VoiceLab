@@ -222,7 +222,7 @@ export const ChatPanel = memo(function ChatPanel({
         {/* Messages Area */}
         <div 
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto p-4 space-y-6"
+          className="flex-1 overflow-y-auto p-4 space-y-8"
           role="log"
           aria-live="polite"
           aria-atomic="false"
