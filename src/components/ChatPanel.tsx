@@ -44,10 +44,8 @@ interface ChatPanelProps {
   onVoiceClick?: () => void;
   /** Whether voice is supported in this browser */
   voiceSupported?: boolean;
-  /** Model selector component to render inside the input bar */
+  /** Model selector component to render below input */
   modelSelector?: React.ReactNode;
-  /** Mode toggle component to render below input */
-  modeToggle?: React.ReactNode;
   /** Channel selector component to render below input */
   channelSelector?: React.ReactNode;
   /** Platform selector component to render below input */
@@ -72,7 +70,6 @@ export const ChatPanel = memo(function ChatPanel({
   onVoiceClick,
   voiceSupported = true,
   modelSelector,
-  modeToggle,
   channelSelector,
   platformSelector,
 }: ChatPanelProps) {
@@ -297,9 +294,6 @@ export const ChatPanel = memo(function ChatPanel({
               }}
             />
 
-            {/* Model selector - rendered inside input bar */}
-            {modelSelector}
-
             {/* Arrow send button - pill shaped */}
             <button
               onClick={handleSubmit}
@@ -331,10 +325,10 @@ export const ChatPanel = memo(function ChatPanel({
             </button>
           </div>
 
-          {/* Mode toggle + Channel/Platform selectors - below input */}
-          {(modeToggle || channelSelector || platformSelector) && (
+          {/* Model + Channel/Platform selectors - below input */}
+          {(modelSelector || channelSelector || platformSelector) && (
             <div className="flex items-center justify-center gap-3 mt-3">
-              {modeToggle}
+              {modelSelector}
               {channelSelector}
               {platformSelector}
             </div>

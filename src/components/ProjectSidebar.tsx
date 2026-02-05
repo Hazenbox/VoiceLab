@@ -7,6 +7,7 @@ interface ProjectSidebarProps {
   onNavigateToLibrary: () => void;
   isLibraryActive: boolean;
   onNavigateToUsage?: () => void;
+  onProjectSelect?: () => void;
 }
 
 /**
@@ -18,6 +19,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   onNavigateToLibrary, 
   isLibraryActive,
   onNavigateToUsage,
+  onProjectSelect,
 }: ProjectSidebarProps) {
   const theme = useThemeColors();
   const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
@@ -28,6 +30,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   
   // More menu state
   const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
+  const [menuFocusIndex, setMenuFocusIndex] = useState(0);
   const [renamingProject, setRenamingProject] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
@@ -44,6 +47,54 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Reset focus index when menu opens
+  useEffect(() => {
+    if (menuOpenFor) {
+      setMenuFocusIndex(0);
+    }
+  }, [menuOpenFor]);
+
+  // Keyboard navigation for more menu
+  useEffect(() => {
+    if (!menuOpenFor) return;
+    
+    const currentProject = projects.find(p => p.id === menuOpenFor);
+    const menuItemCount = projects.length > 1 ? 2 : 1; // Rename + Delete (if allowed)
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setMenuFocusIndex(prev => (prev + 1) % menuItemCount);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setMenuFocusIndex(prev => (prev - 1 + menuItemCount) % menuItemCount);
+          break;
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          if (menuFocusIndex === 0 && currentProject) {
+            handleStartRename(currentProject);
+          } else if (menuFocusIndex === 1 && menuOpenFor) {
+            handleDeleteProject(menuOpenFor);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setMenuOpenFor(null);
+          break;
+        case 'Tab':
+          e.preventDefault();
+          setMenuFocusIndex(prev => (prev + 1) % menuItemCount);
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpenFor, menuFocusIndex, projects, handleStartRename, handleDeleteProject]);
 
   // Focus rename input when renaming starts
   useEffect(() => {
@@ -187,10 +238,10 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                 className="relative"
               >
                 {renamingProject === project.id ? (
-                  // Rename input mode
+                  // Rename input mode - match 32px height of normal items
                   <div 
-                    className="w-full px-2 py-1 flex items-center rounded-lg"
-                    style={{ backgroundColor: theme.stroke.low }}
+                    className="w-full px-2 flex items-center rounded-lg"
+                    style={{ backgroundColor: theme.stroke.low, height: '32px' }}
                   >
                     <input
                       ref={renameInputRef}
@@ -209,7 +260,10 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                 ) : (
                   // Normal project item
                   <button
-                    onClick={() => setActiveProject(project.id)}
+                    onClick={() => {
+                      setActiveProject(project.id);
+                      onProjectSelect?.();
+                    }}
                     className="w-full px-2 py-1 flex items-center justify-between group transition-colors rounded-lg"
                     style={{
                       backgroundColor: activeProject?.id === project.id ? theme.stroke.low : 'transparent',
@@ -246,31 +300,37 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                 {menuOpenFor === project.id && (
                   <div 
                     ref={menuRef}
-                    className="absolute right-0 top-full mt-1 z-50 min-w-[120px] rounded-lg shadow-lg overflow-hidden"
+                    className="absolute right-0 top-full mt-1 z-50 min-w-[100px] rounded-lg overflow-hidden py-1"
                     style={{
                       backgroundColor: theme.background.ghost,
                       border: `1px solid ${theme.stroke.medium}`,
                     }}
+                    role="menu"
+                    aria-orientation="vertical"
                   >
                     <button
                       onClick={() => handleStartRename(project)}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:opacity-80"
-                      style={{ color: theme.text.high }}
+                      onMouseEnter={() => setMenuFocusIndex(0)}
+                      className="w-full px-3 py-1.5 text-left text-xs transition-colors mx-0"
+                      style={{ 
+                        color: theme.text.high,
+                        backgroundColor: menuFocusIndex === 0 ? theme.stroke.low : 'transparent',
+                      }}
+                      role="menuitem"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
                       Rename
                     </button>
                     {projects.length > 1 && (
                       <button
                         onClick={() => handleDeleteProject(project.id)}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors hover:opacity-80"
-                        style={{ color: '#ef4444' }}
+                        onMouseEnter={() => setMenuFocusIndex(1)}
+                        className="w-full px-3 py-1.5 text-left text-xs transition-colors mx-0"
+                        style={{ 
+                          color: theme.text.high,
+                          backgroundColor: menuFocusIndex === 1 ? theme.stroke.low : 'transparent',
+                        }}
+                        role="menuitem"
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
                         Delete
                       </button>
                     )}
@@ -284,14 +344,25 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 
       {/* Bottom Navigation - Library & Usage */}
       <div 
-        className="p-1.5 space-y-1"
+        className="p-1.5 space-y-0.5"
         style={{ borderTop: `1px solid ${theme.stroke.low}` }}
       >
         <button
           onClick={onNavigateToLibrary}
-          className="w-full px-2 py-2 flex items-center gap-2 rounded-lg transition-colors"
+          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors group"
           style={{
             backgroundColor: isLibraryActive ? theme.stroke.low : 'transparent',
+            height: '32px',
+          }}
+          onMouseEnter={(e) => {
+            if (!isLibraryActive) {
+              e.currentTarget.style.backgroundColor = theme.stroke.low;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isLibraryActive) {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }
           }}
         >
           <svg 
@@ -325,9 +396,16 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         {onNavigateToUsage && (
           <button
             onClick={onNavigateToUsage}
-            className="w-full px-2 py-2 flex items-center gap-2 rounded-lg transition-colors hover:opacity-80"
+            className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors"
             style={{
               backgroundColor: 'transparent',
+              height: '32px',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = theme.stroke.low;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
             }}
           >
             <svg 

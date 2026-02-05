@@ -65,6 +65,7 @@ export const PlatformSelector = memo(function PlatformSelector({
   className = '',
 }: PlatformSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const theme = useThemeColors();
 
@@ -82,19 +83,46 @@ export const PlatformSelector = memo(function PlatformSelector({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close dropdown on escape key
+  // Reset focus index and handle keyboard navigation
+  useEffect(() => {
+    if (isOpen) {
+      const currentIndex = PLATFORM_OPTIONS.findIndex(opt => opt.value === value);
+      setFocusedIndex(currentIndex >= 0 ? currentIndex : 0);
+    } else {
+      setFocusedIndex(-1);
+    }
+  }, [isOpen, value]);
+
+  // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
     
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
+      switch (event.key) {
+        case 'Escape':
+          setIsOpen(false);
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          setFocusedIndex(prev => (prev + 1) % PLATFORM_OPTIONS.length);
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          setFocusedIndex(prev => (prev - 1 + PLATFORM_OPTIONS.length) % PLATFORM_OPTIONS.length);
+          break;
+        case 'Enter':
+        case ' ':
+          event.preventDefault();
+          if (focusedIndex >= 0) {
+            handleSelect(PLATFORM_OPTIONS[focusedIndex].value);
+          }
+          break;
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, focusedIndex]);
 
   const handleSelect = (platform: Platform) => {
     onChange(platform);
@@ -143,7 +171,7 @@ export const PlatformSelector = memo(function PlatformSelector({
       {/* Dropdown Menu - Opens Upward */}
       {isOpen && (
         <div 
-          className="absolute bottom-full left-0 mb-1 z-50 min-w-[130px] rounded-lg shadow-lg overflow-hidden"
+          className="absolute bottom-full left-0 mb-1 z-50 min-w-[130px] rounded-lg overflow-hidden py-1"
           style={{
             backgroundColor: theme.background.ghost,
             border: `1px solid ${theme.stroke.medium}`,
@@ -151,26 +179,35 @@ export const PlatformSelector = memo(function PlatformSelector({
           role="listbox"
           aria-label="Platform options"
         >
-          {PLATFORM_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => handleSelect(option.value)}
-              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:opacity-80"
-              style={{
-                backgroundColor: option.value === value 
-                  ? (theme.isLight ? '#fff7ed' : '#431407') 
-                  : 'transparent',
-                color: option.value === value 
-                  ? (theme.isLight ? '#c2410c' : '#fdba74') 
-                  : theme.text.high,
-              }}
-              role="option"
-              aria-selected={option.value === value}
-            >
-              <span className="flex-shrink-0">{option.icon}</span>
-              <span>{option.label}</span>
-            </button>
-          ))}
+          {PLATFORM_OPTIONS.map((option, index) => {
+            const isSelected = option.value === value;
+            const isFocused = index === focusedIndex;
+            
+            return (
+              <button
+                key={option.value}
+                onClick={() => handleSelect(option.value)}
+                onMouseEnter={() => setFocusedIndex(index)}
+                className="flex items-center gap-2 px-2 py-1.5 text-left text-xs transition-colors mx-1 rounded-md"
+                style={{
+                  width: 'calc(100% - 8px)',
+                  backgroundColor: isSelected 
+                    ? (theme.isLight ? '#fff7ed' : '#431407')
+                    : isFocused
+                      ? theme.stroke.low
+                      : 'transparent',
+                  color: isSelected 
+                    ? (theme.isLight ? '#c2410c' : '#fdba74') 
+                    : theme.text.high,
+                }}
+                role="option"
+                aria-selected={isSelected}
+              >
+                <span className="flex-shrink-0">{option.icon}</span>
+                <span>{option.label}</span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

@@ -26,7 +26,6 @@ import {
   ErrorBoundary,
   ModelSelector,
   TTSProviderSelector,
-  ModeToggle,
   DesignSystemLibrary,
   LibraryPage,
   ChannelSelector,
@@ -645,6 +644,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           onNavigateToLibrary={() => setActiveView('library')}
           isLibraryActive={false}
           onNavigateToUsage={() => setShowUsageModal(true)}
+          onProjectSelect={() => setActiveView('main')}
         />
         <main className="flex-1 overflow-hidden">
           <DocPanelComponent onBack={() => setActiveView('main')} />
@@ -694,6 +694,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           onNavigateToLibrary={() => setActiveView('library')}
           isLibraryActive={true}
           onNavigateToUsage={() => setShowUsageModal(true)}
+          onProjectSelect={() => setActiveView('main')}
         />
         <main className="flex-1 overflow-hidden">
           <LibraryPage onBack={() => setActiveView('main')} />
@@ -729,6 +730,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         onNavigateToLibrary={() => setActiveView('library')}
         isLibraryActive={false}
         onNavigateToUsage={() => setShowUsageModal(true)}
+        onProjectSelect={() => setActiveView('main')}
       />
 
       {/* Main Content */}
@@ -919,13 +921,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       onChange={chatMode === 'copy' ? setSelectedLLMProvider : setSelectedTalkLLMProvider}
                       showHealth={false}
                       size="sm"
-                      disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
-                    />
-                  }
-                  modeToggle={
-                    <ModeToggle
-                      mode={chatMode}
-                      onChange={handleModeChange}
                       disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
                     />
                   }

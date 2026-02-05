@@ -25,10 +25,8 @@ interface TwChatPanelProps {
   onVoiceClick?: () => void;
   /** Whether voice is supported in this browser */
   voiceSupported?: boolean;
-  /** Model selector component to render inside the input bar */
+  /** Model selector component to render below input */
   modelSelector?: React.ReactNode;
-  /** Mode toggle component to render below input */
-  modeToggle?: React.ReactNode;
   /** Channel selector component to render below input */
   channelSelector?: React.ReactNode;
   /** Platform selector component to render below input */
@@ -45,7 +43,6 @@ export function TwChatPanel({
   onVoiceClick,
   voiceSupported = true,
   modelSelector,
-  modeToggle,
   channelSelector,
   platformSelector,
 }: TwChatPanelProps) {
@@ -205,9 +202,6 @@ export function TwChatPanel({
               }}
             />
 
-            {/* Model selector - rendered inside input bar */}
-            {modelSelector}
-
             {/* Arrow send button - pill shaped */}
             <button
               onClick={handleSubmit}
@@ -239,10 +233,10 @@ export function TwChatPanel({
             </button>
           </div>
 
-          {/* Mode toggle + Channel/Platform selectors - below input */}
-          {(modeToggle || channelSelector || platformSelector) && (
+          {/* Model + Channel/Platform selectors - below input */}
+          {(modelSelector || channelSelector || platformSelector) && (
             <div className="flex items-center justify-center gap-3 mt-3">
-              {modeToggle}
+              {modelSelector}
               {channelSelector}
               {platformSelector}
             </div>

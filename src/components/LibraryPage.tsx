@@ -102,36 +102,22 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
         className="flex items-center justify-between px-4 py-3"
         style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
       >
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onBack}
-            className="p-1.5 rounded-lg transition-colors hover:opacity-80"
+        <div className="flex items-center gap-2">
+          <h1 
+            className="text-lg font-semibold"
+            style={{ color: theme.text.high }}
+          >
+            Audio Library
+          </h1>
+          <span 
+            className="text-xs px-2 py-0.5 rounded-full"
             style={{ 
-              backgroundColor: theme.background.minimal,
-              color: theme.text.high 
+              backgroundColor: theme.stroke.low,
+              color: theme.text.medium 
             }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div className="flex items-center gap-2">
-            <h1 
-              className="text-lg font-semibold"
-              style={{ color: theme.text.high }}
-            >
-              Audio Library
-            </h1>
-            <span 
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ 
-                backgroundColor: theme.background.subtle,
-                color: theme.text.medium 
-              }}
-            >
-              {audios.length} {audios.length === 1 ? 'audio' : 'audios'}
-            </span>
-          </div>
+            {audios.length} {audios.length === 1 ? 'audio' : 'audios'}
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -142,7 +128,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search audios..."
-              className="pl-8 pr-3 py-1.5 text-sm rounded-lg border"
+              className="pl-8 pr-4 py-1.5 text-sm rounded-full border"
               style={{
                 backgroundColor: theme.background.ghost,
                 borderColor: theme.stroke.medium,
@@ -170,7 +156,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
               onClick={() => setViewMode('list')}
               className="p-1.5 transition-colors"
               style={{
-                backgroundColor: viewMode === 'list' ? theme.background.subtle : 'transparent',
+                backgroundColor: viewMode === 'list' ? theme.stroke.low : 'transparent',
                 color: theme.text.high
               }}
               title="List view"
@@ -183,7 +169,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
               onClick={() => setViewMode('grid')}
               className="p-1.5 transition-colors"
               style={{
-                backgroundColor: viewMode === 'grid' ? theme.background.subtle : 'transparent',
+                backgroundColor: viewMode === 'grid' ? theme.stroke.low : 'transparent',
                 color: theme.text.high
               }}
               title="Grid view"
@@ -229,8 +215,8 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
             {sortedAudios.map((audio) => (
               <div
                 key={audio.id}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg group transition-all hover:scale-[0.995]"
-                style={{ backgroundColor: theme.background.minimal }}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg group transition-colors"
+                style={{ backgroundColor: theme.stroke.low }}
               >
                 {/* Play Button */}
                 <button
@@ -343,8 +329,8 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack }) => {
             {sortedAudios.map((audio) => (
               <div
                 key={audio.id}
-                className="rounded-lg overflow-hidden group transition-all hover:scale-[0.98]"
-                style={{ backgroundColor: theme.background.minimal }}
+                className="rounded-lg overflow-hidden group transition-colors"
+                style={{ backgroundColor: theme.stroke.low }}
               >
                 {/* Waveform/Thumbnail Area */}
                 <div 

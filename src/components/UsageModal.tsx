@@ -181,7 +181,7 @@ export const UsageModal = memo(function UsageModal({
             onClick={onClose}
             className="p-2 rounded-full transition-colors hover:opacity-70"
             style={{
-              backgroundColor: theme.background.subtle,
+              backgroundColor: theme.stroke.low,
               color: theme.text.medium,
             }}
             aria-label="Close usage statistics"

@@ -24,3 +24,5 @@ export { DesignSystemLibrary } from './DesignSystemLibrary';
 export { LibraryPage } from './LibraryPage';
 export { ChannelSelector } from './ChannelSelector';
 export { PlatformSelector } from './PlatformSelector';
+export { Dropdown } from './Dropdown';
+export type { DropdownOption, DropdownProps } from './Dropdown';
