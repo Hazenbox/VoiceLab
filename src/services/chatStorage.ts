@@ -6,10 +6,12 @@
  * - Maximum message limits per project
  * - Automatic cleanup of old messages
  * - Storage usage tracking and warnings
- * - Separate audio data storage with LRU eviction
+ * - Audio data stored in IndexedDB for large capacity (supports 5+ mins per chat)
+ * - Text messages stored in localStorage for quick access
  */
 
 import type { ChatMessage, ChatMode } from '../types';
+import { audioIndexedDB, type AudioEntry } from './audioIndexedDB';
 
 // =============================================================================
 // Constants
@@ -17,12 +19,11 @@ import type { ChatMessage, ChatMode } from '../types';
 
 const STORAGE_KEYS = {
   CHAT_HISTORY: 'voicelab_chat_history',
-  AUDIO_DATA: 'voicelab_chat_audio',
+  // Audio now stored in IndexedDB, not localStorage
 } as const;
 
 const MAX_MESSAGES_PER_PROJECT = 100;
-const MAX_AUDIO_ENTRIES = 50;
-const MAX_TOTAL_STORAGE_MB = 4; // localStorage limit is usually 5MB, leave buffer
+const MAX_TOTAL_STORAGE_MB = 4; // localStorage limit for text messages only
 const DEBOUNCE_MS = 300;
 
 // =============================================================================
@@ -33,20 +34,7 @@ interface ChatHistoryStore {
   [projectId: string]: StoredChatMessage[];
 }
 
-interface AudioDataStore {
-  entries: AudioDataEntry[];
-  totalSize: number;
-}
-
-interface AudioDataEntry {
-  messageId: string;
-  projectId: string;
-  data: string; // base64
-  size: number;
-  accessedAt: number;
-}
-
-// Stored message excludes audioData (stored separately for LRU management)
+// Stored message excludes audioData (stored separately in IndexedDB)
 interface StoredChatMessage extends Omit<ChatMessage, 'audioData'> {
   hasAudio?: boolean;
 }
@@ -145,33 +133,8 @@ function saveChatHistoryDirect(store: ChatHistoryStore): void {
   }
 }
 
-function loadAudioStore(): AudioDataStore {
-  try {
-    const data = localStorage.getItem(STORAGE_KEYS.AUDIO_DATA);
-    return data ? JSON.parse(data) : { entries: [], totalSize: 0 };
-  } catch (error) {
-    console.error('[ChatStorage] Failed to load audio store:', error);
-    return { entries: [], totalSize: 0 };
-  }
-}
-
-function saveAudioStore(store: AudioDataStore): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.AUDIO_DATA, JSON.stringify(store));
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-      console.error('[ChatStorage] Audio storage quota exceeded, evicting oldest');
-      evictOldestAudio(store, 5);
-      try {
-        localStorage.setItem(STORAGE_KEYS.AUDIO_DATA, JSON.stringify(store));
-      } catch {
-        console.error('[ChatStorage] Still cannot save audio after eviction');
-      }
-    } else {
-      console.error('[ChatStorage] Failed to save audio store:', error);
-    }
-  }
-}
+// Audio storage is now handled by IndexedDB (audioIndexedDB.ts)
+// This provides 50MB+ capacity instead of localStorage's 5MB limit
 
 function evictOldestMessages(store: ChatHistoryStore, count: number): void {
   const allMessages: Array<{ projectId: string; message: StoredChatMessage; index: number }> = [];
@@ -198,19 +161,78 @@ function evictOldestMessages(store: ChatHistoryStore, count: number): void {
   }
 }
 
-function evictOldestAudio(store: AudioDataStore, count: number): void {
-  // Sort by access time (oldest first)
-  store.entries.sort((a, b) => a.accessedAt - b.accessedAt);
-  
-  // Remove oldest
-  const removed = store.entries.splice(0, count);
-  for (const entry of removed) {
-    store.totalSize -= entry.size;
+// Debounced save function
+const debouncedSave = debounce(saveChatHistoryDirect, DEBOUNCE_MS);
+
+// =============================================================================
+// Public API
+// =============================================================================
+
+// =============================================================================
+// Migration: Move old localStorage audio to IndexedDB (one-time)
+// =============================================================================
+
+const MIGRATION_KEY = 'voicelab_audio_migrated_to_indexeddb';
+const OLD_AUDIO_DATA_KEY = 'voicelab_chat_audio';
+
+interface OldAudioDataStore {
+  entries: Array<{
+    messageId: string;
+    projectId: string;
+    data: string; // base64
+    size: number;
+    accessedAt: number;
+  }>;
+  totalSize: number;
+}
+
+async function migrateOldAudioToIndexedDB(): Promise<void> {
+  // Check if migration already done
+  if (localStorage.getItem(MIGRATION_KEY)) {
+    return;
+  }
+
+  try {
+    const oldAudioData = localStorage.getItem(OLD_AUDIO_DATA_KEY);
+    if (!oldAudioData) {
+      // No old data to migrate
+      localStorage.setItem(MIGRATION_KEY, 'true');
+      return;
+    }
+
+    const oldStore: OldAudioDataStore = JSON.parse(oldAudioData);
+    console.log(`[ChatStorage] Migrating ${oldStore.entries.length} audio entries from localStorage to IndexedDB...`);
+
+    for (const entry of oldStore.entries) {
+      try {
+        const audioBlob = audioIndexedDB.base64ToBlob(entry.data);
+        const audioEntry: AudioEntry = {
+          id: entry.messageId,
+          projectId: entry.projectId,
+          data: audioBlob,
+          size: audioBlob.size,
+          duration: 0, // Unknown from old format
+          sampleRate: 24000, // Default
+          accessedAt: entry.accessedAt,
+          createdAt: entry.accessedAt,
+        };
+        await audioIndexedDB.save(audioEntry);
+      } catch (err) {
+        console.error(`[ChatStorage] Failed to migrate audio entry ${entry.messageId}:`, err);
+      }
+    }
+
+    // Remove old localStorage data to free up space
+    localStorage.removeItem(OLD_AUDIO_DATA_KEY);
+    localStorage.setItem(MIGRATION_KEY, 'true');
+    console.log('[ChatStorage] Audio migration complete');
+  } catch (err) {
+    console.error('[ChatStorage] Audio migration failed:', err);
   }
 }
 
-// Debounced save function
-const debouncedSave = debounce(saveChatHistoryDirect, DEBOUNCE_MS);
+// Run migration on module load (async, non-blocking)
+migrateOldAudioToIndexedDB();
 
 // =============================================================================
 // Public API
@@ -219,44 +241,41 @@ const debouncedSave = debounce(saveChatHistoryDirect, DEBOUNCE_MS);
 export const chatStorage = {
   /**
    * Save chat messages for a project (debounced)
+   * Text messages go to localStorage, audio data goes to IndexedDB
    */
-  save(projectId: string, messages: ChatMessage[]): void {
+  async save(projectId: string, messages: ChatMessage[]): Promise<void> {
     const store = loadChatHistory();
-    const audioStore = loadAudioStore();
     
-    // Separate audio data from messages
-    const storedMessages: StoredChatMessage[] = messages.map(msg => {
+    // Separate audio data from messages and save to IndexedDB
+    const storedMessages: StoredChatMessage[] = [];
+    
+    for (const msg of messages) {
       if (msg.type === 'audio' && msg.audioData) {
-        // Store audio separately
-        const existingIndex = audioStore.entries.findIndex(e => e.messageId === msg.id);
-        const audioEntry: AudioDataEntry = {
-          messageId: msg.id,
+        // Save audio to IndexedDB (async)
+        const audioBlob = audioIndexedDB.base64ToBlob(msg.audioData);
+        const audioEntry: AudioEntry = {
+          id: msg.id,
           projectId,
-          data: msg.audioData,
-          size: msg.audioData.length * 2, // UTF-16
+          data: audioBlob,
+          size: audioBlob.size,
+          duration: msg.audioDuration || 0,
+          sampleRate: msg.audioSampleRate || 24000,
           accessedAt: Date.now(),
+          createdAt: msg.timestamp,
         };
         
-        if (existingIndex >= 0) {
-          // Update existing
-          audioStore.totalSize -= audioStore.entries[existingIndex].size;
-          audioStore.entries[existingIndex] = audioEntry;
-        } else {
-          audioStore.entries.push(audioEntry);
-        }
-        audioStore.totalSize += audioEntry.size;
-        
-        // Enforce audio limit
-        while (audioStore.entries.length > MAX_AUDIO_ENTRIES) {
-          evictOldestAudio(audioStore, 1);
-        }
+        // Save audio asynchronously (don't await to avoid blocking)
+        audioIndexedDB.save(audioEntry).catch(err => {
+          console.error('[ChatStorage] Failed to save audio to IndexedDB:', err);
+        });
         
         // Return message without inline audioData
         const { audioData: _, ...rest } = msg;
-        return { ...rest, hasAudio: true };
+        storedMessages.push({ ...rest, hasAudio: true });
+      } else {
+        storedMessages.push(msg);
       }
-      return msg;
-    });
+    }
     
     // Enforce message limit per project
     if (storedMessages.length > MAX_MESSAGES_PER_PROJECT) {
@@ -265,71 +284,111 @@ export const chatStorage = {
     
     store[projectId] = storedMessages;
     
-    // Save audio store immediately (not debounced - smaller updates)
-    saveAudioStore(audioStore);
-    
-    // Debounce chat history save
+    // Debounce chat history save (localStorage - small)
     debouncedSave(store);
+    
+    // Ensure IndexedDB storage limits are maintained (async, non-blocking)
+    audioIndexedDB.ensureLimit().catch(err => {
+      console.warn('[ChatStorage] Failed to enforce storage limit:', err);
+    });
   },
 
   /**
    * Load chat messages for a project
+   * Returns synchronously with text, audio loaded async
    */
   load(projectId: string): ChatMessage[] {
     const store = loadChatHistory();
-    const audioStore = loadAudioStore();
     const storedMessages = store[projectId] || [];
     
-    // Rehydrate audio data
-    return storedMessages.map(msg => {
-      if (msg.hasAudio) {
-        const audioEntry = audioStore.entries.find(e => e.messageId === msg.id);
-        if (audioEntry) {
-          // Update access time for LRU
-          audioEntry.accessedAt = Date.now();
-          return {
-            ...msg,
-            audioData: audioEntry.data,
-          } as ChatMessage;
+    // Return messages immediately (audio will be loaded on-demand)
+    return storedMessages.map(msg => msg as ChatMessage);
+  },
+
+  /**
+   * Load chat messages with audio data (async)
+   * Use this when you need the actual audio data
+   */
+  async loadWithAudio(projectId: string): Promise<ChatMessage[]> {
+    const store = loadChatHistory();
+    const storedMessages = store[projectId] || [];
+    
+    // Rehydrate audio data from IndexedDB
+    const messagesWithAudio = await Promise.all(
+      storedMessages.map(async (msg) => {
+        if (msg.hasAudio) {
+          try {
+            const audioEntry = await audioIndexedDB.get(msg.id);
+            if (audioEntry) {
+              const audioData = await audioIndexedDB.blobToBase64(audioEntry.data);
+              return {
+                ...msg,
+                audioData,
+              } as ChatMessage;
+            }
+            // Audio was evicted or not found
+            console.warn(`[ChatStorage] Audio data for message ${msg.id} not found in IndexedDB`);
+          } catch (err) {
+            console.error(`[ChatStorage] Failed to load audio for message ${msg.id}:`, err);
+          }
         }
-        // Audio was evicted - mark as unavailable
-        console.warn(`[ChatStorage] Audio data for message ${msg.id} was evicted`);
+        return msg as ChatMessage;
+      })
+    );
+    
+    return messagesWithAudio;
+  },
+
+  /**
+   * Load audio for a specific message
+   */
+  async loadMessageAudio(messageId: string): Promise<string | null> {
+    try {
+      const audioEntry = await audioIndexedDB.get(messageId);
+      if (audioEntry) {
+        return await audioIndexedDB.blobToBase64(audioEntry.data);
       }
-      return msg as ChatMessage;
-    });
+      return null;
+    } catch (err) {
+      console.error(`[ChatStorage] Failed to load audio for message ${messageId}:`, err);
+      return null;
+    }
   },
 
   /**
    * Clear chat history for a project
    */
-  clear(projectId: string): void {
+  async clear(projectId: string): Promise<void> {
     const store = loadChatHistory();
-    const audioStore = loadAudioStore();
     
-    // Remove project messages
+    // Remove project messages from localStorage
     delete store[projectId];
-    
-    // Remove associated audio
-    const projectAudio = audioStore.entries.filter(e => e.projectId === projectId);
-    for (const entry of projectAudio) {
-      audioStore.totalSize -= entry.size;
-    }
-    audioStore.entries = audioStore.entries.filter(e => e.projectId !== projectId);
-    
     saveChatHistoryDirect(store);
-    saveAudioStore(audioStore);
+    
+    // Remove associated audio from IndexedDB
+    try {
+      await audioIndexedDB.deleteProject(projectId);
+    } catch (err) {
+      console.error('[ChatStorage] Failed to delete project audio:', err);
+    }
   },
 
   /**
    * Clear all chat history
    */
-  clearAll(): void {
+  async clearAll(): Promise<void> {
     localStorage.removeItem(STORAGE_KEYS.CHAT_HISTORY);
-    localStorage.removeItem(STORAGE_KEYS.AUDIO_DATA);
+    
+    // Clear all audio from IndexedDB
+    try {
+      await audioIndexedDB.clearAll();
+    } catch (err) {
+      console.error('[ChatStorage] Failed to clear audio IndexedDB:', err);
+    }
   },
 
   /**
-   * Get storage usage information
+   * Get storage usage information (localStorage only - text messages)
    */
   getStorageUsage(): StorageUsage {
     const used = getStorageSize();
@@ -338,12 +397,36 @@ export const chatStorage = {
     
     let warning: string | null = null;
     if (percentage > 90) {
-      warning = 'Storage almost full. Old messages may be deleted automatically.';
+      warning = 'Text storage almost full. Old messages may be deleted automatically.';
     } else if (percentage > 75) {
-      warning = 'Storage is getting full. Consider clearing old chat history.';
+      warning = 'Text storage is getting full. Consider clearing old chat history.';
     }
     
     return { used, limit, percentage, warning };
+  },
+
+  /**
+   * Get audio storage usage information (IndexedDB)
+   */
+  async getAudioStorageUsage(): Promise<{
+    entryCount: number;
+    totalSize: number;
+    maxSize: number;
+    usagePercent: number;
+    isNearQuota: boolean;
+  }> {
+    try {
+      return await audioIndexedDB.getStats();
+    } catch (err) {
+      console.error('[ChatStorage] Failed to get audio storage stats:', err);
+      return {
+        entryCount: 0,
+        totalSize: 0,
+        maxSize: 100 * 1024 * 1024, // 100MB
+        usagePercent: 0,
+        isNearQuota: false,
+      };
+    }
   },
 
   /**

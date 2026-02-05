@@ -1,11 +1,12 @@
 /**
  * useChatPersistence Hook
  * 
- * Manages chat message persistence with localStorage.
+ * Manages chat message persistence with localStorage (text) + IndexedDB (audio).
  * 
  * Features:
  * - Auto-load messages on project switch
  * - Auto-save on message changes (debounced)
+ * - Large audio storage via IndexedDB (supports 5+ mins per chat)
  * - Storage usage warnings
  * - Project-scoped storage
  */
@@ -87,12 +88,23 @@ export function useChatPersistence(
       return;
     }
     
+    // Load text messages immediately (synchronous)
     const loadedMessages = chatStorage.load(projectId);
     setMessagesInternal(loadedMessages);
     setIsLoaded(true);
     
     // Update storage usage
     setStorageUsage(chatStorage.getStorageUsage());
+    
+    // Load audio data asynchronously in background
+    chatStorage.loadWithAudio(projectId).then(messagesWithAudio => {
+      // Only update if we're still on the same project
+      if (projectIdRef.current === projectId) {
+        setMessagesInternal(messagesWithAudio);
+      }
+    }).catch(err => {
+      console.error('[useChatPersistence] Failed to load audio data:', err);
+    });
     
     // Cleanup on project change
     return () => {
@@ -132,10 +144,10 @@ export function useChatPersistence(
   }, []);
   
   // Clear history
-  const clearHistory = useCallback(() => {
+  const clearHistory = useCallback(async () => {
     if (!projectIdRef.current) return;
     
-    chatStorage.clear(projectIdRef.current);
+    await chatStorage.clear(projectIdRef.current);
     setMessagesInternal([]);
     setStorageUsage(chatStorage.getStorageUsage());
   }, []);

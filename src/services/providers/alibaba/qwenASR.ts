@@ -89,14 +89,18 @@ export class QwenASRClient {
         return;
       }
       
-      // Send ping (as a session.update with no changes to act as keepalive)
+      // Send a proper session.update as keepalive instead of empty audio commit
+      // Empty input_audio_buffer.commit causes "Error committing input audio buffer" on the server
       try {
         const pingEvent = {
           event_id: `ping_${generateUUID()}`,
-          type: 'input_audio_buffer.commit', // Empty commit acts as keepalive
+          type: 'session.update',
+          session: {
+            // Empty session update acts as a keepalive without modifying settings
+          },
         };
         this.ws.send(JSON.stringify(pingEvent));
-        console.log('[QwenASR] Heartbeat sent');
+        console.debug('[QwenASR] Heartbeat sent');
       } catch (error) {
         console.error('[QwenASR] Failed to send heartbeat:', error);
       }
