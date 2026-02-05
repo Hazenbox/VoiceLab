@@ -202,7 +202,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
         onClick={handleToggle}
         disabled={disabled}
         className={`
-          flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors
+          w-full flex items-center justify-end gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80 cursor-pointer'}
         `}
         style={{ 
