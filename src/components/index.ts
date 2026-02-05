@@ -1,6 +1,8 @@
 export { VoiceSelector } from './VoiceSelector';
 export { CustomSelect } from './CustomSelect';
 export { LabeledSlider } from './LabeledSlider';
+export { Slider } from './Slider';
+export { Toggle } from './Toggle';
 export { StatusIndicator } from './StatusIndicator';
 export { AudioPlayer } from './AudioPlayer';
 export { DocumentationPanel } from './DocumentationPanel';

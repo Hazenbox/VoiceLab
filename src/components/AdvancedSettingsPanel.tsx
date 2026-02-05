@@ -25,7 +25,8 @@ import type {
   ResponseLength,
 } from '../types';
 import { VoiceSelector } from './VoiceSelector';
-import { LabeledSlider } from './LabeledSlider';
+import { Slider } from './Slider';
+import { Toggle } from './Toggle';
 import { SearchableDropdown } from './SearchableDropdown';
 import { useThemeColors } from '../theme';
 // Design system context removed - now using single Jio DS
@@ -97,7 +98,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
     <div className="overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors hover:opacity-80"
+        className="w-full flex items-center justify-between px-3 py-2.5 pb-4 text-left transition-colors hover:opacity-80"
         style={{ color: theme.text.high }}
       >
         <div className="flex items-center gap-2">
@@ -115,7 +116,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
       </button>
       
       {isOpen && (
-        <div className="px-3 pb-3 space-y-3">
+        <div className="px-3 pb-4 space-y-4">
           {children}
         </div>
       )}
@@ -123,118 +124,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
   );
 };
 
-// Select component removed - replaced with SearchableDropdown
-
-// =============================================================================
-// Slider Component (for thresholds)
-// =============================================================================
-
-interface SliderProps {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step?: number;
-  onChange: (value: number) => void;
-  disabled?: boolean;
-}
-
-const Slider: React.FC<SliderProps> = ({
-  label,
-  value,
-  min,
-  max,
-  step = 1,
-  onChange,
-  disabled = false,
-}) => {
-  const theme = useThemeColors();
-  
-  return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <label
-          className="text-xs font-medium"
-          style={{ color: theme.text.medium }}
-        >
-          {label}
-        </label>
-        <span
-          className="text-xs font-mono"
-          style={{ color: theme.text.medium }}
-        >
-          {value}
-        </span>
-      </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        disabled={disabled}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-        style={{
-          backgroundColor: theme.stroke.low,
-          accentColor: theme.accent,
-        }}
-      />
-    </div>
-  );
-};
-
-// =============================================================================
-// Toggle Component
-// =============================================================================
-
-interface ToggleProps {
-  label: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  disabled?: boolean;
-}
-
-const Toggle: React.FC<ToggleProps> = ({
-  label,
-  checked,
-  onChange,
-  disabled = false,
-}) => {
-  const theme = useThemeColors();
-  
-  return (
-    <div className="flex items-center justify-between">
-      <label
-        className="text-xs font-medium"
-        style={{ color: theme.text.medium }}
-      >
-        {label}
-      </label>
-      <button
-        onClick={() => !disabled && onChange(!checked)}
-        disabled={disabled}
-        className={`
-          w-9 h-5 rounded-full transition-colors relative
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-        `}
-        style={{
-          backgroundColor: checked ? theme.accent : theme.stroke.low,
-        }}
-        role="switch"
-        aria-checked={checked}
-      >
-        <span
-          className={`
-            absolute top-0.5 w-4 h-4 rounded-full bg-white shadow
-            transition-transform
-            ${checked ? 'translate-x-4' : 'translate-x-0.5'}
-          `}
-        />
-      </button>
-    </div>
-  );
-};
+// Inline components removed - now using dedicated Slider and Toggle components
 
 // =============================================================================
 // Icons
@@ -349,7 +239,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       className="h-full flex flex-col overflow-hidden relative"
       style={{
         width: isCollapsed ? '48px' : '320px',
-        backgroundColor: theme.background.ghost,
+        backgroundColor: theme.stroke.low,
         borderLeft: `1px solid ${theme.stroke.low}`,
         transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1), transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
         transform: isCollapsed ? 'translateX(0)' : 'translateX(0)',
@@ -427,10 +317,10 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
             />
             
             {/* Greeting */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label 
                 className="block text-xs font-medium"
-                style={{ color: theme.text.medium }}
+                style={{ color: theme.text.high }}
               >
                 Greeting
               </label>
@@ -447,20 +337,32 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
             </div>
             
             {/* Pace */}
-            <LabeledSlider
+            <Slider
               label="Pace"
-              value={config.persona.pace}
-              options={['slow', 'medium', 'fast']}
-              onChange={(value) => updatePersona('pace', value as Pace)}
+              value={['slow', 'medium', 'fast'].indexOf(config.persona.pace)}
+              min={0}
+              max={2}
+              step={1}
+              onChange={(value) => {
+                const paceOptions: Pace[] = ['slow', 'medium', 'fast'];
+                updatePersona('pace', paceOptions[value]);
+              }}
+              formatValue={(value) => ['Slow', 'Medium', 'Fast'][value]}
               disabled={disabled}
             />
             
             {/* Response Length */}
-            <LabeledSlider
+            <Slider
               label="Response Length"
-              value={config.maxResponseLength}
-              options={['short', 'medium', 'long']}
-              onChange={(value) => onConfigChange({ ...config, maxResponseLength: value as ResponseLength })}
+              value={['short', 'medium', 'long'].indexOf(config.maxResponseLength)}
+              min={0}
+              max={2}
+              step={1}
+              onChange={(value) => {
+                const lengthOptions: ResponseLength[] = ['short', 'medium', 'long'];
+                onConfigChange({ ...config, maxResponseLength: lengthOptions[value] });
+              }}
+              formatValue={(value) => ['Short', 'Medium', 'Long'][value]}
               disabled={disabled}
             />
           </Section>
@@ -510,57 +412,65 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           
           {/* Project Defaults Section */}
           <Section title="Project Defaults" icon={<ProjectIcon />}>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium" style={{ color: theme.text.medium }}>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium" style={{ color: theme.text.high }}>
                 Default Ecosystem
               </label>
-              <SearchableDropdown
-                value={defaultEcosystem}
-                onChange={(v) => onDefaultEcosystemChange(v as EcosystemType)}
-                options={ecosystemOptions}
-                placeholder="Select ecosystem"
-                disabled={disabled}
-                compact={true}
-              />
+              <div className="w-48">
+                <SearchableDropdown
+                  value={defaultEcosystem}
+                  onChange={(v) => onDefaultEcosystemChange(v as EcosystemType)}
+                  options={ecosystemOptions}
+                  placeholder="Select ecosystem"
+                  disabled={disabled}
+                  compact={true}
+                />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium" style={{ color: theme.text.medium }}>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium" style={{ color: theme.text.high }}>
                 Default Channel
               </label>
-              <SearchableDropdown
-                value={defaultChannel}
-                onChange={(v) => onDefaultChannelChange(v as ContentChannelType)}
-                options={channelOptions}
-                placeholder="Select channel"
-                disabled={disabled}
-                compact={true}
-              />
+              <div className="w-48">
+                <SearchableDropdown
+                  value={defaultChannel}
+                  onChange={(v) => onDefaultChannelChange(v as ContentChannelType)}
+                  options={channelOptions}
+                  placeholder="Select channel"
+                  disabled={disabled}
+                  compact={true}
+                />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium" style={{ color: theme.text.medium }}>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium" style={{ color: theme.text.high }}>
                 Default Language
               </label>
-              <SearchableDropdown
-                value={defaultLanguage}
-                onChange={(v) => onDefaultLanguageChange(v as SupportedLanguage)}
-                options={languageOptions}
-                placeholder="Select language"
-                disabled={disabled}
-                compact={true}
-              />
+              <div className="w-48">
+                <SearchableDropdown
+                  value={defaultLanguage}
+                  onChange={(v) => onDefaultLanguageChange(v as SupportedLanguage)}
+                  options={languageOptions}
+                  placeholder="Select language"
+                  disabled={disabled}
+                  compact={true}
+                />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium" style={{ color: theme.text.medium }}>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium" style={{ color: theme.text.high }}>
                 Default Region
               </label>
-              <SearchableDropdown
-                value={defaultRegion}
-                onChange={(v) => onDefaultRegionChange(v as IndianRegion)}
-                options={regionOptions}
-                placeholder="Select region"
-                disabled={disabled}
-                compact={true}
-              />
+              <div className="w-48">
+                <SearchableDropdown
+                  value={defaultRegion}
+                  onChange={(v) => onDefaultRegionChange(v as IndianRegion)}
+                  options={regionOptions}
+                  placeholder="Select region"
+                  disabled={disabled}
+                  compact={true}
+                />
+              </div>
             </div>
           </Section>
           
@@ -579,18 +489,20 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               onChange={(value) => updateTrustSetting('minimumScore', value)}
               disabled={disabled}
             />
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium" style={{ color: theme.text.medium }}>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium" style={{ color: theme.text.high }}>
                 Validation Strictness
               </label>
-              <SearchableDropdown
-                value={trustSettings.validationStrictness}
-                onChange={(v) => updateTrustSetting('validationStrictness', v as ValidationStrictness)}
-                options={strictnessOptions}
-                placeholder="Select strictness"
-                disabled={disabled}
-                compact={true}
-              />
+              <div className="w-48">
+                <SearchableDropdown
+                  value={trustSettings.validationStrictness}
+                  onChange={(v) => updateTrustSetting('validationStrictness', v as ValidationStrictness)}
+                  options={strictnessOptions}
+                  placeholder="Select strictness"
+                  disabled={disabled}
+                  compact={true}
+                />
+              </div>
             </div>
             <Toggle
               label="Block Below Threshold"
