@@ -174,7 +174,7 @@ export const ChatPanel = memo(function ChatPanel({
         {isUser ? (
           <div
             className={`max-w-[80%] px-4 py-2.5 ${
-              message.content.split('\n').length > 1 ? 'rounded-2xl' : 'rounded-full'
+              message.content.split('\n').length > 1 || message.content.length > 50 ? 'rounded-2xl' : 'rounded-full'
             }`}
             style={{
               backgroundColor: theme.stroke.low,
