@@ -132,7 +132,7 @@ export const AIOrb = memo(function AIOrb({
           dpi: window.devicePixelRatio || 1.5,
           filePath: '/scenes/ai-orb.json',
           interactivity: {
-            mouse: { disableMobile: false },
+            mouse: { disableMobile: true },
           },
         });
         
@@ -228,7 +228,10 @@ export const AIOrb = memo(function AIOrb({
         )}
         
         {webGLSupported ? (
-          <div className="ai-orb-scene" />
+          <div 
+            className="ai-orb-scene" 
+            style={{ opacity: isSceneLoaded ? 1 : 0 }}
+          />
         ) : (
           <FallbackOrb />
         )}

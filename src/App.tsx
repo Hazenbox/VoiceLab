@@ -804,7 +804,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               {chatMode === 'voice' && (
                 <div 
                   className="voice-panel px-4 py-6 border-b flex flex-col items-center gap-4 relative"
-                  style={{ borderColor: theme.stroke.low, backgroundColor: theme.background.subtle }}
+                  style={{ borderColor: theme.stroke.low }}
                 >
                   {/* Close button - return to text mode */}
                   <button
@@ -827,7 +827,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                     state={appState}
                     audioAnalyzer={audioAnalyzerRef.current}
                     onClick={handleToggleConversation}
-                    size={140}
+                    size={105}
                     disabled={false}
                   />
 
