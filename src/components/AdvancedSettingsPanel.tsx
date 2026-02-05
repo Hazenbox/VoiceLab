@@ -19,8 +19,8 @@ import type {
   SupportedLanguage,
   IndianRegion,
   TrustSettings,
+  ValidationStrictness,
 } from '../types';
-import { DEFAULT_TRUST_SETTINGS } from '../types';
 import { VoiceSelector } from './VoiceSelector';
 import { useThemeColors } from '../theme';
 import { useDesignSystem } from '../context/DesignSystemContext';
@@ -324,9 +324,17 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
   
   // Get options
   const ecosystemOptions = getEcosystemOptions().map(o => ({ value: o.value, label: o.label }));
-  const channelOptions = getChannelOptions().map(o => ({ value: o.value, label: o.label }));
+  const channelGroups = getChannelOptions();
+  const channelOptions = channelGroups.flatMap(g => g.channels.map(c => ({ value: c.value, label: c.label })));
   const languageOptions = getLanguageOptions().map(o => ({ value: o.value, label: o.label }));
   const regionOptions = getRegionOptions().map(o => ({ value: o.value, label: o.label }));
+  
+  // Strictness options
+  const strictnessOptions = [
+    { value: 'lenient' as ValidationStrictness, label: 'Lenient' },
+    { value: 'standard' as ValidationStrictness, label: 'Standard' },
+    { value: 'strict' as ValidationStrictness, label: 'Strict' },
+  ];
   
   // Trust settings updater
   const updateTrustSetting = useCallback(<K extends keyof TrustSettings>(
@@ -448,19 +456,18 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           {/* Trust Settings Section */}
           <Section title="Trust Settings" icon={<TrustIcon />}>
             <Slider
-              label="Certification Threshold"
-              value={trustSettings.certificationThreshold}
+              label="Minimum Score"
+              value={trustSettings.minimumScore}
               min={70}
               max={100}
-              onChange={(value) => updateTrustSetting('certificationThreshold', value)}
+              onChange={(value) => updateTrustSetting('minimumScore', value)}
               disabled={disabled}
             />
-            <Slider
-              label="Blocking Threshold"
-              value={trustSettings.blockingThreshold}
-              min={50}
-              max={90}
-              onChange={(value) => updateTrustSetting('blockingThreshold', value)}
+            <Select
+              label="Validation Strictness"
+              value={trustSettings.validationStrictness}
+              options={strictnessOptions}
+              onChange={(v) => updateTrustSetting('validationStrictness', v as ValidationStrictness)}
               disabled={disabled}
             />
             <Toggle
@@ -470,15 +477,15 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               disabled={disabled}
             />
             <Toggle
-              label="Auto-Fix Enabled"
-              checked={trustSettings.autoFixEnabled}
-              onChange={(checked) => updateTrustSetting('autoFixEnabled', checked)}
+              label="Auto-Fix Minor Issues"
+              checked={trustSettings.autoFixMinorIssues}
+              onChange={(checked) => updateTrustSetting('autoFixMinorIssues', checked)}
               disabled={disabled}
             />
             <Toggle
-              label="Show Violations in Chat"
-              checked={trustSettings.showViolations}
-              onChange={(checked) => updateTrustSetting('showViolations', checked)}
+              label="Show Detailed Breakdown"
+              checked={trustSettings.showDetailedBreakdown}
+              onChange={(checked) => updateTrustSetting('showDetailedBreakdown', checked)}
               disabled={disabled}
             />
           </Section>

@@ -1,12 +1,7 @@
 /**
  * Validation Services
- * 
- * Exports all validation functionality for the Content Trust System.
- * 
- * @module services/validation
  */
 
-// Types
 export type {
   ValidationAgentId,
   ValidationViolation,
@@ -22,27 +17,15 @@ export {
   AGENT_WEIGHTS,
 } from './types';
 
-// Agents
 export {
   VALIDATION_AGENTS,
   getValidationAgent,
   getAllValidationAgents,
   getEnabledAgents,
-  genderNeutralityAgent,
-  elitismAgent,
-  culturalSensitivityAgent,
-  disabilityInclusionAgent,
-  complianceAgent,
-  styleGrammarAgent,
-  accessibilityAgent,
-  calculateReadingLevel,
 } from './agents';
 
-// Pipeline
 export {
   runValidationPipeline,
   runQuickValidation,
-  validateAspect,
   getViolationSummary,
-  getViolationsByAgent,
 } from './validationPipeline';

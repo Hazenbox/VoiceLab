@@ -6,36 +6,25 @@
  * @module services/validation/types
  */
 
-import type { ViolationSeverity, ValidationStrictness, GenerationContext } from '../../types';
+import type { ViolationSeverity, ValidationStrictness, GenerationContext, Violation } from '../../types';
 
 /**
  * Validation agent identifiers
  */
 export type ValidationAgentId =
   | 'gender_neutrality'
-  | 'elitism'
+  | 'inclusivity'
   | 'cultural_sensitivity'
-  | 'disability_inclusion'
+  | 'accessibility'
   | 'compliance'
-  | 'style_grammar'
-  | 'accessibility';
+  | 'style_consistency'
+  | 'brand_alignment';
 
 /**
- * Individual violation found by an agent
+ * Individual violation found by an agent (extends base Violation)
  */
-export interface ValidationViolation {
-  id: string;
+export interface ValidationViolation extends Violation {
   agentId: ValidationAgentId;
-  severity: ViolationSeverity;
-  message: string;
-  suggestion?: string;
-  location?: {
-    start: number;
-    end: number;
-    text: string;
-  };
-  category?: string;
-  confidence: number; // 0-100
 }
 
 /**
@@ -45,9 +34,9 @@ export interface PatternRule {
   id: string;
   pattern: RegExp;
   severity: ViolationSeverity;
-  message: string;
-  suggestion?: string;
-  category?: string;
+  rule: string;
+  suggestion: string;
+  category: string;
 }
 
 /**
@@ -59,8 +48,9 @@ export interface AgentValidationResult {
   passed: boolean;
   score: number; // 0-100
   violations: ValidationViolation[];
-  executionTime: number; // ms
-  method: 'pattern' | 'llm' | 'hybrid';
+  suggestions: string[];
+  processingTimeMs: number;
+  usedLLM: boolean;
 }
 
 /**
@@ -69,11 +59,11 @@ export interface AgentValidationResult {
 export interface PipelineValidationResult {
   passed: boolean;
   overallScore: number;
-  certification: 'certified' | 'review' | 'blocked';
+  certification: 'certified' | 'review_recommended' | 'issues_found';
   agentResults: AgentValidationResult[];
   totalViolations: number;
-  criticalViolations: number;
-  executionTime: number;
+  autoFixableCount: number;
+  processingTimeMs: number;
   timestamp: Date;
 }
 
@@ -121,15 +111,15 @@ export interface ValidationAgent {
  * Default validation configuration
  */
 export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
-  strictness: 'balanced',
+  strictness: 'standard',
   enabledAgents: [
     'gender_neutrality',
-    'elitism',
+    'inclusivity',
     'cultural_sensitivity',
-    'disability_inclusion',
-    'compliance',
-    'style_grammar',
     'accessibility',
+    'compliance',
+    'style_consistency',
+    'brand_alignment',
   ],
   skipPatternMatching: false,
   parallelExecution: true,
@@ -141,10 +131,10 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
  */
 export const AGENT_WEIGHTS: Record<ValidationAgentId, number> = {
   gender_neutrality: 15,
-  elitism: 15,
+  inclusivity: 15,
   cultural_sensitivity: 15,
-  disability_inclusion: 15,
-  compliance: 15,
-  style_grammar: 15,
   accessibility: 10,
+  compliance: 15,
+  style_consistency: 15,
+  brand_alignment: 15,
 };

@@ -118,8 +118,6 @@ interface ChannelFormatting {
  * Get channel-specific formatting guidelines
  */
 export function getChannelFormatting(channelId: ContentChannelType): ChannelFormatting {
-  const channel = getChannel(channelId);
-  
   const formattingRules: Record<ContentChannelType, ChannelFormatting> = {
     push_notification: {
       maxLength: 100,
