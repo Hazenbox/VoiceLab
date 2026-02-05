@@ -199,10 +199,10 @@ export const AIOrb = memo(function AIOrb({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
-      {/* Focus ring for accessibility */}
+      {/* Focus ring for accessibility - color applied via CSS custom property */}
       <div 
         className="ai-orb-focus-ring"
-        style={{ borderColor: theme.accent }}
+        style={{ '--focus-ring-color': theme.accent } as React.CSSProperties}
       />
 
       {/* Orb scene container */}
