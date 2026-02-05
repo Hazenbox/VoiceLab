@@ -112,24 +112,40 @@ export const AIOrb = memo(function AIOrb({
       try {
         const UnicornStudio = (window as any).UnicornStudio;
         
-        if (UnicornStudio) {
-          const scene = await UnicornStudio.addScene({
-            element: sceneContainer,
-            fps: 60,
-            scale: 1,
-            dpi: window.devicePixelRatio || 1.5,
-            filePath: '/scenes/ai-orb.json',
-            interactivity: {
-              mouse: { disableMobile: false },
-            },
-          });
+        if (!UnicornStudio) {
+          console.error('[AIOrb] UnicornStudio SDK not loaded. Check if the script tag is present in index.html');
+          setIsSceneLoaded(false);
+          return;
+        }
+
+        if (!UnicornStudio.addScene) {
+          console.error('[AIOrb] UnicornStudio.addScene not available. SDK version may be incompatible.');
+          setIsSceneLoaded(false);
+          return;
+        }
+
+        console.log('[AIOrb] Initializing Unicorn Studio scene...');
+        const scene = await UnicornStudio.addScene({
+          element: sceneContainer,
+          fps: 60,
+          scale: 1,
+          dpi: window.devicePixelRatio || 1.5,
+          filePath: '/scenes/ai-orb.json',
+          interactivity: {
+            mouse: { disableMobile: false },
+          },
+        });
+        
+        if (scene) {
           sceneRef.current = scene;
           setIsSceneLoaded(true);
+          console.log('[AIOrb] Scene loaded successfully');
         } else {
+          console.error('[AIOrb] Scene returned null/undefined');
           setIsSceneLoaded(false);
         }
       } catch (error) {
-        console.warn('Failed to initialize Unicorn Studio scene:', error);
+        console.error('[AIOrb] Failed to initialize Unicorn Studio scene:', error);
         setIsSceneLoaded(false);
       }
     };

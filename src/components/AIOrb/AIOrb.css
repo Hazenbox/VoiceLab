@@ -40,8 +40,8 @@
   position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  overflow: hidden;
+  /* Note: No overflow:hidden or border-radius here - the orb's lens_distort 
+     effect creates the spherical shape. Clipping would break 3D effects. */
 }
 
 /* Unicorn scene container */
