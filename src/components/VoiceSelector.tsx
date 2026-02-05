@@ -27,11 +27,11 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
     <div className="flex items-center justify-between">
       <label 
         className="text-xs font-medium"
-        style={{ color: theme.text.high }}
+        style={{ color: theme.text.medium }}
       >
         Voice Model
       </label>
-      <div style={{ transform: 'scale(0.85)', transformOrigin: 'right top' }}>
+      <div className="voice-selector-radio-group" style={{ transform: 'scale(0.85)', transformOrigin: 'right top' }}>
         <RadioGroup
           name="voice-gender"
           value={value}
@@ -44,6 +44,11 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
           <Radio value={VoiceGender.FEMALE} label="Female" />
           <Radio value={VoiceGender.MALE} label="Male" />
         </RadioGroup>
+        <style>{`
+          .voice-selector-radio-group [role="radiogroup"] > div {
+            gap: 12px !important;
+          }
+        `}</style>
       </div>
     </div>
   );

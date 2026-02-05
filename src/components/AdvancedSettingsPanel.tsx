@@ -99,7 +99,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
     <div className="overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2.5 pb-2 text-left transition-colors hover:opacity-80"
+        className="w-full flex items-center justify-between px-3 py-2 text-left transition-colors hover:opacity-80"
         style={{ color: theme.text.high }}
       >
         <div className="flex items-center gap-2">
@@ -111,13 +111,14 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          style={{ color: theme.text.medium }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       
       {isOpen && (
-        <div className="px-3 pb-2 space-y-4">
+        <div className="px-3 pt-2.5 pb-1.5 space-y-4">
           {children}
         </div>
       )}
@@ -289,19 +290,21 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
             <div className="space-y-2">
               <label 
                 className="block text-xs font-medium"
-                style={{ color: theme.text.high }}
+                style={{ color: theme.text.medium }}
               >
                 Greeting
               </label>
               <div className="scaled-textarea-wrapper">
-                <TextArea
-                  value={config.greeting}
-                  onChange={(value: string) => onConfigChange({ ...config, greeting: value })}
-                  isDisabled={disabled}
-                  rows={2}
-                  size="S"
-                  placeholder="Initial greeting message..."
-                />
+                <div style={{ maxHeight: '48px', overflow: 'hidden' }}>
+                  <TextArea
+                    value={config.greeting}
+                    onChange={(value: string) => onConfigChange({ ...config, greeting: value })}
+                    isDisabled={disabled}
+                    rows={2}
+                    size="S"
+                    placeholder="Initial greeting message..."
+                  />
+                </div>
               </div>
             </div>
             
@@ -370,10 +373,10 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           {/* Project Defaults Section */}
           <Section title="Project Defaults" icon={<ProjectIcon />}>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium w-1/2" style={{ color: theme.text.high }}>
+              <label className="text-xs font-medium flex-shrink-0" style={{ color: theme.text.medium }}>
                 Default Ecosystem
               </label>
-              <div className="w-1/2">
+              <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
                   value={defaultEcosystem}
                   onChange={(v) => onDefaultEcosystemChange(v as EcosystemType)}
@@ -385,10 +388,10 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium w-1/2" style={{ color: theme.text.high }}>
+              <label className="text-xs font-medium flex-shrink-0" style={{ color: theme.text.medium }}>
                 Default Channel
               </label>
-              <div className="w-1/2">
+              <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
                   value={defaultChannel}
                   onChange={(v) => onDefaultChannelChange(v as ContentChannelType)}
@@ -400,10 +403,10 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium w-1/2" style={{ color: theme.text.high }}>
+              <label className="text-xs font-medium flex-shrink-0" style={{ color: theme.text.medium }}>
                 Default Language
               </label>
-              <div className="w-1/2">
+              <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
                   value={defaultLanguage}
                   onChange={(v) => onDefaultLanguageChange(v as SupportedLanguage)}
@@ -415,10 +418,10 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium w-1/2" style={{ color: theme.text.high }}>
+              <label className="text-xs font-medium flex-shrink-0" style={{ color: theme.text.medium }}>
                 Default Region
               </label>
-              <div className="w-1/2">
+              <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
                   value={defaultRegion}
                   onChange={(v) => onDefaultRegionChange(v as IndianRegion)}
@@ -447,10 +450,10 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               disabled={disabled}
             />
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium w-1/2" style={{ color: theme.text.high }}>
+              <label className="text-xs font-medium flex-shrink-0" style={{ color: theme.text.medium }}>
                 Validation Strictness
               </label>
-              <div className="w-1/2">
+              <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
                   value={trustSettings.validationStrictness}
                   onChange={(v) => updateTrustSetting('validationStrictness', v as ValidationStrictness)}

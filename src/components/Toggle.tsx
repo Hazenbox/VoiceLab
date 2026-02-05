@@ -10,11 +10,12 @@ interface ToggleProps {
 
 /**
  * Toggle switch component for boolean settings.
+ * Small size optimized for settings panel.
  * 
  * Design System Integration:
  * - Track background: theme.stroke.low (unchecked) / theme.accent (checked)
  * - Thumb: theme.local.white with shadow
- * - Text: theme.text.high (DS tokens)
+ * - Text: theme.text.medium (DS tokens)
  * - Accessible button with proper ARIA attributes
  */
 export const Toggle: React.FC<ToggleProps> = ({
@@ -29,7 +30,7 @@ export const Toggle: React.FC<ToggleProps> = ({
     <div className="flex items-center justify-between">
       <label
         className="text-xs font-medium"
-        style={{ color: theme.text.high }}
+        style={{ color: theme.text.medium }}
       >
         {label}
       </label>
@@ -40,7 +41,7 @@ export const Toggle: React.FC<ToggleProps> = ({
         onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
         className={`
-          relative w-11 h-6 rounded-full transition-colors duration-200 ease-in-out
+          relative w-9 h-5 rounded-full transition-colors duration-200 ease-in-out
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
           focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2
         `}
@@ -52,9 +53,9 @@ export const Toggle: React.FC<ToggleProps> = ({
         <span
           className={`
             absolute top-0.5 left-0.5
-            inline-block w-5 h-5 rounded-full
+            inline-block w-4 h-4 rounded-full
             transform transition-transform duration-200 ease-in-out
-            ${checked ? 'translate-x-5' : 'translate-x-0'}
+            ${checked ? 'translate-x-4' : 'translate-x-0'}
           `}
           style={{
             backgroundColor: theme.local.white,
