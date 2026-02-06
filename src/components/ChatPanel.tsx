@@ -216,7 +216,7 @@ export const ChatPanel = memo(function ChatPanel({
 
   // Render input area (reusable for both layouts)
   const renderInputArea = useCallback(() => (
-    <div className="w-full max-w-[600px]">
+    <div className="w-full">
       <div 
         className={`${lineCount === 1 ? 'rounded-full' : 'rounded-2xl'} flex items-center px-2 py-1.5 gap-1 transition-all duration-300`}
         style={{ 
