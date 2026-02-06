@@ -200,7 +200,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           <div 
             className="px-2 py-1.5 text-xs font-medium"
             style={{ 
-              color: theme.text.low,
+              color: theme.isLight ? '#a1a1aa' : '#71717a',
               fontSize: '12px',
             }}
           >
