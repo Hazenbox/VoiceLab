@@ -214,179 +214,53 @@ export const ChatPanel = memo(function ChatPanel({
     );
   }, [theme, onSaveAudio, handleSaveAudio, onTrustBadgeClick]);
 
-  return (
-    <div 
-      className="flex flex-col h-full"
-      style={{ backgroundColor: theme.background.ghost }}
-      role="region"
-      aria-label="Chat conversation"
-      id={id}
-    >
-      {/* Centered container with 75% max-width on medium+ screens */}
-      <div className="w-full md:max-w-[75%] mx-auto h-full flex flex-col">
-        {/* Messages Area */}
-        <div 
-          ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto p-4 space-y-8"
-          role="log"
-          aria-live="polite"
-          aria-atomic="false"
-          aria-relevant="additions"
-          tabIndex={0}
-        >
-          {messages.length === 0 && showEmptyState ? (
-            <div 
-              className="flex items-center justify-center h-full"
-              role="status"
-            >
-              <p 
-                className="text-sm text-center max-w-xs"
-                style={{ color: theme.text.low }}
-              >
-                {emptyStateMessage}
-              </p>
-            </div>
-          ) : (
-            <div role="list" aria-label="Messages">
-              {messages.map(renderMessage)}
-              <div ref={messagesEndRef} aria-hidden="true" />
-            </div>
-          )}
-        </div>
-
-        {/* Loading Indicator */}
-        {isLoading && (
-          <div 
-            className="px-4 py-2"
-            role="status"
-            aria-live="polite"
-            aria-label="Generating response"
-          >
-            <div 
-              className="flex items-center gap-2 text-sm"
-              style={{ color: theme.text.medium }}
-            >
-              <div className="flex gap-1" aria-hidden="true">
-                <span 
-                  className="w-2 h-2 rounded-full animate-bounce" 
-                  style={{ backgroundColor: theme.accent, animationDelay: '0ms' }} 
-                />
-                <span 
-                  className="w-2 h-2 rounded-full animate-bounce" 
-                  style={{ backgroundColor: theme.accent, animationDelay: '150ms' }} 
-                />
-                <span 
-                  className="w-2 h-2 rounded-full animate-bounce" 
-                  style={{ backgroundColor: theme.accent, animationDelay: '300ms' }} 
-                />
-              </div>
-              <span>Generating...</span>
-            </div>
-          </div>
-        )}
-
-        {/* Input Area - Grok-style pill-shaped input */}
-        <div className="py-4">
-          <div 
-            className={`${lineCount === 1 ? 'rounded-full' : 'rounded-2xl'} flex items-center px-2 py-1.5 gap-1`}
+  // Render input area (reusable for both layouts)
+  const renderInputArea = useCallback(() => (
+    <div className="w-full max-w-[600px]">
+      <div 
+        className={`${lineCount === 1 ? 'rounded-full' : 'rounded-2xl'} flex items-center px-2 py-1.5 gap-1 transition-all duration-300`}
+        style={{ 
+          backgroundColor: theme.stroke.low,
+        }}
+      >
+        {/* Mic/Stop button - pill shaped, on the left */}
+        {onVoiceClick && (
+          <button
+            onClick={onVoiceClick}
+            disabled={!voiceSupported}
+            aria-label={!voiceSupported 
+              ? "Voice chat not supported in this browser" 
+              : _mode === 'voice' 
+                ? "Stop voice chat and return to text" 
+                : "Switch to voice chat"}
+            title={!voiceSupported 
+              ? "Voice chat not supported in this browser" 
+              : _mode === 'voice'
+                ? "Stop voice chat"
+                : "Voice chat (speak with AI)"}
+            className={`p-2 rounded-full transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+              !voiceSupported 
+                ? 'opacity-50 cursor-not-allowed' 
+                : 'hover:opacity-70 cursor-pointer'
+            }`}
             style={{ 
-              backgroundColor: theme.stroke.low,
+              color: theme.text.medium,
             }}
           >
-            {/* Mic/Stop button - pill shaped, on the left */}
-            {onVoiceClick && (
-              <button
-                onClick={onVoiceClick}
-                disabled={!voiceSupported}
-                aria-label={!voiceSupported 
-                  ? "Voice chat not supported in this browser" 
-                  : _mode === 'voice' 
-                    ? "Stop voice chat and return to text" 
-                    : "Switch to voice chat"}
-                title={!voiceSupported 
-                  ? "Voice chat not supported in this browser" 
-                  : _mode === 'voice'
-                    ? "Stop voice chat"
-                    : "Voice chat (speak with AI)"}
-                className={`p-2 rounded-full transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                  !voiceSupported 
-                    ? 'opacity-50 cursor-not-allowed' 
-                    : 'hover:opacity-70 cursor-pointer'
-                }`}
-                style={{ 
-                  color: theme.text.medium,
-                }}
+            {_mode === 'voice' ? (
+              <svg 
+                width="18" 
+                height="18" 
+                viewBox="0 0 24 24" 
+                fill="currentColor" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
               >
-                {_mode === 'voice' ? (
-                  <svg 
-                    width="18" 
-                    height="18" 
-                    viewBox="0 0 24 24" 
-                    fill="currentColor" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  >
-                    <rect x="6" y="6" width="12" height="12" rx="2" />
-                  </svg>
-                ) : (
-                  <svg 
-                    width="18" 
-                    height="18" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  >
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                    <line x1="12" y1="19" x2="12" y2="22" />
-                  </svg>
-                )}
-              </button>
-            )}
-
-            {/* Multi-line textarea */}
-            <textarea
-              ref={inputRef}
-              data-chat-input
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              disabled={inputDisabled}
-              aria-label="Message input"
-              rows={1}
-              className="flex-1 bg-transparent outline-none text-sm px-2 resize-none overflow-y-auto"
-              style={{ 
-                color: theme.text.high,
-                minHeight: '28px',
-                maxHeight: '84px', // 3 lines * 28px
-                lineHeight: '28px',
-                paddingTop: '0px',
-                paddingBottom: '0px',
-                fontSize: '14px',
-              }}
-            />
-
-            {/* Arrow send button - pill shaped */}
-            <button
-              onClick={handleSubmit}
-              disabled={!inputValue.trim() || isLoading || inputDisabled}
-              aria-label="Send message"
-              className={`p-2 rounded-full transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                !inputValue.trim() || isLoading || inputDisabled
-                  ? 'opacity-40 cursor-not-allowed'
-                  : 'hover:opacity-70 cursor-pointer'
-              }`}
-              style={{ 
-                backgroundColor: theme.background.ghost,
-                color: theme.text.medium,
-              }}
-            >
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+            ) : (
               <svg 
                 width="18" 
                 height="18" 
@@ -397,27 +271,177 @@ export const ChatPanel = memo(function ChatPanel({
                 strokeLinecap="round" 
                 strokeLinejoin="round"
               >
-                <path d="M12 19V5" />
-                <path d="M5 12l7-7 7 7" />
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="22" />
               </svg>
-            </button>
-          </div>
+            )}
+          </button>
+        )}
 
-          {/* Model + Context selectors - below input, centered */}
-          {(modelSelector || contextSelector || channelSelector || platformSelector || settingsTrigger) && (
-            <div className="flex items-center justify-center gap-0 mt-3">
-              {modelSelector}
-              {/* Prefer new contextSelector, fallback to legacy channel + platform */}
-              {contextSelector || (
-                <>
-                  {channelSelector}
-                  {platformSelector}
-                </>
-              )}
-              {settingsTrigger}
-            </div>
+        {/* Multi-line textarea */}
+        <textarea
+          ref={inputRef}
+          data-chat-input
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={inputDisabled}
+          aria-label="Message input"
+          rows={1}
+          className="flex-1 bg-transparent outline-none text-sm px-2 resize-none overflow-y-auto"
+          style={{ 
+            color: theme.text.high,
+            minHeight: '28px',
+            maxHeight: '84px', // 3 lines * 28px
+            lineHeight: '28px',
+            paddingTop: '0px',
+            paddingBottom: '0px',
+            fontSize: '14px',
+          }}
+        />
+
+        {/* Arrow send button - pill shaped */}
+        <button
+          onClick={handleSubmit}
+          disabled={!inputValue.trim() || isLoading || inputDisabled}
+          aria-label="Send message"
+          className={`p-2 rounded-full transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+            !inputValue.trim() || isLoading || inputDisabled
+              ? 'opacity-40 cursor-not-allowed'
+              : 'hover:opacity-70 cursor-pointer'
+          }`}
+          style={{ 
+            backgroundColor: theme.background.ghost,
+            color: theme.text.medium,
+          }}
+        >
+          <svg 
+            width="18" 
+            height="18" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="M12 19V5" />
+            <path d="M5 12l7-7 7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Model + Context selectors - below input, centered */}
+      {(modelSelector || contextSelector || channelSelector || platformSelector || settingsTrigger) && (
+        <div className="flex items-center justify-center gap-0 mt-3">
+          {modelSelector}
+          {/* Prefer new contextSelector, fallback to legacy channel + platform */}
+          {contextSelector || (
+            <>
+              {channelSelector}
+              {platformSelector}
+            </>
           )}
+          {settingsTrigger}
         </div>
+      )}
+    </div>
+  ), [lineCount, theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, inputDisabled, handleSubmit, isLoading, modelSelector, contextSelector, channelSelector, platformSelector, settingsTrigger]);
+
+  return (
+    <div 
+      className="flex flex-col h-full"
+      style={{ backgroundColor: theme.background.ghost }}
+      role="region"
+      aria-label="Chat conversation"
+      id={id}
+    >
+      {/* Centered container with 75% max-width on medium+ screens */}
+      <div className="w-full md:max-w-[75%] mx-auto h-full flex flex-col">
+        {messages.length === 0 && showEmptyState ? (
+          /* Empty State: Centered Layout */
+          <div 
+            className="flex-1 flex flex-col items-center justify-center p-4 gap-6 transition-all duration-300 ease-in-out"
+            style={{
+              animation: 'fadeIn 300ms ease-in-out',
+            }}
+          >
+            <p 
+              className="text-sm text-center max-w-xs"
+              style={{ 
+                color: theme.text.low,
+                animation: 'fadeIn 300ms ease-in-out',
+              }}
+              role="status"
+            >
+              {emptyStateMessage}
+            </p>
+            
+            {renderInputArea()}
+          </div>
+        ) : (
+          /* Active State: Scrollable Messages + Bottom Input */
+          <div 
+            className="h-full flex flex-col"
+            style={{
+              animation: 'fadeIn 300ms ease-in-out',
+            }}
+          >
+            {/* Messages Area */}
+            <div 
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto p-4 space-y-8"
+              role="log"
+              aria-live="polite"
+              aria-atomic="false"
+              aria-relevant="additions"
+              tabIndex={0}
+            >
+              <div role="list" aria-label="Messages">
+                {messages.map(renderMessage)}
+                <div ref={messagesEndRef} aria-hidden="true" />
+              </div>
+            </div>
+
+            {/* Loading Indicator */}
+            {isLoading && (
+              <div 
+                className="px-4 py-2"
+                role="status"
+                aria-live="polite"
+                aria-label="Generating response"
+              >
+                <div 
+                  className="flex items-center gap-2 text-sm"
+                  style={{ color: theme.text.medium }}
+                >
+                  <div className="flex gap-1" aria-hidden="true">
+                    <span 
+                      className="w-2 h-2 rounded-full animate-bounce" 
+                      style={{ backgroundColor: theme.accent, animationDelay: '0ms' }} 
+                    />
+                    <span 
+                      className="w-2 h-2 rounded-full animate-bounce" 
+                      style={{ backgroundColor: theme.accent, animationDelay: '150ms' }} 
+                    />
+                    <span 
+                      className="w-2 h-2 rounded-full animate-bounce" 
+                      style={{ backgroundColor: theme.accent, animationDelay: '300ms' }} 
+                    />
+                  </div>
+                  <span>Generating...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Input Area at Bottom */}
+            <div className="py-4 flex justify-center transition-all duration-300 ease-in-out">
+              {renderInputArea()}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

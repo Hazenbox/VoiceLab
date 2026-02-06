@@ -91,6 +91,16 @@ body.dark {
   @apply bg-zinc-500;
 }
 
+/* Fade-in animation for smooth transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Sound wave animation */
 @keyframes soundWave {
   0%, 100% {
