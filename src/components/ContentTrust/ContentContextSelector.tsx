@@ -60,6 +60,7 @@ export const ContentContextSelector: React.FC<ContentContextSelectorProps> = ({
         title="Ecosystem"
         disabled={disabled}
         compact={compact}
+        direction="up"
       />
       
       <SearchableDropdown
@@ -70,6 +71,7 @@ export const ContentContextSelector: React.FC<ContentContextSelectorProps> = ({
         title="Channel"
         disabled={disabled}
         compact={compact}
+        direction="up"
       />
       
       {showChannelDefaults && !compact && (

@@ -37,6 +37,8 @@ export interface SearchableDropdownProps {
   className?: string;
   /** Title shown at top of dropdown menu */
   title?: string;
+  /** Force dropdown direction (default: 'auto' - smart positioning) */
+  direction?: 'up' | 'down' | 'auto';
 }
 
 // =============================================================================
@@ -53,6 +55,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
   compact = false,
   className = '',
   title,
+  direction = 'auto',
 }: SearchableDropdownProps) {
   const theme = useThemeColors();
   const [isOpen, setIsOpen] = useState(false);
@@ -123,8 +126,14 @@ export const SearchableDropdown = memo(function SearchableDropdown({
     }
   }, [isOpen, shouldShowSearch, value, flatOptions]);
 
-  // Determine dropdown direction based on viewport space
+  // Determine dropdown direction based on viewport space or forced direction
   useEffect(() => {
+    if (direction !== 'auto') {
+      // Use forced direction
+      setDropdownDirection(direction);
+      return;
+    }
+    
     if (isOpen && containerRef.current && menuRef.current) {
       const triggerRect = containerRef.current.getBoundingClientRect();
       const menuHeight = menuRef.current.offsetHeight || 320; // fallback to max-h
@@ -139,7 +148,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
         setDropdownDirection('down');
       }
     }
-  }, [isOpen]);
+  }, [isOpen, direction]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -352,15 +361,22 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                   No results found
                 </div>
               ) : (
-                Object.entries(groupedOptions).map(([group, groupOpts]) => (
+                Object.entries(groupedOptions).map(([group, groupOpts], groupIndex) => (
                   <div key={group || '__ungrouped__'}>
+                    {/* Separator before group (except first) */}
+                    {groupIndex > 0 && (
+                      <div 
+                        className="my-1 mx-2 border-t"
+                        style={{ borderColor: theme.stroke.low }}
+                      />
+                    )}
+                    
                     {/* Group Header - match ModelSelector styling */}
                     {group && Object.keys(groupedOptions).length > 1 && (
                       <div
                         className="px-2 py-1 text-[10px] font-normal"
                         style={{
-                          color: theme.text.low,
-                          backgroundColor: theme.isLight ? '#f5f5f5' : '#2a2a2a',
+                          color: theme.text.high,
                         }}
                       >
                         {group}
