@@ -413,7 +413,7 @@ export const ChatPanel = memo(function ChatPanel({
               aria-relevant="additions"
               tabIndex={0}
             >
-              <div role="list" aria-label="Messages" className="space-y-8">
+              <div role="list" aria-label="Messages" className="space-y-4">
                 {messages.map(renderMessage)}
                 <div ref={messagesEndRef} aria-hidden="true" />
               </div>
