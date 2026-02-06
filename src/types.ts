@@ -42,8 +42,9 @@ export type Platform = 'notifications' | 'banner' | 'ads';
 // =============================================================================
 
 /**
- * 10 Ecosystems - Business context for content generation
+ * 14 Ecosystems - Business context for content generation
  * Replaces old Platform type for copy generation
+ * Source: Training 1.pdf, lines 1629-1737
  */
 export type EcosystemType = 
   | 'connectivity'   // Jio mobile, fiber, network
@@ -53,9 +54,15 @@ export type EcosystemType =
   | 'finance'        // JioPayments, banking
   | 'health'         // JioHealthHub, wellness
   | 'business'       // Enterprise, B2B
-  | 'support'        // Customer care
-  | 'internal'       // Employee communications
-  | 'government';    // G2C services
+  | 'work'           // Employee communications (renamed from 'internal')
+  | 'government'     // G2C services
+  // NEW - 5 Previously Missing Ecosystems
+  | 'education'      // Learning platforms, courses
+  | 'sports'         // Sports content, live streaming
+  | 'agriculture'    // Farmer services, rural
+  | 'energy'         // Solar, clean energy
+  | 'transport'      // Mobility, logistics
+  | 'support';       // Customer care (kept for compatibility)
 
 /**
  * 18 Channels - Output format for content generation

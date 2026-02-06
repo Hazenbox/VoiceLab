@@ -18,7 +18,8 @@ export type ValidationAgentId =
   | 'accessibility'
   | 'compliance'
   | 'style_consistency'
-  | 'brand_alignment';
+  | 'brand_alignment'
+  | 'readability';
 
 /**
  * Individual violation found by an agent (extends base Violation)
@@ -120,6 +121,7 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
     'compliance',
     'style_consistency',
     'brand_alignment',
+    'readability',
   ],
   skipPatternMatching: false,
   parallelExecution: true,
@@ -128,13 +130,15 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
 
 /**
  * Agent weights for score calculation
+ * Updated to include readability (Training 1.pdf requirement: Grade 8 readability)
  */
 export const AGENT_WEIGHTS: Record<ValidationAgentId, number> = {
-  gender_neutrality: 15,
-  inclusivity: 15,
-  cultural_sensitivity: 15,
+  gender_neutrality: 12,
+  inclusivity: 12,
+  cultural_sensitivity: 12,
   accessibility: 10,
-  compliance: 15,
-  style_consistency: 15,
-  brand_alignment: 15,
+  compliance: 14,
+  style_consistency: 14,
+  brand_alignment: 14,
+  readability: 12,  // Training 1.pdf: 100% of messages must test at ≤Grade 8
 };

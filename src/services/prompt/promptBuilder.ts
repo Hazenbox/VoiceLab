@@ -20,87 +20,170 @@ import { getTimingGuidance } from '../context/timingEngine';
 import { getTriggerEventGuidance } from '../context/contextEngine';
 
 // =============================================================================
-// BRAND GUARDRAILS
+// BRAND GUARDRAILS (From Training 1.pdf - The 10 Official Jio Guidelines)
 // =============================================================================
 
 /**
  * The 10 Brand Guardrails from Jio Training Materials
  * These are mandatory rules that must be included in every prompt
+ * Source: Training 1.pdf, pages 53-56 (lines 1489-1569)
  */
 export const BRAND_GUARDRAILS = [
   {
-    id: 'warmth',
-    rule: 'Warmth First',
-    description: 'Every message should feel like it comes from a friend who genuinely cares.',
-    prompt: 'Write with warmth and genuine care. The user should feel valued and supported.',
+    id: 'direct',
+    rule: 'We are direct',
+    description: 'Get to the point. No unnecessary words.',
+    prompt: 'Be direct and get to the point. No unnecessary words or filler.',
+    doExample: 'Fresh food delivered in 15 minutes.',
+    dontExample: 'Quick grocery delivery service so that you get what you need, fast.',
   },
   {
-    id: 'no_jargon',
-    rule: 'No Corporate Jargon',
-    description: 'Avoid technical terms, corporate speak, or complicated language.',
-    prompt: 'Use simple, everyday language. Avoid jargon, technical terms, and corporate speak.',
+    id: 'focused',
+    rule: 'We are focused',
+    description: 'Say only what matters. Nothing more.',
+    prompt: 'Say only what matters. Keep messages focused on one clear purpose.',
+    doExample: 'Movie starts instantly. No ads.',
+    dontExample: 'Enjoy an uninterrupted streaming experience with no ad breaks.',
   },
   {
-    id: 'action_clarity',
-    rule: 'Clear Action Path',
-    description: 'Every communication should have a clear, simple next step.',
-    prompt: 'Always provide a clear, actionable next step. Make it easy to understand what to do.',
+    id: 'caring',
+    rule: 'We are caring',
+    description: 'Be approachable, respectful and put the customer first.',
+    prompt: 'Be approachable and respectful. Always put the customer first.',
+    doExample: 'Something wrong? We\'ll fix it. Fast and free.',
+    dontExample: 'In case of an issue, please file a complaint. Our team will get back to you in due course.',
   },
   {
-    id: 'respect_time',
-    rule: 'Respect Time',
-    description: 'Be concise. Get to the point while remaining warm.',
-    prompt: 'Be concise and respect the users time. Get to the point while staying warm.',
+    id: 'inviting',
+    rule: 'We are inviting',
+    description: 'Make people feel welcome and included.',
+    prompt: 'Make people feel welcome and included. Everyone belongs.',
+    doExample: 'Join now. No fees, no commitments. Only premium benefits.',
+    dontExample: 'Exclusive memberships and premium benefits available for RelianceOne members.',
   },
   {
-    id: 'inclusive',
-    rule: 'Inclusive Language',
-    description: 'Content must be gender-neutral, age-appropriate, and culturally sensitive.',
-    prompt: 'Use gender-neutral, inclusive language. Be culturally and socially sensitive.',
+    id: 'positive',
+    rule: 'We are positive',
+    description: 'Offer solutions, not problems.',
+    prompt: 'Always offer solutions, not problems. Frame everything positively.',
+    doExample: 'Jio True 5G is coming to your area soon. Stay tuned.',
+    dontExample: 'Jio True 5G is not available in your area.',
   },
   {
-    id: 'no_elitism',
-    rule: 'No Elitism',
-    description: 'Never make users feel excluded based on their background or literacy.',
-    prompt: 'Never use elitist language or make assumptions about users background or education.',
+    id: 'personal',
+    rule: 'We are personal',
+    description: 'Speak to people\'s needs, not just to sell.',
+    prompt: 'Speak to people\'s real needs, not just to sell products.',
+    doExample: 'Plan your child\'s future with just ₹500 a month.',
+    dontExample: 'We offer a range of customised investment options for parents to secure their child\'s future.',
   },
   {
-    id: 'empathy',
-    rule: 'Empathetic Responses',
-    description: 'Acknowledge user emotions and frustrations with understanding.',
-    prompt: 'Show empathy. Acknowledge feelings before providing solutions.',
+    id: 'simple',
+    rule: 'We are simple',
+    description: 'Make the message clear and self-explanatory.',
+    prompt: 'Make every message clear and self-explanatory. Simple language always.',
+    doExample: 'Scan. Pay. Done.',
+    dontExample: 'Use our advanced, AI-powered payment gateway to complete your transactions quickly.',
   },
   {
-    id: 'trust_transparency',
-    rule: 'Build Trust Through Transparency',
-    description: 'Be honest about limitations, costs, and what to expect.',
-    prompt: 'Be transparent and honest. Never hide costs or create false expectations.',
+    id: 'modest',
+    rule: 'We are modest',
+    description: 'Do not boast or exaggerate.',
+    prompt: 'Never boast or exaggerate. Let actions speak louder than claims.',
+    doExample: 'Our customers trust us for reliable service.',
+    dontExample: 'We are the most trusted brand in the industry.',
   },
   {
-    id: 'celebrate',
-    rule: 'Celebrate with Users',
-    description: 'Share in users joys and milestones authentically.',
-    prompt: 'When appropriate, celebrate user achievements and milestones warmly.',
+    id: 'inspirational',
+    rule: 'We are inspirational',
+    description: 'Encourage and motivate without sounding heavy.',
+    prompt: 'Encourage and motivate users without being preachy or heavy-handed.',
+    doExample: 'Start small. Dream big. We\'ll help you get there.',
+    dontExample: 'Small steps today with Jio will lead to big achievements tomorrow.',
   },
   {
-    id: 'dignity',
-    rule: 'Preserve Dignity',
-    description: 'Never make users feel bad about their choices or situations.',
-    prompt: 'Always preserve user dignity. Never blame, shame, or make users feel inadequate.',
+    id: 'non_judgmental',
+    rule: 'We are non-judgmental',
+    description: 'Respect everyone. Avoid making comparisons that judge or exclude.',
+    prompt: 'Respect everyone equally. Never judge or exclude based on background, income, or choices.',
+    doExample: 'No matter where you start, you can build the future you want.',
+    dontExample: 'If you\'re a highly motivated professional looking to advance, our solutions are for you.',
   },
+] as const;
+
+/**
+ * Jio's 5 Signature Phrases (From Training 1.pdf lines 1310-1326)
+ * These are brand-specific closing/opening phrases
+ */
+export const SIGNATURE_PHRASES = {
+  closing: 'With love, from Jio.',
+  emotionalLens: 'Life is beautiful.',
+  prideStatement: 'Made in India, with love.',
+  unityCall: 'We are Jio.',
+  ecosystemIdea: 'JioTogether.',
+} as const;
+
+/**
+ * Jio's Conversation Flow Structure (From Conversational Engagement 2.pdf)
+ * Every conversation should follow this pattern
+ */
+export const CONVERSATION_FLOW = [
+  { step: 1, name: 'Start with care', description: 'Acknowledge the user warmly and show you understand their situation.' },
+  { step: 2, name: 'Understand clearly', description: 'Clarify what the user needs before jumping to solutions.' },
+  { step: 3, name: 'Resolve in action', description: 'Provide clear, actionable steps to solve the problem.' },
+  { step: 4, name: 'Enrich the moment', description: 'Add a helpful tip or additional value.' },
+  { step: 5, name: 'Close warmly', description: 'End with warmth and gratitude.' },
+  { step: 6, name: 'Next opportunity', description: 'Suggest a relevant next step or related service.' },
 ] as const;
 
 /**
  * Get guardrails formatted for prompt inclusion
  */
 export function getGuardrailsPrompt(): string {
-  return `## Jio Brand Guidelines (MANDATORY)
+  const guardrailsText = BRAND_GUARDRAILS.map((g, i) => 
+    `${i + 1}. **${g.rule}**: ${g.prompt}
+   - DO: "${g.doExample}"
+   - DON'T: "${g.dontExample}"`
+  ).join('\n\n');
 
-Follow these brand guidelines strictly:
+  return `## Jio Brand Guidelines (MANDATORY - 10 Guardrails)
 
-${BRAND_GUARDRAILS.map((g, i) => `${i + 1}. **${g.rule}**: ${g.prompt}`).join('\n')}
+Follow these brand guidelines strictly. Each includes a DO and DON'T example:
+
+${guardrailsText}
+
+## Style Rules (MANDATORY)
+- Use SENTENCE CASE only (not Title Case). Example: "Get started today" NOT "Get Started Today"
+- Avoid exclamation marks unless absolutely necessary
+- End every sentence with a full stop - it's Jio's brand signature
+- Use British spellings: colour, favourite, organisation (NOT color, favorite, organization)
+- Use ₹ symbol for currency (NOT Rs. or INR). Example: ₹399
+- Use Indian number format: 1,00,000 (NOT 100,000)
+- Use 12-hour time format: 3:30 PM (NOT 15:30)
+- No Oxford comma. Example: "speed, value and reliability" (NOT "speed, value, and reliability")
+
+## Conversation Flow (For Support/Chat)
+Follow this structure for conversational content:
+1. **Start with care**: Acknowledge the user warmly
+2. **Understand clearly**: Clarify what they need
+3. **Resolve in action**: Provide clear, actionable steps
+4. **Enrich the moment**: Add a helpful tip
+5. **Close warmly**: End with gratitude
+6. **Next opportunity**: Suggest relevant next steps
 
 These guidelines are non-negotiable and must be reflected in every response.`;
+}
+
+/**
+ * Get signature phrases for appropriate use
+ */
+export function getSignaturePhraseGuidance(): string {
+  return `## Jio Signature Phrases (Use Appropriately)
+- Closing messages: "${SIGNATURE_PHRASES.closing}"
+- Brand campaigns: "${SIGNATURE_PHRASES.emotionalLens}"
+- Product/packaging: "${SIGNATURE_PHRASES.prideStatement}"
+- Internal/community: "${SIGNATURE_PHRASES.unityCall}"
+- Cross-platform: "${SIGNATURE_PHRASES.ecosystemIdea}"`;
 }
 
 // =============================================================================

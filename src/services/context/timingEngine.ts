@@ -207,26 +207,33 @@ export interface TimeGuidance {
   restrictions: string[];
 }
 
+/**
+ * Time guidance aligned with Training 1.pdf timing rules
+ * Morning: 6am - 11am (hopeful, optimistic)
+ * Afternoon: 11am - 6pm (neutral, practical)
+ * Evening: 6pm - 10pm (warm, relaxed)
+ * Late Night: 10pm - 6am (urgent only)
+ */
 export const TIME_GUIDANCE: readonly TimeGuidance[] = [
   {
     timeOfDay: 'morning',
-    hours: '6am - 12pm',
-    tone: 'Energetic, motivating, fresh',
-    guidance: 'Good time for promotional content. Users are alert and receptive.',
+    hours: '6am - 11am',
+    tone: 'Hopeful, optimistic, fresh',
+    guidance: 'Good time for motivating content. Users are starting their day with energy.',
     restrictions: [],
   },
   {
     timeOfDay: 'afternoon',
-    hours: '12pm - 5pm',
-    tone: 'Quick, efficient, focused',
-    guidance: 'Users are busy. Keep messages brief and action-oriented.',
+    hours: '11am - 6pm',
+    tone: 'Neutral, practical, efficient',
+    guidance: 'Users are busy. Keep messages brief, practical, and action-oriented.',
     restrictions: [],
   },
   {
     timeOfDay: 'evening',
-    hours: '5pm - 10pm',
+    hours: '6pm - 10pm',
     tone: 'Warm, relaxed, conversational',
-    guidance: 'Family time. Tone can be warmer. Good for engagement content.',
+    guidance: 'Family time. Tone can be warmer. Good for engagement and entertainment content.',
     restrictions: [],
   },
   {
@@ -271,14 +278,18 @@ export const DAY_GUIDANCE: readonly DayGuidance[] = [
 // =============================================================================
 
 /**
- * Get current time of day
+ * Get current time of day (Training 1.pdf boundaries)
+ * Morning: 6am - 11am (hours 6-10)
+ * Afternoon: 11am - 6pm (hours 11-17)
+ * Evening: 6pm - 10pm (hours 18-21)
+ * Late Night: 10pm - 6am (hours 22-5)
  */
 export function getTimeOfDay(date: Date = new Date()): TimeOfDay {
   const hour = date.getHours();
   
-  if (hour >= 6 && hour < 12) return 'morning';
-  if (hour >= 12 && hour < 17) return 'afternoon';
-  if (hour >= 17 && hour < 22) return 'evening';
+  if (hour >= 6 && hour < 11) return 'morning';
+  if (hour >= 11 && hour < 18) return 'afternoon';
+  if (hour >= 18 && hour < 22) return 'evening';
   return 'late_night';
 }
 

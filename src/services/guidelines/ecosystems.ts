@@ -1,8 +1,9 @@
 /**
  * Ecosystem Registry
  * 
- * 10 Ecosystems representing different Jio business contexts.
+ * 14 Ecosystems representing different Jio business contexts.
  * Each ecosystem has a specific tone that guides content generation.
+ * Source: Training 1.pdf, lines 1629-1737
  * 
  * @module services/guidelines/ecosystems
  */
@@ -21,78 +22,116 @@ export interface Ecosystem {
 }
 
 /**
- * 10 Ecosystems - Complete registry
+ * 14 Ecosystems - Complete registry (From Training 1.pdf)
+ * Includes the 5 previously missing: Education, Sports, Agriculture, Energy, Transport
  */
 export const ECOSYSTEMS: readonly Ecosystem[] = [
   {
     id: 'connectivity',
     name: 'Connectivity',
     tone: 'Quick, crisp, confident',
-    description: 'Jio mobile, fiber, network services - keeping India connected',
+    description: 'Jio mobile, fiber, network services - keeping India connected. Mobility is about speed, ease and staying in control.',
     keywords: ['network', 'signal', 'data', 'recharge', 'plan', '5G', '4G', 'SIM'],
   },
   {
     id: 'home',
     name: 'Home',
     tone: 'Warm, familiar, relaxed',
-    description: 'JioFiber, home entertainment, smart home solutions',
+    description: 'JioFiber, home entertainment, smart home solutions. Home is about comfort, connection and family life.',
     keywords: ['fiber', 'broadband', 'wifi', 'router', 'home', 'family', 'streaming'],
   },
   {
     id: 'entertainment',
     name: 'Entertainment',
     tone: 'Playful, expressive, energetic',
-    description: 'JioCinema, JioTV, JioSaavn - entertainment for every mood',
+    description: 'JioCinema, JioTV, JioSaavn - entertainment for every mood. Spark joy and match the rhythm of pop culture.',
     keywords: ['movies', 'shows', 'music', 'streaming', 'watch', 'listen', 'live'],
   },
   {
     id: 'shopping',
     name: 'Shopping',
-    tone: 'Cheerful, helpful, straight-talking',
-    description: 'JioMart, retail, e-commerce - shopping made easy',
+    tone: 'Helpful, cheerful, straight-talking',
+    description: 'JioMart, retail, e-commerce - shopping made easy. Like a friendly assistant who makes life easier.',
     keywords: ['order', 'delivery', 'cart', 'discount', 'offer', 'grocery', 'buy'],
   },
   {
     id: 'finance',
     name: 'Finance',
     tone: 'Calm, clear, trustworthy',
-    description: 'JioPayments, banking, insurance - secure financial services',
+    description: 'JioPayments, banking, insurance - secure financial services. Financial decisions should feel empowering, not overwhelming.',
     keywords: ['payment', 'UPI', 'wallet', 'bank', 'insurance', 'loan', 'money'],
   },
   {
     id: 'health',
     name: 'Health',
     tone: 'Caring, steady, informed',
-    description: 'JioHealthHub, wellness, telemedicine - health at your fingertips',
+    description: 'JioHealthHub, wellness, telemedicine - health at your fingertips. Health needs clarity, empathy and trust.',
     keywords: ['doctor', 'medicine', 'health', 'wellness', 'appointment', 'pharmacy'],
   },
   {
     id: 'business',
     name: 'Business',
     tone: 'Sharp, professional, future-focused',
-    description: 'Enterprise solutions, B2B services - empowering businesses',
+    description: 'Enterprise solutions, B2B services - empowering businesses. Leaders value clarity, trust and results.',
     keywords: ['enterprise', 'business', 'cloud', 'solution', 'corporate', 'partner'],
   },
+  {
+    id: 'work',
+    name: 'Work',
+    tone: 'Respectful, sincere, supportive',
+    description: 'Employee communications, internal announcements, HR. Reflects culture that values people and growth.',
+    keywords: ['team', 'employee', 'announcement', 'policy', 'hr', 'training', 'career'],
+  },
+  {
+    id: 'government',
+    name: 'Government',
+    tone: 'Formal, respectful, precise',
+    description: 'G2C services, compliance communications, regulatory. Simplify systems for citizens, keep trust high, avoid jargon.',
+    keywords: ['government', 'compliance', 'regulatory', 'official', 'mandate', 'citizen'],
+  },
+  // NEW - 5 Previously Missing Ecosystems (From Training 1.pdf)
+  {
+    id: 'education',
+    name: 'Education',
+    tone: 'Encouraging, clear, inclusive',
+    description: 'Learning platforms, courses, skill development. Learning is for everyone, no matter where they start.',
+    keywords: ['learn', 'course', 'study', 'skill', 'education', 'class', 'student', 'teacher'],
+  },
+  {
+    id: 'sports',
+    name: 'Sports',
+    tone: 'Passionate, bold, energetic',
+    description: 'Sports content, live streaming, fantasy games. Sports is about movement, emotion and shared moments.',
+    keywords: ['cricket', 'match', 'game', 'sports', 'live', 'score', 'team', 'player'],
+  },
+  {
+    id: 'agriculture',
+    name: 'Agriculture',
+    tone: 'Grounded, simple, respectful',
+    description: 'Farmer services, agricultural solutions, rural connectivity. Speak to real work, real weather, real people.',
+    keywords: ['farm', 'crop', 'kisan', 'agriculture', 'rural', 'harvest', 'weather'],
+  },
+  {
+    id: 'energy',
+    name: 'Energy',
+    tone: 'Purposeful, clear, forward-looking',
+    description: 'Solar, clean energy, sustainability initiatives. Progress and sustainability matter most.',
+    keywords: ['solar', 'energy', 'green', 'sustainable', 'power', 'renewable', 'clean'],
+  },
+  {
+    id: 'transport',
+    name: 'Transport',
+    tone: 'Calm, clear, helpful',
+    description: 'Mobility solutions, logistics, transportation services. Journeys should feel seamless, not stressful.',
+    keywords: ['travel', 'transport', 'logistics', 'delivery', 'ride', 'commute', 'route'],
+  },
+  // Support kept for backward compatibility
   {
     id: 'support',
     name: 'Support',
     tone: 'Empathetic, patient, solution-focused',
     description: 'Customer care, troubleshooting, service requests',
     keywords: ['help', 'issue', 'problem', 'complaint', 'resolve', 'support', 'assist'],
-  },
-  {
-    id: 'internal',
-    name: 'Internal',
-    tone: 'Respectful, sincere, supportive',
-    description: 'Employee communications, internal announcements, HR',
-    keywords: ['team', 'employee', 'announcement', 'policy', 'hr', 'training'],
-  },
-  {
-    id: 'government',
-    name: 'Government',
-    tone: 'Formal, respectful, precise',
-    description: 'G2C services, compliance communications, regulatory',
-    keywords: ['government', 'compliance', 'regulatory', 'official', 'mandate'],
   },
 ] as const;
 

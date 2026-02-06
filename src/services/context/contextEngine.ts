@@ -29,21 +29,44 @@ import { getTimingContext, allowsPromotionalContent } from './timingEngine';
 import { createDefaultProfile } from '../guidelines/userProfile';
 
 // =============================================================================
-// TRIGGER EVENT CLASSIFICATION
+// TRIGGER EVENT CLASSIFICATION (Training 1.pdf - Complete Trigger Categories)
 // =============================================================================
 
 /**
  * Trigger event types that initiate communication
+ * Expanded based on Training 1.pdf to include all 13 categories
  */
 export type TriggerEvent = 
-  | 'user_initiated'      // User started the conversation
-  | 'transaction'         // Payment, order, booking
-  | 'system_alert'        // Service notifications
-  | 'marketing'           // Promotional content
-  | 'support_followup'    // Following up on support case
-  | 'reminder'            // Scheduled reminders
-  | 'milestone'           // Achievement, anniversary
-  | 'feedback_request';   // Asking for rating/review
+  // Original Events
+  | 'user_initiated'       // User started the conversation
+  | 'transaction'          // Payment, order, booking
+  | 'system_alert'         // Service notifications
+  | 'marketing'            // Promotional content
+  | 'support_followup'     // Following up on support case
+  | 'reminder'             // Scheduled reminders
+  | 'milestone'            // Achievement, anniversary
+  | 'feedback_request'     // Asking for rating/review
+  // NEW: Security & Safety Events
+  | 'security_alert'       // Login from new device, password change, OTP
+  | 'fraud_warning'        // Suspicious activity detected
+  | 'account_security'     // Account locked, verification required
+  // NEW: Lifecycle Events
+  | 'onboarding'           // Welcome, first-time user guidance
+  | 'activation'           // Service activated, feature enabled
+  | 'renewal'              // Subscription renewal, plan expiry
+  | 'churn_prevention'     // User hasn't engaged, win-back
+  // NEW: Platform & Device Events
+  | 'app_update'           // New version available
+  | 'feature_announcement' // New feature launched
+  | 'device_setup'         // New device connected, setup guidance
+  // NEW: Health/Education/Finance Events
+  | 'health_reminder'      // Medicine, appointment, wellness check
+  | 'learning_progress'    // Course milestone, certification
+  | 'financial_update'     // Investment update, statement ready
+  // NEW: Emotional & Social Events
+  | 'celebration'          // Birthday, festival, special day
+  | 'community_update'     // Group activity, social engagement
+  | 'empathy_response';    // Response to user frustration/complaint
 
 /**
  * Classify trigger event from context
@@ -58,14 +81,58 @@ export function classifyTriggerEvent(
     return 'user_initiated';
   }
   
+  // Security & Safety Events (highest priority)
+  if (/otp|one[-\s]?time|verification|login attempt|new device|suspicious|fraud|unauthorized/.test(lowerMsg)) {
+    return 'security_alert';
+  }
+  if (/account locked|blocked|compromised|unusual activity/.test(lowerMsg)) {
+    return 'account_security';
+  }
+  
   // Transaction keywords
-  if (/payment|order|booking|recharge|bill|invoice|receipt/.test(lowerMsg)) {
+  if (/payment|order|booking|recharge|bill|invoice|receipt|confirm/.test(lowerMsg)) {
     return 'transaction';
+  }
+  
+  // Lifecycle Events
+  if (/welcome|get started|first time|new user|onboarding/.test(lowerMsg)) {
+    return 'onboarding';
+  }
+  if (/activated|enabled|setup complete|ready to use/.test(lowerMsg)) {
+    return 'activation';
+  }
+  if (/renew|expir|subscription|plan ending|running out/.test(lowerMsg)) {
+    return 'renewal';
+  }
+  if (/miss you|come back|haven't seen you|inactive/.test(lowerMsg)) {
+    return 'churn_prevention';
+  }
+  
+  // Health/Education/Finance
+  if (/medicine|doctor|appointment|health|wellness|checkup/.test(lowerMsg)) {
+    return 'health_reminder';
+  }
+  if (/course|learning|chapter|lesson|quiz|certificate/.test(lowerMsg)) {
+    return 'learning_progress';
+  }
+  if (/portfolio|investment|mutual fund|statement|dividend/.test(lowerMsg)) {
+    return 'financial_update';
   }
   
   // Alert keywords
   if (/alert|warning|notice|update|service|outage|maintenance/.test(lowerMsg)) {
     return 'system_alert';
+  }
+  
+  // Platform & Device Events
+  if (/new version|update available|upgrade|app update/.test(lowerMsg)) {
+    return 'app_update';
+  }
+  if (/new feature|introducing|now available|just launched/.test(lowerMsg)) {
+    return 'feature_announcement';
+  }
+  if (/new device|setup|configure|connect your/.test(lowerMsg)) {
+    return 'device_setup';
   }
   
   // Support keywords
@@ -74,18 +141,29 @@ export function classifyTriggerEvent(
   }
   
   // Reminder keywords
-  if (/reminder|due|expires|renew|don't forget/.test(lowerMsg)) {
+  if (/reminder|due|don't forget/.test(lowerMsg)) {
     return 'reminder';
   }
   
-  // Milestone keywords
-  if (/congratulations|anniversary|milestone|achievement|special/.test(lowerMsg)) {
+  // Milestone/Celebration keywords
+  if (/birthday|anniversary|special day|congratulations/.test(lowerMsg)) {
+    return 'celebration';
+  }
+  if (/congratulations|milestone|achievement/.test(lowerMsg)) {
     return 'milestone';
   }
   
   // Feedback keywords
   if (/rate|review|feedback|survey|opinion|experience/.test(lowerMsg)) {
     return 'feedback_request';
+  }
+  
+  // Emotional/Social
+  if (/sorry to hear|we understand|apolog/.test(lowerMsg)) {
+    return 'empathy_response';
+  }
+  if (/group|community|together|joined/.test(lowerMsg)) {
+    return 'community_update';
   }
   
   // Default to marketing for outbound
@@ -97,6 +175,7 @@ export function classifyTriggerEvent(
  */
 export function getTriggerEventGuidance(event: TriggerEvent): string {
   const guidance: Record<TriggerEvent, string> = {
+    // Original Events
     user_initiated: 'User reached out - prioritize their intent. Be responsive and helpful.',
     transaction: 'Transaction context - be clear, confirm details, provide next steps.',
     system_alert: 'System alert - be informative, calm, provide resolution if applicable.',
@@ -105,6 +184,32 @@ export function getTriggerEventGuidance(event: TriggerEvent): string {
     reminder: 'Reminder - be helpful, not nagging. Provide easy action path.',
     milestone: 'Milestone celebration - be warm and celebratory. Make user feel valued.',
     feedback_request: 'Feedback request - be appreciative, make it easy to respond.',
+    
+    // Security & Safety Events (Training 1.pdf)
+    security_alert: 'Security alert - be calm but urgent. Clear action required. No marketing.',
+    fraud_warning: 'Fraud warning - serious tone. Immediate action. Contact support option.',
+    account_security: 'Account security - reassure user. Clear steps to resolve. Support available.',
+    
+    // Lifecycle Events (Training 1.pdf)
+    onboarding: 'Onboarding - warm welcome. Simple first steps. Build confidence.',
+    activation: 'Activation success - celebrate briefly. Show what\'s possible. Quick value.',
+    renewal: 'Renewal - transparent pricing. Value reminder. Easy decision path.',
+    churn_prevention: 'Win-back - no guilt. Remind value. Easy return path. Respect choice.',
+    
+    // Platform & Device Events (Training 1.pdf)
+    app_update: 'App update - highlight benefits. Simple upgrade path. No pressure.',
+    feature_announcement: 'New feature - show value clearly. Easy to try. No jargon.',
+    device_setup: 'Device setup - step-by-step. Patient tone. Support available.',
+    
+    // Health/Education/Finance Events (Training 1.pdf)
+    health_reminder: 'Health reminder - caring, not alarming. Privacy respected. Action clear.',
+    learning_progress: 'Learning progress - encouraging. Celebrate progress. Next step clear.',
+    financial_update: 'Financial update - precise, trustworthy. No pressure. Full transparency.',
+    
+    // Emotional & Social Events (Training 1.pdf)
+    celebration: 'Celebration - warm, genuine. No selling. Share joy.',
+    community_update: 'Community update - inclusive, friendly. Everyone belongs.',
+    empathy_response: 'Empathy response - acknowledge feeling. Apologize if needed. Fix it.',
   };
   
   return guidance[event];
