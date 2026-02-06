@@ -75,7 +75,7 @@ export const ChatPanel = memo(function ChatPanel({
   placeholder = 'What do you want to know?',
   onSaveAudio,
   showEmptyState = true,
-  emptyStateMessage = 'Start a conversation to generate copy',
+  emptyStateMessage = 'Hello! Let\'s craft something amazing together. What would you like to create today?',
   inputDisabled = false,
   id,
   onVoiceClick,
