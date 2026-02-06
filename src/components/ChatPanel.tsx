@@ -381,6 +381,11 @@ export const ChatPanel = memo(function ChatPanel({
               style={{ 
                 color: theme.text.low,
                 animation: 'fadeIn 300ms ease-in-out',
+                fontWeight: 800,
+                fontSize: '22px',
+                letterSpacing: '-0.3px',
+                width: '400px',
+                maxWidth: '400px',
               }}
               role="status"
             >
