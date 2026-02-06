@@ -406,14 +406,14 @@ export const ChatPanel = memo(function ChatPanel({
             {/* Messages Area */}
             <div 
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto p-4 space-y-8"
+              className="flex-1 overflow-y-auto p-4"
               role="log"
               aria-live="polite"
               aria-atomic="false"
               aria-relevant="additions"
               tabIndex={0}
             >
-              <div role="list" aria-label="Messages">
+              <div role="list" aria-label="Messages" className="space-y-8">
                 {messages.map(renderMessage)}
                 <div ref={messagesEndRef} aria-hidden="true" />
               </div>
