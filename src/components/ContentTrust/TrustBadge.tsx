@@ -5,6 +5,7 @@
  */
 
 import { memo } from 'react';
+import { Button } from '@marcelinodzn/ds-react';
 import type { TrustScore, TrustCertification } from '../../types';
 import { getCertificationBadge } from '../../services/trust';
 
@@ -75,22 +76,24 @@ export const TrustBadge = memo(function TrustBadge({
   );
 
   return (
-    <button
-      onClick={onClick}
-      className={`
-        inline-flex items-center justify-center rounded-full
-        transition-all duration-200
-        ${sizeClasses.container}
-        ${onClick ? 'cursor-pointer hover:scale-110' : 'cursor-default'}
-      `}
+    <Button
+      onPress={onClick}
+      isDisabled={!onClick}
+      appearance="secondary"
+      size="XS"
+      aria-label={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : 'Trust badge'}
       style={{
-        backgroundColor: colors.bg,
+        minWidth: 'auto',
+        width: size === 'sm' ? '24px' : size === 'lg' ? '32px' : '28px',
+        height: size === 'sm' ? '18px' : size === 'lg' ? '26px' : '22px',
+        padding: '0',
+        backgroundColor: 'transparent',
+        border: 'none',
+        borderRadius: '9999px',
       }}
-      title={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : undefined}
-      type="button"
     >
       <ShieldIcon />
-    </button>
+    </Button>
   );
 });
 
