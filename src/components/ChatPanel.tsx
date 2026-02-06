@@ -406,7 +406,7 @@ export const ChatPanel = memo(function ChatPanel({
             {/* Messages Area */}
             <div 
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto p-4"
+              className="flex-1 overflow-y-auto pt-6 px-4 pb-4"
               role="log"
               aria-live="polite"
               aria-atomic="false"
