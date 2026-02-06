@@ -305,27 +305,39 @@ export const ChatPanel = memo(function ChatPanel({
         />
 
         {/* Arrow send button - Jio DS Button (single type, primary, high emphasis) */}
-        <Button
-          onPress={handleSubmit}
-          isDisabled={!inputValue.trim() || isLoading || inputDisabled}
-          aria-label="Send message"
-          appearance="primary"
-          size="S"
-        >
-          <svg 
-            width="18" 
-            height="18" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
+        <div className="flex-shrink-0" style={{ width: '36px', height: '36px' }}>
+          <Button
+            onPress={handleSubmit}
+            isDisabled={!inputValue.trim() || isLoading || inputDisabled}
+            aria-label="Send message"
+            appearance="primary"
+            size="S"
+            style={{ 
+              width: '36px', 
+              height: '36px', 
+              minHeight: '36px',
+              padding: '0',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <path d="M12 19V5" />
-            <path d="M5 12l7-7 7 7" />
-          </svg>
-        </Button>
+            <svg 
+              width="18" 
+              height="18" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="M12 19V5" />
+              <path d="M5 12l7-7 7 7" />
+            </svg>
+          </Button>
+        </div>
       </div>
 
       {/* Model + Context selectors - below input, centered */}
