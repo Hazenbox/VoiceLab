@@ -255,12 +255,12 @@ export const AudioBubble = memo(function AudioBubble({
   
   return (
     <div
-      className={`flex flex-col gap-2 max-w-[85%] ${isUser ? 'ml-auto' : 'mr-auto'}`}
+      className={`flex flex-col gap-1.5 max-w-[55%] ${isUser ? 'ml-auto' : 'mr-auto'}`}
     >
-      {/* Audio Player */}
+      {/* Audio Player - Compact design */}
       <div
         className={`
-          flex items-center gap-3 px-3 py-2 rounded-2xl
+          flex items-center gap-2 px-2.5 py-1.5 rounded-2xl
           ${isUser ? 'rounded-br-md' : 'rounded-bl-md'}
         `}
         style={{
@@ -269,13 +269,13 @@ export const AudioBubble = memo(function AudioBubble({
         role="region"
         aria-label={`Audio message from ${role}`}
       >
-        {/* Play/Pause Button */}
+        {/* Play/Pause Button - Smaller */}
         <button
           onClick={togglePlayback}
           onKeyDown={handleKeyDown}
           disabled={playbackState === 'loading' || playbackState === 'error'}
           className={`
-            flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
+            flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center
             transition-all duration-150
             focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1
             ${playbackState === 'loading' ? 'animate-pulse' : ''}
@@ -292,29 +292,29 @@ export const AudioBubble = memo(function AudioBubble({
           }
         >
           {playbackState === 'loading' ? (
-            <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="32" strokeLinecap="round" />
             </svg>
           ) : playbackState === 'error' ? (
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           ) : playbackState === 'playing' ? (
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="4" width="4" height="16" rx="1" />
               <rect x="14" y="4" width="4" height="16" rx="1" />
             </svg>
           ) : (
-            <svg className="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-3.5 h-3.5 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z" />
             </svg>
           )}
         </button>
         
-        {/* Progress Bar and Time */}
-        <div className="flex-1 flex flex-col gap-1 min-w-0">
+        {/* Progress Bar and Time - Compact */}
+        <div className="flex-1 flex flex-col gap-0.5 min-w-0">
           {/* Progress Bar */}
           <div
             ref={progressBarRef}
@@ -351,11 +351,12 @@ export const AudioBubble = memo(function AudioBubble({
             />
           </div>
           
-          {/* Time Display */}
+          {/* Time Display - Smaller */}
           <div
-            className="flex justify-between text-xs"
+            className="flex justify-between"
             style={{
               color: isUser ? 'rgba(255,255,255,0.8)' : theme.text.low,
+              fontSize: '10px',
             }}
           >
             <span>{formatTime(currentTime)}</span>
@@ -363,12 +364,12 @@ export const AudioBubble = memo(function AudioBubble({
           </div>
         </div>
         
-        {/* Save Button (only for assistant messages) */}
+        {/* Save Button (only for assistant messages) - Smaller */}
         {!isUser && onSave && (
           <button
             onClick={onSave}
             className={`
-              flex-shrink-0 p-1.5 rounded-md
+              flex-shrink-0 p-1 rounded-md
               transition-colors duration-150
               hover:bg-black/5
               focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1
@@ -380,8 +381,8 @@ export const AudioBubble = memo(function AudioBubble({
             title="Save to library"
           >
             <svg
-              width="16"
-              height="16"
+              width="14"
+              height="14"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"

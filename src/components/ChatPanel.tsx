@@ -62,6 +62,12 @@ interface ChatPanelProps {
   // Settings trigger
   /** Settings icon to render below input at the end of dropdowns */
   settingsTrigger?: React.ReactNode;
+  
+  // Voice streaming props
+  /** Streaming user transcript (while user is speaking) */
+  streamingUserTranscript?: string;
+  /** Streaming AI response text (while AI is responding) */
+  streamingAIResponse?: string;
 }
 
 // =============================================================================
@@ -88,6 +94,9 @@ export const ChatPanel = memo(function ChatPanel({
   contextSelector,
   onTrustBadgeClick,
   settingsTrigger,
+  // Voice streaming props
+  streamingUserTranscript,
+  streamingAIResponse,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -97,10 +106,10 @@ export const ChatPanel = memo(function ChatPanel({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or streaming content updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, streamingUserTranscript, streamingAIResponse]);
 
   // Handle form submission
   const handleSubmit = useCallback(() => {
@@ -421,6 +430,42 @@ export const ChatPanel = memo(function ChatPanel({
             >
               <div role="list" aria-label="Messages" className="space-y-4">
                 {messages.map(renderMessage)}
+                
+                {/* Streaming User Transcript (while user is speaking) */}
+                {streamingUserTranscript && (
+                  <div className="flex justify-end" role="listitem">
+                    <div 
+                      className="max-w-[80%] px-4 py-2 rounded-2xl rounded-br-md"
+                      style={{ 
+                        backgroundColor: theme.stroke.low,
+                        color: theme.text.high,
+                      }}
+                    >
+                      <span>{streamingUserTranscript}</span>
+                      <span 
+                        className="inline-block w-0.5 h-4 ml-1 align-middle animate-pulse"
+                        style={{ backgroundColor: theme.text.medium }}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Streaming AI Response (while AI is responding) */}
+                {streamingAIResponse && (
+                  <div className="flex justify-start" role="listitem">
+                    <div 
+                      className="max-w-[80%] px-3 py-2"
+                      style={{ color: theme.text.high }}
+                    >
+                      <span>{streamingAIResponse}</span>
+                      <span 
+                        className="inline-block w-2 h-4 ml-1 align-middle animate-pulse rounded-sm"
+                        style={{ backgroundColor: theme.accent }}
+                      />
+                    </div>
+                  </div>
+                )}
+                
                 <div ref={messagesEndRef} aria-hidden="true" />
               </div>
             </div>

@@ -173,6 +173,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Conversation State
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [transcript, setTranscript] = useState('');
+  const [streamingAIResponse, setStreamingAIResponse] = useState('');
 
   // Chat Persistence - automatically syncs with localStorage
   const {
@@ -602,6 +603,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             console.log('AI response:', text);
             // Store response text to attach to audio message
             currentTurnRef.current.responseText = text;
+            // Show streaming AI response in real-time
+            setStreamingAIResponse(text);
           },
           onAudioReceived: (audioBuffer) => {
             console.log('Audio received:', audioBuffer.duration, 'seconds');
@@ -619,6 +622,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               currentTurnRef.current.userMessageId || undefined
             );
             addMessage(aiMessage);
+            
+            // Clear streaming AI response after message is created
+            setStreamingAIResponse('');
             
             // Reset turn tracking
             currentTurnRef.current = { userMessageId: null, responseText: '' };
@@ -959,20 +965,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       ? 'AI is speaking...'
                       : 'Error - tap to retry'}
                   </p>
-
-                  {/* Live transcript */}
-                  {transcript && (
-                    <div 
-                      className="max-w-md px-4 py-2 rounded-full text-sm text-center"
-                      style={{ 
-                        backgroundColor: theme.background.ghost,
-                        color: theme.text.high,
-                        border: `1px solid ${theme.stroke.low}`,
-                      }}
-                    >
-                      {transcript}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -993,6 +985,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   id={`${chatMode}-panel`}
                   onVoiceClick={() => handleModeChange(chatMode === 'voice' ? 'copy' : 'voice')}
                   voiceSupported={voiceSupported ?? true}
+                  // Voice streaming transcription props
+                  streamingUserTranscript={chatMode === 'voice' && appState === AppState.LISTENING ? transcript : undefined}
+                  streamingAIResponse={chatMode === 'voice' && appState === AppState.SPEAKING ? streamingAIResponse : undefined}
                   modelSelector={
                     <ModelSelector
                       value={chatMode === 'copy' ? selectedLLMProvider : selectedTalkLLMProvider}
