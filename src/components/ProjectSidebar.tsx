@@ -208,7 +208,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                         if (e.key === 'Escape') handleRenameCancel();
                       }}
                       onBlur={() => handleRenameSubmit(project.id)}
-                      className="flex-1 text-xs font-medium bg-transparent outline-none"
+                      className="flex-1 text-xs font-normal bg-transparent outline-none"
                       style={{ color: theme.text.high }}
                     />
                   </div>
@@ -236,7 +236,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                   >
                     <div className="flex-1 text-left">
                       <div 
-                        className="text-xs font-medium truncate"
+                        className="text-xs font-normal truncate"
                         style={{ color: theme.text.high }}
                       >
                         {project.name}
@@ -340,7 +340,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
           </svg>
           <span 
-            className="text-xs font-medium"
+            className="text-xs font-normal"
             style={{ color: theme.text.high }}
           >
             Library
@@ -384,7 +384,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             <span 
-              className="text-xs font-medium"
+              className="text-xs font-normal"
               style={{ color: theme.text.high }}
             >
               Usage
@@ -423,7 +423,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
             </svg>
             <span 
-              className="text-xs font-medium"
+              className="text-xs font-normal"
               style={{ color: isDesignSystemActive ? theme.accent : theme.text.high }}
             >
               Design System
@@ -460,7 +460,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             </svg>
           )}
           <span 
-            className="text-xs font-medium"
+            className="text-xs font-normal"
             style={{ color: theme.text.high }}
           >
             {colorMode === 'Light' ? 'Dark' : 'Light'} Mode

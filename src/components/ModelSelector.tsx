@@ -254,7 +254,7 @@ export function ModelSelector({
             {/* Section: Chat Models */}
             {ttsProviders.length > 0 && (
               <div 
-                className="px-2 py-1 text-[10px] font-medium"
+                className="px-2 py-1 text-[10px] font-normal"
                 style={{ color: theme.text.low }}
               >
                 Chat Models
@@ -335,7 +335,7 @@ export function ModelSelector({
                 
                 {/* Section: Voice Models */}
                 <div 
-                  className="px-2 py-1 text-[10px] font-medium"
+                  className="px-2 py-1 text-[10px] font-normal"
                   style={{ color: theme.text.low }}
                 >
                   Voice Models

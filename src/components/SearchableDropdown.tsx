@@ -221,7 +221,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
         onClick={handleToggle}
         disabled={disabled}
         className={`
-          w-full flex items-center justify-end gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors
+          w-full flex items-center justify-end gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-normal transition-colors
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80 cursor-pointer'}
         `}
         style={{ 
@@ -273,7 +273,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
             {/* Title Header */}
             {title && (
               <div
-                className="px-2 py-1 text-[10px] font-medium"
+                className="px-2 py-1 text-[10px] font-normal"
                 style={{ color: theme.text.low }}
               >
                 {title}
@@ -345,7 +345,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                     {/* Group Header - match ModelSelector styling */}
                     {group && Object.keys(groupedOptions).length > 1 && (
                       <div
-                        className="px-2 py-1 text-[10px] font-medium"
+                        className="px-2 py-1 text-[10px] font-normal"
                         style={{
                           color: theme.text.low,
                           backgroundColor: theme.isLight ? '#f5f5f5' : '#2a2a2a',
