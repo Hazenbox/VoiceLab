@@ -287,13 +287,17 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
           >
             <div className="grid grid-cols-2 gap-4 mb-4">
               <InfoCard 
-                title="Ecosystem (10 Types)"
+                title="Ecosystem (14 Types)"
                 items={[
-                  'Connectivity - Jio mobile, fiber',
-                  'Entertainment - JioCinema, JioTV',
-                  'Finance - JioPayments, banking',
-                  'Shopping - JioMart, retail',
-                  'Support - Customer care',
+                  'Connectivity - Jio mobile, fiber, 5G',
+                  'Entertainment - JioCinema, JioTV, JioSaavn',
+                  'Finance - JioPayments, banking, insurance',
+                  'Shopping - JioMart, retail, e-commerce',
+                  'Health - JioHealthHub, telemedicine',
+                  'Education - Learning platforms, courses',
+                  'Sports - Live streaming, fantasy games',
+                  'Agriculture - Farmer services, rural',
+                  'Energy - Solar, clean energy',
                   'And 5 more...'
                 ]}
                 icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
@@ -316,15 +320,33 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               <InfoCard 
                 title="Navarasa Emotion Detection"
                 items={[
-                  'Shringara - Joy, gratitude',
-                  'Karuna - Compassion, empathy',
-                  'Raudra - Frustration (calm response)',
-                  'Bhayanaka - Anxiety (reassuring)',
-                  'Shanta - Calm, neutral',
-                  'Auto-detected from your message!'
+                  'Shringara - Love & Affection',
+                  'Hasya - Joy & Amusement',
+                  'Karuna - Compassion & Sadness',
+                  'Raudra - Anger & Frustration',
+                  'Vira - Courage & Pride',
+                  'Bhayanaka - Fear & Anxiety',
+                  'Bibhatsa - Disgust & Aversion',
+                  'Adbhuta - Wonder & Curiosity',
+                  'Shanta - Peace & Calm'
                 ]}
                 icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
               />
+              <InfoCard 
+                title="Trigger Events (13 Types)"
+                items={[
+                  'Transaction - Payment, order, booking',
+                  'Security - OTP, login alerts, fraud',
+                  'Lifecycle - Onboarding, renewal, churn',
+                  'Platform - App update, new feature',
+                  'Health/Education/Finance - Reminders',
+                  'Emotional - Celebrations, empathy'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <InfoCard 
                 title="User Profile"
                 items={[
@@ -336,21 +358,18 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 ]}
                 icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
               />
-            </div>
-
-            <div 
-              className="p-4 rounded-lg"
-              style={{ 
-                backgroundColor: theme.background.ghost,
-                border: `1px solid ${theme.stroke.medium}`
-              }}
-            >
-              <h4 className="font-medium text-sm mb-2" style={{ color: theme.text.high }}>
-                Timing Context
-              </h4>
-              <p className="text-sm" style={{ color: theme.text.medium }}>
-                The system also considers time of day (morning/afternoon/evening/late night), day of week (weekday/weekend), and special occasions like festivals to tailor the response appropriately.
-              </p>
+              <InfoCard 
+                title="Timing Context"
+                items={[
+                  'Morning (6-11am) - Hopeful, optimistic',
+                  'Afternoon (11am-6pm) - Neutral, practical',
+                  'Evening (6-10pm) - Warm, relaxed',
+                  'Late Night (10pm-6am) - Urgent only',
+                  'Weekend - More playful, social',
+                  'Festivals - Celebratory tone'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+              />
             </div>
           </Section>
 
@@ -368,20 +387,20 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               }}
             >
               <h4 className="font-medium text-sm mb-3" style={{ color: theme.text.high }}>
-                10 Brand Guardrails (Always Applied)
+                10 Brand Guardrails (Training 1.pdf)
               </h4>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { num: 1, text: 'Warmth First - Feel like a caring friend' },
-                  { num: 2, text: 'No Corporate Jargon - Simple language' },
-                  { num: 3, text: 'Clear Action Path - Obvious next steps' },
-                  { num: 4, text: 'Respect Time - Be concise' },
-                  { num: 5, text: 'Inclusive Language - Gender-neutral' },
-                  { num: 6, text: 'No Elitism - Never exclude anyone' },
-                  { num: 7, text: 'Empathetic Responses - Acknowledge emotions' },
-                  { num: 8, text: 'Trust Transparency - Honest about limitations' },
-                  { num: 9, text: 'Celebrate with Users - Share in joys' },
-                  { num: 10, text: 'Preserve Dignity - Never shame or blame' },
+                  { num: 1, text: 'We are Direct - Get to the point, no filler' },
+                  { num: 2, text: 'We are Focused - Say only what matters' },
+                  { num: 3, text: 'We are Caring - Approachable, customer first' },
+                  { num: 4, text: 'We are Inviting - Make everyone feel welcome' },
+                  { num: 5, text: 'We are Positive - Offer solutions, not problems' },
+                  { num: 6, text: 'We are Personal - Speak to needs, not sell' },
+                  { num: 7, text: 'We are Simple - Clear, self-explanatory' },
+                  { num: 8, text: 'We are Modest - No boasting or exaggeration' },
+                  { num: 9, text: 'We are Inspirational - Encourage without preaching' },
+                  { num: 10, text: 'We are Non-judgmental - Respect everyone' },
                 ].map((item) => (
                   <div 
                     key={item.num}
@@ -400,8 +419,64 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <InfoCard 
+                title="Style & Grammar Rules"
+                items={[
+                  'Sentence case only (not Title Case)',
+                  'Avoid exclamation marks unless necessary',
+                  'British spellings (colour, favourite)',
+                  'Use ₹ symbol, Indian number format',
+                  '12-hour time format (3:30 PM)',
+                  'No Oxford comma'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+              />
+              <InfoCard 
+                title="Conversation Flow"
+                items={[
+                  '1. Start with care - Acknowledge warmly',
+                  '2. Understand - Clarify needs first',
+                  '3. Resolve - Provide clear action steps',
+                  '4. Enrich - Add a helpful tip',
+                  '5. Close warmly - End with gratitude',
+                  '6. Next opportunity - Suggest next steps'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>}
+              />
+            </div>
+
+            <div 
+              className="p-4 rounded-lg mb-4"
+              style={{ 
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`
+              }}
+            >
+              <h4 className="font-medium text-sm mb-2" style={{ color: theme.text.high }}>
+                Jio Signature Phrases
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'With love, from Jio.',
+                  'Life is beautiful.',
+                  'Made in India, with love.',
+                  'We are Jio.',
+                  'JioTogether.'
+                ].map((phrase) => (
+                  <span 
+                    key={phrase}
+                    className="text-xs px-2 py-1 rounded"
+                    style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
+                  >
+                    {phrase}
+                  </span>
+                ))}
+              </div>
+            </div>
+
             <p className="text-sm mb-4" style={{ color: theme.text.medium }}>
-              The prompt builder combines your message with the generation context, brand guardrails, channel-specific formatting rules, and emotion response strategies to create a comprehensive system prompt for the AI.
+              The prompt builder combines your message with the generation context, brand guardrails, channel-specific formatting rules, emotion response strategies, and vocabulary guidelines to create a comprehensive system prompt for the AI.
             </p>
           </Section>
 
@@ -526,7 +601,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
           <Section 
             number={6} 
             title="Content Trust Validation"
-            description="7 AI agents verify the response quality"
+            description="8 AI agents verify the response quality"
           >
             <div 
               className="p-4 rounded-lg mb-4"
@@ -536,27 +611,27 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 overflow: 'hidden'
               }}
             >
-              <svg width="100%" height="300" viewBox="0 0 800 300">
+              <svg width="100%" height="300" viewBox="0 0 900 300">
                 <DottedBackground color={theme.stroke.low} />
-                <rect x="0" y="0" width="800" height="300" fill="url(#dotted-pattern)" />
+                <rect x="0" y="0" width="900" height="300" fill="url(#dotted-pattern)" />
 
-                {/* 7 Agent Nodes */}
+                {/* 8 Agent Nodes */}
                 {[
-                  { name: 'Gender', badge: 'Neutrality', weight: '15%', x: 20, color: '#E0F2FE', textColor: '#0369A1' }, // Sky
-                  { name: 'Inclusivity', badge: 'Check', weight: '15%', x: 130, color: '#F0FDF4', textColor: '#15803D' }, // Green
-                  { name: 'Cultural', badge: 'Sensitivity', weight: '15%', x: 240, color: '#FEF3C7', textColor: '#B45309' }, // Amber
-                  { name: 'A11y', badge: 'Access', weight: '10%', x: 350, color: '#F3E8FF', textColor: '#7E22CE' }, // Purple
-                  { name: 'Compliance', badge: 'Legal', weight: '15%', x: 460, color: '#FCE7F3', textColor: '#BE185D' }, // Pink
-                  { name: 'Style', badge: 'Tone', weight: '15%', x: 570, color: '#FFEDD5', textColor: '#C2410C' }, // Orange
-                  { name: 'Brand', badge: 'Voice', weight: '15%', x: 680, color: '#E1EFFE', textColor: '#0284C7' }, // Light Blue
+                  { name: 'Gender', badge: 'Neutrality', weight: '12%', x: 10, color: '#E0F2FE', textColor: '#0369A1' },
+                  { name: 'Inclusivity', badge: 'Check', weight: '12%', x: 110, color: '#F0FDF4', textColor: '#15803D' },
+                  { name: 'Cultural', badge: 'Sensitivity', weight: '12%', x: 210, color: '#FEF3C7', textColor: '#B45309' },
+                  { name: 'A11y', badge: 'Access', weight: '10%', x: 310, color: '#F3E8FF', textColor: '#7E22CE' },
+                  { name: 'Compliance', badge: 'Legal', weight: '14%', x: 410, color: '#FCE7F3', textColor: '#BE185D' },
+                  { name: 'Style', badge: 'Tone', weight: '14%', x: 510, color: '#FFEDD5', textColor: '#C2410C' },
+                  { name: 'Brand', badge: 'Voice', weight: '14%', x: 610, color: '#E1EFFE', textColor: '#0284C7' },
+                  { name: 'Readability', badge: 'Grade 8', weight: '12%', x: 710, color: '#DCFCE7', textColor: '#166534' },
                 ].map((agent, index) => {
-                  // Calculate target x on the Trust Score node (distributed)
-                  const targetX = 325 + (index * 25); 
+                  const targetX = 350 + (index * 25); 
                   
                   return (
                     <g key={agent.name}>
                       <CurvedFlowArrow 
-                        startX={agent.x + 50} 
+                        startX={agent.x + 45} 
                         startY={90} 
                         endX={targetX} 
                         endY={200} 
@@ -565,7 +640,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                       <FlowNode 
                         x={agent.x} 
                         y={40} 
-                        width={100} 
+                        width={90} 
                         height={50} 
                         label={agent.name} 
                         sublabel={agent.weight}
@@ -584,7 +659,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 
                 {/* Trust Score Node */}
                 <FlowNode 
-                  x={300} 
+                  x={350} 
                   y={200} 
                   width={200} 
                   height={60} 
@@ -597,8 +672,35 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               </svg>
             </div>
 
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <InfoCard 
+                title="Validation Patterns (100+)"
+                items={[
+                  'Title case detection (sentence case only)',
+                  'British spelling enforcement',
+                  'Currency format (₹ symbol)',
+                  'Exclamation mark warnings',
+                  'Elitism patterns (ping us → message us)',
+                  'Fear-based messaging detection'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+              />
+              <InfoCard 
+                title="Readability Agent (NEW)"
+                items={[
+                  'Flesch-Kincaid Grade Level scoring',
+                  'Target: ≤ Grade 8 readability',
+                  'Long sentence detection (>25 words)',
+                  'Complex word flagging',
+                  'Sentence structure analysis',
+                  'Per Training 1.pdf requirement'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>}
+              />
+            </div>
+
             <p className="text-sm" style={{ color: theme.text.medium }}>
-              Each response is analyzed by 7 validation agents that check for gender neutrality, inclusivity, cultural sensitivity, accessibility, compliance, style consistency, and brand alignment. The weighted scores produce a final trust score that determines if the content is certified, needs review, or has issues.
+              Each response is analyzed by 8 validation agents that check for gender neutrality, inclusivity, cultural sensitivity, accessibility, compliance, style consistency, brand alignment, and readability. The weighted scores produce a final trust score that determines if the content is certified, needs review, or has issues.
             </p>
           </Section>
 
@@ -729,27 +831,27 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             description="See how different settings affect the output"
           >
             <ExampleComparison
-              title="Temperature Effect"
-              before={{ label: "Temperature: 0.2 (Focused)", content: "Your bill is Rs 599. Pay by March 5 to avoid service interruption. Use MyJio app or visit jio.com/pay." }}
-              after={{ label: "Temperature: 0.9 (Creative)", content: "Hey there! Just a quick heads up - your bill's chilling at Rs 599, waiting for you! Pop over to MyJio before the 5th and sort it out. Easy peasy!" }}
+              title="Brand Guardrails Applied"
+              before={{ label: "❌ Title Case, Wrong Currency", content: "Light Up Your Home With JioFiber! Get Rs. 100,000 Off Now!" }}
+              after={{ label: "✓ Sentence case, ₹ symbol", content: "Light up your home with JioFiber. Get ₹1,00,000 off now." }}
             />
 
             <ExampleComparison
               title="Channel Effect"
-              before={{ label: "SMS (160 chars)", content: "Jio: Your 2GB/day plan expires tomorrow. Recharge now at jio.com to stay connected! Reply HELP for assistance." }}
-              after={{ label: "Customer Care Chat", content: "Namaste! I noticed your current plan is expiring tomorrow. No worries though - I'm here to help you find the perfect recharge option. Would you like me to show you some plans that match your usage? We have some great offers running right now!" }}
+              before={{ label: "SMS (160 chars)", content: "Jio: Your 2GB/day plan expires tomorrow. Recharge now at jio.com to stay connected. Reply HELP for assistance." }}
+              after={{ label: "Customer Care Chat", content: "Namaste. I noticed your current plan is expiring tomorrow. No worries though - I am here to help you find the perfect recharge option. Would you like me to show you some plans that match your usage? We have some great offers running right now." }}
             />
 
             <ExampleComparison
               title="Ecosystem Effect"
-              before={{ label: "Finance (Calm, trustworthy)", content: "Your JioPay transaction of Rs 2,500 was successful. Reference: JIO123456. Your updated balance is Rs 15,420. For any concerns, we're here 24/7." }}
-              after={{ label: "Entertainment (Playful, energetic)", content: "Woohoo! You just unlocked premium access! Get ready for unlimited movies, shows, and live sports. Your entertainment journey starts NOW - grab some popcorn and dive in!" }}
+              before={{ label: "Finance (Calm, trustworthy)", content: "Your JioPay transaction of ₹2,500 was successful. Reference: JIO123456. Your updated balance is ₹15,420. For any concerns, we are here 24/7." }}
+              after={{ label: "Entertainment (Playful, energetic)", content: "You just unlocked premium access. Get ready for unlimited movies, shows, and live sports. Your entertainment journey starts now - grab some popcorn and dive in." }}
             />
 
             <ExampleComparison
-              title="Emotion Detection"
-              before={{ label: "User frustrated (Raudra)", content: "I completely understand your frustration, and I'm truly sorry for the inconvenience. Let me personally look into this right away and make sure we get it sorted. Here's exactly what I'm doing to fix this..." }}
-              after={{ label: "User excited (Shringara)", content: "That's fantastic news! We're so happy to hear that! Your excitement is contagious and we love being part of this moment with you. Here's something extra special to celebrate..." }}
+              title="Emotion Detection (Navarasa)"
+              before={{ label: "User frustrated (Raudra)", content: "I am truly sorry. This is not the experience you deserve. I am personally going to make sure this is resolved today. Here is exactly what we are doing to fix this." }}
+              after={{ label: "User grateful (Shringara)", content: "Thank you for being with us. It means the world to us. Here is a little something to show our appreciation." }}
             />
           </Section>
 
