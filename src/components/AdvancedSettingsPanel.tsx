@@ -29,6 +29,7 @@ import { LabeledSlider } from './LabeledSlider';
 import { Slider } from './Slider';
 import { Toggle } from './Toggle';
 import { SearchableDropdown } from './SearchableDropdown';
+import { TooltipIcon } from './TooltipIcon';
 import { useThemeColors } from '../theme';
 // Design system context removed - now using single Jio DS
 import { getEcosystemOptions, getChannelOptions, getLanguageOptions, getRegionOptions } from '../services/guidelines';
@@ -257,24 +258,10 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 >
                   Greeting
                 </label>
-                <div
-                  className="cursor-help"
-                  title="The first message the AI says when starting a conversation"
-                >
-                  <svg 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 16 16" 
-                    fill="none"
-                    style={{ opacity: 0.5 }}
-                  >
-                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </div>
+                <TooltipIcon tooltip="The first message the AI says when starting a conversation" />
               </div>
               <div className="scaled-textarea-wrapper">
-                <div style={{ maxHeight: '80px', overflow: 'hidden' }}>
+                <div style={{ maxHeight: '80px', overflow: 'auto' }}>
                   <TextArea
                     value={config.greeting}
                     onChange={(value: string) => onConfigChange({ ...config, greeting: value })}
@@ -367,21 +354,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                   Default Ecosystem
                 </label>
-                <div
-                  className="cursor-help"
-                  title="Pre-selects the product category for new content"
-                >
-                  <svg 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 16 16" 
-                    fill="none"
-                    style={{ opacity: 0.5 }}
-                  >
-                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </div>
+                <TooltipIcon tooltip="Pre-selects the product category for new content" />
               </div>
               <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
@@ -399,21 +372,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                   Default Channel
                 </label>
-                <div
-                  className="cursor-help"
-                  title="Pre-selects the content format for new content"
-                >
-                  <svg 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 16 16" 
-                    fill="none"
-                    style={{ opacity: 0.5 }}
-                  >
-                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </div>
+                <TooltipIcon tooltip="Pre-selects the content format for new content" />
               </div>
               <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
@@ -431,21 +390,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                   Default Language
                 </label>
-                <div
-                  className="cursor-help"
-                  title="Pre-selects the language for content generation"
-                >
-                  <svg 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 16 16" 
-                    fill="none"
-                    style={{ opacity: 0.5 }}
-                  >
-                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </div>
+                <TooltipIcon tooltip="Pre-selects the language for content generation" />
               </div>
               <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
@@ -463,21 +408,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                   Default Region
                 </label>
-                <div
-                  className="cursor-help"
-                  title="Pre-selects regional preferences for content"
-                >
-                  <svg 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 16 16" 
-                    fill="none"
-                    style={{ opacity: 0.5 }}
-                  >
-                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </div>
+                <TooltipIcon tooltip="Pre-selects regional preferences for content" />
               </div>
               <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
@@ -508,21 +439,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                   Validation Strictness
                 </label>
-                <div
-                  className="cursor-help"
-                  title="Lenient = fewer warnings, Strict = catches more potential issues"
-                >
-                  <svg 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 16 16" 
-                    fill="none"
-                    style={{ opacity: 0.5 }}
-                  >
-                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </div>
+                <TooltipIcon tooltip="Lenient = fewer warnings, Strict = catches more potential issues" />
               </div>
               <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown

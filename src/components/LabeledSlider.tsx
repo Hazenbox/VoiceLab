@@ -36,6 +36,15 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
   const theme = useThemeColors();
   const [showTooltip, setShowTooltip] = React.useState(false);
   
+  // Smart width calculation based on content length
+  const getTooltipWidth = (text: string) => {
+    const length = text.length;
+    if (length < 40) return '180px';      // Short text
+    if (length < 80) return '240px';      // Medium text
+    if (length < 120) return '280px';     // Long text
+    return '320px';                        // Very long text
+  };
+  
   // Surface-Minimal: Always use #F5F5F5 for light mode, #262626 for dark mode
   const inactiveBg = theme.isLight ? '#F5F5F5' : '#262626';
   
@@ -71,11 +80,13 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
             </div>
             {showTooltip && (
               <div
-                className="absolute left-0 top-full mt-1 z-50 px-2 py-1.5 rounded text-xs whitespace-normal max-w-xs"
+                className="absolute left-0 top-full mt-1 z-50 px-2 py-1.5 rounded text-xs whitespace-normal"
                 style={{
                   backgroundColor: theme.isLight ? '#262626' : '#f5f5f5',
                   color: theme.isLight ? '#ffffff' : '#000000',
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  width: getTooltipWidth(tooltip),
+                  maxWidth: '95vw',
                 }}
               >
                 {tooltip}
