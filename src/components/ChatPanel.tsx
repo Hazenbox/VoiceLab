@@ -368,6 +368,7 @@ export const ChatPanel = memo(function ChatPanel({
                 lineHeight: '28px',
                 paddingTop: '0px',
                 paddingBottom: '0px',
+                fontSize: '14px',
               }}
             />
 

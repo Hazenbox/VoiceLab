@@ -1028,7 +1028,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   settingsTrigger={
                     <button
                       onClick={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
-                      className="h-[28px] px-3 rounded-full flex items-center justify-center gap-1.5 transition-colors hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+                      className="w-[28px] h-[28px] rounded-full flex items-center justify-center transition-colors hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
                       style={{
                         backgroundColor: 'transparent',
                         color: theme.text.medium,
