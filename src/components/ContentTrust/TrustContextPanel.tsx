@@ -21,6 +21,7 @@ import {
   getComplianceJustification,
 } from '../../services/trust';
 import { getContextSummary } from '../../services/context';
+import { Accordion } from '../ui/Accordion';
 
 interface TrustContextPanelProps {
   isOpen: boolean;
@@ -135,23 +136,6 @@ const ShieldCheckIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 /**
- * Chevron icon for collapsible sections
- */
-const ChevronIcon: React.FC<{ isOpen: boolean; className?: string }> = ({ isOpen, className }) => (
-  <svg 
-    className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} ${className || ''}`} 
-    width="16" 
-    height="16" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2"
-  >
-    <polyline points="6 9 12 15 18 9" />
-  </svg>
-);
-
-/**
  * Content Preview - Shows the analyzed content
  */
 const ContentPreview: React.FC<{ content: string }> = ({ content }) => {
@@ -165,47 +149,6 @@ const ContentPreview: React.FC<{ content: string }> = ({ content }) => {
       style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
     >
       "{content}"
-    </div>
-  );
-};
-
-/**
- * Collapsible Section - Expandable content area
- */
-const CollapsibleSection: React.FC<{
-  title: string;
-  defaultOpen?: boolean;
-  badge?: string | number;
-  children: React.ReactNode;
-}> = ({ title, defaultOpen = false, badge, children }) => {
-  const theme = useThemeColors();
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  
-  return (
-    <div className="border rounded-lg overflow-hidden" style={{ borderColor: theme.stroke.low }}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors"
-        style={{ backgroundColor: theme.stroke.low }}
-      >
-        <span className="text-xs font-semibold" style={{ color: theme.text.high }}>{title}</span>
-        <div className="flex items-center gap-2">
-          {badge !== undefined && (
-            <span 
-              className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-              style={{ backgroundColor: '#00A859', color: '#ffffff' }}
-            >
-              {badge}
-            </span>
-          )}
-          <ChevronIcon isOpen={isOpen} />
-        </div>
-      </button>
-      {isOpen && (
-        <div className="p-3" style={{ backgroundColor: theme.background.ghost }}>
-          {children}
-        </div>
-      )}
     </div>
   );
 };
@@ -322,30 +265,32 @@ const ComplianceJustificationSection: React.FC<{
       </div>
       
       {/* Guardrails Followed (Collapsible) */}
-      <CollapsibleSection 
+      <Accordion 
         title="Brand Guardrails Followed" 
         defaultOpen={false}
         badge={`${followedCount}/10`}
+        variant="card"
       >
         <div>
           {guardrailsFollowed.map(g => (
             <GuardrailItem key={g.id} guardrail={g} />
           ))}
         </div>
-      </CollapsibleSection>
+      </Accordion>
       
       {/* Validation Rules Passed (Collapsible) */}
-      <CollapsibleSection 
+      <Accordion 
         title="Validation Rules Applied" 
         defaultOpen={false}
         badge={totalAgentRulesPassed}
+        variant="card"
       >
         <div>
           {validationsPassed.map(v => (
             <ValidationAgentItem key={v.agentId} validation={v} />
           ))}
         </div>
-      </CollapsibleSection>
+      </Accordion>
     </div>
   );
 };
@@ -451,10 +396,11 @@ export const TrustContextPanel = memo(function TrustContextPanel({
               )}
               
               {/* Score Breakdown - Collapsible */}
-              <CollapsibleSection 
+              <Accordion 
                 title="Score Breakdown" 
                 defaultOpen={false}
                 badge={explanation.agentBreakdown.length}
+                variant="card"
               >
                 <div>
                   {explanation.agentBreakdown.map(agent => (
@@ -462,7 +408,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                       status={agent.status} violations={agent.violations} />
                   ))}
                 </div>
-              </CollapsibleSection>
+              </Accordion>
             </div>
           )}
           

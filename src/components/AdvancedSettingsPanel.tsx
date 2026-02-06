@@ -10,7 +10,7 @@
  * 4. Appearance - Theme, design system
  */
 
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback } from 'react';
 import type { 
   VoiceGender, 
   ColorMode, 
@@ -33,6 +33,7 @@ import { useThemeColors } from '../theme';
 // Design system context removed - now using single Jio DS
 import { getEcosystemOptions, getChannelOptions, getLanguageOptions, getRegionOptions } from '../services/guidelines';
 import { TextArea } from '@marcelinodzn/ds-react';
+import { Accordion } from './ui/Accordion';
 
 // =============================================================================
 // Types
@@ -80,53 +81,8 @@ interface AdvancedSettingsPanelProps {
   onShowDesignSystem?: () => void;
 }
 
-// =============================================================================
-// Collapsible Section
-// =============================================================================
-
-interface SectionProps {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}
-
-const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = false }) => {
-  const theme = useThemeColors();
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  
-  return (
-    <div className="overflow-visible">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-2 text-left transition-colors hover:opacity-80"
-        style={{ color: theme.text.medium }}
-      >
-        <div className="flex items-center gap-2">
-          <span className="w-4 h-4">{icon}</span>
-          <span className="text-xs font-semibold">{title}</span>
-        </div>
-        <svg
-          className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          style={{ color: theme.text.medium }}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      
-      {isOpen && (
-        <div className="px-4 pt-3 pb-3 space-y-4">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
-
 // Inline components removed - now using dedicated Slider and Toggle components
+// Section component replaced with shared Accordion component
 
 // =============================================================================
 // Icons
@@ -284,7 +240,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto py-3 space-y-0">
           {/* Voice Settings Section - Merged Voice & TTS with Conversation Settings */}
-          <Section title="Voice Settings" icon={<VoiceIcon />} defaultOpen>
+          <Accordion title="Voice Settings" icon={<VoiceIcon />} defaultOpen>
             <VoiceSelector
               value={voiceGender}
               onChange={onVoiceGenderChange}
@@ -346,7 +302,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               onChange={(value) => onConfigChange({ ...config, maxResponseLength: value as ResponseLength })}
               disabled={disabled}
             />
-          </Section>
+          </Accordion>
           
           {/* Separator */}
           <div className="py-1.5">
@@ -354,7 +310,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </div>
           
           {/* Chat Settings Section */}
-          <Section title="Chat Settings" icon={<ChatIcon />}>
+          <Accordion title="Chat Settings" icon={<ChatIcon />}>
             {/* Temperature */}
             <Slider
               label="Temperature"
@@ -384,7 +340,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               onChange={(checked) => onStreamResponseChange?.(checked)}
               disabled={disabled}
             />
-          </Section>
+          </Accordion>
           
           {/* Separator */}
           <div className="py-1.5">
@@ -392,7 +348,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </div>
           
           {/* Project Defaults Section */}
-          <Section title="Project Defaults" icon={<ProjectIcon />}>
+          <Accordion title="Project Defaults" icon={<ProjectIcon />}>
             <div className="flex items-center gap-2">
               <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                 Default Ecosystem
@@ -453,7 +409,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 />
               </div>
             </div>
-          </Section>
+          </Accordion>
           
           {/* Separator */}
           <div className="py-1.5">
@@ -461,7 +417,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </div>
           
           {/* Trust Settings Section */}
-          <Section title="Trust Settings" icon={<TrustIcon />}>
+          <Accordion title="Trust Settings" icon={<TrustIcon />}>
             <Slider
               label="Minimum Score"
               value={trustSettings.minimumScore}
@@ -503,7 +459,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               onChange={(checked) => updateTrustSetting('showDetailedBreakdown', checked)}
               disabled={disabled}
             />
-          </Section>
+          </Accordion>
           
           {/* Appearance Section removed - Theme and Design System moved to navigation */}
       </div>

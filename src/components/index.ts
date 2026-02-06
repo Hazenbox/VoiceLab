@@ -33,6 +33,9 @@ export { DropdownSectionHeader } from './DropdownSectionHeader';
 export { AIOrb } from './AIOrb';
 export type { AIOrbProps } from './AIOrb';
 
+// UI Components
+export { Accordion } from './ui/Accordion';
+
 // Content Trust System Components
 export { ContentContextSelector } from './ContentTrust';
 export { TrustBadge, InlineTrustBadge, TrustBadgeLoading } from './ContentTrust';
