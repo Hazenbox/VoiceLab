@@ -335,6 +335,25 @@ export interface ContextOverrides {
 }
 
 /**
+ * Detected product context - for transparency layer
+ * Separates WHAT (product/topic) from HOW (ecosystem tone)
+ */
+export interface DetectedProductContext {
+  /** Detected Jio product from user query */
+  productId: string | null;
+  /** Display name of detected product */
+  productName: string | null;
+  /** Detection confidence level */
+  confidence: 'high' | 'medium' | 'low' | 'none';
+  /** Keywords that triggered detection */
+  matchedKeywords: string[];
+  /** Ecosystem that would naturally fit this product */
+  suggestedEcosystem: EcosystemType | null;
+  /** True if detected product doesn't match selected ecosystem */
+  ecosystemMismatch: boolean;
+}
+
+/**
  * Complete generation context - all parameters for content generation
  */
 export interface GenerationContext {
@@ -358,6 +377,9 @@ export interface GenerationContext {
   
   // Track overrides for display in TrustContextPanel
   overrides?: ContextOverrides;
+  
+  // Detected product context (for transparency layer)
+  detectedProduct?: DetectedProductContext;
 }
 
 /**

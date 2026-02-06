@@ -23,7 +23,7 @@ import type {
 } from '../../types';
 
 import { DEFAULT_GENERATION_CONTEXT } from '../../types';
-import { getChannel, getChannelDefaults, getEcosystem, detectEcosystem } from '../guidelines';
+import { getChannel, getChannelDefaults, getEcosystem, detectProduct } from '../guidelines';
 import { detectEmotion } from '../guidelines/navarasa';
 import { getTimingContext, allowsPromotionalContent } from './timingEngine';
 import { createDefaultProfile } from '../guidelines/userProfile';
@@ -139,23 +139,41 @@ export interface ContextBuilderOptions {
 
 /**
  * Build complete generation context from options
+ * 
+ * KEY DESIGN PRINCIPLE (Industry Best Practice):
+ * - Ecosystem dropdown controls TONE (how content sounds)
+ * - User query controls TOPIC (what content is about)
+ * - Product detection provides transparency on what was understood
  */
 export function buildGenerationContext(options: ContextBuilderOptions): GenerationContext {
   // Start with defaults
   const context: GenerationContext = { ...DEFAULT_GENERATION_CONTEXT };
   const overrides: ContextOverrides = {};
   
-  // 1. Set ecosystem (from option or detect from message)
+  // 1. Set ecosystem from user selection (NOT auto-detected)
+  // Ecosystem now controls TONE only, not content topic
   if (options.ecosystem) {
     context.ecosystem = options.ecosystem;
-  } else if (options.userMessage) {
-    const detected = detectEcosystem(options.userMessage);
-    if (detected) {
-      context.ecosystem = detected;
-    }
+  }
+  // Note: We no longer auto-override ecosystem based on keywords
+  // The user's dropdown selection always controls the tone
+  
+  // 2. Detect product from user message (for transparency layer)
+  // This identifies WHAT the user wants to write about
+  if (options.userMessage) {
+    const productDetection = detectProduct(options.userMessage, context.ecosystem);
+    
+    context.detectedProduct = {
+      productId: productDetection.product?.id || null,
+      productName: productDetection.product?.displayName || null,
+      confidence: productDetection.confidence,
+      matchedKeywords: productDetection.matchedKeywords,
+      suggestedEcosystem: productDetection.suggestedEcosystem,
+      ecosystemMismatch: productDetection.ecosystemMismatch,
+    };
   }
   
-  // 2. Set channel and get defaults
+  // 3. Set channel and get defaults
   if (options.channel) {
     context.channel = options.channel;
     const channelDefaults = getChannelDefaults(options.channel);
@@ -164,7 +182,7 @@ export function buildGenerationContext(options: ContextBuilderOptions): Generati
     context.goal = channelDefaults.goal;
   }
   
-  // 3. Apply warmth/detail overrides
+  // 4. Apply warmth/detail overrides
   if (options.warmth !== undefined) {
     context.warmth = options.warmth;
     overrides.warmthOverridden = true;
@@ -177,14 +195,14 @@ export function buildGenerationContext(options: ContextBuilderOptions): Generati
     context.goal = options.goal;
   }
   
-  // 4. Set user profile
+  // 5. Set user profile
   const defaultProfile = createDefaultProfile();
   context.userProfile = {
     ...defaultProfile,
     ...options.userProfile,
   };
   
-  // 5. Detect or set emotion
+  // 6. Detect or set emotion
   if (options.emotion) {
     context.emotion = options.emotion;
     overrides.emotionOverridden = true;
@@ -192,7 +210,7 @@ export function buildGenerationContext(options: ContextBuilderOptions): Generati
     context.emotion = detectEmotion(options.userMessage);
   }
   
-  // 6. Get or set timing
+  // 7. Get or set timing
   if (options.timing) {
     context.timing = options.timing;
     overrides.timingOverridden = true;
@@ -200,12 +218,12 @@ export function buildGenerationContext(options: ContextBuilderOptions): Generati
     context.timing = getTimingContext();
   }
   
-  // 7. Store overrides for display
+  // 8. Store overrides for display
   if (Object.keys(overrides).length > 0) {
     context.overrides = overrides;
   }
   
-  // 8. Validate marketing restrictions
+  // 9. Validate marketing restrictions
   if (
     context.goal === 'Engagement' &&
     !allowsPromotionalContent(context.timing)
@@ -216,6 +234,18 @@ export function buildGenerationContext(options: ContextBuilderOptions): Generati
   }
   
   return context;
+}
+
+/**
+ * Detected product summary for UI display
+ */
+export interface DetectedProductSummary {
+  productName: string | null;
+  confidence: 'high' | 'medium' | 'low' | 'none';
+  matchedKeywords: string[];
+  ecosystemMismatch: boolean;
+  suggestedEcosystem: string | null;
+  displayText: string;
 }
 
 /**
@@ -231,6 +261,7 @@ export function getContextSummary(context: GenerationContext): {
   emotion: string;
   timing: string;
   overrides: string[];
+  detectedProduct: DetectedProductSummary;
 } {
   const ecosystem = getEcosystem(context.ecosystem);
   const channel = getChannel(context.channel);
@@ -240,6 +271,36 @@ export function getContextSummary(context: GenerationContext): {
   if (context.overrides?.detailOverridden) overridesList.push('Detail');
   if (context.overrides?.emotionOverridden) overridesList.push('Emotion');
   if (context.overrides?.timingOverridden) overridesList.push('Timing');
+  
+  // Build detected product summary
+  const detected = context.detectedProduct;
+  let detectedProductSummary: DetectedProductSummary;
+  
+  if (detected && detected.confidence !== 'none') {
+    const suggestedEcosystemName = detected.suggestedEcosystem 
+      ? getEcosystem(detected.suggestedEcosystem).name 
+      : null;
+    
+    detectedProductSummary = {
+      productName: detected.productName,
+      confidence: detected.confidence,
+      matchedKeywords: detected.matchedKeywords,
+      ecosystemMismatch: detected.ecosystemMismatch,
+      suggestedEcosystem: suggestedEcosystemName,
+      displayText: detected.ecosystemMismatch
+        ? `${detected.productName} (tone mismatch)`
+        : `${detected.productName}`,
+    };
+  } else {
+    detectedProductSummary = {
+      productName: null,
+      confidence: 'none',
+      matchedKeywords: [],
+      ecosystemMismatch: false,
+      suggestedEcosystem: null,
+      displayText: 'No specific product detected',
+    };
+  }
   
   return {
     ecosystem: `${ecosystem.name} - ${ecosystem.tone}`,
@@ -251,6 +312,7 @@ export function getContextSummary(context: GenerationContext): {
     emotion: `${context.emotion.charAt(0).toUpperCase() + context.emotion.slice(1)}`,
     timing: `${context.timing.timeOfDay}${context.timing.festival ? ` (${context.timing.festival})` : ''}, ${context.timing.dayOfWeek}`,
     overrides: overridesList,
+    detectedProduct: detectedProductSummary,
   };
 }
 

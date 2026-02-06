@@ -92,12 +92,87 @@ const ViolationItem: React.FC<{ violation: Violation }> = ({ violation }) => {
   );
 };
 
+/**
+ * Detected Product Badge - Shows product detection with mismatch warning
+ */
+const DetectedProductBadge: React.FC<{ 
+  productName: string | null; 
+  confidence: string;
+  ecosystemMismatch: boolean;
+  suggestedEcosystem: string | null;
+  matchedKeywords: string[];
+}> = ({ productName, confidence, ecosystemMismatch, suggestedEcosystem, matchedKeywords }) => {
+  const theme = useThemeColors();
+  
+  if (!productName) {
+    return (
+      <span className="text-xs" style={{ color: theme.text.low }}>
+        No specific product detected
+      </span>
+    );
+  }
+  
+  const confidenceColors = {
+    high: '#00A859',
+    medium: '#eab308',
+    low: '#f97316',
+  };
+  
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-center gap-1.5">
+        <span 
+          className="text-[10px] px-1.5 py-0.5 rounded"
+          style={{ 
+            backgroundColor: `${confidenceColors[confidence as keyof typeof confidenceColors] || '#6b7280'}20`,
+            color: confidenceColors[confidence as keyof typeof confidenceColors] || '#6b7280',
+          }}
+        >
+          {confidence}
+        </span>
+        <span className="text-xs font-medium" style={{ color: theme.text.high }}>
+          {productName}
+        </span>
+      </div>
+      {ecosystemMismatch && suggestedEcosystem && (
+        <span 
+          className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1"
+          style={{ 
+            backgroundColor: 'rgba(234, 179, 8, 0.15)',
+            color: '#eab308',
+          }}
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          Typically uses {suggestedEcosystem} tone
+        </span>
+      )}
+      {matchedKeywords.length > 0 && (
+        <div className="flex flex-wrap gap-1 justify-end">
+          {matchedKeywords.slice(0, 3).map((kw, i) => (
+            <span 
+              key={i}
+              className="text-[9px] px-1 py-0.5 rounded"
+              style={{ backgroundColor: theme.stroke.low, color: theme.text.low }}
+            >
+              {kw}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ContextSummarySection: React.FC<{ context: GenerationContext }> = ({ context }) => {
   const theme = useThemeColors();
   const summary = getContextSummary(context);
   
   const items = [
-    { label: 'Ecosystem', value: summary.ecosystem },
+    { label: 'Tone & Voice', value: summary.ecosystem },
     { label: 'Channel', value: summary.channel },
     { label: 'Warmth', value: summary.warmth },
     { label: 'Detail', value: summary.detail },
@@ -108,13 +183,45 @@ const ContextSummarySection: React.FC<{ context: GenerationContext }> = ({ conte
   ];
   
   return (
-    <div className="space-y-2">
-      {items.map(item => (
-        <div key={item.label} className="flex items-center justify-between py-1.5 border-b" style={{ borderColor: theme.stroke.low }}>
-          <span className="text-xs font-medium" style={{ color: theme.text.low }}>{item.label}</span>
-          <span className="text-xs text-right max-w-[60%] truncate" style={{ color: theme.text.high }}>{item.value}</span>
+    <div className="space-y-3">
+      {/* Detected Product Section - Transparency Layer */}
+      <div 
+        className="p-3 rounded-lg space-y-2"
+        style={{ backgroundColor: theme.stroke.low }}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: theme.text.high }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            Detected Topic
+          </span>
         </div>
-      ))}
+        <DetectedProductBadge 
+          productName={summary.detectedProduct.productName}
+          confidence={summary.detectedProduct.confidence}
+          ecosystemMismatch={summary.detectedProduct.ecosystemMismatch}
+          suggestedEcosystem={summary.detectedProduct.suggestedEcosystem}
+          matchedKeywords={summary.detectedProduct.matchedKeywords}
+        />
+        {summary.detectedProduct.ecosystemMismatch && (
+          <p className="text-[10px] leading-relaxed" style={{ color: theme.text.low }}>
+            Content will be about <strong>{summary.detectedProduct.productName}</strong> with 
+            the tone from your selected ecosystem setting.
+          </p>
+        )}
+      </div>
+      
+      {/* Other Context Items */}
+      <div>
+        {items.map(item => (
+          <div key={item.label} className="flex items-center justify-between py-1.5 border-b" style={{ borderColor: theme.stroke.low }}>
+            <span className="text-xs font-medium" style={{ color: theme.text.low }}>{item.label}</span>
+            <span className="text-xs text-right max-w-[60%] truncate" style={{ color: theme.text.high }}>{item.value}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

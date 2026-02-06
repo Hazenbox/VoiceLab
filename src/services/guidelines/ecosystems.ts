@@ -126,6 +126,205 @@ export function detectEcosystem(text: string): EcosystemType | null {
   return null;
 }
 
+// =============================================================================
+// PRODUCT DETECTION - Separate from ecosystem (for transparency layer)
+// =============================================================================
+
+/**
+ * Jio product definition for detection
+ */
+export interface JioProduct {
+  id: string;
+  name: string;
+  displayName: string;
+  keywords: string[];
+  relatedEcosystem: EcosystemType;
+  description: string;
+}
+
+/**
+ * Jio Products Registry - All detectable Jio products
+ */
+export const JIO_PRODUCTS: readonly JioProduct[] = [
+  // Connectivity Products
+  {
+    id: 'jio_recharge',
+    name: 'Jio Recharge',
+    displayName: 'Jio Recharge',
+    keywords: ['recharge', 'prepaid', 'top up', 'topup', 'validity', 'talktime'],
+    relatedEcosystem: 'connectivity',
+    description: 'Mobile recharge and prepaid plans',
+  },
+  {
+    id: 'jio_sim',
+    name: 'Jio SIM',
+    displayName: 'Jio SIM',
+    keywords: ['sim', 'new connection', 'port', 'mnp', 'number'],
+    relatedEcosystem: 'connectivity',
+    description: 'SIM cards and new connections',
+  },
+  {
+    id: 'jio_postpaid',
+    name: 'Jio Postpaid',
+    displayName: 'Jio Postpaid',
+    keywords: ['postpaid', 'bill', 'billing', 'monthly plan'],
+    relatedEcosystem: 'connectivity',
+    description: 'Postpaid mobile plans',
+  },
+  {
+    id: 'jio_5g',
+    name: 'Jio 5G',
+    displayName: 'Jio True 5G',
+    keywords: ['5g', 'true 5g', '5g network', '5g speed'],
+    relatedEcosystem: 'connectivity',
+    description: '5G network services',
+  },
+  // Home Products
+  {
+    id: 'jio_fiber',
+    name: 'Jio Fiber',
+    displayName: 'JioFiber',
+    keywords: ['fiber', 'fibre', 'jiofiber', 'broadband', 'home internet', 'wifi'],
+    relatedEcosystem: 'home',
+    description: 'Home broadband and fiber internet',
+  },
+  {
+    id: 'jio_airfiber',
+    name: 'Jio AirFiber',
+    displayName: 'Jio AirFiber',
+    keywords: ['airfiber', 'air fiber', 'wireless broadband'],
+    relatedEcosystem: 'home',
+    description: 'Wireless home broadband',
+  },
+  // Entertainment Products
+  {
+    id: 'jio_cinema',
+    name: 'JioCinema',
+    displayName: 'JioCinema',
+    keywords: ['jiocinema', 'cinema', 'movies', 'shows', 'watch', 'streaming', 'ott'],
+    relatedEcosystem: 'entertainment',
+    description: 'OTT streaming platform for movies and shows',
+  },
+  {
+    id: 'jio_tv',
+    name: 'JioTV',
+    displayName: 'JioTV',
+    keywords: ['jiotv', 'tv', 'live tv', 'channels', 'television'],
+    relatedEcosystem: 'entertainment',
+    description: 'Live TV streaming',
+  },
+  {
+    id: 'jio_saavn',
+    name: 'JioSaavn',
+    displayName: 'JioSaavn',
+    keywords: ['jiosaavn', 'saavn', 'music', 'songs', 'playlist', 'podcast'],
+    relatedEcosystem: 'entertainment',
+    description: 'Music and podcast streaming',
+  },
+  // Shopping Products
+  {
+    id: 'jio_mart',
+    name: 'JioMart',
+    displayName: 'JioMart',
+    keywords: ['jiomart', 'mart', 'grocery', 'shopping', 'delivery', 'order'],
+    relatedEcosystem: 'shopping',
+    description: 'Online grocery and shopping',
+  },
+  // Finance Products
+  {
+    id: 'jio_pay',
+    name: 'Jio Pay',
+    displayName: 'JioPay',
+    keywords: ['jiopay', 'pay', 'upi', 'payment', 'wallet', 'money transfer'],
+    relatedEcosystem: 'finance',
+    description: 'Digital payments and UPI',
+  },
+  // Health Products
+  {
+    id: 'jio_health',
+    name: 'JioHealthHub',
+    displayName: 'JioHealthHub',
+    keywords: ['jiohealth', 'health', 'doctor', 'medicine', 'consultation'],
+    relatedEcosystem: 'health',
+    description: 'Healthcare and telemedicine',
+  },
+  // Business Products
+  {
+    id: 'jio_business',
+    name: 'Jio Business',
+    displayName: 'Jio Business Solutions',
+    keywords: ['jio business', 'enterprise', 'corporate', 'b2b', 'iot'],
+    relatedEcosystem: 'business',
+    description: 'Enterprise and business solutions',
+  },
+] as const;
+
+/**
+ * Detection result for product identification
+ */
+export interface ProductDetectionResult {
+  product: JioProduct | null;
+  confidence: 'high' | 'medium' | 'low' | 'none';
+  matchedKeywords: string[];
+  suggestedEcosystem: EcosystemType | null;
+  ecosystemMismatch: boolean;
+}
+
+/**
+ * Detect Jio product mentioned in user text
+ * This is separate from ecosystem detection to support the transparency layer
+ */
+export function detectProduct(text: string, selectedEcosystem?: EcosystemType): ProductDetectionResult {
+  const lowerText = text.toLowerCase();
+  
+  let bestMatch: JioProduct | null = null;
+  let bestMatchCount = 0;
+  let matchedKeywords: string[] = [];
+  
+  for (const product of JIO_PRODUCTS) {
+    const matches = product.keywords.filter(kw => lowerText.includes(kw.toLowerCase()));
+    
+    if (matches.length > bestMatchCount) {
+      bestMatchCount = matches.length;
+      bestMatch = product;
+      matchedKeywords = matches;
+    }
+  }
+  
+  // Determine confidence based on match count
+  let confidence: ProductDetectionResult['confidence'] = 'none';
+  if (bestMatchCount >= 3) confidence = 'high';
+  else if (bestMatchCount >= 2) confidence = 'medium';
+  else if (bestMatchCount >= 1) confidence = 'low';
+  
+  // Check for ecosystem mismatch
+  const ecosystemMismatch = bestMatch !== null && 
+    selectedEcosystem !== undefined && 
+    bestMatch.relatedEcosystem !== selectedEcosystem;
+  
+  return {
+    product: bestMatch,
+    confidence,
+    matchedKeywords,
+    suggestedEcosystem: bestMatch?.relatedEcosystem || null,
+    ecosystemMismatch,
+  };
+}
+
+/**
+ * Get product by ID
+ */
+export function getProduct(id: string): JioProduct | undefined {
+  return JIO_PRODUCTS.find(p => p.id === id);
+}
+
+/**
+ * Get all products for a given ecosystem
+ */
+export function getProductsByEcosystem(ecosystem: EcosystemType): JioProduct[] {
+  return JIO_PRODUCTS.filter(p => p.relatedEcosystem === ecosystem);
+}
+
 /**
  * Get ecosystems for dropdown display
  */

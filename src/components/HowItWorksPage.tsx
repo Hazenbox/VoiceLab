@@ -183,7 +183,7 @@ const ExampleComparison = memo(function ExampleComparison({ title, before, after
 /**
  * Main HowItWorksPage Component
  */
-export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWorksPageProps) {
+export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: HowItWorksPageProps) {
   const theme = useThemeColors();
   
   return (

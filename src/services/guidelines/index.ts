@@ -16,6 +16,16 @@ export {
   type Ecosystem,
 } from './ecosystems';
 
+// Product Detection (for transparency layer)
+export {
+  JIO_PRODUCTS,
+  detectProduct,
+  getProduct,
+  getProductsByEcosystem,
+  type JioProduct,
+  type ProductDetectionResult,
+} from './ecosystems';
+
 // Channel Registry
 export {
   CONTENT_CHANNELS,

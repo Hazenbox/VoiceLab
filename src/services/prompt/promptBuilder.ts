@@ -330,7 +330,43 @@ ${formatting.formatting.map(r => `- ${r}`).join('\n')}`;
 // =============================================================================
 
 /**
+ * Build product context section for the prompt
+ * This implements the transparency layer - showing what product was detected
+ */
+function buildProductContextPrompt(context: GenerationContext): string {
+  const detected = context.detectedProduct;
+  
+  if (!detected || detected.confidence === 'none') {
+    return `## Content Topic
+
+No specific Jio product was detected in the query. Generate content based on the user's explicit request.`;
+  }
+  
+  let prompt = `## Content Topic (Detected from Query)
+
+**Detected Product**: ${detected.productName}
+**Detection Confidence**: ${detected.confidence}
+**Matched Keywords**: ${detected.matchedKeywords.join(', ')}`;
+
+  if (detected.ecosystemMismatch) {
+    prompt += `
+
+**Note**: The detected product (${detected.productName}) is typically associated with the "${detected.suggestedEcosystem}" ecosystem, but the user has selected a different tone. This is intentional - generate content about ${detected.productName} while using the selected tone and voice style.`;
+  }
+  
+  prompt += `
+
+**Important**: The user's query explicitly mentions this product. Generate content about ${detected.productName} regardless of the ecosystem setting. The ecosystem setting controls the TONE and VOICE STYLE, not the content topic.`;
+  
+  return prompt;
+}
+
+/**
  * Build complete system prompt from generation context
+ * 
+ * KEY DESIGN (Industry Best Practice):
+ * - Ecosystem controls TONE (how content sounds)
+ * - Detected Product controls TOPIC (what content is about)
  */
 export function buildSystemPrompt(context: GenerationContext): string {
   const ecosystem = getEcosystem(context.ecosystem);
@@ -344,6 +380,7 @@ export function buildSystemPrompt(context: GenerationContext): string {
   const toneInstructions = getToneInstructions(toneAdjustments);
   const emotionInstructions = getEmotionInstructions(context.emotion);
   const timingGuidance = getTimingGuidance(context.timing);
+  const productContext = buildProductContextPrompt(context);
   
   // Build the complete system prompt
   return `# Jio Content Generation System
@@ -352,9 +389,9 @@ You are generating content for Jio, India's largest digital services company. Yo
 
 ## Current Context
 
-**Ecosystem**: ${ecosystem.name}
+**Tone & Voice Style**: ${ecosystem.name}
 ${ecosystem.description}
-Tone: ${ecosystem.tone}
+Voice: ${ecosystem.tone}
 
 **Channel**: ${channel.name}
 ${channel.description}
@@ -363,6 +400,8 @@ Goal: ${context.goal}
 **Content Parameters**:
 - Warmth Level: ${context.warmth}/10 ${context.warmth >= 7 ? '(Very warm, friendly)' : context.warmth <= 3 ? '(Formal, professional)' : '(Balanced)'}
 - Detail Level: ${context.detail}/10 ${context.detail >= 7 ? '(Comprehensive, thorough)' : context.detail <= 3 ? '(Brief, concise)' : '(Moderate detail)'}
+
+${productContext}
 
 ${guardrails}
 
@@ -391,12 +430,14 @@ ${timingGuidance}
 ## Important Reminders
 
 1. Always maintain Jio's brand voice - warm, helpful, and trustworthy
-2. Adapt complexity based on user profile
-3. Match the emotional tone appropriately
-4. Follow channel-specific formatting strictly
-5. Ensure content is inclusive and respectful
-6. Be transparent about any limitations or costs
-7. Provide clear next steps when applicable
+2. **CRITICAL**: Generate content about the TOPIC from the user's query (detected product if any)
+3. **CRITICAL**: Use the TONE from the selected ecosystem setting (${ecosystem.name}: ${ecosystem.tone})
+4. Adapt complexity based on user profile
+5. Match the emotional tone appropriately
+6. Follow channel-specific formatting strictly
+7. Ensure content is inclusive and respectful
+8. Be transparent about any limitations or costs
+9. Provide clear next steps when applicable
 
 Generate content that makes users feel valued, understood, and supported.`;
 }
