@@ -73,7 +73,7 @@ export const ChatPanel = memo(function ChatPanel({
   onSendMessage, 
   isLoading,
   mode: _mode = 'copy',
-  placeholder = 'What do you want to know?',
+  placeholder = 'Ask or describe what you need...',
   onSaveAudio,
   showEmptyState = true,
   emptyStateMessage = 'What would you like to create today?',

@@ -982,9 +982,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   onSendMessage={handleSendChatMessage}
                   isLoading={isChatLoading}
                   mode={chatMode}
-                  placeholder={chatMode === 'copy' 
-                    ? 'What do you want to know?' 
-                    : 'Type a message...'}
+                  placeholder="Ask or describe what you need..."
                   onSaveAudio={handleSaveAudioFromChat}
                   showEmptyState={chatMode !== 'voice'}
                   emptyStateMessage={chatMode === 'copy'

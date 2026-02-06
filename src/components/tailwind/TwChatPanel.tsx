@@ -37,7 +37,7 @@ export function TwChatPanel({
   messages, 
   onSendMessage, 
   isLoading,
-  placeholder = 'What do you want to know?',
+  placeholder = 'Ask or describe what you need...',
   emptyStateMessage = 'Start a conversation to generate copy',
   inputDisabled = false,
   onVoiceClick,
