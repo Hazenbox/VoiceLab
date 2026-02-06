@@ -196,7 +196,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             </button>
           </div>
 
-          {/* Your projects title */}
+          {/* Your threads title */}
           <div 
             className="px-2 py-1.5 text-xs font-medium"
             style={{ 
@@ -204,7 +204,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               fontSize: '12px',
             }}
           >
-            Your projects
+            Your threads
           </div>
 
           <div className="space-y-0.5" role="listbox" aria-label="Projects list">
