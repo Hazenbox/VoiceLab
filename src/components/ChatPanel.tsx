@@ -92,6 +92,7 @@ export const ChatPanel = memo(function ChatPanel({
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
   const [lineCount, setLineCount] = useState(1);
+  const [hasMultipleLines, setHasMultipleLines] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -107,6 +108,7 @@ export const ChatPanel = memo(function ChatPanel({
       onSendMessage(inputValue.trim());
       setInputValue('');
       setLineCount(1);
+      setHasMultipleLines(false);
     }
   }, [inputValue, isLoading, inputDisabled, onSendMessage]);
 
@@ -132,6 +134,10 @@ export const ChatPanel = memo(function ChatPanel({
       } else {
         inputRef.current.style.height = `${maxHeight}px`;
       }
+      
+      // Detect multiple visual lines (including word-wrapped text)
+      // Single line height is approximately 34px (28px minHeight + 6px padding)
+      setHasMultipleLines(scrollHeight > 34);
     }
   }, []);
 
@@ -220,7 +226,7 @@ export const ChatPanel = memo(function ChatPanel({
   const renderInputArea = useCallback(() => (
     <div className="w-full px-4">
       <div 
-        className={`${lineCount === 1 ? 'rounded-full' : 'rounded-2xl'} flex items-center px-2 py-1.5 gap-1 transition-all duration-300`}
+        className={`${hasMultipleLines ? 'rounded-2xl' : 'rounded-full'} flex ${hasMultipleLines ? 'items-end' : 'items-center'} px-2 py-1.5 gap-1 transition-all duration-300`}
         style={{ 
           backgroundColor: theme.stroke.low,
         }}
@@ -357,7 +363,7 @@ export const ChatPanel = memo(function ChatPanel({
         </div>
       )}
     </div>
-  ), [lineCount, theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, inputDisabled, handleSubmit, isLoading, modelSelector, contextSelector, channelSelector, platformSelector, settingsTrigger]);
+  ), [hasMultipleLines, theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, inputDisabled, handleSubmit, isLoading, modelSelector, contextSelector, channelSelector, platformSelector, settingsTrigger]);
 
   return (
     <div 
