@@ -194,7 +194,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                 {explanation.summary}
               </p>
               <div>
-                <h3 className="text-xs font-semibold tracking-wider mb-3" style={{ color: theme.text.low }}>
+                <h3 className="text-xs font-semibold mb-3" style={{ color: theme.text.low }}>
                   Score Breakdown
                 </h3>
                 <div className="divide-y" style={{ borderColor: theme.stroke.low }}>
@@ -205,7 +205,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                 </div>
               </div>
               <div>
-                <h3 className="text-xs font-semibold tracking-wider mb-3" style={{ color: theme.text.low }}>
+                <h3 className="text-xs font-semibold mb-3" style={{ color: theme.text.low }}>
                   Recommendations
                 </h3>
                 <ul className="space-y-2">
