@@ -3,6 +3,7 @@ import { useProject } from '../context/ProjectContext';
 import { useAudioLibrary } from '../context/AudioLibraryContext';
 import { useThemeColors } from '../theme';
 import type { ColorMode } from '../types';
+import { Dropdown, type DropdownOption } from './Dropdown';
 
 interface ProjectSidebarProps {
   onNavigateToLibrary: () => void;
@@ -67,26 +68,160 @@ const SidebarNavItem = memo(function SidebarNavItem({
 });
 
 /**
+ * Simple Menu Component for Project Actions
+ * Reuses Dropdown component's menu styling
+ */
+interface ProjectMenuProps {
+  options: DropdownOption[];
+  onSelect: (value: string) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+const ProjectMenu = memo(function ProjectMenu({
+  options,
+  onSelect,
+  isOpen,
+  onToggle,
+}: ProjectMenuProps) {
+  const theme = useThemeColors();
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onToggle();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onToggle]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setFocusedIndex(prev => (prev + 1) % options.length);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setFocusedIndex(prev => (prev - 1 + options.length) % options.length);
+          break;
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          if (focusedIndex >= 0) {
+            onSelect(options[focusedIndex].value);
+            onToggle();
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          onToggle();
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, focusedIndex, options, onSelect, onToggle]);
+
+  return (
+    <div className="relative inline-block">
+      {/* Trigger Button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        className="p-1 rounded transition-opacity hover:opacity-70 cursor-pointer"
+        style={{ color: theme.text.low }}
+        aria-label="Project options"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+        </svg>
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div
+          ref={menuRef}
+          className="absolute z-50 min-w-[120px] rounded-lg overflow-hidden py-1 top-full mt-1 right-0"
+          style={{
+            backgroundColor: theme.background.ghost,
+            border: `1px solid ${theme.stroke.medium}`,
+          }}
+          role="menu"
+          aria-orientation="vertical"
+        >
+          {options.map((option, index) => {
+            const isFocused = index === focusedIndex;
+            
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect(option.value);
+                  onToggle();
+                }}
+                onMouseEnter={() => setFocusedIndex(index)}
+                className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs transition-colors mx-1 rounded-md cursor-pointer"
+                style={{
+                  width: 'calc(100% - 8px)',
+                  backgroundColor: isFocused ? theme.stroke.low : 'transparent',
+                  color: theme.text.high,
+                }}
+                role="menuitem"
+              >
+                {option.icon && (
+                  <span className="flex-shrink-0 w-4 h-4">{option.icon}</span>
+                )}
+                <span className="truncate">{option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+});
+
+/**
  * Sidebar Project Item Component
- * Specialized for project list items with more menu
+ * Specialized for project list items with dropdown menu
  */
 interface SidebarProjectItemProps {
   projectName: string;
   isActive: boolean;
   onClick: () => void;
-  onMoreClick: () => void;
-  showMoreMenu: boolean;
+  menuOptions: DropdownOption[];
+  onMenuAction: (action: string) => void;
 }
 
 const SidebarProjectItem = memo(function SidebarProjectItem({
   projectName,
   isActive,
   onClick,
-  onMoreClick,
-  showMoreMenu,
+  menuOptions,
+  onMenuAction,
 }: SidebarProjectItemProps) {
   const theme = useThemeColors();
   const [isHovered, setIsHovered] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <button
@@ -102,14 +237,14 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
         backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
         height: '32px',
         paddingLeft: '10px',
-        paddingRight: '10px',
+        paddingRight: '4px',
       }}
       aria-selected={isActive}
       role="option"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex-1 text-left">
+      <div className="flex-1 text-left pointer-events-none">
         <div 
           className="text-xs font-normal truncate"
           style={{ color: theme.text.high, fontSize: '13px' }}
@@ -118,20 +253,15 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
         </div>
       </div>
       
-      {/* More menu button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onMoreClick();
-        }}
-        className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity hover:opacity-70 cursor-pointer"
-        style={{ color: theme.text.low }}
-        aria-label="Project options"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-        </svg>
-      </button>
+      {/* More menu - only visible on hover */}
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+        <ProjectMenu
+          options={menuOptions}
+          onSelect={onMenuAction}
+          isOpen={isMenuOpen}
+          onToggle={() => setIsMenuOpen(!isMenuOpen)}
+        />
+      </div>
     </button>
   );
 });
@@ -156,32 +286,10 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   const { audios } = useAudioLibrary();
   
   
-  // More menu state
-  const [menuOpenFor, setMenuOpenFor] = useState<string | null>(null);
-  const [menuFocusIndex, setMenuFocusIndex] = useState(0);
+  // Rename state
   const [renamingProject, setRenamingProject] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
-  const menuRef = useRef<HTMLDivElement>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpenFor(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Reset focus index when menu opens
-  useEffect(() => {
-    if (menuOpenFor) {
-      setMenuFocusIndex(0);
-    }
-  }, [menuOpenFor]);
 
   // Focus rename input when renaming starts
   useEffect(() => {
@@ -196,13 +304,11 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     if (confirm('Are you sure you want to delete this project? All associated audios will be deleted.')) {
       deleteProject(id);
     }
-    setMenuOpenFor(null);
   }, [deleteProject]);
 
   const handleStartRename = useCallback((project: { id: string; name: string }) => {
     setRenamingProject(project.id);
     setRenameValue(project.name);
-    setMenuOpenFor(null);
   }, []);
 
   const handleRenameSubmit = useCallback((id: string) => {
@@ -219,46 +325,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     setRenameValue('');
   }, []);
 
-  // Keyboard navigation for more menu
-  useEffect(() => {
-    if (!menuOpenFor) return;
-    
-    const currentProject = projects.find(p => p.id === menuOpenFor);
-    const menuItemCount = projects.length > 1 ? 2 : 1; // Rename + Delete (if allowed)
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setMenuFocusIndex(prev => (prev + 1) % menuItemCount);
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setMenuFocusIndex(prev => (prev - 1 + menuItemCount) % menuItemCount);
-          break;
-        case 'Enter':
-        case ' ':
-          e.preventDefault();
-          if (menuFocusIndex === 0 && currentProject) {
-            handleStartRename(currentProject);
-          } else if (menuFocusIndex === 1 && menuOpenFor) {
-            handleDeleteProject(menuOpenFor);
-          }
-          break;
-        case 'Escape':
-          e.preventDefault();
-          setMenuOpenFor(null);
-          break;
-        case 'Tab':
-          e.preventDefault();
-          setMenuFocusIndex(prev => (prev + 1) % menuItemCount);
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [menuOpenFor, menuFocusIndex, projects, handleStartRename, handleDeleteProject]);
 
   return (
     <aside 
@@ -348,50 +414,18 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                       setActiveProject(project.id);
                       onProjectSelect?.();
                     }}
-                    onMoreClick={() => setMenuOpenFor(menuOpenFor === project.id ? null : project.id)}
-                    showMoreMenu={menuOpenFor === project.id}
-                  />
-                )}
-
-                {/* Dropdown menu */}
-                {menuOpenFor === project.id && (
-                  <div 
-                    ref={menuRef}
-                    className="absolute right-0 top-full mt-1 z-50 min-w-[100px] rounded-lg overflow-hidden py-1"
-                    style={{
-                      backgroundColor: theme.background.ghost,
-                      border: `1px solid ${theme.stroke.medium}`,
+                    menuOptions={[
+                      { value: 'rename', label: 'Rename' },
+                      ...(projects.length > 1 ? [{ value: 'delete', label: 'Delete' }] : []),
+                    ]}
+                    onMenuAction={(action) => {
+                      if (action === 'rename') {
+                        handleStartRename(project);
+                      } else if (action === 'delete') {
+                        handleDeleteProject(project.id);
+                      }
                     }}
-                    role="menu"
-                    aria-orientation="vertical"
-                  >
-                    <button
-                      onClick={() => handleStartRename(project)}
-                      onMouseEnter={() => setMenuFocusIndex(0)}
-                      className="w-full px-3 py-1.5 text-left text-xs transition-colors mx-0 cursor-pointer"
-                      style={{ 
-                        color: theme.text.high,
-                        backgroundColor: menuFocusIndex === 0 ? theme.stroke.low : 'transparent',
-                      }}
-                      role="menuitem"
-                    >
-                      Rename
-                    </button>
-                    {projects.length > 1 && (
-                      <button
-                        onClick={() => handleDeleteProject(project.id)}
-                        onMouseEnter={() => setMenuFocusIndex(1)}
-                        className="w-full px-3 py-1.5 text-left text-xs transition-colors mx-0 cursor-pointer"
-                        style={{ 
-                          color: theme.text.high,
-                          backgroundColor: menuFocusIndex === 1 ? theme.stroke.low : 'transparent',
-                        }}
-                        role="menuitem"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
+                  />
                 )}
               </div>
             ))}
