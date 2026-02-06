@@ -187,7 +187,7 @@ const InfoCard = memo(function InfoCard({ title, items, icon }: InfoCardProps) {
     <div 
       className="p-4 rounded-lg"
       style={{ 
-        backgroundColor: theme.background.subtle,
+        backgroundColor: theme.stroke.low,
         border: `1px solid ${theme.stroke.low}`
       }}
     >
@@ -232,7 +232,7 @@ const ExampleComparison = memo(function ExampleComparison({ title, before, after
     <div 
       className="p-4 rounded-lg mb-4"
       style={{ 
-        backgroundColor: theme.background.subtle,
+        backgroundColor: theme.stroke.low,
         border: `1px solid ${theme.stroke.low}`
       }}
     >
@@ -343,7 +343,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
           <div 
             className="mb-12 p-6 rounded-xl"
             style={{ 
-              backgroundColor: theme.background.subtle,
+              backgroundColor: theme.stroke.low,
               border: `1px solid ${theme.stroke.low}`
             }}
           >
@@ -386,7 +386,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg mb-4"
               style={{ 
-                backgroundColor: theme.background.subtle,
+                backgroundColor: theme.stroke.low,
                 border: `1px solid ${theme.stroke.low}`
               }}
             >
@@ -470,7 +470,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg"
               style={{ 
-                backgroundColor: theme.background.subtle,
+                backgroundColor: theme.stroke.low,
                 border: `1px solid ${theme.stroke.low}`
               }}
             >
@@ -492,7 +492,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg mb-4"
               style={{ 
-                backgroundColor: theme.background.subtle,
+                backgroundColor: theme.stroke.low,
                 border: `1px solid ${theme.stroke.low}`
               }}
             >
@@ -543,7 +543,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg mb-4"
               style={{ 
-                backgroundColor: theme.background.subtle,
+                backgroundColor: theme.stroke.low,
                 border: `1px solid ${theme.stroke.low}`
               }}
             >
@@ -627,7 +627,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg mb-4"
               style={{ 
-                backgroundColor: theme.background.subtle,
+                backgroundColor: theme.stroke.low,
                 border: `1px solid ${theme.stroke.low}`
               }}
             >
@@ -659,7 +659,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg mb-4"
               style={{ 
-                backgroundColor: theme.background.subtle,
+                backgroundColor: theme.stroke.low,
                 border: `1px solid ${theme.stroke.low}`
               }}
             >
@@ -735,7 +735,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg"
               style={{ 
-                backgroundColor: theme.background.subtle,
+                backgroundColor: theme.stroke.low,
                 border: `1px solid ${theme.stroke.low}`
               }}
             >
@@ -758,7 +758,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
               <div 
                 className="p-4 rounded-lg"
                 style={{ 
-                  backgroundColor: theme.background.subtle,
+                  backgroundColor: theme.stroke.low,
                   border: `1px solid ${theme.stroke.low}`
                 }}
               >
@@ -791,7 +791,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
               <div 
                 className="p-4 rounded-lg"
                 style={{ 
-                  backgroundColor: theme.background.subtle,
+                  backgroundColor: theme.stroke.low,
                   border: `1px solid ${theme.stroke.low}`
                 }}
               >
@@ -864,7 +864,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
               <div 
                 className="p-4 rounded-lg"
                 style={{ 
-                  backgroundColor: theme.background.subtle,
+                  backgroundColor: theme.stroke.low,
                   border: `1px solid ${theme.stroke.low}`
                 }}
               >
@@ -896,7 +896,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
               <div 
                 className="p-4 rounded-lg"
                 style={{ 
-                  backgroundColor: theme.background.subtle,
+                  backgroundColor: theme.stroke.low,
                   border: `1px solid ${theme.stroke.low}`
                 }}
               >
