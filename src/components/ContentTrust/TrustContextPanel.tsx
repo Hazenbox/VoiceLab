@@ -143,8 +143,13 @@ const ContentPreview: React.FC<{ content: string }> = ({ content }) => {
   
   return (
     <div 
-      className="p-3 rounded-lg text-sm leading-relaxed" 
-      style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
+      className="p-3 rounded-lg text-sm" 
+      style={{ 
+        backgroundColor: theme.stroke.low, 
+        color: theme.text.high,
+        letterSpacing: '-0.12px',
+        lineHeight: '22px'
+      }}
     >
       "{content}"
     </div>
