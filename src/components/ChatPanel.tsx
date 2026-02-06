@@ -301,6 +301,7 @@ export const ChatPanel = memo(function ChatPanel({
             paddingTop: '0px',
             paddingBottom: '0px',
             fontSize: '14px',
+            textAlign: 'center',
           }}
         />
 
