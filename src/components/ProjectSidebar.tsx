@@ -160,11 +160,47 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Projects List */}
         <div className="flex-1 overflow-y-auto px-2.5 py-1.5">
+          {/* New Project Button */}
+          <div className="mb-2">
+            <button
+              onClick={() => createProject()}
+              className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+              style={{
+                backgroundColor: 'transparent',
+                height: '32px',
+              }}
+              aria-label="Create new project"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = theme.stroke.low;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <svg 
+                className="w-4 h-4" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                style={{ color: theme.text.high }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              <span 
+                className="text-xs font-normal"
+                style={{ color: theme.text.high, fontSize: '13px' }}
+              >
+                New
+              </span>
+            </button>
+          </div>
+
           {/* Your projects title */}
           <div 
             className="px-2 py-1.5 text-xs font-medium"
             style={{ 
-              color: theme.text.medium,
+              color: theme.text.low,
               fontSize: '12px',
             }}
           >
@@ -298,40 +334,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         className="p-2.5 space-y-0.5"
         style={{ borderTop: `1px solid ${theme.stroke.low}` }}
       >
-        {/* New Project Button */}
-        <button
-          onClick={() => createProject()}
-          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
-          style={{
-            backgroundColor: 'transparent',
-            height: '32px',
-          }}
-          aria-label="Create new project"
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = theme.stroke.low;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-        >
-          <svg 
-            className="w-4 h-4" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            style={{ color: theme.text.high }}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          <span 
-            className="text-xs font-normal"
-            style={{ color: theme.text.high, fontSize: '13px' }}
-          >
-            New
-          </span>
-        </button>
-
         <button
           onClick={onNavigateToLibrary}
           className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors group cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
