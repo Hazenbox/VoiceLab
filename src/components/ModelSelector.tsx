@@ -203,20 +203,32 @@ export function ModelSelector({
 
   return (
     <div className={`relative ${className}`} ref={containerRef}>
-      {/* Trigger Button - Naked style (transparent bg, text + chevron only) */}
+      {/* Trigger Button - Standardized 28px pill-shaped style */}
       <button
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`
-          flex items-center gap-1 text-xs
+          h-[28px] px-3 rounded-full
+          flex items-center gap-1.5 text-xs font-normal
           transition-colors
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-90'}
         `}
         style={{
+          backgroundColor: isOpen ? theme.stroke.low : 'transparent',
           color: theme.text.medium,
         }}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
+        onMouseEnter={(e) => {
+          if (!disabled) {
+            e.currentTarget.style.backgroundColor = theme.stroke.low;
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!disabled && !isOpen) {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }
+        }}
       >
         <span className="truncate">
           {displayText}
@@ -224,7 +236,7 @@ export function ModelSelector({
         
         {/* Dropdown arrow */}
         <svg
-          className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-3 h-3 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
