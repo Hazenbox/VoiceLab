@@ -295,12 +295,12 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 Greeting
               </label>
               <div className="scaled-textarea-wrapper">
-                <div style={{ maxHeight: '90px', overflow: 'hidden' }}>
+                <div style={{ maxHeight: '80px', overflow: 'hidden' }}>
                   <TextArea
                     value={config.greeting}
                     onChange={(value: string) => onConfigChange({ ...config, greeting: value })}
                     isDisabled={disabled}
-                    rows={3}
+                    rows={2}
                     size="S"
                     placeholder="Initial greeting message..."
                   />
@@ -316,7 +316,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                   .scaled-textarea-wrapper textarea {
                     font-size: 14px !important;
                     padding: 8px !important;
-                    min-height: 70px !important;
+                    min-height: 56px !important;
                     width: 100% !important;
                     box-sizing: border-box !important;
                   }
