@@ -18,6 +18,7 @@ import { useThemeColors } from '../theme';
 import { MessageContent } from './MessageContent';
 import { AudioBubble } from './AudioBubble';
 import { TrustBadge } from './ContentTrust';
+import { Button } from '@marcelinodzn/ds-react';
 
 // =============================================================================
 // Types
@@ -178,12 +179,13 @@ export const ChatPanel = memo(function ChatPanel({
       >
         {isUser ? (
           <div
-            className={`max-w-[80%] px-4 pt-1.5 pb-0 ${
+            className={`max-w-[80%] px-4 pt-1.5 ${
               message.content.split('\n').length > 1 || message.content.length > 50 ? 'rounded-2xl' : 'rounded-full'
             }`}
             style={{
               backgroundColor: theme.stroke.low,
               color: theme.text.high,
+              paddingBottom: '3px',
             }}
           >
             <MessageContent content={message.content} role={message.role} />
@@ -302,20 +304,13 @@ export const ChatPanel = memo(function ChatPanel({
           }}
         />
 
-        {/* Arrow send button - pill shaped */}
-        <button
-          onClick={handleSubmit}
-          disabled={!inputValue.trim() || isLoading || inputDisabled}
+        {/* Arrow send button - Jio DS Button (single type, primary, high emphasis) */}
+        <Button
+          onPress={handleSubmit}
+          isDisabled={!inputValue.trim() || isLoading || inputDisabled}
           aria-label="Send message"
-          className={`p-2 rounded-full transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-            !inputValue.trim() || isLoading || inputDisabled
-              ? 'opacity-40 cursor-not-allowed'
-              : 'hover:opacity-70 cursor-pointer'
-          }`}
-          style={{ 
-            backgroundColor: theme.background.ghost,
-            color: theme.text.medium,
-          }}
+          appearance="primary"
+          size="S"
         >
           <svg 
             width="18" 
@@ -330,7 +325,7 @@ export const ChatPanel = memo(function ChatPanel({
             <path d="M12 19V5" />
             <path d="M5 12l7-7 7 7" />
           </svg>
-        </button>
+        </Button>
       </div>
 
       {/* Model + Context selectors - below input, centered */}

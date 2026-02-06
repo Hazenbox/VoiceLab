@@ -350,7 +350,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         {/* Projects List */}
         <div className="flex-1 overflow-y-auto px-2.5 py-1.5">
           {/* New Project Button */}
-          <div className="mb-2">
+          <div className="mb-4">
             <Button
               onPress={() => createProject()}
               appearance="primary"

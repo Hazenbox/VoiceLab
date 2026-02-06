@@ -20,25 +20,21 @@ const BADGE_COLORS: Record<TrustCertification, {
   bg: string;
   border: string;
   text: string;
-  icon: string;
 }> = {
   certified: {
     bg: 'rgba(34, 197, 94, 0.15)',
     border: 'rgba(34, 197, 94, 0.4)',
     text: '#22c55e',
-    icon: '✓',
   },
   review_recommended: {
     bg: 'rgba(234, 179, 8, 0.15)',
     border: 'rgba(234, 179, 8, 0.4)',
     text: '#eab308',
-    icon: '!',
   },
   issues_found: {
     bg: 'rgba(239, 68, 68, 0.15)',
     border: 'rgba(239, 68, 68, 0.4)',
     text: '#ef4444',
-    icon: '✕',
   },
 };
 
@@ -62,6 +58,22 @@ export const TrustBadge = memo(function TrustBadge({
   const sizeClasses = SIZES[size];
   const badge = getCertificationBadge(certification);
   
+  // Shield icon with functional color based on score
+  const ShieldIcon = () => (
+    <svg 
+      width={size === 'sm' ? '12' : size === 'lg' ? '16' : '14'} 
+      height={size === 'sm' ? '12' : size === 'lg' ? '16' : '14'}
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke={colors.text}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  );
+
   return (
     <button
       onClick={onClick}
@@ -73,19 +85,11 @@ export const TrustBadge = memo(function TrustBadge({
       `}
       style={{
         backgroundColor: colors.bg,
-        border: `1px solid ${colors.border}`,
       }}
       title={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : undefined}
       type="button"
     >
-      <span className={`font-bold leading-none ${sizeClasses.text}`} style={{ color: colors.text }}>
-        {colors.icon}
-      </span>
-      {showScore && (
-        <span className={`font-medium ${sizeClasses.score}`} style={{ color: colors.text }}>
-          {overall}
-        </span>
-      )}
+      <ShieldIcon />
     </button>
   );
 });
@@ -106,12 +110,22 @@ export const InlineTrustBadge = memo(function InlineTrustBadge({
       style={{
         backgroundColor: colors.bg,
         color: colors.text,
-        border: `1px solid ${colors.border}`,
       }}
       title={`${badge.label} - Click for details`}
       type="button"
     >
-      <span>{colors.icon}</span>
+      <svg 
+        width="12" 
+        height="12"
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke={colors.text}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
       <span>{trustScore.overall}</span>
     </button>
   );
