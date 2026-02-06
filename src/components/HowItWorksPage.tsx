@@ -50,6 +50,7 @@ const FlowNode = memo(function FlowNode({
         fill={textColor}
         fontSize={12}
         fontWeight={500}
+        fontFamily="monospace"
       >
         {label}
       </text>
@@ -62,6 +63,7 @@ const FlowNode = memo(function FlowNode({
           fill={textColor}
           fontSize={10}
           opacity={0.7}
+          fontFamily="monospace"
         >
           {sublabel}
         </text>
@@ -116,6 +118,7 @@ const FlowArrow = memo(function FlowArrow({ x1, y1, x2, y2, color, label }: Flow
           textAnchor="middle"
           fill={color}
           fontSize={10}
+          fontFamily="monospace"
         >
           {label}
         </text>
