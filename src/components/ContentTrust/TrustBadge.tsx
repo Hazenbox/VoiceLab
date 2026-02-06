@@ -4,8 +4,8 @@
  * Simple inline icon showing trust certification status.
  */
 
-import { memo } from 'react';
-import { Button } from '@marcelinodzn/ds-react';
+import { memo, useState } from 'react';
+import { useThemeColors } from '../../theme';
 import type { TrustScore, TrustCertification } from '../../types';
 import { getCertificationBadge } from '../../services/trust';
 
@@ -15,6 +15,7 @@ interface TrustBadgeProps {
   size?: 'sm' | 'md' | 'lg';
   showScore?: boolean;
   showTooltip?: boolean;
+  messageContent?: string;
 }
 
 const BADGE_COLORS: Record<TrustCertification, {
@@ -51,19 +52,28 @@ export const TrustBadge = memo(function TrustBadge({
   size = 'md',
   showScore = false,
   showTooltip = true,
+  messageContent,
 }: TrustBadgeProps) {
+  const theme = useThemeColors();
+  const [isHoveredTrust, setIsHoveredTrust] = useState(false);
+  const [isHoveredCopy, setIsHoveredCopy] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  
   if (!trustScore) return null;
   
   const { certification, overall } = trustScore;
   const colors = BADGE_COLORS[certification];
-  const sizeClasses = SIZES[size];
   const badge = getCertificationBadge(certification);
+  
+  // Determine button size based on size prop
+  const buttonSize = size === 'sm' ? '24px' : size === 'lg' ? '32px' : '28px';
+  const iconSize = size === 'sm' ? '14' : size === 'lg' ? '18' : '16';
   
   // Shield icon with functional color based on score
   const ShieldIcon = () => (
     <svg 
-      width={size === 'sm' ? '12' : size === 'lg' ? '16' : '14'} 
-      height={size === 'sm' ? '12' : size === 'lg' ? '16' : '14'}
+      width={iconSize} 
+      height={iconSize}
       viewBox="0 0 24 24" 
       fill="none" 
       stroke={colors.text}
@@ -75,25 +85,87 @@ export const TrustBadge = memo(function TrustBadge({
     </svg>
   );
 
-  return (
-    <Button
-      onPress={onClick}
-      isDisabled={!onClick}
-      appearance="secondary"
-      size="XS"
-      aria-label={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : 'Trust badge'}
-      style={{
-        minWidth: 'auto',
-        width: size === 'sm' ? '24px' : size === 'lg' ? '32px' : '28px',
-        height: size === 'sm' ? '18px' : size === 'lg' ? '26px' : '22px',
-        padding: '0',
-        backgroundColor: 'transparent',
-        border: 'none',
-        borderRadius: '9999px',
-      }}
+  // Copy icon
+  const CopyIcon = () => (
+    <svg 
+      width={iconSize} 
+      height={iconSize}
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      <ShieldIcon />
-    </Button>
+      {copySuccess ? (
+        // Checkmark icon when copied
+        <path d="M20 6L9 17l-5-5" />
+      ) : (
+        // Copy icon
+        <>
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </>
+      )}
+    </svg>
+  );
+
+  // Handle copy to clipboard
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!messageContent) return;
+    
+    try {
+      await navigator.clipboard.writeText(messageContent);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      {/* Trust Badge Button */}
+      <button
+        onClick={onClick}
+        className="rounded-full flex items-center justify-center transition-colors hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+        style={{
+          width: buttonSize,
+          height: buttonSize,
+          backgroundColor: isHoveredTrust ? theme.stroke.low : 'transparent',
+          color: colors.text,
+        }}
+        title={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : undefined}
+        type="button"
+        aria-label={`Trust badge: ${badge.label}`}
+        onMouseEnter={() => setIsHoveredTrust(true)}
+        onMouseLeave={() => setIsHoveredTrust(false)}
+      >
+        <ShieldIcon />
+      </button>
+
+      {/* Copy Button */}
+      {messageContent && (
+        <button
+          onClick={handleCopy}
+          className="rounded-full flex items-center justify-center transition-colors hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+          style={{
+            width: buttonSize,
+            height: buttonSize,
+            backgroundColor: isHoveredCopy ? theme.stroke.low : 'transparent',
+            color: theme.text.medium,
+          }}
+          title={copySuccess ? 'Copied!' : 'Copy message'}
+          type="button"
+          aria-label={copySuccess ? 'Copied to clipboard' : 'Copy message to clipboard'}
+          onMouseEnter={() => setIsHoveredCopy(true)}
+          onMouseLeave={() => setIsHoveredCopy(false)}
+        >
+          <CopyIcon />
+        </button>
+      )}
+    </div>
   );
 });
 

@@ -206,6 +206,7 @@ export const ChatPanel = memo(function ChatPanel({
                   onClick={() => onTrustBadgeClick?.(message.id)}
                   size="sm"
                   showScore={true}
+                  messageContent={message.content}
                 />
               </div>
             )}
