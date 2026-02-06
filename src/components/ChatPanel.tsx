@@ -320,7 +320,7 @@ export const ChatPanel = memo(function ChatPanel({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: '#3730a3',
+              backgroundColor: '#3900AD',
               color: '#ffffff',
             }}
           >
