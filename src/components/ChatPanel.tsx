@@ -404,32 +404,18 @@ export const ChatPanel = memo(function ChatPanel({
             }}
           >
             {/* Messages Area */}
-            <div className="flex-1 overflow-hidden relative">
-              {/* Progressive blur overlay at top - AI-ish fade effect */}
-              <div
-                className="absolute top-0 left-0 right-0 z-10 pointer-events-none"
-                style={{
-                  height: '24px',
-                  background: `linear-gradient(to bottom, ${theme.background.ghost} 0%, ${theme.background.ghost}E6 40%, ${theme.background.ghost}80 70%, ${theme.background.ghost}00 100%)`,
-                  backdropFilter: 'blur(12px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(12px) saturate(180%)',
-                  boxShadow: `0 1px 2px 0 ${theme.background.ghost}40`,
-                }}
-                aria-hidden="true"
-              />
-              <div 
-                ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto pt-6 px-4 pb-4 h-full"
-                role="log"
-                aria-live="polite"
-                aria-atomic="false"
-                aria-relevant="additions"
-                tabIndex={0}
-              >
-                <div role="list" aria-label="Messages" className="space-y-4">
-                  {messages.map(renderMessage)}
-                  <div ref={messagesEndRef} aria-hidden="true" />
-                </div>
+            <div 
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto pt-6 px-4 pb-4"
+              role="log"
+              aria-live="polite"
+              aria-atomic="false"
+              aria-relevant="additions"
+              tabIndex={0}
+            >
+              <div role="list" aria-label="Messages" className="space-y-4">
+                {messages.map(renderMessage)}
+                <div ref={messagesEndRef} aria-hidden="true" />
               </div>
             </div>
 
