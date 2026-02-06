@@ -368,12 +368,12 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>New thread</span>
+                <span>Create</span>
               </div>
             </Button>
           </div>
 
-          {/* Your threads title */}
+          {/* Recent title */}
           <div 
             className="px-2 py-1.5 text-xs font-medium"
             style={{ 
@@ -381,7 +381,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               fontSize: '12px',
             }}
           >
-            Your threads
+            Recent
           </div>
 
           <div className="space-y-0.5" role="listbox" aria-label="Projects list">
