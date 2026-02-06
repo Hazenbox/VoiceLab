@@ -16,6 +16,127 @@ interface ProjectSidebarProps {
 }
 
 /**
+ * Reusable Sidebar Navigation Item Component
+ * Single source of truth for all sidebar navigation items
+ */
+interface SidebarNavItemProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  isActive?: boolean;
+  badge?: React.ReactNode;
+  ariaLabel?: string;
+  ariaCurrent?: 'page' | undefined;
+}
+
+const SidebarNavItem = memo(function SidebarNavItem({
+  icon,
+  label,
+  onClick,
+  isActive = false,
+  badge,
+  ariaLabel,
+  ariaCurrent,
+}: SidebarNavItemProps) {
+  const theme = useThemeColors();
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+      style={{
+        backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
+        height: '32px',
+      }}
+      aria-label={ariaLabel}
+      aria-current={ariaCurrent}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {icon}
+      <span 
+        className="text-xs font-normal"
+        style={{ color: theme.text.high, fontSize: '13px' }}
+      >
+        {label}
+      </span>
+      {badge}
+    </button>
+  );
+});
+
+/**
+ * Sidebar Project Item Component
+ * Specialized for project list items with more menu
+ */
+interface SidebarProjectItemProps {
+  projectName: string;
+  isActive: boolean;
+  onClick: () => void;
+  onMoreClick: () => void;
+  showMoreMenu: boolean;
+}
+
+const SidebarProjectItem = memo(function SidebarProjectItem({
+  projectName,
+  isActive,
+  onClick,
+  onMoreClick,
+  showMoreMenu,
+}: SidebarProjectItemProps) {
+  const theme = useThemeColors();
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <button
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="w-full py-1 flex items-center justify-between group transition-colors rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+      style={{
+        backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
+        height: '32px',
+        paddingLeft: '10px',
+        paddingRight: '10px',
+      }}
+      aria-selected={isActive}
+      role="option"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="flex-1 text-left">
+        <div 
+          className="text-xs font-normal truncate"
+          style={{ color: theme.text.high, fontSize: '13px' }}
+        >
+          {projectName}
+        </div>
+      </div>
+      
+      {/* More menu button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onMoreClick();
+        }}
+        className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity hover:opacity-70 cursor-pointer"
+        style={{ color: theme.text.low }}
+        aria-label="Project options"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+        </svg>
+      </button>
+    </button>
+  );
+});
+
+/**
  * Left sidebar for projects navigation
  * Library navigation opens a full page instead of sidebar view
  * Memoized to prevent unnecessary re-renders
@@ -162,38 +283,23 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         <div className="flex-1 overflow-y-auto px-2.5 py-1.5">
           {/* New Project Button */}
           <div className="mb-2">
-            <button
+            <SidebarNavItem
+              icon={
+                <svg 
+                  className="w-4 h-4" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  style={{ color: theme.text.high }}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              }
+              label="New thread"
               onClick={() => createProject()}
-              className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
-              style={{
-                backgroundColor: 'transparent',
-                height: '32px',
-              }}
-              aria-label="Create new project"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = theme.stroke.low;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              <svg 
-                className="w-4 h-4" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                style={{ color: theme.text.high }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              <span 
-                className="text-xs font-normal"
-                style={{ color: theme.text.high, fontSize: '13px' }}
-              >
-                New
-              </span>
-            </button>
+              ariaLabel="Create new project"
+            />
           </div>
 
           {/* Your threads title */}
@@ -235,52 +341,16 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                   </div>
                 ) : (
                   // Normal project item
-                  <button
+                  <SidebarProjectItem
+                    projectName={project.name}
+                    isActive={activeProject?.id === project.id}
                     onClick={() => {
                       setActiveProject(project.id);
                       onProjectSelect?.();
                     }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        setActiveProject(project.id);
-                        onProjectSelect?.();
-                      }
-                    }}
-                    className="w-full py-1 flex items-center justify-between group transition-colors rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
-                    style={{
-                      backgroundColor: activeProject?.id === project.id ? theme.stroke.low : 'transparent',
-                      height: '32px',
-                      paddingLeft: '10px',
-                      paddingRight: '10px',
-                    }}
-                    aria-selected={activeProject?.id === project.id}
-                    role="option"
-                  >
-                    <div className="flex-1 text-left">
-                      <div 
-                        className="text-xs font-normal truncate"
-                        style={{ color: theme.text.high, fontSize: '13px' }}
-                      >
-                        {project.name}
-                      </div>
-                    </div>
-                    
-                    {/* More menu button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpenFor(menuOpenFor === project.id ? null : project.id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded transition-opacity hover:opacity-70 cursor-pointer"
-                      style={{ color: theme.text.low }}
-                      aria-label="Project options"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                      </svg>
-                    </button>
-                  </button>
+                    onMoreClick={() => setMenuOpenFor(menuOpenFor === project.id ? null : project.id)}
+                    showMoreMenu={menuOpenFor === project.id}
+                  />
                 )}
 
                 {/* Dropdown menu */}
@@ -334,69 +404,8 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         className="p-2.5 space-y-0.5"
         style={{ borderTop: `1px solid ${theme.stroke.low}` }}
       >
-        <button
-          onClick={onNavigateToLibrary}
-          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors group cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
-          style={{
-            backgroundColor: isLibraryActive ? theme.stroke.low : 'transparent',
-            height: '32px',
-          }}
-          aria-current={isLibraryActive ? 'page' : undefined}
-          onMouseEnter={(e) => {
-            if (!isLibraryActive) {
-              e.currentTarget.style.backgroundColor = theme.stroke.low;
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isLibraryActive) {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }
-          }}
-        >
-          <svg 
-            className="w-4 h-4" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-            style={{ color: theme.text.high }}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-          </svg>
-          <span 
-            className="text-xs font-normal"
-            style={{ color: theme.text.high, fontSize: '13px' }}
-          >
-            Library
-          </span>
-          {audios.length > 0 && (
-            <span 
-              className="ml-auto text-xs px-2 py-0.5 rounded-full"
-              style={{ 
-                backgroundColor: theme.stroke.low,
-                color: theme.text.medium 
-              }}
-            >
-              {audios.length}
-            </span>
-          )}
-        </button>
-
-        {onNavigateToUsage && (
-          <button
-            onClick={onNavigateToUsage}
-            className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
-            style={{
-              backgroundColor: 'transparent',
-              height: '32px',
-            }}
-            aria-label="View usage statistics"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = theme.stroke.low;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-          >
+        <SidebarNavItem
+          icon={
             <svg 
               className="w-4 h-4" 
               fill="none" 
@@ -404,91 +413,88 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               viewBox="0 0 24 24"
               style={{ color: theme.text.high }}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
             </svg>
-            <span 
-              className="text-xs font-normal"
-              style={{ color: theme.text.high, fontSize: '13px' }}
-            >
-              Usage
-            </span>
-          </button>
+          }
+          label="Library"
+          onClick={onNavigateToLibrary}
+          isActive={isLibraryActive}
+          ariaCurrent={isLibraryActive ? 'page' : undefined}
+          badge={
+            audios.length > 0 ? (
+              <span 
+                className="ml-auto text-xs px-2 py-0.5 rounded-full"
+                style={{ 
+                  backgroundColor: theme.stroke.low,
+                  color: theme.text.medium 
+                }}
+              >
+                {audios.length}
+              </span>
+            ) : undefined
+          }
+        />
+
+        {onNavigateToUsage && (
+          <SidebarNavItem
+            icon={
+              <svg 
+                className="w-4 h-4" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+                style={{ color: theme.text.high }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            }
+            label="Usage"
+            onClick={onNavigateToUsage}
+            ariaLabel="View usage statistics"
+          />
         )}
 
         {/* Design System Nav Item */}
         {onNavigateToDesignSystem && (
-          <button
+          <SidebarNavItem
+            icon={
+              <svg 
+                className="w-4 h-4" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+                style={{ color: isDesignSystemActive ? theme.accent : theme.text.high }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
+              </svg>
+            }
+            label="Design System"
             onClick={onNavigateToDesignSystem}
-            className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
-            style={{
-              backgroundColor: isDesignSystemActive ? theme.stroke.low : 'transparent',
-              height: '32px',
-            }}
-            aria-label="Open design system library"
-            onMouseEnter={(e) => {
-              if (!isDesignSystemActive) {
-                e.currentTarget.style.backgroundColor = theme.stroke.low;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isDesignSystemActive) {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }
-            }}
-          >
-            <svg 
-              className="w-4 h-4" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-              style={{ color: isDesignSystemActive ? theme.accent : theme.text.high }}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
-            </svg>
-            <span 
-              className="text-xs font-normal"
-              style={{ color: isDesignSystemActive ? theme.accent : theme.text.high, fontSize: '13px' }}
-            >
-              Design System
-            </span>
-          </button>
+            isActive={isDesignSystemActive}
+            ariaLabel="Open design system library"
+          />
         )}
 
         {/* Dark Mode Toggle */}
-        <button
+        <SidebarNavItem
+          icon={
+            colorMode === 'Light' ? (
+              // Moon icon for dark mode
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" style={{ color: theme.text.high }}>
+                <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              // Sun icon for light mode
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.text.high }}>
+                <circle cx="12" cy="12" r="4" strokeWidth="2" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+              </svg>
+            )
+          }
+          label={`${colorMode === 'Light' ? 'Dark' : 'Light'} Mode`}
           onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
-          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
-          style={{
-            backgroundColor: 'transparent',
-            height: '32px',
-          }}
-          aria-label={`Switch to ${colorMode === 'Light' ? 'dark' : 'light'} mode`}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = theme.stroke.low;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-        >
-          {colorMode === 'Light' ? (
-            // Moon icon for dark mode
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" style={{ color: theme.text.high }}>
-              <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
-            </svg>
-          ) : (
-            // Sun icon for light mode
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.text.high }}>
-              <circle cx="12" cy="12" r="4" strokeWidth="2" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-            </svg>
-          )}
-          <span 
-            className="text-xs font-normal"
-            style={{ color: theme.text.high, fontSize: '13px' }}
-          >
-            {colorMode === 'Light' ? 'Dark' : 'Light'} Mode
-          </span>
-        </button>
+          ariaLabel={`Switch to ${colorMode === 'Light' ? 'dark' : 'light'} mode`}
+        />
       </div>
     </aside>
   );

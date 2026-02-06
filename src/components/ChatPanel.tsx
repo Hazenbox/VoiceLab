@@ -405,7 +405,7 @@ export const ChatPanel = memo(function ChatPanel({
 
           {/* Model + Context selectors - below input, centered */}
           {(modelSelector || contextSelector || channelSelector || platformSelector || settingsTrigger) && (
-            <div className="flex items-center justify-center gap-3 mt-3">
+            <div className="flex items-center justify-center gap-0 mt-3">
               {modelSelector}
               {/* Prefer new contextSelector, fallback to legacy channel + platform */}
               {contextSelector || (
