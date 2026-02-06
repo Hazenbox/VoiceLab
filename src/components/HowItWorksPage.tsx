@@ -93,13 +93,18 @@ const FlowArrow = memo(function FlowArrow({ x1, y1, x2, y2, color, label }: Flow
       <defs>
         <marker
           id={`arrowhead-${x1}-${y1}`}
-          markerWidth="10"
+          markerWidth="11"
           markerHeight="7"
-          refX="9"
+          refX="9.5"
           refY="3.5"
           orient="auto"
+          markerUnits="userSpaceOnUse"
         >
-          <polygon points="0 0, 10 3.5, 0 7" fill={color} />
+          <path
+            d="M 0 0 L 9.5 3.5 L 0 7 L 2 3.5 Z"
+            fill={color}
+            stroke="none"
+          />
         </marker>
       </defs>
       <line
@@ -108,7 +113,8 @@ const FlowArrow = memo(function FlowArrow({ x1, y1, x2, y2, color, label }: Flow
         x2={x2}
         y2={y2}
         stroke={color}
-        strokeWidth={2}
+        strokeWidth={2.5}
+        strokeLinecap="round"
         markerEnd={`url(#arrowhead-${x1}-${y1})`}
       />
       {label && (
