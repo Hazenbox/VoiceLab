@@ -52,6 +52,7 @@ import {
 import { getOrchestratorInstance } from './services/llm/orchestrator';
 import { getDefaultLLMProviderType, createLLMProvider, type LLMProviderType } from './services/providers/llm';
 import { createAudioContext, checkAudioSupport } from './services/audioUtils';
+import { getNoiseSuppressionService, isNoiseSuppressionSupported, type NoiseSuppressionService } from './services/audio';
 import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
 // Design system context removed - locked to Jio only
@@ -202,6 +203,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const streamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const audioAnalyzerRef = useRef<AnalyserNode | null>(null);
+  const noiseSuppressionRef = useRef<NoiseSuppressionService | null>(null);
   
   // Refs for conversation turn tracking (to link user message to AI response)
   const currentTurnRef = useRef<{
@@ -524,13 +526,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     setTranscript('');
 
     try {
-      // Request microphone access
+      // Request microphone access with enhanced audio processing
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: AUDIO_CONFIG.inputSampleRate,
+          sampleRate: { ideal: AUDIO_CONFIG.inputSampleRate },
           channelCount: AUDIO_CONFIG.channels,
-          echoCancellation: true,
-          noiseSuppression: true,
+          echoCancellation: { ideal: true },
+          noiseSuppression: { ideal: true },
+          autoGainControl: { ideal: true },
         },
       });
       streamRef.current = stream;
@@ -639,7 +642,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         }
       );
 
-      // Set up audio processing
+      // Set up audio processing with noise suppression
       const source = inputAudioContextRef.current.createMediaStreamSource(stream);
       const processor = inputAudioContextRef.current.createScriptProcessor(
         AUDIO_CONFIG.bufferSize,
@@ -653,8 +656,29 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         provider.sendAudio(inputData);
       };
 
-      source.connect(processor);
-      processor.connect(inputAudioContextRef.current.destination);
+      // Initialize noise suppression if supported
+      if (isNoiseSuppressionSupported()) {
+        try {
+          console.log('[Voice] Initializing RNNoise noise suppression...');
+          const noiseSuppression = getNoiseSuppressionService();
+          await noiseSuppression.initialize(inputAudioContextRef.current);
+          noiseSuppressionRef.current = noiseSuppression;
+          
+          // Connect: source -> noise suppression -> processor -> destination
+          noiseSuppression.connect(source, processor);
+          processor.connect(inputAudioContextRef.current.destination);
+          console.log('[Voice] Noise suppression enabled');
+        } catch (nsError) {
+          console.warn('[Voice] Failed to initialize noise suppression, using direct connection:', nsError);
+          // Fallback: direct connection without noise suppression
+          source.connect(processor);
+          processor.connect(inputAudioContextRef.current.destination);
+        }
+      } else {
+        console.log('[Voice] AudioWorklet not supported, noise suppression disabled');
+        source.connect(processor);
+        processor.connect(inputAudioContextRef.current.destination);
+      }
 
     } catch (err) {
       console.error('Failed to start conversation:', err);
@@ -690,6 +714,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     if (conversationProviderRef.current) {
       conversationProviderRef.current.disconnect();
       conversationProviderRef.current = null;
+    }
+
+    // Disconnect noise suppression
+    if (noiseSuppressionRef.current) {
+      noiseSuppressionRef.current.disconnect();
+      noiseSuppressionRef.current = null;
     }
 
     // Stop audio processing
