@@ -16,8 +16,6 @@ import type {
 } from '../../types';
 import { 
   getScoreExplanation, 
-  getCertificationBadge, 
-  formatScore, 
   getComplianceJustification,
 } from '../../services/trust';
 import { getContextSummary } from '../../services/context';
@@ -308,7 +306,6 @@ export const TrustContextPanel = memo(function TrustContextPanel({
   const [activeTab, setActiveTab] = useState<'score' | 'context' | 'violations'>('score');
   
   const explanation = trustScore ? getScoreExplanation(trustScore) : null;
-  const badge = trustScore ? getCertificationBadge(trustScore.certification) : null;
   const allViolations = trustScore?.validationResults.flatMap(vr => vr.violations) || [];
   
   // Compute compliance justification for trust building
@@ -334,21 +331,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
         {/* Header */}
         {isOpen && (
           <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
-            <div className="flex items-center gap-3">
-              {trustScore && badge && (
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
-                  style={{
-                    backgroundColor: `${badge.color === 'green' ? '#00A859' : badge.color === 'yellow' ? '#eab308' : '#ef4444'}20`,
-                    color: badge.color === 'green' ? '#00A859' : badge.color === 'yellow' ? '#eab308' : '#ef4444',
-                  }}>
-                  {formatScore(trustScore.overall)}
-                </div>
-              )}
-              <div>
-                <h2 className="text-sm font-semibold" style={{ color: theme.text.high }}>Content Trust</h2>
-                {badge && <p className="text-xs" style={{ color: theme.text.medium }}>{badge.label}</p>}
-              </div>
-            </div>
+            <h2 className="text-sm font-semibold" style={{ color: theme.text.high }}>Content Trust</h2>
             <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors"
               style={{ color: theme.text.medium }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
