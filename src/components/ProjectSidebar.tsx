@@ -86,14 +86,15 @@ const ProjectMenu = memo(function ProjectMenu({
 }: ProjectMenuProps) {
   const theme = useThemeColors();
   const [focusedIndex, setFocusedIndex] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close on click outside
+  // Close on click outside (excluding both trigger and menu)
   useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         onToggle();
       }
     };
@@ -136,7 +137,7 @@ const ProjectMenu = memo(function ProjectMenu({
   }, [isOpen, focusedIndex, options, onSelect, onToggle]);
 
   return (
-    <div className="relative inline-block">
+    <div ref={containerRef} className="relative inline-block">
       {/* Trigger Button */}
       <button
         onClick={(e) => {
@@ -253,8 +254,8 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
         </div>
       </div>
       
-      {/* More menu - only visible on hover */}
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* More menu - visible on hover or when open */}
+      <div className={`transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         <ProjectMenu
           options={menuOptions}
           onSelect={onMenuAction}
