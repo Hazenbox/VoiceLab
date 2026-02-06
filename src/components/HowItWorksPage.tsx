@@ -187,8 +187,8 @@ const InfoCard = memo(function InfoCard({ title, items, icon }: InfoCardProps) {
     <div 
       className="p-4 rounded-lg"
       style={{ 
-        backgroundColor: theme.stroke.low,
-        border: `1px solid ${theme.stroke.low}`
+        backgroundColor: theme.background.ghost,
+        border: `1px solid ${theme.stroke.medium}`
       }}
     >
       <div className="flex items-center gap-2 mb-3">
@@ -232,7 +232,7 @@ const ExampleComparison = memo(function ExampleComparison({ title, before, after
     <div 
       className="p-4 rounded-lg mb-4"
       style={{ 
-        backgroundColor: theme.stroke.low,
+        backgroundColor: theme.background.ghost,
         border: `1px solid ${theme.stroke.medium}`
       }}
     >
@@ -450,8 +450,8 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg"
               style={{ 
-                backgroundColor: theme.stroke.low,
-                border: `1px solid ${theme.stroke.low}`
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`
               }}
             >
               <h4 className="font-medium text-sm mb-2" style={{ color: theme.text.high }}>
@@ -472,8 +472,8 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg mb-4"
               style={{ 
-                backgroundColor: theme.stroke.low,
-                border: `1px solid ${theme.stroke.low}`
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`
               }}
             >
               <h4 className="font-medium text-sm mb-3" style={{ color: theme.text.high }}>
@@ -639,8 +639,8 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg mb-4"
               style={{ 
-                backgroundColor: theme.stroke.low,
-                border: `1px solid ${theme.stroke.low}`
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`
               }}
             >
               <div className="grid grid-cols-7 gap-2 mb-4">
@@ -715,8 +715,8 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg"
               style={{ 
-                backgroundColor: theme.stroke.low,
-                border: `1px solid ${theme.stroke.low}`
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`
               }}
             >
               <h4 className="font-medium text-sm mb-2" style={{ color: theme.text.high }}>
@@ -738,8 +738,8 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
               <div 
                 className="p-4 rounded-lg"
                 style={{ 
-                  backgroundColor: theme.stroke.low,
-                  border: `1px solid ${theme.stroke.low}`
+                  backgroundColor: theme.background.ghost,
+                  border: `1px solid ${theme.stroke.medium}`
                 }}
               >
                 <h4 className="font-medium text-sm mb-3 flex items-center gap-2" style={{ color: theme.text.high }}>
@@ -771,8 +771,8 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
               <div 
                 className="p-4 rounded-lg"
                 style={{ 
-                  backgroundColor: theme.stroke.low,
-                  border: `1px solid ${theme.stroke.low}`
+                  backgroundColor: theme.background.ghost,
+                  border: `1px solid ${theme.stroke.medium}`
                 }}
               >
                 <h4 className="font-medium text-sm mb-3 flex items-center gap-2" style={{ color: theme.text.high }}>
@@ -876,8 +876,8 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
               <div 
                 className="p-4 rounded-lg"
                 style={{ 
-                  backgroundColor: theme.stroke.low,
-                  border: `1px solid ${theme.stroke.low}`
+                  backgroundColor: theme.background.ghost,
+                  border: `1px solid ${theme.stroke.medium}`
                 }}
               >
                 <h4 className="font-medium text-sm mb-3" style={{ color: theme.text.high }}>
