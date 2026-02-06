@@ -238,7 +238,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       )}
       
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto py-3 space-y-0">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {/* Voice Settings Section - Merged Voice & TTS with Conversation Settings */}
           <Accordion title="Voice Settings" icon={<VoiceIcon />} defaultOpen>
             <VoiceSelector
@@ -304,11 +304,6 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
             />
           </Accordion>
           
-          {/* Separator */}
-          <div className="py-1.5">
-            <div style={{ borderBottom: `1px solid ${theme.stroke.low}` }} />
-          </div>
-          
           {/* Chat Settings Section */}
           <Accordion title="Chat Settings" icon={<ChatIcon />}>
             {/* Temperature */}
@@ -341,11 +336,6 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               disabled={disabled}
             />
           </Accordion>
-          
-          {/* Separator */}
-          <div className="py-1.5">
-            <div style={{ borderBottom: `1px solid ${theme.stroke.low}` }} />
-          </div>
           
           {/* Project Defaults Section */}
           <Accordion title="Project Defaults" icon={<ProjectIcon />}>
@@ -410,11 +400,6 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               </div>
             </div>
           </Accordion>
-          
-          {/* Separator */}
-          <div className="py-1.5">
-            <div style={{ borderBottom: `1px solid ${theme.stroke.low}` }} />
-          </div>
           
           {/* Trust Settings Section */}
           <Accordion title="Trust Settings" icon={<TrustIcon />}>
