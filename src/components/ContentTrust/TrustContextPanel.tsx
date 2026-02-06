@@ -46,10 +46,7 @@ const ScoreIndicator: React.FC<{
       className="flex items-center justify-between py-2 border-b last:border-b-0"
       style={{ borderColor: theme.stroke.low }}
     >
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: statusColors[status] }} />
-        <span className="text-sm" style={{ color: theme.text.high }}>{label}</span>
-      </div>
+      <span className="text-sm" style={{ color: theme.text.high }}>{label}</span>
       <div className="flex items-center gap-2">
         {violations > 0 && (
           <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
@@ -223,7 +220,10 @@ const GuardrailItem: React.FC<{ guardrail: GuardrailStatus }> = ({ guardrail }) 
   const isFollowed = guardrail.status === 'followed';
   
   return (
-    <div className="flex items-start gap-2 py-2 first:pt-0 last:pb-0">
+    <div 
+      className="flex items-start gap-2 py-2 border-b last:border-b-0"
+      style={{ borderColor: theme.stroke.low }}
+    >
       <div 
         className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
         style={{ 
@@ -258,7 +258,10 @@ const ValidationAgentItem: React.FC<{ validation: ValidationAgentSummary }> = ({
   const isPerfect = validation.rulesPassed === validation.rulesChecked;
   
   return (
-    <div className="py-2 first:pt-0 last:pb-0">
+    <div 
+      className="py-2 border-b last:border-b-0"
+      style={{ borderColor: theme.stroke.low }}
+    >
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-xs font-medium" style={{ color: theme.text.high }}>
           {validation.agentName}
@@ -326,7 +329,7 @@ const ComplianceJustificationSection: React.FC<{
         defaultOpen={false}
         badge={`${followedCount}/10`}
       >
-        <div className="divide-y" style={{ borderColor: theme.stroke.low }}>
+        <div>
           {guardrailsFollowed.map(g => (
             <GuardrailItem key={g.id} guardrail={g} />
           ))}
@@ -339,7 +342,7 @@ const ComplianceJustificationSection: React.FC<{
         defaultOpen={false}
         badge={totalAgentRulesPassed}
       >
-        <div className="divide-y" style={{ borderColor: theme.stroke.low }}>
+        <div>
           {validationsPassed.map(v => (
             <ValidationAgentItem key={v.agentId} validation={v} />
           ))}
@@ -465,20 +468,6 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                       status={agent.status} violations={agent.violations} />
                   ))}
                 </div>
-              </div>
-              
-              {/* Recommendations */}
-              <div>
-                <h3 className="text-xs font-semibold mb-3" style={{ color: theme.text.low }}>
-                  Recommendations
-                </h3>
-                <ul className="space-y-2">
-                  {explanation.recommendations.map((rec, i) => (
-                    <li key={i} className="text-sm flex items-start gap-2" style={{ color: theme.text.medium }}>
-                      <span>•</span><span>{rec}</span>
-                    </li>
-                  ))}
-                </ul>
               </div>
             </div>
           )}
