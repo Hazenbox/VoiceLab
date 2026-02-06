@@ -330,13 +330,25 @@ export const TrustContextPanel = memo(function TrustContextPanel({
         
         {/* Header */}
         {isOpen && (
-          <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
+          <div className="px-3 py-3 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
             <h2 className="text-sm font-semibold" style={{ color: theme.text.high }}>Content Trust</h2>
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/10 transition-colors"
-              style={{ color: theme.text.medium }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 6L6 18M6 6l12 12" />
+            <button
+              onClick={onClose}
+              className="close-trust-btn w-6 h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+              style={{
+                backgroundColor: 'transparent',
+                color: theme.text.high,
+              }}
+              aria-label="Close trust panel"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
+              <style>{`
+                .close-trust-btn:hover {
+                  background-color: ${theme.stroke.low} !important;
+                }
+              `}</style>
             </button>
           </div>
         )}

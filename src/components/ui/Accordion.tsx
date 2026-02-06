@@ -40,7 +40,7 @@ export const Accordion = memo(function Accordion({
         className={`w-full flex items-center justify-between text-left transition-colors hover:opacity-80 ${isCard ? 'p-3' : 'px-4 py-2'}`}
         style={{ 
           color: theme.text.high,
-          backgroundColor: isCard ? theme.stroke.low : undefined,
+          backgroundColor: isCard ? theme.background.ghost : undefined,
         }}
       >
         <div className="flex items-center gap-2">
