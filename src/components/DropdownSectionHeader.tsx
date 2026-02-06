@@ -7,6 +7,7 @@
  * Design specs:
  * - Horizontal padding: 12px (px-3)
  * - Vertical padding: 4px (py-1)
+ * - Top margin: 2px (mt-0.5) for spacing with menu edge
  * - Font size: 10px
  * - Opacity: 0.75 for subtle visual hierarchy
  * - Color: theme.text.low
@@ -28,7 +29,7 @@ export const DropdownSectionHeader: React.FC<DropdownSectionHeaderProps> = ({
 
   return (
     <div
-      className={`px-3 py-1 text-[10px] font-normal ${className}`}
+      className={`px-3 py-1 mt-0.5 text-[10px] font-normal ${className}`}
       style={{
         color: theme.text.low,
         opacity: 0.75,
