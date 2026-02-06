@@ -99,7 +99,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
     <div className="overflow-visible">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-3 py-2 text-left transition-colors hover:opacity-80"
+        className="w-full flex items-center justify-between px-4 py-2 text-left transition-colors hover:opacity-80"
         style={{ color: theme.text.medium }}
       >
         <div className="flex items-center gap-2">
@@ -118,7 +118,7 @@ const Section: React.FC<SectionProps> = ({ title, icon, children, defaultOpen = 
       </button>
       
       {isOpen && (
-        <div className="px-3 pt-2.5 pb-1.5 space-y-4">
+        <div className="px-4 pt-3 pb-3 space-y-4">
           {children}
         </div>
       )}

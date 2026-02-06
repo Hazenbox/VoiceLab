@@ -148,7 +148,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       }}
     >
       {/* Logo */}
-      <div className="p-2">
+      <div className="p-3">
         <img 
           src={theme.isLight ? "/jio-voice-lab-light.svg?v=3" : "/jio-voice-lab-dark.svg?v=3"}
           alt="Jio Tone Studio" 
@@ -185,7 +185,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         </div>
 
         {/* Projects List */}
-        <div className="flex-1 overflow-y-auto px-1.5 py-1.5">
+        <div className="flex-1 overflow-y-auto px-2.5 py-1.5">
           <div className="space-y-0.5" role="listbox" aria-label="Projects list">
             {projects.map((project) => (
               <div
@@ -308,7 +308,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 
       {/* Bottom Navigation - Library & Usage */}
       <div 
-        className="p-1.5 space-y-0.5"
+        className="p-2.5 space-y-0.5"
         style={{ borderTop: `1px solid ${theme.stroke.low}` }}
       >
         <button
