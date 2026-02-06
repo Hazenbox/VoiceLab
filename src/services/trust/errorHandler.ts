@@ -90,6 +90,7 @@ export function createFallbackTrustScore(): TrustScore {
     compliance: 50,
     styleConsistency: 50,
     brandAlignment: 50,
+    readability: 50,
   };
 
   return {

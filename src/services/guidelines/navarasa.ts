@@ -154,7 +154,7 @@ export const NAVARASA_EMOTIONS: readonly NavarasaEmotion[] = [
     dontList: [
       'Minimise their fears',
       'Use alarming or technical language',
-      'Be vague about what's happening',
+      'Be vague about what is happening',
     ],
     exampleResponse: "Your concern is valid, and your account is secure. Here's exactly what we've done to protect you.",
   },

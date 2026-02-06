@@ -240,6 +240,7 @@ export interface TrustScoreBreakdown {
   compliance: number;
   styleConsistency: number;
   brandAlignment: number;
+  readability: number;  // Training 1.pdf: Grade 8 readability requirement
 }
 
 /**

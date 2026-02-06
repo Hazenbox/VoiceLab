@@ -248,8 +248,8 @@ const STYLE_PATTERNS: PatternRule[] = [
   { id: 'st-033', pattern: /\b(\d{1,3})(,\d{3}){2,}\b/g, severity: 'warning', rule: 'Use Indian number format (1,00,000)', suggestion: 'Use Indian grouping: X,XX,XXX', category: 'numbers' },
   
   // Straight quotes to curved quotes
-  { id: 'st-034', pattern: /"([^"]*)"/g, severity: 'info', rule: 'Use curved quotes for better typography', suggestion: '"$1"', category: 'punctuation' },
-  { id: 'st-035', pattern: /'([^']*?)'/g, severity: 'info', rule: 'Use curved apostrophes for better typography', suggestion: ''$1'', category: 'punctuation' },
+  { id: 'st-034', pattern: /"([^"]*)"/g, severity: 'info', rule: 'Use curved quotes for better typography', suggestion: 'Use curved quotes', category: 'punctuation' },
+  { id: 'st-035', pattern: /'([^']*?)'/g, severity: 'info', rule: 'Use curved apostrophes for better typography', suggestion: 'Use curved apostrophes', category: 'punctuation' },
   
   // En-dash for ranges (not hyphen)
   { id: 'st-036', pattern: /(\d+)-(\d+)/g, severity: 'info', rule: 'Use en-dash for number ranges', suggestion: '$1–$2', category: 'punctuation' },

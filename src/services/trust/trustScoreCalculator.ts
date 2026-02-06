@@ -29,6 +29,7 @@ const AGENT_TO_BREAKDOWN: Record<ValidationAgentId, keyof TrustScoreBreakdown> =
   compliance: 'compliance',
   style_consistency: 'styleConsistency',
   brand_alignment: 'brandAlignment',
+  readability: 'readability',
 };
 
 /**
@@ -47,6 +48,7 @@ export function calculateTrustScore(
     compliance: 100,
     styleConsistency: 100,
     brandAlignment: 100,
+    readability: 100,
   };
   
   // Convert to validation results format
