@@ -160,13 +160,11 @@ const ContentPreview: React.FC<{ content: string }> = ({ content }) => {
   if (!content) return null;
   
   return (
-    <div className="mb-4">
-      <div 
-        className="p-3 rounded-lg text-sm leading-relaxed" 
-        style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
-      >
-        "{content}"
-      </div>
+    <div 
+      className="p-3 rounded-lg text-sm leading-relaxed" 
+      style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
+    >
+      "{content}"
     </div>
   );
 };
@@ -306,7 +304,7 @@ const ComplianceJustificationSection: React.FC<{
   const totalAgentRulesPassed = validationsPassed.reduce((sum, v) => sum + v.rulesPassed, 0);
   
   return (
-    <div className="mb-4 space-y-3">
+    <div className="space-y-3">
       {/* Trust Summary Header */}
       <div 
         className="flex items-center gap-3 p-3 rounded-lg" 
@@ -441,7 +439,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
         {isOpen && (
           <div className="flex-1 overflow-y-auto p-4">
           {activeTab === 'score' && explanation && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Content Preview - Shows what was analyzed */}
               {complianceJustification && (
                 <ContentPreview content={complianceJustification.analyzedContent} />
@@ -452,23 +450,19 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                 <ComplianceJustificationSection justification={complianceJustification} />
               )}
               
-              {/* Summary Message */}
-              <p className="text-sm p-3 rounded-lg" style={{ backgroundColor: theme.stroke.low, color: theme.text.high }}>
-                {explanation.summary}
-              </p>
-              
-              {/* Score Breakdown */}
-              <div>
-                <h3 className="text-xs font-semibold mb-3" style={{ color: theme.text.low }}>
-                  Score Breakdown
-                </h3>
+              {/* Score Breakdown - Collapsible */}
+              <CollapsibleSection 
+                title="Score Breakdown" 
+                defaultOpen={false}
+                badge={explanation.agentBreakdown.length}
+              >
                 <div>
                   {explanation.agentBreakdown.map(agent => (
                     <ScoreIndicator key={agent.name} score={agent.score} label={agent.name}
                       status={agent.status} violations={agent.violations} />
                   ))}
                 </div>
-              </div>
+              </CollapsibleSection>
             </div>
           )}
           
