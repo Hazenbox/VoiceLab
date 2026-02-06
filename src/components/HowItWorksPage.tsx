@@ -247,8 +247,9 @@ const ExampleComparison = memo(function ExampleComparison({ title, before, after
           <div 
             className="text-xs font-medium mb-2 px-2 py-1 rounded inline-block"
             style={{ 
-              backgroundColor: theme.stroke.low,
-              color: theme.text.medium 
+              backgroundColor: theme.background.ghost,
+              color: theme.text.medium,
+              border: `1px solid ${theme.stroke.medium}`
             }}
           >
             {before.label}
