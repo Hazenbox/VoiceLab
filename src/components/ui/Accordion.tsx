@@ -37,10 +37,10 @@ export const Accordion = memo(function Accordion({
     <div className={isCard ? 'border rounded-lg overflow-hidden' : ''} style={isCard ? { borderColor: theme.stroke.low } : undefined}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between text-left transition-colors hover:opacity-80 ${isCard ? 'p-3' : 'px-4 py-2'}`}
+        className="w-full flex items-center justify-between text-left transition-colors hover:opacity-80 p-3"
         style={{ 
           color: theme.text.high,
-          backgroundColor: isCard ? theme.background.ghost : undefined,
+          backgroundColor: theme.background.ghost,
         }}
       >
         <div className="flex items-center gap-2">
