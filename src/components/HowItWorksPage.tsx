@@ -141,7 +141,7 @@ const Section = memo(function Section({ number, title, description, children }: 
     <section className="mb-12">
       <div className="flex items-start gap-4 mb-6">
         <div 
-          className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-sm"
+          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-lg"
           style={{ 
             backgroundColor: theme.accent,
             color: '#fff'
@@ -233,7 +233,7 @@ const ExampleComparison = memo(function ExampleComparison({ title, before, after
       className="p-4 rounded-lg mb-4"
       style={{ 
         backgroundColor: theme.stroke.low,
-        border: `1px solid ${theme.stroke.low}`
+        border: `1px solid ${theme.stroke.medium}`
       }}
     >
       <h4 
@@ -258,7 +258,7 @@ const ExampleComparison = memo(function ExampleComparison({ title, before, after
             style={{ 
               backgroundColor: theme.background.ghost,
               color: theme.text.medium,
-              border: `1px solid ${theme.stroke.low}`
+              border: `1px solid ${theme.stroke.medium}`
             }}
           >
             {before.content}
