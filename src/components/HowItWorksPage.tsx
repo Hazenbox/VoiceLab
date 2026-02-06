@@ -7,238 +7,11 @@
 
 import { memo } from 'react';
 import { useThemeColors } from '../theme';
+import { FlowCanvas, FlowNode, FlowArrow, CurvedFlowArrow, DottedBackground } from './FlowDiagram';
 
 interface HowItWorksPageProps {
   onBack: () => void;
 }
-
-/**
- * Dotted Background Pattern
- */
-const DottedBackground = memo(function DottedBackground({ color }: { color: string }) {
-  return (
-    <defs>
-      <pattern id="dotted-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-        <circle cx="2" cy="2" r="1" fill={color} />
-      </pattern>
-    </defs>
-  );
-});
-
-/**
- * Flow Diagram Component - Reusable SVG-based flow visualization
- */
-interface FlowNodeProps {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-  sublabel?: string;
-  color: string;
-  textColor: string;
-  strokeColor: string;
-  badge?: { text: string; color: string; textColor: string };
-}
-
-const FlowNode = memo(function FlowNode({ 
-  x, y, width, height, label, sublabel, color, textColor, strokeColor, badge
-}: FlowNodeProps) {
-  return (
-    <g>
-      {/* Main Card */}
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        rx={8}
-        fill={color}
-        stroke={strokeColor}
-        strokeWidth={1}
-        filter="drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.05))"
-      />
-      
-      {/* Badge (if present) */}
-      {badge && (
-        <g transform={`translate(${x + width/2}, ${y - 10})`}>
-          <rect
-            x={-(badge.text.length * 3 + 8)}
-            y={-10}
-            width={badge.text.length * 6 + 16}
-            height={20}
-            rx={10}
-            fill={badge.color}
-          />
-          <text
-            x={0}
-            y={1}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill={badge.textColor}
-            fontSize={10}
-            fontWeight={600}
-            fontFamily="'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
-          >
-            {badge.text}
-          </text>
-        </g>
-      )}
-
-      {/* Content */}
-      <text
-        x={x + width / 2}
-        y={sublabel ? y + height / 2 - 6 : y + height / 2}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fill={textColor}
-        fontSize={12}
-        fontWeight={500}
-        fontFamily="'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
-      >
-        {label}
-      </text>
-      {sublabel && (
-        <text
-          x={x + width / 2}
-          y={y + height / 2 + 10}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fill={textColor}
-          fontSize={10}
-          opacity={0.7}
-          fontFamily="'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
-        >
-          {sublabel}
-        </text>
-      )}
-    </g>
-  );
-});
-
-/**
- * Curved Arrow Component for flow diagrams
- */
-interface CurvedFlowArrowProps {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-  color: string;
-}
-
-const CurvedFlowArrow = memo(function CurvedFlowArrow({ startX, startY, endX, endY, color }: CurvedFlowArrowProps) {
-  const controlY1 = startY + (endY - startY) / 2;
-  const controlY2 = endY - (endY - startY) / 2;
-  
-  const path = `M ${startX} ${startY} C ${startX} ${controlY1}, ${endX} ${controlY2}, ${endX} ${endY}`;
-
-  return (
-    <g>
-      <defs>
-        <marker
-          id={`arrowhead-curved-${startX}-${startY}`}
-          markerWidth="12"
-          markerHeight="12"
-          refX="10"
-          refY="6"
-          orient="auto"
-          markerUnits="userSpaceOnUse"
-        >
-          <path
-            d="M 0 0 L 10 6 L 0 12 L 2 6 Z"
-            fill={color}
-            stroke="none"
-          />
-        </marker>
-      </defs>
-      <path
-        d={path}
-        fill="none"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        markerEnd={`url(#arrowhead-curved-${startX}-${startY})`}
-      />
-      {/* Start dot */}
-      <circle cx={startX} cy={startY} r={3} fill={color} />
-    </g>
-  );
-});
-
-/**
- * Arrow Component for flow diagrams
- */
-interface FlowArrowProps {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  color: string;
-  label?: string;
-}
-
-const FlowArrow = memo(function FlowArrow({ x1, y1, x2, y2, color, label }: FlowArrowProps) {
-  const midX = (x1 + x2) / 2;
-  const midY = (y1 + y2) / 2;
-  
-  return (
-    <g>
-      <defs>
-        <marker
-          id={`arrowhead-${x1}-${y1}`}
-          markerWidth="12"
-          markerHeight="8"
-          refX="10"
-          refY="4"
-          orient="auto"
-          markerUnits="userSpaceOnUse"
-        >
-          <line
-            x1="0"
-            y1="0"
-            x2="10"
-            y2="4"
-            stroke={color}
-            strokeWidth={2.5}
-            strokeLinecap="round"
-          />
-          <line
-            x1="0"
-            y1="8"
-            x2="10"
-            y2="4"
-            stroke={color}
-            strokeWidth={2.5}
-            strokeLinecap="round"
-          />
-        </marker>
-      </defs>
-      <line
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
-        stroke={color}
-        strokeWidth={2.5}
-        strokeLinecap="round"
-        markerEnd={`url(#arrowhead-${x1}-${y1})`}
-      />
-      {label && (
-        <text
-          x={midX}
-          y={midY - 8}
-          textAnchor="middle"
-          fill={color}
-          fontSize={10}
-          fontFamily="'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
-        >
-          {label}
-        </text>
-      )}
-    </g>
-  );
-});
 
 /**
  * Section Component - Consistent section styling
@@ -450,31 +223,28 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             >
               Complete Generation Flow
             </h3>
-            <svg width="100%" height="140" viewBox="0 0 800 140">
-              <DottedBackground color={theme.stroke.low} />
-              <rect x="0" y="0" width="800" height="140" fill="url(#dotted-pattern)" />
-              
+            <FlowCanvas height={120} viewBox="0 0 800 120" dotColor={theme.stroke.low}>
               {/* Flow Nodes */}
-              <FlowNode x={0} y={45} width={90} height={50} label="User Input" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              <FlowArrow x1={95} y1={70} x2={115} y2={70} color={theme.accent} />
+              <FlowNode x={0} y={35} width={90} height={50} label="User Input" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={95} y1={60} x2={115} y2={60} color={theme.accent} />
               
-              <FlowNode x={120} y={45} width={100} height={50} label="Context" sublabel="Building" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              <FlowArrow x1={225} y1={70} x2={245} y2={70} color={theme.accent} />
+              <FlowNode x={120} y={35} width={100} height={50} label="Context" sublabel="Building" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={225} y1={60} x2={245} y2={60} color={theme.accent} />
               
-              <FlowNode x={250} y={45} width={90} height={50} label="Prompt" sublabel="Builder" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              <FlowArrow x1={345} y1={70} x2={365} y2={70} color={theme.accent} />
+              <FlowNode x={250} y={35} width={90} height={50} label="Prompt" sublabel="Builder" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={345} y1={60} x2={365} y2={60} color={theme.accent} />
               
-              <FlowNode x={370} y={45} width={100} height={50} label="LLM" sublabel="Orchestrator" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
-              <FlowArrow x1={475} y1={70} x2={495} y2={70} color={theme.accent} />
+              <FlowNode x={370} y={35} width={100} height={50} label="LLM" sublabel="Orchestrator" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+              <FlowArrow x1={475} y1={60} x2={495} y2={60} color={theme.accent} />
               
-              <FlowNode x={500} y={45} width={90} height={50} label="Content" sublabel="Trust" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              <FlowArrow x1={595} y1={70} x2={615} y2={70} color={theme.accent} />
+              <FlowNode x={500} y={35} width={90} height={50} label="Content" sublabel="Trust" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={595} y1={60} x2={615} y2={60} color={theme.accent} />
               
-              <FlowNode x={620} y={45} width={90} height={50} label="Response" sublabel="Display" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              <FlowArrow x1={715} y1={70} x2={735} y2={70} color={theme.accent} />
+              <FlowNode x={620} y={35} width={90} height={50} label="Response" sublabel="Display" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={715} y1={60} x2={735} y2={60} color={theme.accent} />
               
-              <FlowNode x={740} y={45} width={55} height={50} label="Save" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-            </svg>
+              <FlowNode x={740} y={35} width={55} height={50} label="Save" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+            </FlowCanvas>
           </div>
 
           {/* Section 1: User Input */}
@@ -491,21 +261,18 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
                 overflow: 'hidden'
               }}
             >
-              <svg width="100%" height="120" viewBox="0 0 600 120">
-                <DottedBackground color={theme.stroke.low} />
-                <rect x="0" y="0" width="600" height="120" fill="url(#dotted-pattern)" />
+              <FlowCanvas height={100} viewBox="0 0 600 100" dotColor={theme.stroke.low}>
+                <FlowNode x={0} y={25} width={120} height={50} label="User Types" sublabel="Message" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={120} startY={50} endX={180} endY={50} color={theme.stroke.medium} />
                 
-                <FlowNode x={0} y={35} width={120} height={50} label="User Types" sublabel="Message" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <FlowArrow x1={130} y1={60} x2={170} y2={60} color={theme.accent} />
+                <FlowNode x={180} y={25} width={120} height={50} label="ChatPanel" sublabel="Captures Input" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={300} startY={50} endX={360} endY={50} color={theme.stroke.medium} />
                 
-                <FlowNode x={180} y={35} width={120} height={50} label="ChatPanel" sublabel="Captures Input" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <FlowArrow x1={310} y1={60} x2={350} y2={60} color={theme.accent} />
+                <FlowNode x={360} y={25} width={120} height={50} label="App.tsx" sublabel="handleSendMessage" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+                <CurvedFlowArrow startX={480} startY={50} endX={540} endY={50} color={theme.stroke.medium} />
                 
-                <FlowNode x={360} y={35} width={120} height={50} label="App.tsx" sublabel="handleSendMessage" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
-                <FlowArrow x1={490} y1={60} x2={530} y2={60} color={theme.accent} />
-                
-                <FlowNode x={540} y={35} width={55} height={50} label="Next" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              </svg>
+                <FlowNode x={540} y={25} width={55} height={50} label="Next" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              </FlowCanvas>
             </div>
             <p className="text-sm" style={{ color: theme.text.medium }}>
               When you type a message and press Enter (or click send), the <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>ChatPanel</code> component captures your input and passes it to the main <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>handleSendChatMessage</code> function in App.tsx. Your message is immediately displayed in the chat while processing begins.
@@ -652,50 +419,46 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
                 overflow: 'hidden'
               }}
             >
-              <svg width="100%" height="220" viewBox="0 0 700 220">
-                <DottedBackground color={theme.stroke.low} />
-                <rect x="0" y="0" width="700" height="220" fill="url(#dotted-pattern)" />
-                
+              <FlowCanvas height={200} viewBox="0 0 700 200" dotColor={theme.stroke.low}>
                 {/* Main flow */}
-                <FlowNode x={0} y={85} width={80} height={50} label="Request" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <FlowArrow x1={85} y1={110} x2={115} y2={110} color={theme.accent} />
+                <FlowNode x={0} y={75} width={80} height={50} label="Request" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={80} startY={100} endX={120} endY={100} color={theme.stroke.medium} />
                 
-                <FlowNode x={120} y={85} width={90} height={50} label="Cache" sublabel="Check" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={120} y={75} width={90} height={50} label="Cache" sublabel="Check" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 
                 {/* Cache hit path */}
-                <FlowArrow x1={165} y1={85} x2={165} y2={40} color={theme.accent} label="Hit" />
-                <FlowNode x={130} y={10} width={70} height={25} label="Return" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+                <CurvedFlowArrow startX={165} startY={75} endX={165} endY={25} color={theme.accent} label="Hit" />
+                <FlowNode x={130} y={0} width={70} height={25} label="Return" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
                 
                 {/* Cache miss path */}
-                <FlowArrow x1={215} y1={110} x2={245} y2={110} color={theme.accent} label="Miss" />
+                <CurvedFlowArrow startX={210} startY={100} endX={250} endY={100} color={theme.stroke.medium} label="Miss" />
                 
-                <FlowNode x={250} y={85} width={90} height={50} label="Provider" sublabel="Selection" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <FlowArrow x1={345} y1={110} x2={375} y2={110} color={theme.accent} />
+                <FlowNode x={250} y={75} width={90} height={50} label="Provider" sublabel="Selection" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 
                 {/* Provider options */}
-                <FlowNode x={380} y={30} width={80} height={35} label="Qwen" sublabel="(Primary)" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
-                <FlowNode x={380} y={75} width={80} height={35} label="HuggingFace" sublabel="(Fallback)" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <FlowNode x={380} y={120} width={80} height={35} label="OpenAI" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <FlowNode x={380} y={165} width={80} height={35} label="Claude" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={380} y={20} width={80} height={35} label="Qwen" sublabel="(Primary)" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+                <FlowNode x={380} y={65} width={80} height={35} label="HuggingFace" sublabel="(Fallback)" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={380} y={110} width={80} height={35} label="OpenAI" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={380} y={155} width={80} height={35} label="Claude" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 
                 {/* Lines connecting to providers */}
-                <line x1={345} y1={110} x2={380} y2={47} stroke={theme.accent} strokeWidth={2} strokeDasharray="2,2" />
-                <line x1={345} y1={110} x2={380} y2={92} stroke={theme.accent} strokeWidth={2} strokeDasharray="2,2" />
-                <line x1={345} y1={110} x2={380} y2={137} stroke={theme.accent} strokeWidth={2} strokeDasharray="2,2" />
-                <line x1={345} y1={110} x2={380} y2={182} stroke={theme.accent} strokeWidth={2} strokeDasharray="2,2" />
+                <CurvedFlowArrow startX={340} startY={100} endX={380} endY={37} color={theme.stroke.medium} />
+                <CurvedFlowArrow startX={340} startY={100} endX={380} endY={82} color={theme.stroke.medium} />
+                <CurvedFlowArrow startX={340} startY={100} endX={380} endY={127} color={theme.stroke.medium} />
+                <CurvedFlowArrow startX={340} startY={100} endX={380} endY={172} color={theme.stroke.medium} />
                 
                 {/* Retry loop */}
-                <FlowArrow x1={465} y1={92} x2={505} y2={92} color={theme.accent} />
-                <FlowNode x={510} y={70} width={80} height={45} label="Retry" sublabel="Logic" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={460} startY={82} endX={510} endY={82} color={theme.stroke.medium} />
+                <FlowNode x={510} y={60} width={80} height={45} label="Retry" sublabel="Logic" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 
                 {/* Success path */}
-                <FlowArrow x1={595} y1={92} x2={625} y2={92} color={theme.accent} />
-                <FlowNode x={630} y={70} width={65} height={45} label="Success" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+                <CurvedFlowArrow startX={590} startY={82} endX={630} endY={82} color={theme.accent} />
+                <FlowNode x={630} y={60} width={65} height={45} label="Success" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
                 
                 {/* Failure - try fallback */}
-                <path d="M 550 115 L 550 150 L 420 150 L 420 120" fill="none" stroke={theme.stroke.medium} strokeWidth={2} strokeDasharray="4" />
-                <text x={485} y={165} textAnchor="middle" fill={theme.text.low} fontSize={10} fontFamily="'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">Fallback on failure</text>
-              </svg>
+                <path d="M 550 105 L 550 140 L 420 140 L 420 110" fill="none" stroke={theme.stroke.medium} strokeWidth={1} strokeDasharray="4" />
+                <text x={485} y={155} textAnchor="middle" fill={theme.text.low} fontSize={10} fontFamily="'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">Fallback on failure</text>
+              </FlowCanvas>
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-4">
@@ -740,21 +503,18 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
                 overflow: 'hidden'
               }}
             >
-              <svg width="100%" height="100" viewBox="0 0 600 100">
-                <DottedBackground color={theme.stroke.low} />
-                <rect x="0" y="0" width="600" height="100" fill="url(#dotted-pattern)" />
+              <FlowCanvas height={80} viewBox="0 0 600 80" dotColor={theme.stroke.low}>
+                <FlowNode x={0} y={15} width={100} height={50} label="Frontend" sublabel="Request" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={100} startY={40} endX={160} endY={40} color={theme.stroke.medium} />
                 
-                <FlowNode x={0} y={25} width={100} height={50} label="Frontend" sublabel="Request" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <FlowArrow x1={110} y1={50} x2={150} y2={50} color={theme.accent} />
+                <FlowNode x={160} y={15} width={120} height={50} label="/api/llm" sublabel="Serverless Function" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+                <CurvedFlowArrow startX={280} startY={40} endX={340} endY={40} color={theme.stroke.medium} />
                 
-                <FlowNode x={160} y={25} width={120} height={50} label="/api/llm" sublabel="Serverless Function" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
-                <FlowArrow x1={290} y1={50} x2={330} y2={50} color={theme.accent} />
+                <FlowNode x={340} y={15} width={120} height={50} label="External API" sublabel="DashScope/OpenAI" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={460} startY={40} endX={520} endY={40} color={theme.stroke.medium} />
                 
-                <FlowNode x={340} y={25} width={120} height={50} label="External API" sublabel="DashScope/OpenAI" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <FlowArrow x1={470} y1={50} x2={510} y2={50} color={theme.accent} />
-                
-                <FlowNode x={520} y={25} width={70} height={50} label="Response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              </svg>
+                <FlowNode x={520} y={15} width={70} height={50} label="Response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              </FlowCanvas>
             </div>
 
             <p className="text-sm" style={{ color: theme.text.medium }}>

@@ -29,7 +29,7 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
     );
   }, [searchQuery]);
 
-  // Group icons by category
+  // Group icons by category with improved categorization
   const iconGroups = useMemo(() => {
     const groups: Record<string, string[]> = {
       'Navigation': [],
@@ -40,33 +40,127 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
       'Status': [],
       'Objects': [],
       'Finance': [],
+      'Shopping & Commerce': [],
+      'Technology': [],
+      'Files & Documents': [],
+      'Social & Sharing': [],
+      'UI Elements': [],
+      'Time & Date': [],
+      'Security': [],
+      'Miscellaneous': [],
     };
 
     filteredIcons.forEach(icon => {
       const name = icon.toLowerCase();
-      if (name.includes('arrow') || name.includes('chevron') || name.includes('home') || name.includes('search') || name.includes('menu')) {
+      
+      // Navigation
+      if (name.includes('arrow') || name.includes('chevron') || name.includes('home') || 
+          name.includes('search') || name.includes('menu') || name.includes('back') || 
+          name.includes('forward') || name.includes('next') || name.includes('previous')) {
         groups['Navigation'].push(icon);
-      } else if (name.includes('plus') || name.includes('minus') || name.includes('close') || name.includes('check') || name.includes('edit') || name.includes('delete') || name.includes('refresh') || name.includes('download') || name.includes('upload') || name.includes('share') || name.includes('copy') || name.includes('save')) {
+      }
+      // Actions
+      else if (name.includes('plus') || name.includes('minus') || name.includes('close') || 
+               name.includes('check') || name.includes('edit') || name.includes('delete') || 
+               name.includes('refresh') || name.includes('download') || name.includes('upload') || 
+               name.includes('share') || name.includes('copy') || name.includes('save') ||
+               name.includes('filter') || name.includes('more') || name.includes('add') || 
+               name.includes('remove')) {
         groups['Actions'].push(icon);
-      } else if (name.includes('user') || name.includes('settings') || name.includes('profile') || name.includes('logout') || name.includes('login')) {
+      }
+      // User & Account
+      else if (name.includes('user') || name.includes('settings') || name.includes('profile') || 
+               name.includes('logout') || name.includes('login') || name.includes('account') || 
+               name.includes('avatar')) {
         groups['User & Account'].push(icon);
-      } else if (name.includes('mail') || name.includes('phone') || name.includes('chat') || name.includes('notification') || name.includes('bell')) {
+      }
+      // Communication
+      else if (name.includes('mail') || name.includes('phone') || name.includes('chat') || 
+               name.includes('notification') || name.includes('bell') || name.includes('message') ||
+               name.includes('send') || name.includes('reply')) {
         groups['Communication'].push(icon);
-      } else if (name.includes('play') || name.includes('pause') || name.includes('stop') || name.includes('microphone') || name.includes('speaker') || name.includes('volume') || name.includes('camera') || name.includes('image') || name.includes('video')) {
+      }
+      // Media
+      else if (name.includes('play') || name.includes('pause') || name.includes('stop') || 
+               name.includes('microphone') || name.includes('speaker') || name.includes('volume') || 
+               name.includes('camera') || name.includes('image') || name.includes('video') ||
+               name.includes('music') || name.includes('headphone')) {
         groups['Media'].push(icon);
-      } else if (name.includes('info') || name.includes('warning') || name.includes('error') || name.includes('success') || name.includes('question')) {
+      }
+      // Status
+      else if (name.includes('info') || name.includes('warning') || name.includes('error') || 
+               name.includes('success') || name.includes('question') || name.includes('alert') ||
+               name.includes('circle')) {
         groups['Status'].push(icon);
-      } else if (name.includes('calendar') || name.includes('clock') || name.includes('location') || name.includes('star') || name.includes('heart') || name.includes('bookmark') || name.includes('document') || name.includes('folder') || name.includes('link') || name.includes('lock')) {
-        groups['Objects'].push(icon);
-      } else if (name.includes('wallet') || name.includes('card') || name.includes('money') || name.includes('currency') || name.includes('bank')) {
+      }
+      // Shopping & Commerce
+      else if (name.includes('cart') || name.includes('shopping') || name.includes('store') || 
+               name.includes('gift')) {
+        groups['Shopping & Commerce'].push(icon);
+      }
+      // Technology
+      else if (name.includes('wifi') || name.includes('bluetooth') || name.includes('battery') || 
+               name.includes('signal') || name.includes('cloud') || name.includes('database') ||
+               name.includes('server')) {
+        groups['Technology'].push(icon);
+      }
+      // Files & Documents
+      else if (name.includes('file') || name.includes('archive') || name.includes('zip') || 
+               name.includes('pdf') || name.includes('excel') || name.includes('word')) {
+        groups['Files & Documents'].push(icon);
+      }
+      // Social & Sharing
+      else if (name.includes('facebook') || name.includes('twitter') || name.includes('instagram') || 
+               name.includes('linkedin') || name.includes('whatsapp') || name.includes('telegram') ||
+               name.includes('youtube')) {
+        groups['Social & Sharing'].push(icon);
+      }
+      // UI Elements
+      else if (name.includes('grid') || name.includes('list') || name.includes('layout') || 
+               name.includes('column') || name.includes('row') || name.includes('drag') ||
+               name.includes('resize') || name.includes('fullscreen') || name.includes('minimize') ||
+               name.includes('maximize')) {
+        groups['UI Elements'].push(icon);
+      }
+      // Time & Date
+      else if (name.includes('time') || name.includes('date') || name.includes('schedule') || 
+               name.includes('history') || name.includes('recent')) {
+        groups['Time & Date'].push(icon);
+      }
+      // Security
+      else if (name.includes('shield') || name.includes('security') || name.includes('verified') || 
+               name.includes('fingerprint') || name.includes('eye') || name.includes('hide') ||
+               name.includes('show') || name.includes('key')) {
+        groups['Security'].push(icon);
+      }
+      // Finance
+      else if (name.includes('wallet') || name.includes('card') || name.includes('money') || 
+               name.includes('currency') || name.includes('bank') || name.includes('payment') ||
+               name.includes('transaction') || name.includes('receipt')) {
         groups['Finance'].push(icon);
+      }
+      // Objects (catch-all for remaining icons)
+      else if (name.includes('calendar') || name.includes('clock') || name.includes('location') || 
+               name.includes('star') || name.includes('heart') || name.includes('bookmark') || 
+               name.includes('document') || name.includes('folder') || name.includes('link') || 
+               name.includes('lock') || name.includes('unlock') || name.includes('tag') ||
+               name.includes('label') || name.includes('flag') || name.includes('pin')) {
+        groups['Objects'].push(icon);
+      }
+      // Miscellaneous (catch-all)
+      else {
+        groups['Miscellaneous'].push(icon);
       }
     });
 
-    // Filter out empty groups
-    return Object.fromEntries(
-      Object.entries(groups).filter(([, icons]) => icons.length > 0)
+    // Filter out empty groups and sort categories
+    const sortedGroups = Object.fromEntries(
+      Object.entries(groups)
+        .filter(([, icons]) => icons.length > 0)
+        .sort(([a], [b]) => a.localeCompare(b))
     );
+
+    return sortedGroups;
   }, [filteredIcons]);
 
   const handleCopyIcon = (iconName: string) => {
@@ -80,6 +174,7 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
   // Emoji mapping for visual representation (since actual icons need the Icon component)
   const getIconEmoji = (name: string): string => {
     const emojiMap: Record<string, string> = {
+      // Navigation
       'IcHome': '🏠',
       'IcSearch': '🔍',
       'IcMenu': '☰',
@@ -91,6 +186,12 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
       'IcChevronRight': '›',
       'IcChevronUp': '⌃',
       'IcChevronDown': '⌄',
+      'IcBack': '←',
+      'IcForward': '→',
+      'IcNext': '→',
+      'IcPrevious': '←',
+      
+      // Actions
       'IcPlus': '+',
       'IcMinus': '−',
       'IcClose': '✕',
@@ -103,17 +204,34 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
       'IcShare': '↗️',
       'IcCopy': '📋',
       'IcSave': '💾',
+      'IcFilter': '🔽',
+      'IcMore': '⋯',
+      'IcMoreVertical': '⋮',
+      'IcMoreHorizontal': '⋯',
+      'IcAdd': '+',
+      'IcRemove': '−',
+      
+      // User & Account
       'IcUser': '👤',
       'IcUsers': '👥',
       'IcSettings': '⚙️',
       'IcProfile': '👤',
       'IcLogout': '🚪',
       'IcLogin': '🔐',
+      'IcAccount': '👤',
+      'IcAvatar': '👤',
+      
+      // Communication
       'IcMail': '✉️',
       'IcPhone': '📱',
       'IcChat': '💬',
       'IcNotification': '🔔',
       'IcBell': '🔔',
+      'IcMessage': '💬',
+      'IcSend': '📤',
+      'IcReply': '↩️',
+      
+      // Media
       'IcPlay': '▶️',
       'IcPause': '⏸️',
       'IcStop': '⏹️',
@@ -123,11 +241,21 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
       'IcCamera': '📷',
       'IcImage': '🖼️',
       'IcVideo': '🎥',
+      'IcMusic': '🎵',
+      'IcHeadphones': '🎧',
+      
+      // Status
       'IcInfo': 'ℹ️',
       'IcWarning': '⚠️',
       'IcError': '❌',
       'IcSuccess': '✅',
       'IcQuestion': '❓',
+      'IcAlert': '⚠️',
+      'IcCheckCircle': '✅',
+      'IcXCircle': '❌',
+      'IcInfoCircle': 'ℹ️',
+      
+      // Objects
       'IcCalendar': '📅',
       'IcClock': '🕐',
       'IcLocation': '📍',
@@ -139,13 +267,123 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
       'IcLink': '🔗',
       'IcLock': '🔒',
       'IcUnlock': '🔓',
+      'IcTag': '🏷️',
+      'IcLabel': '🏷️',
+      'IcFlag': '🚩',
+      'IcPin': '📌',
+      
+      // Finance
       'IcWallet': '👛',
       'IcCard': '💳',
       'IcMoney': '💰',
       'IcCurrency': '💲',
       'IcBank': '🏦',
+      'IcCurrencyRupee': '₹',
+      'IcPayment': '💳',
+      'IcTransaction': '💸',
+      'IcReceipt': '🧾',
+      
+      // Shopping & Commerce
+      'IcCart': '🛒',
+      'IcShoppingBag': '🛍️',
+      'IcShoppingCart': '🛒',
+      'IcStore': '🏪',
+      'IcGift': '🎁',
+      
+      // Technology
+      'IcWifi': '📶',
+      'IcBluetooth': '📶',
+      'IcBattery': '🔋',
+      'IcSignal': '📶',
+      'IcCloud': '☁️',
+      'IcCloudUpload': '☁️⬆️',
+      'IcCloudDownload': '☁️⬇️',
+      'IcDatabase': '🗄️',
+      'IcServer': '🖥️',
+      
+      // Files & Documents
+      'IcFile': '📄',
+      'IcFiles': '📄',
+      'IcArchive': '📦',
+      'IcZip': '📦',
+      'IcPdf': '📄',
+      'IcExcel': '📊',
+      'IcWord': '📝',
+      
+      // Social & Sharing
+      'IcFacebook': '📘',
+      'IcTwitter': '🐦',
+      'IcInstagram': '📷',
+      'IcLinkedIn': '💼',
+      'IcWhatsApp': '💬',
+      'IcTelegram': '✈️',
+      'IcYoutube': '📺',
+      
+      // UI Elements
+      'IcGrid': '⊞',
+      'IcList': '☰',
+      'IcLayout': '⊞',
+      'IcColumns': '▦',
+      'IcRows': '☰',
+      'IcDrag': '⋮⋮',
+      'IcResize': '↔️',
+      'IcFullscreen': '⛶',
+      'IcMinimize': '➖',
+      'IcMaximize': '➕',
+      
+      // Time & Date
+      'IcTime': '🕐',
+      'IcDate': '📅',
+      'IcSchedule': '📅',
+      'IcHistory': '🕐',
+      'IcRecent': '🕐',
+      
+      // Security
+      'IcShield': '🛡️',
+      'IcSecurity': '🔒',
+      'IcVerified': '✓',
+      'IcFingerprint': '👆',
+      'IcEye': '👁️',
+      'IcEyeOff': '👁️‍🗨️',
+      'IcHide': '🙈',
+      'IcShow': '👁️',
+      'IcKey': '🔑',
+      
+      // Miscellaneous
+      'IcHelp': '❓',
+      'IcSupport': '💬',
+      'IcFeedback': '💬',
+      'IcBug': '🐛',
+      'IcCode': '</>',
+      'IcTerminal': '💻',
+      'IcGlobe': '🌐',
+      'IcLanguage': '🌐',
+      'IcTranslate': '🌐',
+      'IcAward': '🏆',
+      'IcTrophy': '🏆',
+      'IcFire': '🔥',
+      'IcTrending': '📈',
+      'IcChart': '📊',
+      'IcGraph': '📈',
+      'IcAnalytics': '📊',
     };
-    return emojiMap[name] || '📦';
+    
+    // Fallback: try to infer emoji from icon name
+    if (!emojiMap[name]) {
+      const lowerName = name.toLowerCase();
+      if (lowerName.includes('arrow')) return '→';
+      if (lowerName.includes('check')) return '✓';
+      if (lowerName.includes('close')) return '✕';
+      if (lowerName.includes('plus') || lowerName.includes('add')) return '+';
+      if (lowerName.includes('minus') || lowerName.includes('remove')) return '−';
+      if (lowerName.includes('star')) return '⭐';
+      if (lowerName.includes('heart')) return '❤️';
+      if (lowerName.includes('lock')) return '🔒';
+      if (lowerName.includes('unlock')) return '🔓';
+      return '📦';
+    }
+    
+    return emojiMap[name];
   };
 
   return (
@@ -236,11 +474,18 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
         >
           {`import { Icon } from '@marcelinodzn/ds-react';
 
+// Basic usage
 <Icon name="IcHome" size="M" />
-<Icon name="IcSearch" size="L" color="#f97316" />`}
+
+// Different sizes
+<Icon name="IcSearch" size="S" />
+<Icon name="IcUser" size="L" />
+
+// With custom color
+<Icon name="IcSettings" size="M" color="#f97316" />`}
         </code>
         <p className="text-xs mt-2" style={{ color: theme.text.low }}>
-          Click any icon above to copy its usage code
+          Click any icon above to copy its usage code. Icons are from the Jio Design System icon library.
         </p>
       </div>
     </div>

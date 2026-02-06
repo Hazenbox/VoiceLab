@@ -253,17 +253,29 @@ export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
 
   Icon: {
     name: 'Icon',
-    description: 'SVG icon component with extensive icon library',
+    description: 'SVG icon component with extensive icon library. Icons are available from the Jio Design System icon library. Use the icon browser in the Design System Library to explore all available icons.',
     category: 'other',
     props: {
-      name: { type: 'string', required: true, description: 'Icon name (e.g., "IcHome")' },
-      size: { type: '"S" | "M" | "L"', default: '"M"' },
-      color: { type: 'string', description: 'Icon color' },
+      name: { type: 'string', required: true, description: 'Icon name from the icon library (e.g., "IcHome", "IcSearch", "IcUser"). Browse icons in the Design System Library to see all available options.' },
+      size: { type: '"S" | "M" | "L"', default: '"M"', description: 'Size of the icon' },
+      color: { type: 'string', description: 'Optional custom color for the icon. If not provided, uses the default theme color.' },
     },
     code: `import { Icon } from '@marcelinodzn/ds-react';
 
+// Basic usage
 <Icon name="IcHome" size="M" />
-<Icon name="IcSearch" size="L" />`,
+
+// Different sizes
+<Icon name="IcSearch" size="S" />
+<Icon name="IcUser" size="L" />
+
+// With custom color
+<Icon name="IcSettings" size="M" color="#f97316" />
+
+// Common icons
+<Icon name="IcArrowLeft" size="M" />
+<Icon name="IcCheck" size="M" />
+<Icon name="IcClose" size="M" />`,
     hasLivePreview: true,
   },
 
@@ -712,37 +724,76 @@ export const TOKEN_CATEGORIES = {
 };
 
 // =============================================================================
-// Common Icons
+// Icon Library
 // =============================================================================
+// Comprehensive list of available icons from Jio Design System
+// Browse icons in the Design System Library to see all available options
 
 export const COMMON_ICONS = [
   // Navigation
   'IcHome', 'IcSearch', 'IcMenu', 'IcArrowLeft', 'IcArrowRight', 'IcArrowUp', 'IcArrowDown',
   'IcChevronLeft', 'IcChevronRight', 'IcChevronUp', 'IcChevronDown',
+  'IcBack', 'IcForward', 'IcNext', 'IcPrevious',
   
   // Actions
   'IcPlus', 'IcMinus', 'IcClose', 'IcCheck', 'IcEdit', 'IcDelete', 'IcRefresh',
-  'IcDownload', 'IcUpload', 'IcShare', 'IcCopy', 'IcSave',
+  'IcDownload', 'IcUpload', 'IcShare', 'IcCopy', 'IcSave', 'IcFilter',
+  'IcMore', 'IcMoreVertical', 'IcMoreHorizontal', 'IcAdd', 'IcRemove',
   
   // User & Account
   'IcUser', 'IcUsers', 'IcSettings', 'IcProfile', 'IcLogout', 'IcLogin',
+  'IcAccount', 'IcAvatar',
   
   // Communication
-  'IcMail', 'IcPhone', 'IcChat', 'IcNotification', 'IcBell',
+  'IcMail', 'IcPhone', 'IcChat', 'IcNotification', 'IcBell', 'IcMessage',
+  'IcSend', 'IcReply', 'IcForward',
   
   // Media
   'IcPlay', 'IcPause', 'IcStop', 'IcMicrophone', 'IcSpeaker', 'IcVolume',
-  'IcCamera', 'IcImage', 'IcVideo',
+  'IcCamera', 'IcImage', 'IcVideo', 'IcMusic', 'IcHeadphones',
   
   // Status
-  'IcInfo', 'IcWarning', 'IcError', 'IcSuccess', 'IcQuestion',
+  'IcInfo', 'IcWarning', 'IcError', 'IcSuccess', 'IcQuestion', 'IcAlert',
+  'IcCheckCircle', 'IcXCircle', 'IcInfoCircle',
   
   // Objects
   'IcCalendar', 'IcClock', 'IcLocation', 'IcStar', 'IcHeart', 'IcBookmark',
-  'IcDocument', 'IcFolder', 'IcLink', 'IcLock', 'IcUnlock',
+  'IcDocument', 'IcFolder', 'IcLink', 'IcLock', 'IcUnlock', 'IcKey',
+  'IcTag', 'IcLabel', 'IcFlag', 'IcPin',
   
   // Finance
-  'IcWallet', 'IcCard', 'IcMoney', 'IcCurrency', 'IcBank',
+  'IcWallet', 'IcCard', 'IcMoney', 'IcCurrency', 'IcBank', 'IcCurrencyRupee',
+  'IcPayment', 'IcTransaction', 'IcReceipt',
+  
+  // Shopping & Commerce
+  'IcCart', 'IcShoppingBag', 'IcShoppingCart', 'IcStore', 'IcGift',
+  
+  // Technology
+  'IcWifi', 'IcBluetooth', 'IcBattery', 'IcSignal', 'IcCloud', 'IcCloudUpload',
+  'IcCloudDownload', 'IcDatabase', 'IcServer',
+  
+  // Files & Documents
+  'IcFile', 'IcFiles', 'IcArchive', 'IcZip', 'IcPdf', 'IcExcel', 'IcWord',
+  
+  // Social & Sharing
+  'IcFacebook', 'IcTwitter', 'IcInstagram', 'IcLinkedIn', 'IcWhatsApp',
+  'IcTelegram', 'IcYoutube',
+  
+  // UI Elements
+  'IcGrid', 'IcList', 'IcLayout', 'IcColumns', 'IcRows', 'IcDrag',
+  'IcResize', 'IcFullscreen', 'IcMinimize', 'IcMaximize',
+  
+  // Time & Date
+  'IcTime', 'IcDate', 'IcSchedule', 'IcHistory', 'IcRecent',
+  
+  // Security
+  'IcShield', 'IcSecurity', 'IcVerified', 'IcFingerprint', 'IcEye',
+  'IcEyeOff', 'IcHide', 'IcShow',
+  
+  // Miscellaneous
+  'IcHelp', 'IcSupport', 'IcFeedback', 'IcBug', 'IcCode', 'IcTerminal',
+  'IcGlobe', 'IcLanguage', 'IcTranslate', 'IcAward', 'IcTrophy',
+  'IcFire', 'IcTrending', 'IcChart', 'IcGraph', 'IcAnalytics',
 ];
 
 // =============================================================================
