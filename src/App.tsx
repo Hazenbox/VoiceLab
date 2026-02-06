@@ -27,6 +27,7 @@ import {
   ModelSelector,
   DesignSystemLibrary,
   LibraryPage,
+  HowItWorksPage,
   AIOrb,
   // Content Trust System components
   ContentContextSelector,
@@ -810,6 +811,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           onProjectSelect={() => setActiveView('main')}
           onNavigateToDesignSystem={() => setActiveView('design-system')}
           isDesignSystemActive={false}
+          onNavigateToHowItWorks={() => setActiveView('how-it-works')}
+          isHowItWorksActive={false}
           colorMode={colorMode}
           onColorModeChange={onColorModeChange}
         />
@@ -883,6 +886,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           onProjectSelect={() => setActiveView('main')}
           onNavigateToDesignSystem={() => setActiveView('design-system')}
           isDesignSystemActive={false}
+          onNavigateToHowItWorks={() => setActiveView('how-it-works')}
+          isHowItWorksActive={false}
           colorMode={colorMode}
           onColorModeChange={onColorModeChange}
         />
@@ -927,6 +932,38 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     );
   }
 
+  // Render how it works view
+  if (activeView === 'how-it-works') {
+    return (
+      <div 
+        className="flex h-screen"
+        style={{ backgroundColor: theme.background.ghost }}
+      >
+        <ProjectSidebar 
+          onNavigateToLibrary={() => setActiveView('library')}
+          isLibraryActive={false}
+          onNavigateToUsage={() => setShowUsageModal(true)}
+          onProjectSelect={() => setActiveView('main')}
+          onNavigateToDesignSystem={() => setActiveView('design-system')}
+          isDesignSystemActive={false}
+          onNavigateToHowItWorks={() => setActiveView('how-it-works')}
+          isHowItWorksActive={true}
+          colorMode={colorMode}
+          onColorModeChange={onColorModeChange}
+        />
+        <main className="flex-1 overflow-hidden">
+          <HowItWorksPage onBack={() => setActiveView('main')} />
+        </main>
+
+        {/* Usage Modal */}
+        <UsageModal
+          isOpen={showUsageModal}
+          onClose={() => setShowUsageModal(false)}
+        />
+      </div>
+    );
+  }
+
   // Render main view - Always use Jio components
   const ChatPanelComponent = ChatPanel;
   
@@ -941,8 +978,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         isLibraryActive={false}
         onNavigateToUsage={() => setShowUsageModal(true)}
         onProjectSelect={() => setActiveView('main')}
-          onNavigateToDesignSystem={() => setActiveView('design-system')}
-          isDesignSystemActive={activeView === 'design-system' as any}
+        onNavigateToDesignSystem={() => setActiveView('design-system')}
+        isDesignSystemActive={false}
+        onNavigateToHowItWorks={() => setActiveView('how-it-works')}
+        isHowItWorksActive={false}
         colorMode={colorMode}
         onColorModeChange={onColorModeChange}
       />

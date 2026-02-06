@@ -23,6 +23,7 @@ export { ModeToggle, ModeToggleCompact } from './ModeToggle';
 export { AudioBubble } from './AudioBubble';
 export { DesignSystemLibrary } from './DesignSystemLibrary';
 export { LibraryPage } from './LibraryPage';
+export { HowItWorksPage } from './HowItWorksPage';
 export { ChannelSelector } from './ChannelSelector';
 export { PlatformSelector } from './PlatformSelector';
 export { Dropdown } from './Dropdown';
