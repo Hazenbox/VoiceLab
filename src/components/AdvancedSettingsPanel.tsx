@@ -295,7 +295,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                 Greeting
               </label>
               <div className="scaled-textarea-wrapper">
-                <div style={{ maxHeight: '72px', overflow: 'hidden' }}>
+                <div style={{ maxHeight: '90px', overflow: 'hidden' }}>
                   <TextArea
                     value={config.greeting}
                     onChange={(value: string) => onConfigChange({ ...config, greeting: value })}
@@ -315,6 +315,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                   .scaled-textarea-wrapper textarea {
                     font-size: 14px !important;
                     padding: 8px !important;
+                    min-height: 70px !important;
                   }
                 `}</style>
               </div>
