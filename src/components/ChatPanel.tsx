@@ -304,7 +304,7 @@ export const ChatPanel = memo(function ChatPanel({
           }}
         />
 
-        {/* Arrow send button - Jio DS Button (single type, primary, high emphasis) */}
+        {/* Arrow send button - Jio DS Button (high attention style) */}
         <div className="flex-shrink-0" style={{ width: '36px', height: '36px' }}>
           <Button
             onPress={handleSubmit}
@@ -321,6 +321,8 @@ export const ChatPanel = memo(function ChatPanel({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              backgroundColor: '#3730a3',
+              color: '#ffffff',
             }}
           >
             <svg 
