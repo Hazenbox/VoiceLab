@@ -140,9 +140,10 @@ export function getConfiguredLLMProviders(): Array<{
 export function getDefaultLLMProviderType(): LLMProviderType {
   const configured = getConfiguredLLMProviders();
   
-  // Prefer in order: huggingface (free), openai, claude, gemini, qwen, inworld
+  // Prefer in order: qwen (DashScope), huggingface (free), gemini, inworld
+  // Note: OpenAI and Claude removed - requires separate API keys
   const preferenceOrder: LLMProviderType[] = [
-    'huggingface', 'openai', 'claude', 'gemini-text', 'qwen-text', 'inworld'
+    'qwen-text', 'huggingface', 'gemini-text', 'inworld'
   ];
   
   for (const type of preferenceOrder) {
@@ -151,8 +152,8 @@ export function getDefaultLLMProviderType(): LLMProviderType {
     }
   }
   
-  // Fallback to first configured or openai
-  return configured[0]?.type || 'openai';
+  // Fallback to first configured or qwen-text
+  return configured[0]?.type || 'qwen-text';
 }
 
 /**

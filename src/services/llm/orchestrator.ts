@@ -369,7 +369,7 @@ export function getOrchestratorInstance(): LLMOrchestrator {
     
     const fallbackChain = import.meta.env.VITE_LLM_FALLBACK_CHAIN
       ? import.meta.env.VITE_LLM_FALLBACK_CHAIN.split(',').map((s: string) => s.trim())
-      : ['huggingface', 'openai', 'claude']; // Default with huggingface as primary (free)
+      : ['qwen-text', 'huggingface']; // Default with qwen (DashScope) as primary
 
     orchestratorInstance = new LLMOrchestrator({
       enableRetry,
