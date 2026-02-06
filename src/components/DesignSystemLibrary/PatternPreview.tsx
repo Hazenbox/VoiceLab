@@ -458,7 +458,7 @@ const StatsCardPattern: React.FC = () => {
           </p>
           <p
             className="text-xs mt-1"
-            style={{ color: stat.change.startsWith('+') ? '#22c55e' : '#ef4444' }}
+            style={{ color: stat.change.startsWith('+') ? '#00A859' : '#ef4444' }}
           >
             {stat.change}
           </p>
@@ -641,7 +641,7 @@ const TransactionListPattern: React.FC = () => {
           </div>
           <span
             className="font-semibold"
-            style={{ color: tx.amount > 0 ? '#22c55e' : theme.text.high }}
+            style={{ color: tx.amount > 0 ? '#00A859' : theme.text.high }}
           >
             {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}
           </span>

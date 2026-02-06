@@ -39,7 +39,7 @@ const ScoreIndicator: React.FC<{
   violations: number;
 }> = ({ score, label, status, violations }) => {
   const theme = useThemeColors();
-  const statusColors = { pass: '#22c55e', warning: '#eab308', fail: '#ef4444' };
+  const statusColors = { pass: '#00A859', warning: '#eab308', fail: '#ef4444' };
   
   return (
     <div 
@@ -308,11 +308,11 @@ const ComplianceJustificationSection: React.FC<{
       {/* Trust Summary Header */}
       <div 
         className="flex items-center gap-3 p-3 rounded-lg" 
-        style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}
+        style={{ backgroundColor: 'rgba(0, 168, 89, 0.1)' }}
       >
-        <ShieldCheckIcon className="flex-shrink-0 text-[#22c55e]" />
+        <ShieldCheckIcon className="flex-shrink-0 text-[#00A859]" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold" style={{ color: '#22c55e' }}>
+          <p className="text-sm font-semibold" style={{ color: '#00A859' }}>
             {trustSummary.totalRulesPassed}/{trustSummary.totalRulesChecked} rules followed
           </p>
           <p className="text-xs" style={{ color: theme.text.medium }}>
@@ -393,8 +393,8 @@ export const TrustContextPanel = memo(function TrustContextPanel({
               {trustScore && badge && (
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
                   style={{
-                    backgroundColor: `${badge.color === 'green' ? '#22c55e' : badge.color === 'yellow' ? '#eab308' : '#ef4444'}20`,
-                    color: badge.color === 'green' ? '#22c55e' : badge.color === 'yellow' ? '#eab308' : '#ef4444',
+                    backgroundColor: `${badge.color === 'green' ? '#00A859' : badge.color === 'yellow' ? '#eab308' : '#ef4444'}20`,
+                    color: badge.color === 'green' ? '#00A859' : badge.color === 'yellow' ? '#eab308' : '#ef4444',
                   }}>
                   {formatScore(trustScore.overall)}
                 </div>
@@ -476,8 +476,8 @@ export const TrustContextPanel = memo(function TrustContextPanel({
               {allViolations.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
+                    style={{ backgroundColor: 'rgba(0, 168, 89, 0.1)' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00A859" strokeWidth="2">
                       <path d="M5 13l4 4L19 7" />
                     </svg>
                   </div>

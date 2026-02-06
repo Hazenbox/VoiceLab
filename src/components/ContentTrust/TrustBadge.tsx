@@ -24,9 +24,9 @@ const BADGE_COLORS: Record<TrustCertification, {
   text: string;
 }> = {
   certified: {
-    bg: 'rgba(34, 197, 94, 0.15)',
-    border: 'rgba(34, 197, 94, 0.4)',
-    text: '#22c55e',
+    bg: 'rgba(0, 168, 89, 0.15)',
+    border: 'rgba(0, 168, 89, 0.4)',
+    text: '#00A859',
   },
   review_recommended: {
     bg: 'rgba(234, 179, 8, 0.15)',

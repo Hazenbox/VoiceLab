@@ -88,13 +88,13 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ state }) => {
           <span
             className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
             style={{
-              backgroundColor: state === AppState.LISTENING ? '#4ade80' : '#fb923c',
+              backgroundColor: state === AppState.LISTENING ? '#00A85980' : '#fb923c',
             }}
           />
           <span
             className="relative inline-flex rounded-full h-1.5 w-1.5"
             style={{
-              backgroundColor: state === AppState.LISTENING ? '#22c55e' : '#f97316',
+              backgroundColor: state === AppState.LISTENING ? '#00A859' : '#f97316',
             }}
           />
         </span>
