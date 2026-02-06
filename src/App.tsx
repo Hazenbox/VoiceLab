@@ -298,8 +298,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         selectedLLMProvider,
         {
           messages,
-          maxTokens: 1000,
-          temperature: 0.7,
+          maxTokens: maxTokens,
+          temperature: temperature,
+          stream: streamResponse,
           signal: getChatAbortSignal(), // Get fresh signal after reset
         },
         createLLMProvider

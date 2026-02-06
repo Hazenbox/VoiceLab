@@ -245,16 +245,34 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               value={voiceGender}
               onChange={onVoiceGenderChange}
               disabled={disabled}
+              tooltip="Choose male or female voice for audio generation"
             />
             
             {/* Greeting */}
             <div className="space-y-2">
-              <label 
-                className="block text-xs font-normal"
-                style={{ color: theme.text.medium }}
-              >
-                Greeting
-              </label>
+              <div className="flex items-center gap-1.5">
+                <label 
+                  className="block text-xs font-normal"
+                  style={{ color: theme.text.medium }}
+                >
+                  Greeting
+                </label>
+                <div
+                  className="cursor-help"
+                  title="The first message the AI says when starting a conversation"
+                >
+                  <svg 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 16 16" 
+                    fill="none"
+                    style={{ opacity: 0.5 }}
+                  >
+                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
               <div className="scaled-textarea-wrapper">
                 <div style={{ maxHeight: '80px', overflow: 'hidden' }}>
                   <TextArea
@@ -292,6 +310,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               options={['slow', 'medium', 'fast']}
               onChange={(value) => updatePersona('pace', value as Pace)}
               disabled={disabled}
+              tooltip="How the AI structures its responses - slow gives more detail, fast is more concise"
             />
             
             {/* Response Length */}
@@ -301,6 +320,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               options={['short', 'medium', 'long']}
               onChange={(value) => onConfigChange({ ...config, maxResponseLength: value as ResponseLength })}
               disabled={disabled}
+              tooltip="How long AI responses should be. Short (30 words), Medium (50), Long (100)"
             />
           </Accordion>
           
@@ -315,6 +335,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               step={0.1}
               onChange={(value) => onTemperatureChange?.(value)}
               disabled={disabled}
+              tooltip="Controls randomness. Low (0) = focused/predictable. High (1) = creative/varied"
             />
             
             {/* Max Tokens */}
@@ -326,6 +347,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               step={100}
               onChange={(value) => onMaxTokensChange?.(value)}
               disabled={disabled}
+              tooltip="Maximum response length in tokens. Higher = longer possible responses"
             />
             
             {/* Stream Response */}
@@ -334,15 +356,33 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               checked={streamResponse}
               onChange={(checked) => onStreamResponseChange?.(checked)}
               disabled={disabled}
+              tooltip="Show response word-by-word as it generates, instead of all at once"
             />
           </Accordion>
           
           {/* Project Defaults Section */}
           <Accordion title="Project Defaults" icon={<ProjectIcon />}>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
-                Default Ecosystem
-              </label>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
+                  Default Ecosystem
+                </label>
+                <div
+                  className="cursor-help"
+                  title="Pre-selects the product category for new content"
+                >
+                  <svg 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 16 16" 
+                    fill="none"
+                    style={{ opacity: 0.5 }}
+                  >
+                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
               <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
                   value={defaultEcosystem}
@@ -355,9 +395,26 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
-                Default Channel
-              </label>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
+                  Default Channel
+                </label>
+                <div
+                  className="cursor-help"
+                  title="Pre-selects the content format for new content"
+                >
+                  <svg 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 16 16" 
+                    fill="none"
+                    style={{ opacity: 0.5 }}
+                  >
+                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
               <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
                   value={defaultChannel}
@@ -370,9 +427,26 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
-                Default Language
-              </label>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
+                  Default Language
+                </label>
+                <div
+                  className="cursor-help"
+                  title="Pre-selects the language for content generation"
+                >
+                  <svg 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 16 16" 
+                    fill="none"
+                    style={{ opacity: 0.5 }}
+                  >
+                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
               <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
                   value={defaultLanguage}
@@ -385,9 +459,26 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
-                Default Region
-              </label>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
+                  Default Region
+                </label>
+                <div
+                  className="cursor-help"
+                  title="Pre-selects regional preferences for content"
+                >
+                  <svg 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 16 16" 
+                    fill="none"
+                    style={{ opacity: 0.5 }}
+                  >
+                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
               <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
                   value={defaultRegion}
@@ -410,11 +501,29 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               max={100}
               onChange={(value) => updateTrustSetting('minimumScore', value)}
               disabled={disabled}
+              tooltip="Content below this trust score gets flagged for review"
             />
             <div className="flex items-center gap-2">
-              <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
-                Validation Strictness
-              </label>
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
+                  Validation Strictness
+                </label>
+                <div
+                  className="cursor-help"
+                  title="Lenient = fewer warnings, Strict = catches more potential issues"
+                >
+                  <svg 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 16 16" 
+                    fill="none"
+                    style={{ opacity: 0.5 }}
+                  >
+                    <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
               <div className="max-w-[50%] ml-auto">
                 <SearchableDropdown
                   value={trustSettings.validationStrictness}
@@ -431,18 +540,21 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               checked={trustSettings.blockBelowThreshold}
               onChange={(checked) => updateTrustSetting('blockBelowThreshold', checked)}
               disabled={disabled}
+              tooltip="Reject content that scores below minimum instead of just flagging"
             />
             <Toggle
               label="Auto-fix Minor Issues"
               checked={trustSettings.autoFixMinorIssues}
               onChange={(checked) => updateTrustSetting('autoFixMinorIssues', checked)}
               disabled={disabled}
+              tooltip="Automatically fix small issues like punctuation and capitalization"
             />
             <Toggle
               label="Show Detailed Breakdown"
               checked={trustSettings.showDetailedBreakdown}
               onChange={(checked) => updateTrustSetting('showDetailedBreakdown', checked)}
               disabled={disabled}
+              tooltip="Show individual scores from each validation agent"
             />
           </Accordion>
           

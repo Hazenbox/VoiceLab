@@ -10,6 +10,7 @@ interface SliderProps {
   onChange: (value: number) => void;
   disabled?: boolean;
   formatValue?: (value: number) => string;
+  tooltip?: string;
 }
 
 /**
@@ -32,8 +33,10 @@ export const Slider: React.FC<SliderProps> = ({
   onChange,
   disabled = false,
   formatValue,
+  tooltip,
 }) => {
   const theme = useThemeColors();
+  const [showTooltip, setShowTooltip] = React.useState(false);
   
   // Calculate fill percentage for visual feedback
   const fillPercentage = ((value - min) / (max - min)) * 100;
@@ -49,12 +52,46 @@ export const Slider: React.FC<SliderProps> = ({
     <div className="space-y-2">
       {/* Label and Value */}
       <div className="flex items-center justify-between">
-        <label
-          className="text-xs font-normal"
-          style={{ color: theme.text.medium }}
-        >
-          {label}
-        </label>
+        <div className="flex items-center gap-1.5 relative">
+          <label
+            className="text-xs font-normal"
+            style={{ color: theme.text.medium }}
+          >
+            {label}
+          </label>
+          {tooltip && (
+            <>
+              <div
+                className="cursor-help"
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+              >
+                <svg 
+                  width="12" 
+                  height="12" 
+                  viewBox="0 0 16 16" 
+                  fill="none"
+                  style={{ opacity: 0.5 }}
+                >
+                  <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                  <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </div>
+              {showTooltip && (
+                <div
+                  className="absolute left-0 top-full mt-1 z-50 px-2 py-1.5 rounded text-xs whitespace-normal max-w-xs"
+                  style={{
+                    backgroundColor: theme.isLight ? '#262626' : '#f5f5f5',
+                    color: theme.isLight ? '#ffffff' : '#000000',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  }}
+                >
+                  {tooltip}
+                </div>
+              )}
+            </>
+          )}
+        </div>
         <span
           className="text-xs font-mono font-normal"
           style={{ color: theme.text.medium }}

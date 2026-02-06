@@ -40,6 +40,8 @@ export interface SearchableDropdownProps {
   title?: string;
   /** Force dropdown direction (default: 'auto' - smart positioning) */
   direction?: 'up' | 'down' | 'auto';
+  /** Tooltip text to show on hover */
+  tooltip?: string;
 }
 
 // =============================================================================
@@ -57,12 +59,14 @@ export const SearchableDropdown = memo(function SearchableDropdown({
   className = '',
   title,
   direction = 'auto',
+  tooltip,
 }: SearchableDropdownProps) {
   const theme = useThemeColors();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [dropdownDirection, setDropdownDirection] = useState<'down' | 'up'>('down');
+  const [showTooltip, setShowTooltip] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
