@@ -160,7 +160,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Projects Header */}
         <div 
-          className="p-2 flex items-center justify-between"
+          className="px-3 py-2 flex items-center justify-between"
           style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
         >
           <h2 
