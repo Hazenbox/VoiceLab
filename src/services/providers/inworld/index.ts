@@ -4,6 +4,7 @@ import type {
   InworldSendTextRequest,
   InworldResponse 
 } from './types';
+import { getApiBaseUrl } from '../../../config/providers';
 
 export class InworldService {
   private config: InworldServiceConfig;
@@ -118,8 +119,8 @@ export function createInworldService(): InworldService {
     throw new Error('VITE_INWORLD_CHARACTER is not configured');
   }
 
-  // Use proxy for API calls
-  const proxyUrl = `http://${import.meta.env.VITE_WS_PROXY_HOST || 'localhost'}:${import.meta.env.VITE_WS_PROXY_PORT || 3001}`;
+  // Use proxy for API calls - works in both production (Vercel) and development
+  const proxyUrl = getApiBaseUrl();
 
   return new InworldService({
     apiKey,

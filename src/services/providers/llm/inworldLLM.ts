@@ -1,6 +1,7 @@
 /**
  * Inworld LLM Provider
  * Production-ready implementation with error handling and usage tracking
+ * Routes through /api/inworld serverless function in production for security
  */
 
 import {
@@ -13,6 +14,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
+import { getApiBaseUrl } from '../../../config/providers';
 
 export interface InworldLLMConfig {
   apiKey: string;
@@ -200,12 +202,12 @@ export class InworldLLMProvider implements LLMProvider {
 }
 
 export function createInworldLLMProvider(config?: Partial<InworldLLMConfig>): InworldLLMProvider {
-  const proxyHost = import.meta.env.VITE_WS_PROXY_HOST || 'localhost';
-  const proxyPort = import.meta.env.VITE_WS_PROXY_PORT || '3001';
+  // Get API base URL for proxy
+  const apiBase = getApiBaseUrl();
   
   return new InworldLLMProvider({
     apiKey: config?.apiKey || import.meta.env.VITE_INWORLD_API_KEY || '',
     character: config?.character || import.meta.env.VITE_INWORLD_CHARACTER || '',
-    proxyUrl: config?.proxyUrl || `http://${proxyHost}:${proxyPort}`,
+    proxyUrl: config?.proxyUrl || apiBase,
   });
 }

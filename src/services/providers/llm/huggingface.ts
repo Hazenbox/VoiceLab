@@ -2,6 +2,7 @@
  * Hugging Face LLM Provider
  * Production-ready implementation with error handling, streaming, and usage tracking
  * Supports multiple models via Hugging Face Inference API
+ * Routes through /api/huggingface serverless function in production for security
  */
 
 import {
@@ -14,6 +15,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
+import { getApiBaseUrl } from '../../../config/providers';
 
 // Available HuggingFace models configuration
 export const HF_MODELS = {
@@ -401,10 +403,11 @@ export function createHuggingFaceProvider(config?: Partial<HuggingFaceConfig>): 
   // Validate model key
   const validModel = modelKey in HF_MODELS ? modelKey : 'qwen25-7b';
 
-  // Build proxy URL from environment variables for browser CORS bypass
-  const proxyHost = import.meta.env.VITE_WS_PROXY_HOST || 'localhost';
-  const proxyPort = import.meta.env.VITE_WS_PROXY_PORT || '3001';
-  const proxyUrl = config?.proxyUrl || `http://${proxyHost}:${proxyPort}/api/huggingface`;
+  // Get API base URL for proxy
+  const apiBase = getApiBaseUrl();
+  
+  // Build proxy URL - use API routes on Vercel or local proxy in development
+  const proxyUrl = config?.proxyUrl || `${apiBase}/api/huggingface`;
 
   return new HuggingFaceProvider({
     apiKey: config?.apiKey || import.meta.env.VITE_HUGGINGFACE_API_KEY || '',

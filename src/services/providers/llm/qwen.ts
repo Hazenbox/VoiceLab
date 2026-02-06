@@ -1,6 +1,7 @@
 /**
  * Qwen (Alibaba) LLM Provider
  * Production-ready implementation with error handling and usage tracking
+ * Routes through /api/llm serverless function in production for security
  */
 
 import {
@@ -13,6 +14,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
+import { getApiBaseUrl } from '../../../config/providers';
 
 export interface QwenConfig {
   apiKey: string;
@@ -172,12 +174,12 @@ export class QwenTextProvider implements LLMProvider {
 }
 
 export function createQwenTextProvider(config?: Partial<QwenConfig>): QwenTextProvider {
-  const proxyHost = import.meta.env.VITE_WS_PROXY_HOST || 'localhost';
-  const proxyPort = import.meta.env.VITE_WS_PROXY_PORT || '3001';
+  // Get API base URL for proxy
+  const apiBase = getApiBaseUrl();
   
   return new QwenTextProvider({
     apiKey: config?.apiKey || import.meta.env.VITE_DASHSCOPE_API_KEY || '',
     model: config?.model || 'qwen-turbo',
-    proxyUrl: config?.proxyUrl || `http://${proxyHost}:${proxyPort}`,
+    proxyUrl: config?.proxyUrl || apiBase,
   });
 }

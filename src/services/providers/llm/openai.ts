@@ -1,6 +1,7 @@
 /**
  * OpenAI LLM Provider
  * Production-ready implementation with error handling, streaming, and usage tracking
+ * Routes through /api/openai serverless function in production for security
  */
 
 import {
@@ -13,6 +14,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
+import { getApiBaseUrl, isProduction } from '../../../config/providers';
 
 export interface OpenAIConfig {
   apiKey: string;
@@ -33,16 +35,50 @@ export class OpenAIProvider implements LLMProvider {
     this.config = config;
   }
 
+  /**
+   * Get the API endpoint URL
+   * In production: use /api/openai serverless function
+   * In development: use direct API or local proxy
+   */
+  private getApiUrl(): string {
+    if (isProduction()) {
+      return `${getApiBaseUrl()}/api/openai`;
+    }
+    // In development, use the proxy server
+    const proxyBase = getApiBaseUrl();
+    if (proxyBase) {
+      return `${proxyBase}/api/openai`;
+    }
+    // Fallback to direct API (not recommended for production)
+    return `${this.config.baseUrl}/chat/completions`;
+  }
+
+  /**
+   * Get headers for API request
+   * In production: no auth header (handled by serverless function)
+   * In development with proxy: no auth header (handled by proxy)
+   */
+  private getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Only include auth header for direct API calls (fallback only)
+    const proxyBase = getApiBaseUrl();
+    if (!isProduction() && !proxyBase) {
+      headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+    }
+    
+    return headers;
+  }
+
   async generate(options: LLMGenerateOptions): Promise<LLMGenerateResult> {
     const startTime = Date.now();
 
     try {
-      const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
+      const response = await fetch(this.getApiUrl(), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
-        },
+        headers: this.getHeaders(),
         body: JSON.stringify({
           model: this.config.model,
           messages: options.messages.map(m => ({
@@ -102,12 +138,9 @@ export class OpenAIProvider implements LLMProvider {
     let totalTokens = 0;
 
     try {
-      const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
+      const response = await fetch(this.getApiUrl(), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.config.apiKey}`,
-        },
+        headers: this.getHeaders(),
         body: JSON.stringify({
           model: this.config.model,
           messages: options.messages.map(m => ({
@@ -189,6 +222,18 @@ export class OpenAIProvider implements LLMProvider {
 
   async healthCheck(): Promise<boolean> {
     try {
+      // In production, check the health endpoint
+      if (isProduction()) {
+        const response = await fetch(`${getApiBaseUrl()}/api/health`);
+        return response.ok;
+      }
+      // In development, check if proxy is available or API key is set
+      const proxyBase = getApiBaseUrl();
+      if (proxyBase) {
+        const response = await fetch(`${proxyBase}/health`);
+        return response.ok;
+      }
+      // Direct API check
       const response = await fetch(`${this.config.baseUrl}/models`, {
         headers: { 'Authorization': `Bearer ${this.config.apiKey}` },
       });
@@ -199,6 +244,15 @@ export class OpenAIProvider implements LLMProvider {
   }
 
   isReady(): boolean {
+    // In production, we don't need client-side API key
+    if (isProduction()) {
+      return true;
+    }
+    // In development with proxy, we don't need client-side API key
+    const proxyBase = getApiBaseUrl();
+    if (proxyBase) {
+      return true;
+    }
     return this.config.apiKey.length > 0;
   }
 

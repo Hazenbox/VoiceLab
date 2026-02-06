@@ -50,7 +50,7 @@ export const TrustBadge = memo(function TrustBadge({
   trustScore,
   onClick,
   size = 'md',
-  showScore = false,
+  showScore: _showScore = false,
   showTooltip = true,
   messageContent,
 }: TrustBadgeProps) {

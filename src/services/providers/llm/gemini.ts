@@ -1,6 +1,7 @@
 /**
  * Gemini LLM Provider
  * Production-ready implementation with error handling and usage tracking
+ * Routes through /api/gemini serverless function in production for security
  */
 
 import {
@@ -13,6 +14,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
+import { getApiBaseUrl, isProduction } from '../../../config/providers';
 
 export interface GeminiConfig {
   apiKey: string;
@@ -32,6 +34,32 @@ export class GeminiTextProvider implements LLMProvider {
     this.config = config;
   }
 
+  /**
+   * Get the API endpoint URL
+   * In production: use /api/gemini serverless function
+   * In development: use direct API with key in URL (or proxy if available)
+   */
+  private getApiUrl(stream: boolean = false): string {
+    if (isProduction()) {
+      return `${getApiBaseUrl()}/api/gemini`;
+    }
+    // In development, check if proxy is available
+    const proxyBase = getApiBaseUrl();
+    if (proxyBase) {
+      return `${proxyBase}/api/gemini`;
+    }
+    // Fallback to direct API (not recommended - exposes API key)
+    const action = stream ? 'streamGenerateContent?alt=sse' : 'generateContent';
+    return `https://generativelanguage.googleapis.com/v1beta/models/${this.config.model}:${action}&key=${this.config.apiKey}`;
+  }
+
+  /**
+   * Check if we should use proxy mode (send model/action in body instead of URL)
+   */
+  private useProxyMode(): boolean {
+    return isProduction() || Boolean(getApiBaseUrl());
+  }
+
   async generate(options: LLMGenerateOptions): Promise<LLMGenerateResult> {
     const startTime = Date.now();
 
@@ -45,23 +73,32 @@ export class GeminiTextProvider implements LLMProvider {
       }));
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.config.model}:generateContent?key=${this.config.apiKey}`;
+      const useProxy = this.useProxyMode();
+      const url = this.getApiUrl(false);
+      
+      const requestBody: Record<string, unknown> = {
+        system_instruction: systemInstruction 
+          ? { parts: [{ text: systemInstruction.content }] } 
+          : undefined,
+        contents,
+        generationConfig: {
+          maxOutputTokens: options.maxTokens || 1000,
+          temperature: options.temperature ?? 0.7,
+          topP: options.topP,
+          stopSequences: options.stopSequences,
+        },
+      };
+
+      // Add model and action for proxy mode
+      if (useProxy) {
+        requestBody.model = this.config.model;
+        requestBody.action = 'generateContent';
+      }
       
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: systemInstruction 
-            ? { parts: [{ text: systemInstruction.content }] } 
-            : undefined,
-          contents,
-          generationConfig: {
-            maxOutputTokens: options.maxTokens || 1000,
-            temperature: options.temperature ?? 0.7,
-            topP: options.topP,
-            stopSequences: options.stopSequences,
-          },
-        }),
+        body: JSON.stringify(requestBody),
         signal: options.signal,
       });
 
@@ -123,21 +160,31 @@ export class GeminiTextProvider implements LLMProvider {
       }));
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.config.model}:streamGenerateContent?alt=sse&key=${this.config.apiKey}`;
+      const useProxy = this.useProxyMode();
+      const url = this.getApiUrl(true);
+      
+      const requestBody: Record<string, unknown> = {
+        system_instruction: systemInstruction 
+          ? { parts: [{ text: systemInstruction.content }] } 
+          : undefined,
+        contents,
+        generationConfig: {
+          maxOutputTokens: options.maxTokens || 1000,
+          temperature: options.temperature ?? 0.7,
+        },
+      };
+
+      // Add model and stream flag for proxy mode
+      if (useProxy) {
+        requestBody.model = this.config.model;
+        requestBody.stream = true;
+        requestBody.action = 'streamGenerateContent';
+      }
       
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: systemInstruction 
-            ? { parts: [{ text: systemInstruction.content }] } 
-            : undefined,
-          contents,
-          generationConfig: {
-            maxOutputTokens: options.maxTokens || 1000,
-            temperature: options.temperature ?? 0.7,
-          },
-        }),
+        body: JSON.stringify(requestBody),
         signal: options.signal,
       });
 
@@ -212,6 +259,18 @@ export class GeminiTextProvider implements LLMProvider {
 
   async healthCheck(): Promise<boolean> {
     try {
+      // In production, check the health endpoint
+      if (isProduction()) {
+        const response = await fetch(`${getApiBaseUrl()}/api/health`);
+        return response.ok;
+      }
+      // In development, check if proxy is available
+      const proxyBase = getApiBaseUrl();
+      if (proxyBase) {
+        const response = await fetch(`${proxyBase}/health`);
+        return response.ok;
+      }
+      // Direct API check
       const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${this.config.apiKey}`;
       const response = await fetch(url);
       return response.ok;
@@ -221,6 +280,15 @@ export class GeminiTextProvider implements LLMProvider {
   }
 
   isReady(): boolean {
+    // In production, we don't need client-side API key
+    if (isProduction()) {
+      return true;
+    }
+    // In development with proxy, we don't need client-side API key
+    const proxyBase = getApiBaseUrl();
+    if (proxyBase) {
+      return true;
+    }
     return this.config.apiKey.length > 0;
   }
 

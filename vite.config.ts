@@ -6,13 +6,14 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const isProd = mode === 'production'
   
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      'process.env.DASHSCOPE_API_KEY': JSON.stringify(env.VITE_DASHSCOPE_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
-      'process.env.TTS_PROVIDER': JSON.stringify(env.VITE_TTS_PROVIDER || 'alibaba'),
+      // Only expose non-sensitive configuration to client
+      // API keys are handled server-side via /api routes
+      'process.env.TTS_PROVIDER': JSON.stringify(env.VITE_TTS_PROVIDER || 'elevenlabs'),
       'process.env.CONVERSATION_PROVIDER': JSON.stringify(env.VITE_CONVERSATION_PROVIDER || 'alibaba'),
     },
     server: {
@@ -23,6 +24,16 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, './src'),
       },
+    },
+    // Strip console.log and debugger statements in production
+    esbuild: {
+      drop: isProd ? ['console', 'debugger'] : [],
+    },
+    build: {
+      // Generate sourcemaps for production debugging (optional)
+      sourcemap: false,
+      // Optimize chunk size
+      chunkSizeWarningLimit: 1000,
     },
   }
 })

@@ -136,12 +136,44 @@ export function getAlibabaConfig(): AlibabaConfig {
 }
 
 /**
+ * Check if running in production (Vercel) environment
+ */
+export function isProduction(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return hostname !== 'localhost' && hostname !== '127.0.0.1';
+}
+
+/**
+ * Get the base URL for API calls
+ * In production (Vercel): use same-origin /api routes
+ * In development: use local proxy server
+ */
+export function getApiBaseUrl(): string {
+  if (isProduction()) {
+    return ''; // Same-origin API routes on Vercel
+  }
+  const port = parseInt(getEnv('VITE_WS_PROXY_PORT', '3001'), 10);
+  const host = getEnv('VITE_WS_PROXY_HOST', 'localhost');
+  return `http://${host}:${port}`;
+}
+
+/**
  * Get proxy server configuration
  * The proxy is needed because:
  * - Browser WebSockets cannot send custom Authorization headers
  * - Browser fetch requests are blocked by CORS policy
  */
 export function getProxyConfig(): ProxyConfig {
+  if (isProduction()) {
+    // In production, use same-origin API routes
+    return {
+      wsProxyUrl: '', // WebSocket not supported on Vercel
+      httpProxyUrl: '', // Same origin, no prefix needed
+      wsProxyPort: 0,
+    };
+  }
+  // Local development
   const port = parseInt(getEnv('VITE_WS_PROXY_PORT', '3001'), 10);
   const host = getEnv('VITE_WS_PROXY_HOST', 'localhost');
   return {

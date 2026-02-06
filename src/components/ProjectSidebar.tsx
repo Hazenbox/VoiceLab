@@ -3,7 +3,7 @@ import { useProject } from '../context/ProjectContext';
 import { useAudioLibrary } from '../context/AudioLibraryContext';
 import { useThemeColors } from '../theme';
 import type { ColorMode } from '../types';
-import { Dropdown, type DropdownOption } from './Dropdown';
+import type { DropdownOption } from './Dropdown';
 import { Button } from '@marcelinodzn/ds-react';
 
 interface ProjectSidebarProps {

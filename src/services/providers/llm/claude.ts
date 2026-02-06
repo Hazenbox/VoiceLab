@@ -1,6 +1,7 @@
 /**
  * Claude (Anthropic) LLM Provider
  * Production-ready implementation with error handling and usage tracking
+ * Routes through /api/claude serverless function in production for security
  */
 
 import {
@@ -13,6 +14,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
+import { getApiBaseUrl, isProduction } from '../../../config/providers';
 
 export interface ClaudeConfig {
   apiKey: string;
@@ -32,6 +34,44 @@ export class ClaudeProvider implements LLMProvider {
     this.config = config;
   }
 
+  /**
+   * Get the API endpoint URL
+   * In production: use /api/claude serverless function
+   * In development: use local proxy or direct API
+   */
+  private getApiUrl(): string {
+    if (isProduction()) {
+      return `${getApiBaseUrl()}/api/claude`;
+    }
+    // In development, use the proxy server
+    const proxyBase = getApiBaseUrl();
+    if (proxyBase) {
+      return `${proxyBase}/api/claude`;
+    }
+    // Fallback to direct API (not recommended for production)
+    return 'https://api.anthropic.com/v1/messages';
+  }
+
+  /**
+   * Get headers for API request
+   * In production: no auth header (handled by serverless function)
+   * In development with proxy: no auth header (handled by proxy)
+   */
+  private getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Only include auth headers for direct API calls (fallback only)
+    const proxyBase = getApiBaseUrl();
+    if (!isProduction() && !proxyBase) {
+      headers['x-api-key'] = this.config.apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+    }
+    
+    return headers;
+  }
+
   async generate(options: LLMGenerateOptions): Promise<LLMGenerateResult> {
     const startTime = Date.now();
 
@@ -40,13 +80,9 @@ export class ClaudeProvider implements LLMProvider {
     const conversationMessages = options.messages.filter(m => m.role !== 'system');
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch(this.getApiUrl(), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.config.apiKey,
-          'anthropic-version': '2023-06-01',
-        },
+        headers: this.getHeaders(),
         body: JSON.stringify({
           model: this.config.model,
           system: systemMessage?.content,
@@ -113,13 +149,9 @@ export class ClaudeProvider implements LLMProvider {
     const conversationMessages = options.messages.filter(m => m.role !== 'system');
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch(this.getApiUrl(), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.config.apiKey,
-          'anthropic-version': '2023-06-01',
-        },
+        headers: this.getHeaders(),
         body: JSON.stringify({
           model: this.config.model,
           system: systemMessage?.content,
@@ -207,6 +239,17 @@ export class ClaudeProvider implements LLMProvider {
 
   async healthCheck(): Promise<boolean> {
     try {
+      // In production, check the health endpoint
+      if (isProduction()) {
+        const response = await fetch(`${getApiBaseUrl()}/api/health`);
+        return response.ok;
+      }
+      // In development, check if proxy is available or API key is set
+      const proxyBase = getApiBaseUrl();
+      if (proxyBase) {
+        const response = await fetch(`${proxyBase}/health`);
+        return response.ok;
+      }
       // Claude doesn't have a simple health endpoint, so we'll just check if API key is set
       return this.isReady();
     } catch {
@@ -215,6 +258,15 @@ export class ClaudeProvider implements LLMProvider {
   }
 
   isReady(): boolean {
+    // In production, we don't need client-side API key
+    if (isProduction()) {
+      return true;
+    }
+    // In development with proxy, we don't need client-side API key
+    const proxyBase = getApiBaseUrl();
+    if (proxyBase) {
+      return true;
+    }
     return this.config.apiKey.length > 0;
   }
 

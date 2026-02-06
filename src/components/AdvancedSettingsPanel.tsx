@@ -10,7 +10,7 @@
  * 4. Appearance - Theme, design system
  */
 
-import React, { memo, useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import type { 
   VoiceGender, 
   ColorMode, 
