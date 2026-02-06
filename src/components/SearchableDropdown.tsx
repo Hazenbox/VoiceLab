@@ -294,8 +294,11 @@ export const SearchableDropdown = memo(function SearchableDropdown({
             {/* Title Header */}
             {title && (
               <div
-                className="px-2 py-1 text-[10px] font-normal"
-                style={{ color: theme.text.low }}
+                className="px-3 py-1 text-[10px] font-normal"
+                style={{ 
+                  color: theme.text.low,
+                  opacity: 0.75,
+                }}
               >
                 {title}
               </div>
@@ -374,9 +377,10 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                     {/* Group Header - match ModelSelector styling */}
                     {group && Object.keys(groupedOptions).length > 1 && (
                       <div
-                        className="px-2 py-1 text-[10px] font-normal"
+                        className="px-3 py-1 text-[10px] font-normal"
                         style={{
                           color: theme.text.high,
+                          opacity: 0.75,
                         }}
                       >
                         {group}
