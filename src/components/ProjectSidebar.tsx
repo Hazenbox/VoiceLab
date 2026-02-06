@@ -355,6 +355,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               onPress={() => createProject()}
               appearance="primary"
               size="S"
+              fullWidth
               aria-label="Create new project"
             >
               <div className="flex items-center gap-2">
