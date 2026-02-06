@@ -303,11 +303,11 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
     >
       {/* Header */}
       <header 
-        className="flex items-center px-6 py-4 flex-shrink-0"
+        className="flex items-center px-6 py-2 flex-shrink-0"
         style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
       >
         <h1 
-          className="text-2xl font-semibold"
+          className="text-xl font-semibold"
           style={{ color: theme.text.high }}
         >
           How It Works
