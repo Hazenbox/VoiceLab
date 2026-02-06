@@ -377,8 +377,9 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           <div 
             className="px-2 py-1.5 text-xs font-medium"
             style={{ 
-              color: theme.isLight ? '#a1a1aa' : '#71717a',
+              color: 'var(--color-zinc-500)',
               fontSize: '12px',
+              letterSpacing: '-0.2px',
             }}
           >
             Recent
