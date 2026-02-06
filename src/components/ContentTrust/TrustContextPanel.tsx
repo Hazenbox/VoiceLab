@@ -32,7 +32,7 @@ const ScoreIndicator: React.FC<{
     <div className="flex items-center justify-between py-2">
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: statusColors[status] }} />
-        <span className="text-sm" style={{ color: theme.text.high }}>{label}</span>
+        <span style={{ color: theme.text.high, fontSize: '13px' }}>{label}</span>
       </div>
       <div className="flex items-center gap-2">
         {violations > 0 && (
@@ -60,7 +60,13 @@ const ViolationItem: React.FC<{ violation: Violation }> = ({ violation }) => {
         <div className="flex-1">
           <p className="text-sm" style={{ color: theme.text.high }}>{violation.rule}</p>
           {violation.suggestion && (
-            <p className="text-xs mt-1" style={{ color: theme.text.medium }}>💡 {violation.suggestion}</p>
+            <p className="text-xs mt-1 flex items-start gap-1" style={{ color: theme.text.medium }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4M12 8h.01" />
+              </svg>
+              <span>{violation.suggestion}</span>
+            </p>
           )}
           {violation.text && (
             <p className="text-xs mt-1 font-mono px-2 py-1 rounded"
@@ -188,7 +194,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                 {explanation.summary}
               </p>
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: theme.text.low }}>
+                <h3 className="text-xs font-semibold tracking-wider mb-3" style={{ color: theme.text.low }}>
                   Score Breakdown
                 </h3>
                 <div className="divide-y" style={{ borderColor: theme.stroke.low }}>
@@ -199,7 +205,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                 </div>
               </div>
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: theme.text.low }}>
+                <h3 className="text-xs font-semibold tracking-wider mb-3" style={{ color: theme.text.low }}>
                   Recommendations
                 </h3>
                 <ul className="space-y-2">
@@ -224,7 +230,9 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                 <div className="text-center py-8">
                   <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
                     style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
-                    <span className="text-2xl">✓</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
                   </div>
                   <p className="text-sm" style={{ color: theme.text.medium }}>No violations found!</p>
                 </div>
@@ -239,9 +247,12 @@ export const TrustContextPanel = memo(function TrustContextPanel({
         {/* Footer */}
         {isOpen && autoFixAvailable && trustScore && allViolations.length > 0 && (
           <div className="px-4 py-3 border-t flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
-            <button onClick={onAutoFix} className="w-full py-2.5 rounded-lg text-sm font-medium"
+            <button onClick={onAutoFix} className="w-full py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2"
               style={{ backgroundColor: theme.accent, color: '#ffffff' }}>
-              ✨ Auto-Fix ({trustScore.autoFixableCount} fixable)
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              Auto-Fix ({trustScore.autoFixableCount} fixable)
             </button>
           </div>
         )}
