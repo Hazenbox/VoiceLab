@@ -301,18 +301,19 @@ export function ModelSelector({
                   role="option"
                   aria-selected={isSelected}
                 >
-                  {/* Health/config indicator */}
-                  <span
-                    className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                      showHealth && provider.isHealthy === false
-                        ? 'bg-red-500'
-                        : provider.isConfigured
-                          ? 'bg-green-500'
-                          : 'bg-zinc-300 dark:bg-zinc-600'
-                    }`}
-                  />
-                  
                   <span className="flex-1 truncate">{provider.displayName}</span>
+                  
+                  {/* Selected checkmark */}
+                  {isSelected && (
+                    <svg
+                      className="w-3.5 h-3.5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
                   
                   {/* Streaming badge */}
                   {provider.supportsStreaming && provider.isConfigured && (
@@ -382,16 +383,19 @@ export function ModelSelector({
                       role="option"
                       aria-selected={isSelected}
                     >
-                      {/* Config indicator */}
-                      <span
-                        className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          provider.isConfigured
-                            ? 'bg-green-500'
-                            : 'bg-zinc-300 dark:bg-zinc-600'
-                        }`}
-                      />
-                      
                       <span className="flex-1 truncate">{provider.displayName}</span>
+                      
+                      {/* Selected checkmark */}
+                      {isSelected && (
+                        <svg
+                          className="w-3.5 h-3.5 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
                       
                       {!provider.isConfigured && (
                         <span className="text-[10px]" style={{ color: theme.text.low }}>
