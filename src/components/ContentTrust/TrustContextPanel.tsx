@@ -192,8 +192,8 @@ const CollapsibleSection: React.FC<{
         <div className="flex items-center gap-2">
           {badge !== undefined && (
             <span 
-              className="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
-              style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}
+              className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+              style={{ backgroundColor: '#00A859', color: '#ffffff' }}
             >
               {badge}
             </span>
@@ -225,16 +225,16 @@ const GuardrailItem: React.FC<{ guardrail: GuardrailStatus }> = ({ guardrail }) 
       <div 
         className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
         style={{ 
-          backgroundColor: isFollowed ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)',
+          backgroundColor: isFollowed ? '#00A859' : '#eab308',
         }}
       >
         {isFollowed ? (
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         ) : (
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="3">
-            <circle cx="12" cy="12" r="1" fill="#eab308" />
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3">
+            <circle cx="12" cy="12" r="1" fill="#ffffff" />
           </svg>
         )}
       </div>
@@ -265,10 +265,10 @@ const ValidationAgentItem: React.FC<{ validation: ValidationAgentSummary }> = ({
           {validation.agentName}
         </span>
         <span 
-          className="text-[10px] px-1.5 py-0.5 rounded font-medium"
+          className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
           style={{ 
-            backgroundColor: isPerfect ? 'rgba(34, 197, 94, 0.15)' : 'rgba(234, 179, 8, 0.15)',
-            color: isPerfect ? '#22c55e' : '#eab308',
+            backgroundColor: isPerfect ? '#00A859' : '#eab308',
+            color: '#ffffff',
           }}
         >
           {validation.rulesPassed}/{validation.rulesChecked}
