@@ -661,43 +661,56 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
             <div 
               className="p-4 rounded-lg mb-4"
               style={{ 
-                backgroundColor: theme.background.ghost,
+                backgroundColor: 'transparent',
                 border: `1px solid ${theme.stroke.medium}`
               }}
             >
-              <div className="grid grid-cols-7 gap-2 mb-4">
+              <svg width="100%" height="180" viewBox="0 0 800 180">
+                {/* 7 Agent Nodes */}
                 {[
-                  { name: 'Gender Neutrality', weight: '15%' },
-                  { name: 'Inclusivity', weight: '15%' },
-                  { name: 'Cultural Sensitivity', weight: '15%' },
-                  { name: 'Accessibility', weight: '10%' },
-                  { name: 'Compliance', weight: '15%' },
-                  { name: 'Style', weight: '15%' },
-                  { name: 'Brand', weight: '15%' },
+                  { name: 'Gender Neutrality', weight: '15%', x: 0 },
+                  { name: 'Inclusivity', weight: '15%', x: 110 },
+                  { name: 'Cultural Sensitivity', weight: '15%', x: 220 },
+                  { name: 'Accessibility', weight: '10%', x: 330 },
+                  { name: 'Compliance', weight: '15%', x: 440 },
+                  { name: 'Style', weight: '15%', x: 550 },
+                  { name: 'Brand', weight: '15%', x: 660 },
                 ].map((agent) => (
-                  <div 
-                    key={agent.name}
-                    className="p-2 rounded text-center"
-                    style={{ backgroundColor: theme.background.ghost }}
-                  >
-                    <div className="text-xs font-medium" style={{ color: theme.text.high }}>{agent.name}</div>
-                    <div className="text-xs" style={{ color: theme.accent }}>{agent.weight}</div>
-                  </div>
+                  <g key={agent.name}>
+                    <FlowNode 
+                      x={agent.x} 
+                      y={0} 
+                      width={90} 
+                      height={50} 
+                      label={agent.name} 
+                      sublabel={agent.weight}
+                      color={theme.background.bold} 
+                      textColor={theme.text.high} 
+                      strokeColor={theme.stroke.medium} 
+                    />
+                    <FlowArrow 
+                      x1={agent.x + 45} 
+                      y1={55} 
+                      x2={agent.x + 45} 
+                      y2={100} 
+                      color={theme.accent} 
+                    />
+                  </g>
                 ))}
-              </div>
-              
-              <div className="flex items-center justify-center gap-4">
-                <svg className="w-6 h-6" fill="none" stroke={theme.stroke.medium} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-                <div 
-                  className="px-4 py-2 rounded-lg text-center"
-                  style={{ backgroundColor: theme.accent, color: '#fff' }}
-                >
-                  <div className="font-medium">Trust Score</div>
-                  <div className="text-sm">Certified / Review / Issues Found</div>
-                </div>
-              </div>
+                
+                {/* Trust Score Node */}
+                <FlowNode 
+                  x={300} 
+                  y={110} 
+                  width={200} 
+                  height={60} 
+                  label="Trust Score" 
+                  sublabel="Certified / Review / Issues"
+                  color={theme.accent} 
+                  textColor="#fff" 
+                  strokeColor={theme.accent} 
+                />
+              </svg>
             </div>
 
             <p className="text-sm" style={{ color: theme.text.medium }}>
