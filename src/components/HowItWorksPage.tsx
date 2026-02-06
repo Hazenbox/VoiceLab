@@ -141,7 +141,7 @@ const Section = memo(function Section({ number, title, description, children }: 
     <section className="mb-12">
       <div className="flex items-start gap-4 mb-6">
         <div 
-          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-lg"
+          className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-sm"
           style={{ 
             backgroundColor: theme.accent,
             color: '#fff'
