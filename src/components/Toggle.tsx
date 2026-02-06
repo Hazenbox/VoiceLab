@@ -29,7 +29,7 @@ export const Toggle: React.FC<ToggleProps> = ({
   return (
     <div className="flex items-center justify-between">
       <label
-        className="text-xs font-medium"
+        className="text-xs font-normal"
         style={{ color: theme.text.medium }}
       >
         {label}

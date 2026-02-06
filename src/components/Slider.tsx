@@ -50,13 +50,13 @@ export const Slider: React.FC<SliderProps> = ({
       {/* Label and Value */}
       <div className="flex items-center justify-between">
         <label
-          className="text-xs font-medium"
+          className="text-xs font-normal"
           style={{ color: theme.text.medium }}
         >
           {label}
         </label>
         <span
-          className="text-xs font-mono font-medium"
+          className="text-xs font-mono font-normal"
           style={{ color: theme.text.medium }}
         >
           {displayValue}

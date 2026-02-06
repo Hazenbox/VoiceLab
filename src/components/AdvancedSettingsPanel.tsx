@@ -289,7 +289,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
             {/* Greeting */}
             <div className="space-y-2">
               <label 
-                className="block text-xs font-medium"
+                className="block text-xs font-normal"
                 style={{ color: theme.text.medium }}
               >
                 Greeting
@@ -373,7 +373,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           {/* Project Defaults Section */}
           <Section title="Project Defaults" icon={<ProjectIcon />}>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium flex-shrink-0" style={{ color: theme.text.medium }}>
+              <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                 Default Ecosystem
               </label>
               <div className="max-w-[50%] ml-auto">
@@ -388,7 +388,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium flex-shrink-0" style={{ color: theme.text.medium }}>
+              <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                 Default Channel
               </label>
               <div className="max-w-[50%] ml-auto">
@@ -403,7 +403,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium flex-shrink-0" style={{ color: theme.text.medium }}>
+              <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                 Default Language
               </label>
               <div className="max-w-[50%] ml-auto">
@@ -418,7 +418,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium flex-shrink-0" style={{ color: theme.text.medium }}>
+              <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                 Default Region
               </label>
               <div className="max-w-[50%] ml-auto">
@@ -450,7 +450,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               disabled={disabled}
             />
             <div className="flex items-center gap-2">
-              <label className="text-xs font-medium flex-shrink-0" style={{ color: theme.text.medium }}>
+              <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
                 Validation Strictness
               </label>
               <div className="max-w-[50%] ml-auto">

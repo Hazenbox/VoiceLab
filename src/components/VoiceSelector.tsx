@@ -26,7 +26,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
   return (
     <div className="flex items-center justify-between">
       <label 
-        className="text-xs font-medium"
+        className="text-xs font-normal"
         style={{ color: theme.text.medium }}
       >
         Voice Model
