@@ -311,11 +311,14 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                     justify-content: center !important;
                     align-items: flex-start !important;
                     padding: 8px !important;
+                    width: 100% !important;
                   }
                   .scaled-textarea-wrapper textarea {
                     font-size: 14px !important;
                     padding: 8px !important;
                     min-height: 70px !important;
+                    width: 100% !important;
+                    box-sizing: border-box !important;
                   }
                 `}</style>
               </div>
