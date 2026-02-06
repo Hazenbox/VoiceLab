@@ -303,36 +303,15 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
     >
       {/* Header */}
       <header 
-        className="flex items-center gap-4 px-6 py-4 flex-shrink-0"
+        className="flex items-center px-6 py-4 flex-shrink-0"
         style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
       >
-        <button
-          onClick={onBack}
-          className="p-2 rounded-lg transition-colors hover:opacity-80 cursor-pointer"
-          style={{ 
-            backgroundColor: theme.background.subtle,
-            color: theme.text.high 
-          }}
-          aria-label="Go back"
+        <h1 
+          className="text-2xl font-semibold"
+          style={{ color: theme.text.high }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <div>
-          <h1 
-            className="text-2xl font-semibold"
-            style={{ color: theme.text.high }}
-          >
-            How It Works
-          </h1>
-          <p 
-            className="text-sm"
-            style={{ color: theme.text.medium }}
-          >
-            Complete guide to the chat generation flow
-          </p>
-        </div>
+          How It Works
+        </h1>
       </header>
 
       {/* Content */}
