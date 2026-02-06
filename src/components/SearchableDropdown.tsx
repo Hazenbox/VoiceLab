@@ -59,14 +59,19 @@ export const SearchableDropdown = memo(function SearchableDropdown({
   className = '',
   title,
   direction = 'auto',
-  tooltip,
+  tooltip: _tooltip,
 }: SearchableDropdownProps) {
   const theme = useThemeColors();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [dropdownDirection, setDropdownDirection] = useState<'down' | 'up'>('down');
-  const [showTooltip, setShowTooltip] = useState(false);
+  const [_showTooltip, _setShowTooltip] = useState(false);
+  
+  // Suppress unused variable warnings for future tooltip feature
+  void _tooltip;
+  void _showTooltip;
+  void _setShowTooltip;
   
   const containerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
