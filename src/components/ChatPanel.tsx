@@ -286,7 +286,7 @@ export const ChatPanel = memo(function ChatPanel({
         )}
 
         {/* Input Area - Grok-style pill-shaped input */}
-        <div className="p-4">
+        <div className="py-4">
           <div 
             className={`${lineCount === 1 ? 'rounded-full' : 'rounded-2xl'} flex items-center px-2 py-1.5 gap-1`}
             style={{ 
