@@ -9,6 +9,7 @@ export {
   getScoreColor,
   getScoreExplanation,
   shouldBlockContent,
+  getComplianceJustification,
 } from './trustScoreCalculator';
 
 export type {

@@ -250,6 +250,56 @@ export interface TrustScore {
   processingTimeMs: number;
 }
 
+/**
+ * Guardrail compliance status for UI display
+ */
+export interface GuardrailStatus {
+  id: string;
+  rule: string;
+  description: string;
+  status: 'followed' | 'partial';
+  confidence: 'high' | 'medium';
+}
+
+/**
+ * Validation agent results summary for UI display
+ */
+export interface ValidationAgentSummary {
+  agentId: string;
+  agentName: string;
+  rulesChecked: number;
+  rulesPassed: number;
+  keyRulesFollowed: string[];
+}
+
+/**
+ * Trust summary for quick overview
+ */
+export interface TrustSummary {
+  totalRulesChecked: number;
+  totalRulesPassed: number;
+  compliancePercentage: number;
+  intelligenceIndicators: string[];
+}
+
+/**
+ * Complete compliance justification for building user trust
+ * Shows which rules have been followed and provides transparency
+ */
+export interface ComplianceJustification {
+  /** The content that was analyzed (truncated for display) */
+  analyzedContent: string;
+  
+  /** Brand guardrails status */
+  guardrailsFollowed: GuardrailStatus[];
+  
+  /** Validation agents status (rules passed) */
+  validationsPassed: ValidationAgentSummary[];
+  
+  /** Summary for quick trust building */
+  trustSummary: TrustSummary;
+}
+
 // =============================================================================
 // GENERATION CONTEXT TYPES
 // =============================================================================

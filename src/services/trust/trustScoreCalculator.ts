@@ -10,9 +10,13 @@ import type {
   TrustCertification,
   TrustSettings,
   ValidationResult,
+  ComplianceJustification,
+  GuardrailStatus,
+  ValidationAgentSummary,
 } from '../../types';
 import { DEFAULT_TRUST_SETTINGS } from '../../types';
 import type { PipelineValidationResult, ValidationAgentId } from '../validation/types';
+import { BRAND_GUARDRAILS } from '../prompt/promptBuilder';
 
 /**
  * Map agent IDs to breakdown fields
@@ -207,6 +211,234 @@ export function shouldBlockContent(trustScore: TrustScore, settings: TrustSettin
   return trustScore.overall < settings.minimumScore;
 }
 
+// =============================================================================
+// COMPLIANCE JUSTIFICATION HELPERS
+// =============================================================================
+
+/**
+ * Map of agent names to their rule counts
+ */
+const AGENT_RULE_COUNTS: Record<string, number> = {
+  'Gender Neutrality': 5,
+  'Inclusivity': 5,
+  'Cultural Sensitivity': 3,
+  'Accessibility': 3,
+  'Compliance': 3,
+  'Style Consistency': 5,
+  'Brand Alignment': 2,
+};
+
+/**
+ * Map of agent names to their key rules for display
+ */
+const AGENT_KEY_RULES: Record<string, string[]> = {
+  'Gender Neutrality': [
+    'Gender-neutral job titles',
+    'Inclusive pronouns',
+    'Non-gendered language',
+  ],
+  'Inclusivity': [
+    'Person-first language',
+    'No assumptions about ability',
+    'Avoids elitist terms',
+  ],
+  'Cultural Sensitivity': [
+    'No regional stereotypes',
+    'Culturally respectful',
+    'Avoids sensitive references',
+  ],
+  'Accessibility': [
+    'Descriptive link text',
+    'Color-independent references',
+    'Text alternatives provided',
+  ],
+  'Compliance': [
+    'No absolute claims',
+    'Terms clearly stated',
+    'Substantiated superlatives',
+  ],
+  'Style Consistency': [
+    'Correct brand capitalization',
+    'Simple language used',
+    'Professional punctuation',
+  ],
+  'Brand Alignment': [
+    'Warm, friendly tone',
+    'Positive framing',
+    'User-centric language',
+  ],
+};
+
+/**
+ * Map guardrail IDs to relevant agent score keys
+ */
+const GUARDRAIL_TO_AGENTS: Record<string, (keyof TrustScoreBreakdown)[]> = {
+  warmth: ['brandAlignment', 'styleConsistency'],
+  no_jargon: ['styleConsistency', 'accessibility'],
+  action_clarity: ['accessibility', 'compliance'],
+  respect_time: ['styleConsistency'],
+  inclusive: ['genderNeutrality', 'inclusivity', 'culturalSensitivity'],
+  no_elitism: ['inclusivity'],
+  empathy: ['brandAlignment'],
+  trust_transparency: ['compliance', 'brandAlignment'],
+  celebrate: ['brandAlignment'],
+  dignity: ['inclusivity', 'culturalSensitivity', 'brandAlignment'],
+};
+
+/**
+ * Safely truncate content for display (prevents data leaks)
+ */
+function truncateContent(content: string, maxLength: number = 150): string {
+  if (!content) return '';
+  const trimmed = content.trim();
+  if (trimmed.length <= maxLength) return trimmed;
+  return trimmed.substring(0, maxLength).trim() + '...';
+}
+
+/**
+ * Determine guardrail compliance status based on trust score
+ */
+function determineGuardrailStatus(
+  trustScore: TrustScore,
+  guardrailId: string
+): 'followed' | 'partial' {
+  const relevantAgents = GUARDRAIL_TO_AGENTS[guardrailId] || [];
+  
+  if (relevantAgents.length === 0) {
+    // No specific agent mapping, use overall score
+    return trustScore.overall >= 90 ? 'followed' : 'partial';
+  }
+  
+  // Calculate average score from relevant agents
+  const scores = relevantAgents.map(key => trustScore.breakdown[key]);
+  const avgScore = scores.reduce((sum, s) => sum + s, 0) / scores.length;
+  
+  return avgScore >= 90 ? 'followed' : 'partial';
+}
+
+/**
+ * Get the total number of rules for an agent
+ */
+function getAgentRuleCount(agentName: string): number {
+  return AGENT_RULE_COUNTS[agentName] || 3;
+}
+
+/**
+ * Get the key rules that passed for a validation result
+ */
+function getPassedRules(validationResult: ValidationResult): string[] {
+  const keyRules = AGENT_KEY_RULES[validationResult.agentName] || [];
+  const violatedRules = new Set(validationResult.violations.map(v => v.rule));
+  
+  // Return rules that weren't violated
+  return keyRules.filter(rule => {
+    // Check if any violation matches this key rule (partial match)
+    return !Array.from(violatedRules).some(violated => 
+      violated.toLowerCase().includes(rule.toLowerCase().split(' ')[0])
+    );
+  });
+}
+
+/**
+ * Generate intelligence indicators based on trust score analysis
+ */
+function generateIntelligenceIndicators(trustScore: TrustScore): string[] {
+  const indicators: string[] = [];
+  
+  // Processing speed indicator
+  if (trustScore.processingTimeMs < 100) {
+    indicators.push('Real-time analysis');
+  } else if (trustScore.processingTimeMs < 500) {
+    indicators.push('Quick validation');
+  }
+  
+  // Confidence indicator
+  if (trustScore.confidence === 'high') {
+    indicators.push('High confidence');
+  }
+  
+  // Multi-agent indicator
+  if (trustScore.validationResults.length >= 5) {
+    indicators.push(`${trustScore.validationResults.length} AI agents`);
+  }
+  
+  // Perfect score indicator
+  if (trustScore.overall === 100) {
+    indicators.push('Perfect compliance');
+  } else if (trustScore.overall >= 95) {
+    indicators.push('Excellent compliance');
+  }
+  
+  // Auto-fix capability
+  if (trustScore.autoFixableCount > 0) {
+    indicators.push('Auto-fix available');
+  }
+  
+  // Brand guardrails indicator
+  indicators.push('10 brand guardrails');
+  
+  // Certification status
+  if (trustScore.certified) {
+    indicators.push('Jio Certified');
+  }
+  
+  return indicators.slice(0, 5); // Limit to 5 indicators
+}
+
+/**
+ * Get compliance justification for building user trust
+ * Shows which rules have been followed with detailed breakdown
+ */
+export function getComplianceJustification(
+  content: string,
+  trustScore: TrustScore
+): ComplianceJustification {
+  // 1. Truncate content for safe display (prevent data leaks)
+  const analyzedContent = truncateContent(content, 150);
+  
+  // 2. Map brand guardrails to followed status
+  const guardrailsFollowed: GuardrailStatus[] = BRAND_GUARDRAILS.map(g => ({
+    id: g.id,
+    rule: g.rule,
+    description: g.description,
+    status: determineGuardrailStatus(trustScore, g.id),
+    confidence: trustScore.confidence === 'low' ? 'medium' : 'high',
+  }));
+  
+  // 3. Extract validation rules passed from each agent
+  const validationsPassed: ValidationAgentSummary[] = trustScore.validationResults.map(vr => {
+    const rulesChecked = getAgentRuleCount(vr.agentName);
+    const rulesPassed = Math.max(0, rulesChecked - vr.violations.length);
+    
+    return {
+      agentId: vr.agentName.toLowerCase().replace(/\s/g, '_'),
+      agentName: vr.agentName,
+      rulesChecked,
+      rulesPassed,
+      keyRulesFollowed: getPassedRules(vr),
+    };
+  });
+  
+  // 4. Build trust summary
+  const totalRulesChecked = validationsPassed.reduce((sum, v) => sum + v.rulesChecked, 0);
+  const totalRulesPassed = validationsPassed.reduce((sum, v) => sum + v.rulesPassed, 0);
+  const compliancePercentage = totalRulesChecked > 0 
+    ? Math.round((totalRulesPassed / totalRulesChecked) * 100) 
+    : 100;
+  
+  return {
+    analyzedContent,
+    guardrailsFollowed,
+    validationsPassed,
+    trustSummary: {
+      totalRulesChecked,
+      totalRulesPassed,
+      compliancePercentage,
+      intelligenceIndicators: generateIntelligenceIndicators(trustScore),
+    },
+  };
+}
+
 export default {
   calculateTrustScore,
   getCertificationBadge,
@@ -214,4 +446,5 @@ export default {
   getScoreColor,
   getScoreExplanation,
   shouldBlockContent,
+  getComplianceJustification,
 };

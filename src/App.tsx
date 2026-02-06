@@ -1102,6 +1102,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         }}
         trustScore={selectedMessageForTrustPanel?.trustScore}
         generationContext={selectedMessageForTrustPanel?.generationContext}
+        analyzedContent={selectedMessageForTrustPanel?.content}
       />
 
       {/* Save Audio Modal */}
