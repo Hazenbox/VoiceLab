@@ -4,6 +4,7 @@ import { useAudioLibrary } from '../context/AudioLibraryContext';
 import { useThemeColors } from '../theme';
 import type { ColorMode } from '../types';
 import { Dropdown, type DropdownOption } from './Dropdown';
+import { TwButton } from './tailwind/TwButton';
 
 interface ProjectSidebarProps {
   onNavigateToLibrary: () => void;
@@ -350,23 +351,25 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         <div className="flex-1 overflow-y-auto px-2.5 py-1.5">
           {/* New Project Button */}
           <div className="mb-2">
-            <SidebarNavItem
-              icon={
+            <TwButton
+              onClick={() => createProject()}
+              appearance="secondary"
+              size="M"
+              aria-label="Create new project"
+            >
+              <div className="flex items-center gap-2">
                 <svg 
                   className="w-4 h-4" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
                   strokeWidth={2}
-                  style={{ color: theme.text.high }}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-              }
-              label="New thread"
-              onClick={() => createProject()}
-              ariaLabel="Create new project"
-            />
+                <span>New thread</span>
+              </div>
+            </TwButton>
           </div>
 
           {/* Your threads title */}
