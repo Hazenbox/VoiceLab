@@ -341,7 +341,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         <img 
           src={theme.isLight ? "/jio-voice-lab-light.svg?v=3" : "/jio-voice-lab-dark.svg?v=3"}
           alt="Jio Tone Studio" 
-          className="h-7"
+          className="h-8"
         />
       </div>
 
