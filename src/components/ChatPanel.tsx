@@ -298,10 +298,9 @@ export const ChatPanel = memo(function ChatPanel({
             minHeight: '28px',
             maxHeight: '84px', // 3 lines * 28px
             lineHeight: '22px',
-            paddingTop: '0px',
-            paddingBottom: '0px',
+            paddingTop: '3px',
+            paddingBottom: '3px',
             fontSize: '14px',
-            textAlign: 'center',
           }}
         />
 
