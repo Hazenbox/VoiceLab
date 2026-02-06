@@ -89,8 +89,8 @@ export function MessageContent({ content }: MessageContentProps) {
     // Paragraphs
     p: ({ children }) => (
       <p 
-        className="text-sm mb-2 leading-relaxed"
-        style={{ color: theme.text.high, letterSpacing: '-0.3px' }}
+        className="text-sm mb-2"
+        style={{ color: theme.text.high, letterSpacing: '-0.12px', lineHeight: '22px' }}
       >
         {children}
       </p>

@@ -297,7 +297,7 @@ export const ChatPanel = memo(function ChatPanel({
             color: theme.text.high,
             minHeight: '28px',
             maxHeight: '84px', // 3 lines * 28px
-            lineHeight: '28px',
+            lineHeight: '22px',
             paddingTop: '0px',
             paddingBottom: '0px',
             fontSize: '14px',
