@@ -32,7 +32,7 @@ const ScoreIndicator: React.FC<{
     <div className="flex items-center justify-between py-2">
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: statusColors[status] }} />
-        <span style={{ color: theme.text.high, fontSize: '13px' }}>{label}</span>
+        <span className="text-sm" style={{ color: theme.text.high }}>{label}</span>
       </div>
       <div className="flex items-center gap-2">
         {violations > 0 && (

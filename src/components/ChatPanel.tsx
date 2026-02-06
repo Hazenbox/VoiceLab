@@ -179,14 +179,12 @@ export const ChatPanel = memo(function ChatPanel({
       >
         {isUser ? (
           <div
-            className={`max-w-[80%] px-4 ${
+            className={`max-w-[80%] px-4 pt-2 ${
               message.content.split('\n').length > 1 || message.content.length > 50 ? 'rounded-2xl' : 'rounded-full'
             }`}
             style={{
               backgroundColor: theme.stroke.low,
               color: theme.text.high,
-              paddingTop: '8px',
-              paddingBottom: '0px',
             }}
           >
             <MessageContent content={message.content} role={message.role} />
