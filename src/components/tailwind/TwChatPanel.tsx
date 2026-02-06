@@ -78,7 +78,7 @@ export function TwChatPanel({
       {/* Centered container with 75% max-width on medium+ screens */}
       <div className="w-full md:max-w-[75%] mx-auto h-full flex flex-col">
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollable-container">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <p 

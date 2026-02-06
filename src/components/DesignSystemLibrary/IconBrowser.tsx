@@ -228,7 +228,7 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
           Usage
         </h4>
         <code
-          className="block text-xs p-3 rounded overflow-x-auto"
+          className="block text-xs p-3 rounded overflow-x-auto scrollable-container"
           style={{
             backgroundColor: theme.background.ghost,
             color: theme.text.medium,

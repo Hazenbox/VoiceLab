@@ -74,7 +74,7 @@ export const TwConfigPanel: React.FC<TwConfigPanelProps> = ({
 
       {/* Scrollable content */}
       {!isCollapsed && (
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollable-container">
         {/* Voice Selection */}
         <TwVoiceSelector
           value={voiceGender}

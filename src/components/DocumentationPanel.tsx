@@ -90,7 +90,7 @@ export const DocumentationPanel: React.FC<DocumentationPanelProps> = ({ onBack }
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollable-container">
         {filteredSections.length === 0 ? (
           <div 
             className="text-center py-8"

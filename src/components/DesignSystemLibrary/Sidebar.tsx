@@ -178,7 +178,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Navigation Tree */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+      <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollable-container">
         {filteredItems.length === 0 ? (
           <div
             className="text-center py-8 text-sm"

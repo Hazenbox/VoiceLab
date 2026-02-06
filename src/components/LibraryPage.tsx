@@ -185,7 +185,7 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({ onBack: _onBack }) => 
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 scrollable-container">
         {sortedAudios.length === 0 ? (
           /* Empty State */
           <div 

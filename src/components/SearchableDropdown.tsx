@@ -350,7 +350,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
             )}
 
             {/* Options List */}
-            <div className="overflow-y-auto flex-1 py-1">
+            <div className="overflow-y-auto flex-1 py-1 scrollable-container">
               {filteredOptions.length === 0 ? (
                 <div 
                   className="px-3 py-4 text-xs text-center"

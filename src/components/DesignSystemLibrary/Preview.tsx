@@ -53,7 +53,7 @@ export const Preview: React.FC<PreviewProps> = ({ item, colorMode: _colorMode })
         style={{ backgroundColor: theme.background.ghost }}
       >
         <PreviewHeader title="Icons" subtitle="Icon library" />
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 scrollable-container">
           <IconBrowser />
         </div>
       </div>
@@ -68,7 +68,7 @@ export const Preview: React.FC<PreviewProps> = ({ item, colorMode: _colorMode })
         style={{ backgroundColor: theme.background.ghost }}
       >
         <PreviewHeader title={item.label} subtitle="Design Token" />
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 scrollable-container">
           <TokenPreview categoryId={item.id} />
         </div>
       </div>
@@ -89,7 +89,7 @@ export const Preview: React.FC<PreviewProps> = ({ item, colorMode: _colorMode })
             title={componentData.name} 
             subtitle={`${componentData.category.charAt(0).toUpperCase() + componentData.category.slice(1)} Component`} 
           />
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-6 scrollable-container">
             <ComponentDetailPreview component={componentData} />
           </div>
         </div>
@@ -103,7 +103,7 @@ export const Preview: React.FC<PreviewProps> = ({ item, colorMode: _colorMode })
         style={{ backgroundColor: theme.background.ghost }}
       >
         <PreviewHeader title={item.label} subtitle="Component Category" />
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 scrollable-container">
           <CategoryOverview item={item} />
         </div>
       </div>
@@ -118,7 +118,7 @@ export const Preview: React.FC<PreviewProps> = ({ item, colorMode: _colorMode })
         style={{ backgroundColor: theme.background.ghost }}
       >
         <PreviewHeader title={item.label} subtitle="UI Pattern" />
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 scrollable-container">
           <PatternPreview patternId={item.id} />
         </div>
       </div>
@@ -133,7 +133,7 @@ export const Preview: React.FC<PreviewProps> = ({ item, colorMode: _colorMode })
         style={{ backgroundColor: theme.background.ghost }}
       >
         <PreviewHeader title={item.label} subtitle="Density Option" />
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 scrollable-container">
           <DensityPreview densityId={item.id} />
         </div>
       </div>
@@ -148,7 +148,7 @@ export const Preview: React.FC<PreviewProps> = ({ item, colorMode: _colorMode })
         style={{ backgroundColor: theme.background.ghost }}
       >
         <PreviewHeader title={item.label} subtitle="Guideline" />
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 scrollable-container">
           <GuidelinePreview guidelineId={item.id} />
         </div>
       </div>

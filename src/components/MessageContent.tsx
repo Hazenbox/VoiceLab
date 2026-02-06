@@ -161,7 +161,7 @@ export function MessageContent({ content }: MessageContentProps) {
 
     // Tables
     table: ({ children }) => (
-      <div className="overflow-x-auto my-3">
+      <div className="overflow-x-auto my-3 scrollable-container">
         <table 
           className="min-w-full text-sm border-collapse"
           style={{ 

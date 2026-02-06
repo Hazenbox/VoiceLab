@@ -348,7 +348,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       {/* Main Content Area - Projects */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {/* Projects List */}
-        <div className="flex-1 overflow-y-auto px-2.5 py-1.5">
+        <div className="flex-1 overflow-y-auto px-2.5 py-1.5 scrollable-container">
           {/* New Project Button */}
           <div className="mb-4">
             <Button

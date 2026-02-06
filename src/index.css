@@ -61,33 +61,60 @@ body.dark {
   @apply bg-zinc-950 text-white;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
+/* Custom scrollbar - Hidden by default, shown on hover */
+
+/* Hide scrollbars by default */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Show scrollbar on hover - container level */
+.scrollable-container:hover,
+.scrollable-container:hover * {
+  scrollbar-width: thin; /* Firefox */
+}
+
+.scrollable-container:hover::-webkit-scrollbar,
+.scrollable-container:hover *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
+/* Scrollbar track styling (only visible on hover) */
+.scrollable-container:hover::-webkit-scrollbar-track,
+.scrollable-container:hover *::-webkit-scrollbar-track {
   @apply bg-zinc-100;
 }
 
-.dark ::-webkit-scrollbar-track {
+.dark .scrollable-container:hover::-webkit-scrollbar-track,
+.dark .scrollable-container:hover *::-webkit-scrollbar-track {
   @apply bg-zinc-800;
 }
 
-::-webkit-scrollbar-thumb {
+/* Scrollbar thumb styling */
+.scrollable-container:hover::-webkit-scrollbar-thumb,
+.scrollable-container:hover *::-webkit-scrollbar-thumb {
   @apply bg-zinc-300 rounded-full;
 }
 
-.dark ::-webkit-scrollbar-thumb {
+.dark .scrollable-container:hover::-webkit-scrollbar-thumb,
+.dark .scrollable-container:hover *::-webkit-scrollbar-thumb {
   @apply bg-zinc-600 rounded-full;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.scrollable-container:hover::-webkit-scrollbar-thumb:hover,
+.scrollable-container:hover *::-webkit-scrollbar-thumb:hover {
   @apply bg-zinc-400;
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
+.dark .scrollable-container:hover::-webkit-scrollbar-thumb:hover,
+.dark .scrollable-container:hover *::-webkit-scrollbar-thumb:hover {
   @apply bg-zinc-500;
 }
 
