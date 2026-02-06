@@ -178,7 +178,7 @@ export const ChatPanel = memo(function ChatPanel({
       >
         {isUser ? (
           <div
-            className={`max-w-[80%] px-4 pt-2 pb-0 ${
+            className={`max-w-[80%] px-4 pt-1.5 pb-0 ${
               message.content.split('\n').length > 1 || message.content.length > 50 ? 'rounded-2xl' : 'rounded-full'
             }`}
             style={{
