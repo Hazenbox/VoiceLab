@@ -292,7 +292,7 @@ export const ChatPanel = memo(function ChatPanel({
           disabled={inputDisabled}
           aria-label="Message input"
           rows={1}
-          className="flex-1 bg-transparent outline-none text-sm px-2 resize-none overflow-y-auto"
+          className={`flex-1 bg-transparent outline-none text-sm px-2 resize-none ${lineCount > 1 ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
           style={{ 
             color: theme.text.high,
             minHeight: '28px',
