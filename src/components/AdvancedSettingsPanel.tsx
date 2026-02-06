@@ -305,6 +305,18 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
                     placeholder="Initial greeting message..."
                   />
                 </div>
+                <style>{`
+                  .scaled-textarea-wrapper > div > div > div {
+                    gap: 16px !important;
+                    justify-content: center !important;
+                    align-items: flex-start !important;
+                    padding: 8px !important;
+                  }
+                  .scaled-textarea-wrapper textarea {
+                    font-size: 14px !important;
+                    padding: 8px !important;
+                  }
+                `}</style>
               </div>
             </div>
             
