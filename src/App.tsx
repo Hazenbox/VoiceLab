@@ -988,7 +988,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   onSaveAudio={handleSaveAudioFromChat}
                   showEmptyState={chatMode !== 'voice'}
                   emptyStateMessage={chatMode === 'copy'
-                    ? 'Hello! Let\'s craft something amazing together. What would you like to create today?'
+                    ? 'What would you like to create today?'
                     : 'Start a voice conversation or type a message'}
                   inputDisabled={chatMode === 'voice' && appState !== AppState.IDLE && appState !== AppState.ERROR}
                   id={`${chatMode}-panel`}
