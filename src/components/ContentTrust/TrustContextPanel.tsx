@@ -42,7 +42,10 @@ const ScoreIndicator: React.FC<{
   const statusColors = { pass: '#22c55e', warning: '#eab308', fail: '#ef4444' };
   
   return (
-    <div className="flex items-center justify-between py-2">
+    <div 
+      className="flex items-center justify-between py-2 border-b last:border-b-0"
+      style={{ borderColor: theme.stroke.low }}
+    >
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: statusColors[status] }} />
         <span className="text-sm" style={{ color: theme.text.high }}>{label}</span>
@@ -161,17 +164,8 @@ const ContentPreview: React.FC<{ content: string }> = ({ content }) => {
   
   return (
     <div className="mb-4">
-      <h3 className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: theme.text.low }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-        </svg>
-        Analyzed Content
-      </h3>
       <div 
-        className="p-3 rounded-lg text-sm italic leading-relaxed" 
+        className="p-3 rounded-lg text-sm leading-relaxed" 
         style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
       >
         "{content}"
@@ -326,21 +320,6 @@ const ComplianceJustificationSection: React.FC<{
         </div>
       </div>
       
-      {/* Intelligence Indicators */}
-      {trustSummary.intelligenceIndicators.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {trustSummary.intelligenceIndicators.map((indicator, i) => (
-            <span 
-              key={i} 
-              className="text-[10px] px-2 py-1 rounded-full font-medium"
-              style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
-            >
-              {indicator}
-            </span>
-          ))}
-        </div>
-      )}
-      
       {/* Guardrails Followed (Collapsible) */}
       <CollapsibleSection 
         title="Brand Guardrails Followed" 
@@ -480,7 +459,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                 <h3 className="text-xs font-semibold mb-3" style={{ color: theme.text.low }}>
                   Score Breakdown
                 </h3>
-                <div className="divide-y" style={{ borderColor: theme.stroke.low }}>
+                <div>
                   {explanation.agentBreakdown.map(agent => (
                     <ScoreIndicator key={agent.name} score={agent.score} label={agent.name}
                       status={agent.status} violations={agent.violations} />
