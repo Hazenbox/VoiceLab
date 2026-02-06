@@ -307,7 +307,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
         style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
       >
         <h1 
-          className="text-xl font-semibold"
+          className="text-lg font-extrabold"
           style={{ color: theme.text.high }}
         >
           How It Works
