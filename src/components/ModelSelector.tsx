@@ -7,6 +7,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { getAvailableLLMProviders, type LLMProviderType } from '../services/providers/llm';
 import { getOrchestratorInstance } from '../services/llm/orchestrator';
 import { useThemeColors } from '../theme';
+import { DropdownSectionHeader } from './DropdownSectionHeader';
 
 export type TTSProviderType = 'dashscope' | 'gemini' | 'elevenlabs';
 
@@ -265,12 +266,9 @@ export function ModelSelector({
           >
             {/* Section: Chat Models */}
             {ttsProviders.length > 0 && (
-              <div 
-                className="px-2 py-1 text-[10px] font-normal"
-                style={{ color: theme.text.low }}
-              >
+              <DropdownSectionHeader>
                 Chat Models
-              </div>
+              </DropdownSectionHeader>
             )}
             
             {llmProviders.map((provider, index) => {
@@ -347,12 +345,9 @@ export function ModelSelector({
                 />
                 
                 {/* Section: Voice Models */}
-                <div 
-                  className="px-2 py-1 text-[10px] font-normal"
-                  style={{ color: theme.text.low }}
-                >
+                <DropdownSectionHeader>
                   Voice Models
-                </div>
+                </DropdownSectionHeader>
                 
                 {ttsProviders.map((provider, index) => {
                   const isSelected = provider.type === ttsValue;

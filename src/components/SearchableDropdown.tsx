@@ -13,6 +13,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
 import { useThemeColors } from '../theme';
+import { DropdownSectionHeader } from './DropdownSectionHeader';
 
 // =============================================================================
 // Types
@@ -293,15 +294,9 @@ export const SearchableDropdown = memo(function SearchableDropdown({
           >
             {/* Title Header */}
             {title && (
-              <div
-                className="px-3 py-1 text-[10px] font-normal"
-                style={{ 
-                  color: theme.text.low,
-                  opacity: 0.75,
-                }}
-              >
+              <DropdownSectionHeader>
                 {title}
-              </div>
+              </DropdownSectionHeader>
             )}
             
             {/* Search Input - compact */}
@@ -374,17 +369,11 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                       />
                     )}
                     
-                    {/* Group Header - match ModelSelector styling */}
+                    {/* Group Header - standardized component */}
                     {group && Object.keys(groupedOptions).length > 1 && (
-                      <div
-                        className="px-3 py-1 text-[10px] font-normal"
-                        style={{
-                          color: theme.text.high,
-                          opacity: 0.75,
-                        }}
-                      >
+                      <DropdownSectionHeader>
                         {group}
-                      </div>
+                      </DropdownSectionHeader>
                     )}
 
                     {/* Group Options */}

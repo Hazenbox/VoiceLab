@@ -29,6 +29,7 @@ export { Dropdown } from './Dropdown';
 export type { DropdownOption, DropdownProps } from './Dropdown';
 export { SearchableDropdown } from './SearchableDropdown';
 export type { SearchableDropdownOption, SearchableDropdownProps } from './SearchableDropdown';
+export { DropdownSectionHeader } from './DropdownSectionHeader';
 export { AIOrb } from './AIOrb';
 export type { AIOrbProps } from './AIOrb';
 
