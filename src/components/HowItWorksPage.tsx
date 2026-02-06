@@ -844,8 +844,8 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack }: HowItWork
               <div 
                 className="p-4 rounded-lg"
                 style={{ 
-                  backgroundColor: theme.stroke.low,
-                  border: `1px solid ${theme.stroke.low}`
+                  backgroundColor: 'transparent',
+                  border: `1px solid ${theme.stroke.medium}`
                 }}
               >
                 <h4 className="font-medium text-sm mb-3" style={{ color: theme.text.high }}>
