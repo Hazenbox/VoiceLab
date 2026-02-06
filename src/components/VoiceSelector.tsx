@@ -46,7 +46,13 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
         </RadioGroup>
         <style>{`
           .voice-selector-radio-group [role="radiogroup"] > div {
-            gap: 12px !important;
+            gap: 16px !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+          }
+          .voice-selector-radio-group [role="radiogroup"] span {
+            font-size: 14px !important;
+            font-weight: 400 !important;
           }
         `}</style>
       </div>
