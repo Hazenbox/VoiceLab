@@ -101,7 +101,7 @@ const FlowArrow = memo(function FlowArrow({ x1, y1, x2, y2, color, label }: Flow
           markerUnits="userSpaceOnUse"
         >
           <path
-            d="M 0 0 L 9.5 3.5 L 0 7 L 2 3.5 Z"
+            d="M 0 0 L 9.5 3.5 L 0 7 Z"
             fill={color}
             stroke="none"
           />
