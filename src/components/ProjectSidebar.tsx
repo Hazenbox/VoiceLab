@@ -226,10 +226,12 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                         onProjectSelect?.();
                       }
                     }}
-                    className="w-full px-2 py-1 flex items-center justify-between group transition-colors rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+                    className="w-full py-1 flex items-center justify-between group transition-colors rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
                     style={{
                       backgroundColor: activeProject?.id === project.id ? theme.stroke.low : 'transparent',
                       height: '32px',
+                      paddingLeft: '10px',
+                      paddingRight: '10px',
                     }}
                     aria-selected={activeProject?.id === project.id}
                     role="option"
@@ -341,7 +343,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           </svg>
           <span 
             className="text-xs font-normal"
-            style={{ color: theme.text.high }}
+            style={{ color: theme.text.high, fontSize: '13px' }}
           >
             Library
           </span>
@@ -385,7 +387,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             </svg>
             <span 
               className="text-xs font-normal"
-              style={{ color: theme.text.high }}
+              style={{ color: theme.text.high, fontSize: '13px' }}
             >
               Usage
             </span>
@@ -424,7 +426,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             </svg>
             <span 
               className="text-xs font-normal"
-              style={{ color: isDesignSystemActive ? theme.accent : theme.text.high }}
+              style={{ color: isDesignSystemActive ? theme.accent : theme.text.high, fontSize: '13px' }}
             >
               Design System
             </span>
@@ -461,7 +463,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           )}
           <span 
             className="text-xs font-normal"
-            style={{ color: theme.text.high }}
+            style={{ color: theme.text.high, fontSize: '13px' }}
           >
             {colorMode === 'Light' ? 'Dark' : 'Light'} Mode
           </span>
