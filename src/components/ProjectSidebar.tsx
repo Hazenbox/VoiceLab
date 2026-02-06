@@ -161,8 +161,8 @@ const ProjectMenu = memo(function ProjectMenu({
           ref={menuRef}
           className="absolute z-50 min-w-[120px] rounded-lg overflow-hidden py-1 top-full mt-1 right-0"
           style={{
-            backgroundColor: theme.background.ghost,
-            border: `1px solid ${theme.stroke.medium}`,
+            backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
+            border: `1px solid ${theme.stroke.low}`,
           }}
           role="menu"
           aria-orientation="vertical"
