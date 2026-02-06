@@ -262,9 +262,9 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </h2>
           <button
             onClick={onToggleCollapse}
-            className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:opacity-70 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+            className="close-settings-btn w-6 h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
             style={{
-              backgroundColor: theme.stroke.low,
+              backgroundColor: 'transparent',
               color: theme.text.high,
             }}
             aria-label="Close settings panel"
@@ -272,6 +272,11 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
+            <style>{`
+              .close-settings-btn:hover {
+                background-color: ${theme.stroke.low} !important;
+              }
+            `}</style>
           </button>
         </div>
       )}
