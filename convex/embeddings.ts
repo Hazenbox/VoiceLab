@@ -18,6 +18,7 @@
 import { v } from "convex/values";
 import { action, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
+import type { Id, Doc } from "./_generated/dataModel";
 
 // ── Configuration ────────────────────────────────────────────────
 
@@ -165,7 +166,13 @@ export const backfillEmbeddings = action({
   args: {
     batchSize: v.optional(v.number()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{
+    processed: number;
+    errors: number;
+    remaining: number;
+    model: string;
+    message: string;
+  }> => {
     const apiKey = process.env.HUGGINGFACE_API_KEY;
     if (!apiKey) {
       throw new Error(
@@ -176,13 +183,13 @@ export const backfillEmbeddings = action({
     const batchSize = args.batchSize ?? 50;
 
     // Fetch items without embeddings
-    const items = await ctx.runQuery(
+    const items: Doc<"knowledgeItems">[] = await ctx.runQuery(
       internal.embeddings.getItemsWithoutEmbeddings,
       { limit: batchSize }
     );
 
     if (items.length === 0) {
-      return { processed: 0, message: "All items already have embeddings" };
+      return { processed: 0, errors: 0, remaining: 0, model: HF_MODEL, message: "All items already have embeddings" };
     }
 
     let processed = 0;
@@ -192,7 +199,7 @@ export const backfillEmbeddings = action({
     const miniBatchSize = 10;
     for (let i = 0; i < items.length; i += miniBatchSize) {
       const batch = items.slice(i, i + miniBatchSize);
-      const texts = batch.map((item) => buildEmbeddingText(item));
+      const texts = batch.map((item: Doc<"knowledgeItems">) => buildEmbeddingText(item));
 
       try {
         const embeddings = await getHuggingFaceBatchEmbeddings(texts, apiKey);
@@ -232,11 +239,11 @@ export const backfillEmbeddings = action({
           await new Promise((resolve) => setTimeout(resolve, 5000));
 
           try {
-            const embeddings = await getHuggingFaceBatchEmbeddings(texts, apiKey);
+            const retryEmbeddings = await getHuggingFaceBatchEmbeddings(texts, apiKey);
             for (let j = 0; j < batch.length; j++) {
               await ctx.runMutation(internal.embeddings.storeEmbedding, {
                 id: batch[j]._id,
-                embedding: embeddings[j],
+                embedding: retryEmbeddings[j],
               });
               processed++;
               errors--; // Undo the error count
@@ -260,6 +267,29 @@ export const backfillEmbeddings = action({
 
 // ── Semantic Search ──────────────────────────────────────────────
 
+// Result type for semantic search
+interface SemanticResult {
+  _id: Id<"knowledgeItems">;
+  _creationTime: number;
+  type: string;
+  category: string;
+  content: string;
+  metadata: {
+    ecosystem?: string;
+    channel?: string;
+    persona?: string;
+    severity?: string;
+    suggestion?: string;
+    source?: string;
+  };
+  tags: string[];
+  isActive: boolean;
+  createdBy?: string;
+  createdAt: number;
+  updatedAt: number;
+  _score: number;
+}
+
 export const semanticSearch = action({
   args: {
     query: v.string(),
@@ -267,7 +297,7 @@ export const semanticSearch = action({
     filterType: v.optional(v.string()),
     filterActiveOnly: v.optional(v.boolean()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<SemanticResult[]> => {
     const apiKey = process.env.HUGGINGFACE_API_KEY;
     if (!apiKey) {
       throw new Error(
@@ -276,67 +306,79 @@ export const semanticSearch = action({
     }
 
     const limit = args.limit ?? 10;
+    const shouldFilterActive = args.filterActiveOnly !== false;
 
     // 1. Generate embedding for the search query via Hugging Face
     const queryEmbedding = await getHuggingFaceEmbedding(args.query, apiKey);
 
-    // 2. Build filter
-    // NOTE: Convex vectorSearch doesn't support q.and(), so we use the more
-    // selective single filter and post-filter JavaScript results for the other condition.
-    type FilterExpression = {
-      eq: (field: string, value: string | boolean) => FilterExpression;
-      or: (...exprs: FilterExpression[]) => FilterExpression;
-    };
-
-    let filter: ((q: FilterExpression) => FilterExpression) | undefined;
-    const shouldFilterActive = args.filterActiveOnly !== false;
-
-    // Use filterType as the primary vector search filter (more selective).
-    // isActive is post-filtered below after fetching documents.
-    if (args.filterType) {
-      filter = (q: FilterExpression) => q.eq("type", args.filterType!);
-    } else if (shouldFilterActive) {
-      filter = (q: FilterExpression) => q.eq("isActive", true);
-    }
-
-    // Request extra results to account for post-filter removal
+    // 2. Run vector search with the appropriate filter
+    // NOTE: Convex vectorSearch doesn't support q.and(), so when both filterType
+    // and filterActiveOnly are needed, we use filterType as the DB-level filter
+    // and post-filter for isActive in JavaScript below.
     const fetchLimit = shouldFilterActive && args.filterType ? limit * 2 : limit;
 
-    // 3. Run vector search
-    const searchResults = await ctx.vectorSearch(
-      "knowledgeItems",
-      "by_embedding",
-      {
-        vector: queryEmbedding,
-        limit: fetchLimit,
-        ...(filter ? { filter } : {}),
-      },
-    );
+    let searchResults: { _id: Id<"knowledgeItems">; _score: number }[];
+
+    if (args.filterType) {
+      // Filter by type at the DB level
+      const filterTypeValue = args.filterType;
+      searchResults = await ctx.vectorSearch(
+        "knowledgeItems",
+        "by_embedding",
+        {
+          vector: queryEmbedding,
+          limit: fetchLimit,
+          filter: (q) => q.eq("type", filterTypeValue),
+        },
+      );
+    } else if (shouldFilterActive) {
+      // Filter by isActive at the DB level
+      searchResults = await ctx.vectorSearch(
+        "knowledgeItems",
+        "by_embedding",
+        {
+          vector: queryEmbedding,
+          limit: fetchLimit,
+          filter: (q) => q.eq("isActive", true),
+        },
+      );
+    } else {
+      // No filter
+      searchResults = await ctx.vectorSearch(
+        "knowledgeItems",
+        "by_embedding",
+        {
+          vector: queryEmbedding,
+          limit: fetchLimit,
+        },
+      );
+    }
 
     if (searchResults.length === 0) {
       return [];
     }
 
-    // 4. Fetch full documents
-    const documents = await ctx.runQuery(
+    // 3. Fetch full documents
+    const documents: Omit<Doc<"knowledgeItems">, "embedding">[] = await ctx.runQuery(
       internal.embeddings.fetchDocumentsByIds,
       { ids: searchResults.map((r) => r._id) }
     );
 
-    // 5. Combine with scores and post-filter for isActive (AND condition)
-    const combined = searchResults
-      .map((result) => {
-        const doc = documents.find((d) => d?._id === result._id);
-        return {
+    // 4. Combine with scores
+    const combined: SemanticResult[] = [];
+    for (const result of searchResults) {
+      const doc = documents.find((d) => d._id === result._id);
+      if (doc) {
+        combined.push({
           ...doc,
           _score: result._score,
-        };
-      })
-      .filter((r) => r._id); // Filter out any not-found docs
+        });
+      }
+    }
 
-    // Post-filter: if both filterType and filterActiveOnly, apply the isActive check here
+    // 5. Post-filter: if both filterType and filterActiveOnly, apply the isActive check here
     const finalResults = shouldFilterActive && args.filterType
-      ? combined.filter((r) => (r as { isActive?: boolean }).isActive === true)
+      ? combined.filter((r) => r.isActive === true)
       : combined;
 
     return finalResults.slice(0, limit);

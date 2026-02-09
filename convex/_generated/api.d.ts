@@ -11,7 +11,9 @@
 import type * as adminConfig from "../adminConfig.js";
 import type * as analytics from "../analytics.js";
 import type * as corrections from "../corrections.js";
+import type * as embeddings from "../embeddings.js";
 import type * as knowledge from "../knowledge.js";
+import type * as seed from "../seed.js";
 import type * as users from "../users.js";
 
 import type {
@@ -24,7 +26,9 @@ declare const fullApi: ApiFromModules<{
   adminConfig: typeof adminConfig;
   analytics: typeof analytics;
   corrections: typeof corrections;
+  embeddings: typeof embeddings;
   knowledge: typeof knowledge;
+  seed: typeof seed;
   users: typeof users;
 }>;
 
