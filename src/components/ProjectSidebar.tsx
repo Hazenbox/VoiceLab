@@ -224,45 +224,48 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <button
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      className="w-full py-1 flex items-center justify-between group transition-colors rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+    <div
+      className="w-full group transition-colors rounded-lg"
       style={{
         backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
         height: '32px',
-        paddingLeft: '10px',
-        paddingRight: '4px',
       }}
-      aria-selected={isActive}
-      role="option"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      role="option"
+      aria-selected={isActive}
     >
-      <div className="flex-1 text-left pointer-events-none">
-        <div 
-          className="text-xs font-normal truncate"
-          style={{ color: theme.text.high, fontSize: '13px' }}
+      <div className="flex items-center justify-between h-full" style={{ paddingLeft: '10px', paddingRight: '4px' }}>
+        {/* Project name button */}
+        <button
+          onClick={onClick}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onClick();
+            }
+          }}
+          className="flex-1 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset rounded py-1"
         >
-          {projectName}
+          <div 
+            className="text-xs font-normal truncate"
+            style={{ color: theme.text.high, fontSize: '13px' }}
+          >
+            {projectName}
+          </div>
+        </button>
+        
+        {/* More menu - visible on hover or when open */}
+        <div className={`transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+          <ProjectMenu
+            options={menuOptions}
+            onSelect={onMenuAction}
+            isOpen={isMenuOpen}
+            onToggle={() => setIsMenuOpen(!isMenuOpen)}
+          />
         </div>
       </div>
-      
-      {/* More menu - visible on hover or when open */}
-      <div className={`transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-        <ProjectMenu
-          options={menuOptions}
-          onSelect={onMenuAction}
-          isOpen={isMenuOpen}
-          onToggle={() => setIsMenuOpen(!isMenuOpen)}
-        />
-      </div>
-    </button>
+    </div>
   );
 });
 
