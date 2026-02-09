@@ -867,7 +867,7 @@ function AdminUsers() {
 function AdminConfig() {
   const theme = useThemeColors();
 
-  const featureFlags = [
+  const featureFlagsList = [
     { key: 'VITE_ENABLE_CONVEX_SYNC', label: 'Convex Sync', value: import.meta.env.VITE_ENABLE_CONVEX_SYNC === 'true' },
     { key: 'VITE_ENABLE_PERSONA', label: 'Persona Engine', value: import.meta.env.VITE_ENABLE_PERSONA === 'true' },
     { key: 'VITE_ENABLE_KNOWLEDGE_BASE', label: 'Knowledge Base', value: import.meta.env.VITE_ENABLE_KNOWLEDGE_BASE === 'true' },
@@ -890,7 +890,7 @@ function AdminConfig() {
       <AdminCard className="p-4 mb-5">
         <CardLabel>Feature Flags</CardLabel>
         <div className="space-y-0">
-          {featureFlags.map((ff) => (
+          {featureFlagsList.map((ff) => (
             <div
               key={ff.key}
               className="flex items-center justify-between py-2"

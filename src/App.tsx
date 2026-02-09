@@ -61,6 +61,8 @@ import OnboardingModal, { loadUserProfile, getDeviceId, type UserProfile } from 
 import { initSyncService, getSyncService } from './services/sync/convexSync';
 // Persona Engine (Phase 1)
 import { getAutoConfig, type PersonaRole } from './services/persona';
+// Feature Flags
+import { featureFlags } from './services/featureFlags';
 // Knowledge & Learning (Phase 2-3)
 import {
   storeLocalCorrection,
@@ -103,8 +105,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
   const [showOnboarding, setShowOnboarding] = useState(() => !getDeviceId());
   
-  // Initialize sync service on mount or when profile changes
+  // Initialize sync service on mount or when profile changes (gated by feature flag)
   useEffect(() => {
+    if (!featureFlags.convexSync) return;
+
     const syncService = initSyncService();
     
     if (userProfile?.deviceId) {
@@ -131,10 +135,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     // (triggers on userProfile?.deviceId change), avoiding a race condition
     // where initSyncService() would destroy an in-flight sync call.
 
-    // Phase 1: Auto-configure from persona engine
-    const autoConfig = getAutoConfig(profile.role as PersonaRole, profile.product);
-    setEcosystem(autoConfig.ecosystem);
-    setContentChannel(autoConfig.channel);
+    // Phase 1: Auto-configure from persona engine (gated by feature flag)
+    if (featureFlags.persona) {
+      const autoConfig = getAutoConfig(profile.role as PersonaRole, profile.product);
+      setEcosystem(autoConfig.ecosystem);
+      setContentChannel(autoConfig.channel);
+    }
   }, []);
 
   // UI State - chatMode persisted to localStorage
@@ -321,25 +327,32 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         userMessage: message,
         // Optional: add profile/timing if available from project
         userProfile: activeProject?.defaultUserProfile,
-        // Phase 1: Pass persona role for prompt personality injection
-        persona: userProfile?.role,
+        // Phase 1: Pass persona role for prompt personality injection (gated)
+        persona: featureFlags.persona ? userProfile?.role : undefined,
       });
 
-      // Build knowledge + learning data for prompt injection (Phase 2-3)
-      const baseKnowledge = getCodeDefaults(ecosystem, contentChannel);
-      const localCorrections = getLocalCorrections(ecosystem, contentChannel);
-      const enrichedKnowledge = mergeLearnedCorrections(
-        baseKnowledge,
-        localCorrections,
-        ecosystem,
-        contentChannel,
-      );
+      // Build knowledge + learning data for prompt injection (Phase 2-3, gated)
+      let promptKnowledge: import('./services/knowledge').RetrievedKnowledge | undefined;
+      if (featureFlags.knowledgeBase) {
+        const baseKnowledge = getCodeDefaults(ecosystem, contentChannel);
+        if (featureFlags.learning) {
+          const localCorrections = getLocalCorrections(ecosystem, contentChannel);
+          promptKnowledge = mergeLearnedCorrections(
+            baseKnowledge,
+            localCorrections,
+            ecosystem,
+            contentChannel,
+          );
+        } else {
+          promptKnowledge = baseKnowledge;
+        }
+      }
 
       // Build comprehensive prompt using Content Trust System + Knowledge
       const { system: systemPrompt, context: finalContext } = buildPrompt(
         generationContext,
         message,
-        { knowledge: enrichedKnowledge }
+        promptKnowledge ? { knowledge: promptKnowledge } : {}
       );
 
       // Build messages with system prompt and history
@@ -435,32 +448,36 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     const feedbackEcosystem = originalMessage?.generationContext?.ecosystem || ecosystem;
     const feedbackChannel = originalMessage?.generationContext?.channel || contentChannel;
 
-    // Store locally for immediate learning
-    const correction: CorrectionEntry = {
-      originalContent: payload.originalContent,
-      editedContent: payload.editedContent,
-      feedbackType: payload.feedbackType as CorrectionEntry['feedbackType'],
-      comment: payload.comment,
-      ecosystem: feedbackEcosystem,
-      channel: feedbackChannel,
-      persona: userProfile?.role || '',
-      timestamp: Date.now(),
-    };
-    storeLocalCorrection(correction);
-
-    // Sync to Convex via the sync service
-    const syncService = getSyncService();
-    if (syncService) {
-      syncService.logCorrection({
-        messageContent: payload.originalContent,
+    // Store locally for immediate learning (gated by learning flag)
+    if (featureFlags.learning) {
+      const correction: CorrectionEntry = {
         originalContent: payload.originalContent,
         editedContent: payload.editedContent,
-        feedbackType: payload.feedbackType,
+        feedbackType: payload.feedbackType as CorrectionEntry['feedbackType'],
         comment: payload.comment,
         ecosystem: feedbackEcosystem,
         channel: feedbackChannel,
         persona: userProfile?.role || '',
-      });
+        timestamp: Date.now(),
+      };
+      storeLocalCorrection(correction);
+    }
+
+    // Sync to Convex via the sync service (gated by convex sync flag)
+    if (featureFlags.convexSync) {
+      const syncService = getSyncService();
+      if (syncService) {
+        syncService.logCorrection({
+          messageContent: payload.originalContent,
+          originalContent: payload.originalContent,
+          editedContent: payload.editedContent,
+          feedbackType: payload.feedbackType,
+          comment: payload.comment,
+          ecosystem: feedbackEcosystem,
+          channel: feedbackChannel,
+          persona: userProfile?.role || '',
+        });
+      }
     }
   }, [chatMessages, ecosystem, contentChannel, userProfile]);
 
