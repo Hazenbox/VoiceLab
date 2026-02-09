@@ -42,3 +42,5 @@ export { ContentContextSelector } from './ContentTrust';
 export { TrustBadge, InlineTrustBadge, TrustBadgeLoading } from './ContentTrust';
 export { TrustContextPanel } from './ContentTrust';
 export { AdvancedSettingsPanel } from './AdvancedSettingsPanel';
+export { MessageFeedback } from './MessageFeedback';
+export type { FeedbackPayload, FeedbackType } from './MessageFeedback';

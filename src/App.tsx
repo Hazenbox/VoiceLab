@@ -65,6 +65,16 @@ import OnboardingModal, { loadUserProfile, getDeviceId, type UserProfile } from 
 import { initSyncService, getSyncService } from './services/sync/convexSync';
 // Persona Engine (Phase 1)
 import { getAutoConfig, type PersonaRole } from './services/persona';
+// Knowledge & Learning (Phase 2-3)
+import {
+  storeLocalCorrection,
+  saveAsExample,
+  getCodeDefaults,
+  mergeLearnedCorrections,
+  getLocalCorrections,
+  type CorrectionEntry,
+} from './services/knowledge';
+import type { FeedbackPayload } from './components/MessageFeedback';
 
 // Storage key for chat mode persistence
 const CHAT_MODE_STORAGE_KEY = 'voiceDesigner_chatMode';
@@ -321,10 +331,21 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         persona: userProfile?.role,
       });
 
-      // Build comprehensive prompt using Content Trust System
+      // Build knowledge + learning data for prompt injection (Phase 2-3)
+      const baseKnowledge = getCodeDefaults();
+      const localCorrections = getLocalCorrections(ecosystem, contentChannel);
+      const enrichedKnowledge = mergeLearnedCorrections(
+        baseKnowledge,
+        localCorrections,
+        ecosystem,
+        contentChannel,
+      );
+
+      // Build comprehensive prompt using Content Trust System + Knowledge
       const { system: systemPrompt, context: finalContext } = buildPrompt(
         generationContext,
-        message
+        message,
+        { knowledge: enrichedKnowledge }
       );
 
       // Build messages with system prompt and history
@@ -408,6 +429,49 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       setIsChatLoading(false);
     }
   }, [resetChatAbort, chatMode, addMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings]);
+
+  // ========================================================================
+  // Phase 3: Feedback & Learning Handlers
+  // ========================================================================
+
+  const handleMessageFeedback = useCallback((payload: FeedbackPayload) => {
+    // Store locally for immediate learning
+    const correction: CorrectionEntry = {
+      originalContent: payload.originalContent,
+      editedContent: payload.editedContent,
+      feedbackType: payload.feedbackType as CorrectionEntry['feedbackType'],
+      comment: payload.comment,
+      ecosystem,
+      channel: contentChannel,
+      persona: userProfile?.role || '',
+      timestamp: Date.now(),
+    };
+    storeLocalCorrection(correction);
+
+    // Sync to Convex via the sync service
+    const syncService = getSyncService();
+    if (syncService) {
+      syncService.logCorrection({
+        messageContent: payload.originalContent,
+        originalContent: payload.originalContent,
+        editedContent: payload.editedContent,
+        feedbackType: payload.feedbackType,
+        comment: payload.comment,
+        ecosystem,
+        channel: contentChannel,
+        persona: userProfile?.role || '',
+      });
+    }
+  }, [ecosystem, contentChannel, userProfile]);
+
+  const handleSaveAsExample = useCallback((content: string) => {
+    saveAsExample({
+      content,
+      ecosystem,
+      channel: contentChannel,
+      persona: userProfile?.role,
+    });
+  }, [ecosystem, contentChannel, userProfile]);
 
   // Auto-dismiss error
   useEffect(() => {
@@ -1165,6 +1229,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   }
                   // Content Trust System: Trust badge click handler
                   onTrustBadgeClick={handleTrustBadgeClick}
+                  // Phase 3: Feedback & Learning
+                  onMessageFeedback={handleMessageFeedback}
+                  onSaveAsExample={handleSaveAsExample}
                 />
               </div>
             </div>

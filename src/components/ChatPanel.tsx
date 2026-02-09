@@ -18,6 +18,8 @@ import { useThemeColors } from '../theme';
 import { MessageContent } from './MessageContent';
 import { AudioBubble } from './AudioBubble';
 import { TrustBadge } from './ContentTrust';
+import { MessageFeedback } from './MessageFeedback';
+import type { FeedbackPayload } from './MessageFeedback';
 import { Button } from '@marcelinodzn/ds-react';
 
 // =============================================================================
@@ -68,6 +70,12 @@ interface ChatPanelProps {
   streamingUserTranscript?: string;
   /** Streaming AI response text (while AI is responding) */
   streamingAIResponse?: string;
+  
+  // Feedback props (Phase 3)
+  /** Callback when user gives feedback on a message */
+  onMessageFeedback?: (payload: FeedbackPayload) => void;
+  /** Callback when user saves content as an approved example */
+  onSaveAsExample?: (content: string) => void;
 }
 
 // =============================================================================
@@ -97,6 +105,9 @@ export const ChatPanel = memo(function ChatPanel({
   // Voice streaming props
   streamingUserTranscript,
   streamingAIResponse,
+  // Feedback props (Phase 3)
+  onMessageFeedback,
+  onSaveAsExample: onSaveAsExampleProp,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -225,11 +236,21 @@ export const ChatPanel = memo(function ChatPanel({
                 />
               </div>
             )}
+            
+            {/* Feedback Actions (Phase 3) */}
+            {onMessageFeedback && (
+              <MessageFeedback
+                messageId={message.id}
+                messageContent={message.content}
+                onFeedback={onMessageFeedback}
+                onSaveAsExample={onSaveAsExampleProp}
+              />
+            )}
           </div>
         )}
       </div>
     );
-  }, [theme, onSaveAudio, handleSaveAudio, onTrustBadgeClick]);
+  }, [theme, onSaveAudio, handleSaveAudio, onTrustBadgeClick, onMessageFeedback, onSaveAsExampleProp]);
 
   // Render input area (reusable for both layouts)
   const renderInputArea = useCallback(() => (

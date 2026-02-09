@@ -15,3 +15,14 @@ export {
   clearLocalExamples,
   type SaveExamplePayload,
 } from './saveExample';
+
+export {
+  extractLearningInsights,
+  mergeLearnedCorrections,
+  storeLocalCorrection,
+  getLocalCorrections,
+  clearLocalCorrections,
+  type CorrectionEntry,
+  type LearnedPattern,
+  type LearningInsights,
+} from './learningEngine';
