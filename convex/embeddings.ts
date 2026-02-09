@@ -23,7 +23,7 @@ import type { Id, Doc } from "./_generated/dataModel";
 // ── Configuration ────────────────────────────────────────────────
 
 const HF_MODEL = "sentence-transformers/all-MiniLM-L6-v2";
-const HF_API_URL = `https://router.huggingface.co/pipeline/feature-extraction/${HF_MODEL}`;
+const HF_API_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`;
 const EXPECTED_DIMENSIONS = 384;
 
 // ── Hugging Face Embedding Helper ────────────────────────────────
