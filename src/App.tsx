@@ -20,7 +20,6 @@ import { getSystemInstruction, AUDIO_CONFIG } from './constants';
 import { 
   DocumentationPanel,
   ProjectSidebar,
-  SaveAudioModal,
   ChatPanel,
   ErrorBoundary,
   ModelSelector,
@@ -99,7 +98,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     updateProjectDefaultLanguage,
     updateProjectDefaultRegion,
   } = useProject();
-  const { saveAudio } = useAudioLibrary();
   
   // ── Onboarding State ──────────────────────────────────────────
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
@@ -150,8 +148,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   });
   const [activeView, setActiveView] = useState<ActiveView>('main');
   const [error, setError] = useState<AppError | null>(null);
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [audioToSave, setAudioToSave] = useState<{ messageId: string; audioData: string; transcript: string } | null>(null);
   const [isConfigPanelCollapsed, setIsConfigPanelCollapsed] = useState(true);
   
   // ==========================================================================
@@ -547,68 +543,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   //   }
   // };
 
-  // Handle save audio to library (from TTS generation or chat audio message)
-  const handleSaveAudio = useCallback(async (name: string) => {
-    if (!activeProject) return;
-
-    try {
-      // If saving from chat message
-      if (audioToSave) {
-        // Convert base64 to AudioBuffer
-        const buffer = await audioBufferManager.fromBase64(
-          audioToSave.audioData,
-          24000,
-          `save-${audioToSave.messageId}`
-        );
-        
-        saveAudio(
-          activeProject.id,
-          name,
-          audioToSave.transcript,
-          buffer,
-          {
-            gender: activeProject.voiceGender,
-            voice: lastGeneratedVoice || 'default',
-          }
-        );
-        setAudioToSave(null);
-      } 
-      // If saving from TTS generation
-      else if (generatedAudio) {
-        saveAudio(
-          activeProject.id,
-          name,
-          ttsText,
-          generatedAudio,
-          {
-            gender: activeProject.voiceGender,
-            voice: lastGeneratedVoice,
-          }
-        );
-      }
-      
-      setShowSaveModal(false);
-    } catch (err) {
-      console.error('Error saving audio:', err);
-      setError({
-        code: 'SAVE_ERROR',
-        message: 'Failed to save audio to library',
-      });
-    }
-  }, [activeProject, audioToSave, generatedAudio, ttsText, lastGeneratedVoice, saveAudio]);
-
-  // Handle save audio from chat message
-  const handleSaveAudioFromChat = useCallback((messageId: string) => {
-    const message = chatMessages.find(m => m.id === messageId);
-    if (message?.audioData) {
-      setAudioToSave({
-        messageId: message.id,
-        audioData: message.audioData,
-        transcript: message.content,
-      });
-      setShowSaveModal(true);
-    }
-  }, [chatMessages]);
 
   // Handle trust badge click - opens trust context panel
   const handleTrustBadgeClick = useCallback((messageId: string) => {
@@ -1093,7 +1027,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   isLoading={isChatLoading}
                   mode={chatMode}
                   placeholder="Ask or describe what you need..."
-                  onSaveAudio={handleSaveAudioFromChat}
                   showEmptyState={chatMode !== 'voice'}
                   emptyStateMessage={chatMode === 'copy'
                     ? 'What would you like to create today?'
@@ -1223,20 +1156,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         analyzedContent={selectedMessageForTrustPanel?.content}
       />
 
-      {/* Save Audio Modal */}
-      <SaveAudioModal
-        isOpen={showSaveModal}
-        onClose={() => {
-          setShowSaveModal(false);
-          setAudioToSave(null);
-        }}
-        onSave={handleSaveAudio}
-        defaultName={
-          audioToSave 
-            ? audioToSave.transcript.slice(0, 30) + (audioToSave.transcript.length > 30 ? '...' : '')
-            : ttsText.slice(0, 30) + (ttsText.length > 30 ? '...' : '')
-        }
-      />
 
       {/* Onboarding Modal */}
       {showOnboarding && (

@@ -8,7 +8,6 @@ export { AudioPlayer } from './AudioPlayer';
 export { DocumentationPanel } from './DocumentationPanel';
 export { SoundWave } from './SoundWave';
 export { ProjectSidebar } from './ProjectSidebar';
-export { SaveAudioModal } from './SaveAudioModal';
 export { ChatPanel } from './ChatPanel';
 export { ErrorBoundary, ErrorFallback } from './ErrorBoundary';
 export { ModelSelector, ModelSelectorInline } from './ModelSelector';

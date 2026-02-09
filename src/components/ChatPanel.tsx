@@ -34,8 +34,6 @@ interface ChatPanelProps {
   mode?: ChatMode;
   /** Placeholder text for input */
   placeholder?: string;
-  /** Callback when user wants to save an audio message */
-  onSaveAudio?: (messageId: string) => void;
   /** Whether to show empty state */
   showEmptyState?: boolean;
   /** Custom empty state message */
@@ -88,7 +86,6 @@ export const ChatPanel = memo(function ChatPanel({
   isLoading,
   mode: _mode = 'copy',
   placeholder = 'Ask or describe what you need...',
-  onSaveAudio,
   showEmptyState = true,
   emptyStateMessage = 'What would you like to create today?',
   inputDisabled = false,
@@ -170,10 +167,6 @@ export const ChatPanel = memo(function ChatPanel({
     // Shift+Enter allows new lines, so we don't prevent default
   }, [handleSubmit]);
 
-  // Handle save audio
-  const handleSaveAudio = useCallback((messageId: string) => {
-    onSaveAudio?.(messageId);
-  }, [onSaveAudio]);
 
   // Render individual message
   const renderMessage = useCallback((message: ChatMessage) => {
@@ -190,7 +183,6 @@ export const ChatPanel = memo(function ChatPanel({
           duration={message.audioDuration || 0}
           transcript={message.content}
           role={message.role}
-          onSave={onSaveAudio ? () => handleSaveAudio(message.id) : undefined}
           showTranscript={true}
         />
       );
@@ -250,7 +242,7 @@ export const ChatPanel = memo(function ChatPanel({
         )}
       </div>
     );
-  }, [theme, onSaveAudio, handleSaveAudio, onTrustBadgeClick, onMessageFeedback, onSaveAsExampleProp]);
+  }, [theme, onTrustBadgeClick, onMessageFeedback, onSaveAsExampleProp]);
 
   // Render input area (reusable for both layouts)
   const renderInputArea = useCallback(() => (
