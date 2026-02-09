@@ -1,8 +1,10 @@
 /**
  * HowItWorksPage Component
  * 
- * Comprehensive documentation page explaining the complete chat generation flow.
- * Includes visual workflow diagrams, step-by-step explanations, and real examples.
+ * Comprehensive documentation page explaining the complete Voice Lab system.
+ * Covers the full generation flow including onboarding, persona engine,
+ * knowledge base, RAG, learning engine, content trust, feedback loop,
+ * multi-user sync via Convex, and admin panel.
  */
 
 import { memo } from 'react';
@@ -181,6 +183,55 @@ const ExampleComparison = memo(function ExampleComparison({ title, before, after
 });
 
 /**
+ * Compact Table Component for structured data
+ */
+interface CompactTableProps {
+  title: string;
+  headers: string[];
+  rows: string[][];
+}
+
+const CompactTable = memo(function CompactTable({ title, headers, rows }: CompactTableProps) {
+  const theme = useThemeColors();
+  
+  return (
+    <div 
+      className="p-4 rounded-lg"
+      style={{ 
+        backgroundColor: theme.background.ghost,
+        border: `1px solid ${theme.stroke.medium}`
+      }}
+    >
+      <h4 className="font-medium text-sm mb-3" style={{ color: theme.text.high }}>
+        {title}
+      </h4>
+      <table className="w-full text-sm">
+        <thead>
+          <tr style={{ borderBottom: `1px solid ${theme.stroke.medium}` }}>
+            {headers.map((h, i) => (
+              <th key={i} className="py-1.5 text-left text-xs font-medium" style={{ color: theme.text.low }}>
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri} style={{ borderBottom: `1px solid ${theme.stroke.low}` }}>
+              {row.map((cell, ci) => (
+                <td key={ci} className="py-1.5 text-xs" style={{ color: ci === 0 ? theme.text.high : theme.text.medium }}>
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+});
+
+/**
  * Main HowItWorksPage Component
  */
 export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: HowItWorksPageProps) {
@@ -223,35 +274,65 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             >
               Complete Generation Flow
             </h3>
-            <FlowCanvas height={120} viewBox="0 0 800 120" dotColor={theme.stroke.low}>
-              {/* Flow Nodes */}
-              <FlowNode x={0} y={35} width={90} height={50} label="User Input" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              <FlowArrow x1={95} y1={60} x2={115} y2={60} color={theme.accent} />
+            <FlowCanvas height={200} viewBox="0 0 900 200" dotColor={theme.stroke.low}>
+              {/* Row 1: Main generation flow */}
+              <FlowNode x={0} y={15} width={90} height={45} label="Onboarding" sublabel="Profile" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={95} y1={37} x2={115} y2={37} color={theme.accent} />
               
-              <FlowNode x={120} y={35} width={100} height={50} label="Context" sublabel="Building" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              <FlowArrow x1={225} y1={60} x2={245} y2={60} color={theme.accent} />
+              <FlowNode x={120} y={15} width={90} height={45} label="Persona" sublabel="Auto-Config" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={215} y1={37} x2={235} y2={37} color={theme.accent} />
               
-              <FlowNode x={250} y={35} width={90} height={50} label="Prompt" sublabel="Builder" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              <FlowArrow x1={345} y1={60} x2={365} y2={60} color={theme.accent} />
+              <FlowNode x={240} y={15} width={100} height={45} label="Context" sublabel="+ Knowledge" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={345} y1={37} x2={365} y2={37} color={theme.accent} />
               
-              <FlowNode x={370} y={35} width={100} height={50} label="LLM" sublabel="Orchestrator" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
-              <FlowArrow x1={475} y1={60} x2={495} y2={60} color={theme.accent} />
+              <FlowNode x={370} y={15} width={90} height={45} label="Prompt" sublabel="Builder" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={465} y1={37} x2={485} y2={37} color={theme.accent} />
               
-              <FlowNode x={500} y={35} width={90} height={50} label="Content" sublabel="Trust" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              <FlowArrow x1={595} y1={60} x2={615} y2={60} color={theme.accent} />
+              <FlowNode x={490} y={15} width={100} height={45} label="LLM" sublabel="Orchestrator" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+              <FlowArrow x1={595} y1={37} x2={615} y2={37} color={theme.accent} />
               
-              <FlowNode x={620} y={35} width={90} height={50} label="Response" sublabel="Display" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              <FlowArrow x1={715} y1={60} x2={735} y2={60} color={theme.accent} />
+              <FlowNode x={620} y={15} width={90} height={45} label="Content" sublabel="Trust" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={715} y1={37} x2={735} y2={37} color={theme.accent} />
               
-              <FlowNode x={740} y={35} width={55} height={50} label="Save" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={740} y={15} width={80} height={45} label="Response" sublabel="Display" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+
+              {/* Row 2: Feedback loop */}
+              <FlowNode x={740} y={80} width={80} height={45} label="Feedback" sublabel="5 Actions" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={740} y1={60} x2={740} y2={80} color={theme.accent} />
+
+              <FlowNode x={580} y={80} width={100} height={45} label="Learning" sublabel="Engine" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <CurvedFlowArrow startX={740} startY={102} endX={680} endY={102} color={theme.accent} />
+
+              <FlowNode x={400} y={80} width={120} height={45} label="Convex Sync" sublabel="Multi-User DB" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <CurvedFlowArrow startX={580} startY={102} endX={520} endY={102} color={theme.accent} />
+              
+              <FlowNode x={230} y={80} width={110} height={45} label="RAG" sublabel="Vector Search" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <CurvedFlowArrow startX={400} startY={102} endX={340} endY={102} color={theme.accent} />
+
+              {/* Loop back arrow */}
+              <path 
+                d={`M 230 102 L 180 102 L 180 60 L 240 42`} 
+                fill="none" 
+                stroke={theme.accent} 
+                strokeWidth={1.5} 
+                strokeDasharray="4" 
+                markerEnd="url(#arrowhead)"
+              />
+              <text x={140} y={82} textAnchor="middle" fill={theme.text.low} fontSize={9} fontFamily="'Geist Mono', ui-monospace, monospace">
+                Loop
+              </text>
+
+              {/* Row 3: Admin */}
+              <FlowNode x={400} y={150} width={120} height={40} label="Admin Panel" sublabel="/admin" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowArrow x1={460} y1={125} x2={460} y2={150} color={theme.stroke.medium} />
             </FlowCanvas>
           </div>
 
-          {/* Section 1: User Input */}
+          {/* ━━━ Section 1: First-Time Onboarding ━━━ */}
           <Section 
             number={1} 
-            title="User Input"
-            description="Your message starts its journey here"
+            title="First-Time Onboarding"
+            description="New users set up their profile in a 3-step wizard"
           >
             <div 
               className="p-4 rounded-lg mb-4"
@@ -261,29 +342,107 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 overflow: 'hidden'
               }}
             >
-              <FlowCanvas height={100} viewBox="0 0 600 100" dotColor={theme.stroke.low}>
-                <FlowNode x={0} y={25} width={120} height={50} label="User Types" sublabel="Message" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <CurvedFlowArrow startX={120} startY={50} endX={180} endY={50} color={theme.stroke.medium} />
+              <FlowCanvas height={80} viewBox="0 0 700 80" dotColor={theme.stroke.low}>
+                <FlowNode x={0} y={15} width={140} height={50} label="Step 1" sublabel="Your Name" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={140} startY={40} endX={200} endY={40} color={theme.stroke.medium} />
                 
-                <FlowNode x={180} y={25} width={120} height={50} label="ChatPanel" sublabel="Captures Input" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <CurvedFlowArrow startX={300} startY={50} endX={360} endY={50} color={theme.stroke.medium} />
+                <FlowNode x={200} y={15} width={140} height={50} label="Step 2" sublabel="Your Role" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={340} startY={40} endX={400} endY={40} color={theme.stroke.medium} />
                 
-                <FlowNode x={360} y={25} width={120} height={50} label="App.tsx" sublabel="handleSendMessage" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
-                <CurvedFlowArrow startX={480} startY={50} endX={540} endY={50} color={theme.stroke.medium} />
+                <FlowNode x={400} y={15} width={140} height={50} label="Step 3" sublabel="Product Ecosystem" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={540} startY={40} endX={600} endY={40} color={theme.accent} />
                 
-                <FlowNode x={540} y={25} width={55} height={50} label="Next" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={600} y={15} width={90} height={50} label="Ready" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
               </FlowCanvas>
             </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <InfoCard 
+                title="6 Roles"
+                items={[
+                  'Marketing - Campaigns, promotions, brand content',
+                  'Product - Feature copy, release notes, in-app content',
+                  'UX Writer - Interface copy, microcopy, flows',
+                  'Sales - Pitches, proposals, outreach',
+                  'Support - Help articles, chat responses, FAQs',
+                  'Leadership - Internal comms, strategy, memos'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
+              />
+              <InfoCard 
+                title="14 Product Ecosystems"
+                items={[
+                  'Connectivity - Jio Mobile, Fiber, 5G',
+                  'Home - JioFiber, Home Entertainment',
+                  'Entertainment - JioCinema, JioTV, JioSaavn',
+                  'Shopping - JioMart, Retail',
+                  'Finance - JioPayments, Banking, Insurance',
+                  'Health - JioHealthHub, Wellness',
+                  'Business / Work / Government / Education',
+                  'Sports / Agriculture / Energy / Transport'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+              />
+            </div>
+
             <p className="text-sm" style={{ color: theme.text.medium }}>
-              When you type a message and press Enter (or click send), the <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>ChatPanel</code> component captures your input and passes it to the main <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>handleSendChatMessage</code> function in App.tsx. Your message is immediately displayed in the chat while processing begins.
+              On first visit, a 3-step onboarding wizard collects your name, role, and primary product ecosystem. A unique device ID is generated via <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>crypto.randomUUID()</code>. Your profile is saved to <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>localStorage</code> and synced to Convex for multi-user tracking. No login required. You can update these settings anytime in the Settings panel.
             </p>
           </Section>
 
-          {/* Section 2: Context Building */}
+          {/* ━━━ Section 2: Persona Auto-Configuration ━━━ */}
           <Section 
             number={2} 
+            title="Persona Auto-Configuration"
+            description="Your role automatically configures the system for optimal output"
+          >
+            <CompactTable 
+              title="Role-Based Presets (6 Personas)"
+              headers={['Role', 'Default Channel', 'Goal', 'Warmth', 'Detail', 'Emotion']}
+              rows={[
+                ['Marketing', 'Social Media Post', 'Engagement', '8/10', '4/10', 'Adbhuta (Wonder)'],
+                ['Product', 'App Notification', 'Information', '6/10', '7/10', 'Shanta (Peace)'],
+                ['UX Writer', 'Onboarding Screen', 'Instructional', '7/10', '3/10', 'Shanta (Peace)'],
+                ['Sales', 'Marketing Email', 'Action', '8/10', '6/10', 'Vira (Courage)'],
+                ['Support', 'Customer Care Chat', 'Support', '9/10', '8/10', 'Karuna (Compassion)'],
+                ['Leadership', 'Internal Announcement', 'Information', '6/10', '7/10', 'Vira (Courage)'],
+              ]}
+            />
+
+            <div className="grid grid-cols-2 gap-4 mt-4 mb-4">
+              <InfoCard 
+                title="Each Persona Configures"
+                items={[
+                  'Default ecosystem and channel selection',
+                  'Warmth and detail level sliders',
+                  'Content goal (engagement, information, action, etc.)',
+                  'Default Navarasa emotion',
+                  'Prompt personality paragraph for the LLM',
+                  'Content focus and priority areas',
+                  'Anti-patterns specific to the role'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+              />
+              <InfoCard 
+                title="Prompt Personality Injection"
+                items={[
+                  'A "Content Creator Context" section is added to the system prompt',
+                  'Describes how the AI should write for the specific role',
+                  'Example: Support persona emphasises empathy, patience, clear steps',
+                  'Example: Marketing persona focuses on hooks, CTAs, engagement',
+                  'Includes role-specific avoidance patterns',
+                  'All overridable by the user in Settings'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+              />
+            </div>
+          </Section>
+
+          {/* ━━━ Section 3: Context Building ━━━ */}
+          <Section 
+            number={3} 
             title="Context Building"
-            description="Your message gets enriched with smart context"
+            description="Your message gets enriched with smart context from multiple sources"
           >
             <div className="grid grid-cols-2 gap-4 mb-4">
               <InfoCard 
@@ -297,8 +456,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Education - Learning platforms, courses',
                   'Sports - Live streaming, fantasy games',
                   'Agriculture - Farmer services, rural',
-                  'Energy - Solar, clean energy',
-                  'And 5 more...'
+                  'Energy / Transport / Home / Business / Work / Government'
                 ]}
                 icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
               />
@@ -310,7 +468,9 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Customer Care Chat - Warm, detailed',
                   'WhatsApp Support - Conversational',
                   'Marketing Email - Engaging',
-                  'And 13 more...'
+                  'App Notification / Onboarding Screen',
+                  'Social Media / Digital Ads / IVR',
+                  'And 9 more...'
                 ]}
                 icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>}
               />
@@ -333,51 +493,110 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
               />
               <InfoCard 
-                title="Trigger Events (13 Types)"
-                items={[
-                  'Transaction - Payment, order, booking',
-                  'Security - OTP, login alerts, fraud',
-                  'Lifecycle - Onboarding, renewal, churn',
-                  'Platform - App update, new feature',
-                  'Health/Education/Finance - Reminders',
-                  'Emotional - Celebrations, empathy'
-                ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <InfoCard 
-                title="User Profile"
+                title="User Profile & Timing"
                 items={[
                   'Age Group - Digital confident/cautious',
                   'Literacy Level - Affects complexity',
                   'Region - 12 Indian regions',
                   'Language - 15 supported languages',
-                  'Adapts tone and vocabulary'
-                ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
-              />
-              <InfoCard 
-                title="Timing Context"
-                items={[
-                  'Morning (6-11am) - Hopeful, optimistic',
-                  'Afternoon (11am-6pm) - Neutral, practical',
-                  'Evening (6-10pm) - Warm, relaxed',
-                  'Late Night (10pm-6am) - Urgent only',
-                  'Weekend - More playful, social',
-                  'Festivals - Celebratory tone'
+                  'Morning/Afternoon/Evening/Late Night tone shifts',
+                  'Weekend and festival-aware timing'
                 ]}
                 icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
               />
             </div>
           </Section>
 
-          {/* Section 3: Prompt Construction */}
+          {/* ━━━ Section 4: Knowledge Base & RAG ━━━ */}
           <Section 
-            number={3} 
+            number={4} 
+            title="Knowledge Base & RAG"
+            description="Dynamic knowledge retrieval powered by Convex + vector search"
+          >
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <InfoCard 
+                title="Seeded Knowledge (Tier 1)"
+                items={[
+                  '~283 avoid words/phrases',
+                  '~200+ preferred vocabulary',
+                  '~33 auto-fix replacement rules',
+                  '14 product definitions',
+                  '11 Indian festivals',
+                  'All stored in Convex with embeddings'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" /></svg>}
+              />
+              <InfoCard 
+                title="Code-Level Rules (Stay in Code)"
+                items={[
+                  '101 regex validation patterns',
+                  '10 brand guardrails',
+                  '9 Navarasa emotions',
+                  'Readability algorithm',
+                  '18 channel formatting rules',
+                  '15 ecosystem definitions'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>}
+              />
+              <InfoCard 
+                title="RAG Pipeline (Vector Search)"
+                items={[
+                  'Model: BAAI/bge-small-en-v1.5',
+                  '384-dimensional embeddings',
+                  'Convex native vector search',
+                  'Filters by type, category, active status',
+                  'Minimum similarity score: 0.3',
+                  'Results merged into prompt context'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
+              />
+            </div>
+
+            <div 
+              className="p-4 rounded-lg mb-4"
+              style={{ 
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`,
+                overflow: 'hidden'
+              }}
+            >
+              <h4 className="font-medium text-sm mb-3" style={{ color: theme.text.high }}>
+                Two-Source Architecture
+              </h4>
+              <FlowCanvas height={100} viewBox="0 0 700 100" dotColor={theme.stroke.low}>
+                <FlowNode x={0} y={10} width={100} height={40} label="User Query" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={100} startY={30} endX={150} endY={30} color={theme.stroke.medium} />
+                
+                <FlowNode x={150} y={10} width={120} height={40} label="Knowledge" sublabel="Retriever" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+                
+                {/* Two branches */}
+                <CurvedFlowArrow startX={270} startY={20} endX={320} endY={10} color={theme.stroke.medium} />
+                <FlowNode x={320} y={0} width={120} height={30} label="Convex DB" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+
+                <CurvedFlowArrow startX={270} startY={40} endX={320} endY={55} color={theme.stroke.medium} />
+                <FlowNode x={320} y={45} width={120} height={30} label="Code Defaults" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                
+                {/* Merge */}
+                <CurvedFlowArrow startX={440} startY={15} endX={490} endY={30} color={theme.stroke.medium} />
+                <CurvedFlowArrow startX={440} startY={60} endX={490} endY={30} color={theme.stroke.medium} />
+                
+                <FlowNode x={490} y={10} width={100} height={40} label="Semantic" sublabel="Search (RAG)" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <CurvedFlowArrow startX={590} startY={30} endX={630} endY={30} color={theme.accent} />
+                
+                <FlowNode x={630} y={10} width={65} height={40} label="Prompt" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+              </FlowCanvas>
+            </div>
+
+            <p className="text-sm" style={{ color: theme.text.medium }}>
+              The Knowledge Retriever first checks Convex for dynamic knowledge (avoid words, vocabulary, auto-fix rules, approved examples). If Convex is unavailable, it falls back to hardcoded code defaults. Results are cached in-memory for 60 seconds. When RAG is enabled, the user's query is embedded via HuggingFace and run through Convex vector search to find contextually relevant knowledge items, which are merged into the prompt alongside the base knowledge.
+            </p>
+          </Section>
+
+          {/* ━━━ Section 5: Prompt Construction ━━━ */}
+          <Section 
+            number={5} 
             title="Prompt Construction"
-            description="Building the perfect instructions for the AI"
+            description="14 layers of context assembled into a comprehensive system prompt"
           >
             <div 
               className="p-4 rounded-lg mb-4"
@@ -387,6 +606,59 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               }}
             >
               <h4 className="font-medium text-sm mb-3" style={{ color: theme.text.high }}>
+                System Prompt Assembly Order
+              </h4>
+              <div className="space-y-1.5">
+                {[
+                  { num: 1, text: 'System Header - "Jio Content Generation System"', badge: 'Core' },
+                  { num: 2, text: 'Current Context - Ecosystem tone, channel, warmth/detail levels', badge: 'Core' },
+                  { num: 3, text: 'Content Topic - Detected product context', badge: 'Core' },
+                  { num: 4, text: '10 Brand Guardrails (MANDATORY) - With DO/DON\'T examples', badge: 'Core' },
+                  { num: 5, text: 'Style Rules (MANDATORY) - Sentence case, British spellings, ₹ symbol, etc.', badge: 'Core' },
+                  { num: 6, text: 'Conversation Flow - 6-step structure', badge: 'Core' },
+                  { num: 7, text: 'Content Creator Context - Persona prompt personality', badge: 'Phase 1' },
+                  { num: 8, text: 'Channel Guidelines - 18 channel-specific formatting rules', badge: 'Core' },
+                  { num: 9, text: 'Knowledge Sections - Avoid words (50), vocabulary (30), auto-fix (15), examples (5)', badge: 'Phase 2' },
+                  { num: 10, text: 'Learned Corrections - User edits, dislikes, style preferences', badge: 'Phase 3' },
+                  { num: 11, text: 'Semantic RAG Results - Contextually retrieved knowledge', badge: 'Phase 4' },
+                  { num: 12, text: 'User Profile Adaptations - Language, region, age, literacy', badge: 'Core' },
+                  { num: 13, text: 'Emotional Context - Navarasa emotion mapping', badge: 'Core' },
+                  { num: 14, text: 'Timing Context + Important Reminders (9 final rules)', badge: 'Core' },
+                ].map((item) => (
+                  <div 
+                    key={item.num}
+                    className="flex items-center gap-3 p-2 rounded"
+                    style={{ backgroundColor: item.badge !== 'Core' ? `${theme.accent}08` : 'transparent' }}
+                  >
+                    <span 
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0"
+                      style={{ backgroundColor: theme.accent, color: '#fff' }}
+                    >
+                      {item.num}
+                    </span>
+                    <span className="text-xs flex-1" style={{ color: theme.text.medium }}>{item.text}</span>
+                    <span 
+                      className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0"
+                      style={{ 
+                        backgroundColor: item.badge === 'Core' ? theme.stroke.low : theme.accent,
+                        color: item.badge === 'Core' ? theme.text.low : '#fff'
+                      }}
+                    >
+                      {item.badge}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div 
+              className="p-4 rounded-lg mb-4"
+              style={{ 
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`
+              }}
+            >
+              <h4 className="font-medium text-sm mb-2" style={{ color: theme.text.high }}>
                 10 Brand Guardrails (Training 1.pdf)
               </h4>
               <div className="grid grid-cols-2 gap-2">
@@ -419,33 +691,6 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <InfoCard 
-                title="Style & Grammar Rules"
-                items={[
-                  'Sentence case only (not Title Case)',
-                  'Avoid exclamation marks unless necessary',
-                  'British spellings (colour, favourite)',
-                  'Use ₹ symbol, Indian number format',
-                  '12-hour time format (3:30 PM)',
-                  'No Oxford comma'
-                ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
-              />
-              <InfoCard 
-                title="Conversation Flow"
-                items={[
-                  '1. Start with care - Acknowledge warmly',
-                  '2. Understand - Clarify needs first',
-                  '3. Resolve - Provide clear action steps',
-                  '4. Enrich - Add a helpful tip',
-                  '5. Close warmly - End with gratitude',
-                  '6. Next opportunity - Suggest next steps'
-                ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>}
-              />
-            </div>
-
             <div 
               className="p-4 rounded-lg mb-4"
               style={{ 
@@ -474,15 +719,11 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 ))}
               </div>
             </div>
-
-            <p className="text-sm mb-4" style={{ color: theme.text.medium }}>
-              The prompt builder combines your message with the generation context, brand guardrails, channel-specific formatting rules, emotion response strategies, and vocabulary guidelines to create a comprehensive system prompt for the AI.
-            </p>
           </Section>
 
-          {/* Section 4: LLM Orchestration */}
+          {/* ━━━ Section 6: LLM Orchestration ━━━ */}
           <Section 
-            number={4} 
+            number={6} 
             title="LLM Orchestration"
             description="Smart request management with caching, retry, and fallback"
           >
@@ -516,7 +757,6 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 <FlowNode x={380} y={110} width={80} height={35} label="OpenAI" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 <FlowNode x={380} y={155} width={80} height={35} label="Claude" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 
-                {/* Lines connecting to providers */}
                 <CurvedFlowArrow startX={340} startY={100} endX={380} endY={37} color={theme.stroke.medium} />
                 <CurvedFlowArrow startX={340} startY={100} endX={380} endY={82} color={theme.stroke.medium} />
                 <CurvedFlowArrow startX={340} startY={100} endX={380} endY={127} color={theme.stroke.medium} />
@@ -564,42 +804,55 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             </div>
           </Section>
 
-          {/* Section 5: Backend API */}
+          {/* ━━━ Section 7: Backend Architecture ━━━ */}
           <Section 
-            number={5} 
-            title="Backend API"
-            description="Secure server-side processing"
+            number={7} 
+            title="Backend Architecture"
+            description="Hybrid client-side + Vercel serverless + Convex real-time database"
           >
-            <div 
-              className="p-4 rounded-lg mb-4"
-              style={{ 
-                backgroundColor: theme.background.ghost,
-                border: `1px solid ${theme.stroke.medium}`,
-                overflow: 'hidden'
-              }}
-            >
-              <FlowCanvas height={80} viewBox="0 0 600 80" dotColor={theme.stroke.low}>
-                <FlowNode x={0} y={15} width={100} height={50} label="Frontend" sublabel="Request" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <CurvedFlowArrow startX={100} startY={40} endX={160} endY={40} color={theme.stroke.medium} />
-                
-                <FlowNode x={160} y={15} width={120} height={50} label="/api/llm" sublabel="Serverless Function" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
-                <CurvedFlowArrow startX={280} startY={40} endX={340} endY={40} color={theme.stroke.medium} />
-                
-                <FlowNode x={340} y={15} width={120} height={50} label="External API" sublabel="DashScope/OpenAI" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                <CurvedFlowArrow startX={460} startY={40} endX={520} endY={40} color={theme.stroke.medium} />
-                
-                <FlowNode x={520} y={15} width={70} height={50} label="Response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-              </FlowCanvas>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <InfoCard 
+                title="Vercel Serverless (/api/llm)"
+                items={[
+                  'Proxies LLM requests securely',
+                  'Keeps API keys server-side',
+                  'Request logging and rate limiting',
+                  'Streaming support (SSE)'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" /></svg>}
+              />
+              <InfoCard 
+                title="Convex (Shared Database)"
+                items={[
+                  '5 tables: users, corrections, analytics, knowledgeItems, adminConfig',
+                  'Real-time subscriptions (useQuery hooks)',
+                  'Native vector search (384-dim)',
+                  'Serverless functions (actions, mutations, queries)',
+                  'Multi-user data aggregation'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" /></svg>}
+              />
+              <InfoCard 
+                title="Client-Side Persistence"
+                items={[
+                  'localStorage - UI prefs, profiles, caches, queues',
+                  'IndexedDB - Audio blobs (large files)',
+                  'In-memory caches - Knowledge (60s TTL)',
+                  'Convex is the shared source of truth',
+                  'Local storage acts as offline buffer'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
+              />
             </div>
 
             <p className="text-sm" style={{ color: theme.text.medium }}>
-              Your request is sent to a secure Vercel serverless function (<code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>/api/llm</code>) which adds authentication headers and forwards the request to the AI provider. This keeps your API keys secure and allows for request logging and rate limiting.
+              Voice Lab uses a hybrid architecture: LLM requests go through Vercel serverless functions for API key security. User data (profiles, corrections, analytics, knowledge) is stored in Convex for multi-user access. Client-side storage (localStorage, IndexedDB) provides offline resilience and fast reads. The <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>ConvexSyncService</code> handles background sync with offline queuing, automatic replay on reconnect, and batched analytics flushing every 5 seconds.
             </p>
           </Section>
 
-          {/* Section 6: Content Trust Validation */}
+          {/* ━━━ Section 8: Content Trust Validation ━━━ */}
           <Section 
-            number={6} 
+            number={8} 
             title="Content Trust Validation"
             description="8 AI agents verify the response quality"
           >
@@ -680,16 +933,16 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'British spelling enforcement',
                   'Currency format (₹ symbol)',
                   'Exclamation mark warnings',
-                  'Elitism patterns (ping us → message us)',
+                  'Elitism patterns (ping us -> message us)',
                   'Fear-based messaging detection'
                 ]}
                 icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
               />
               <InfoCard 
-                title="Readability Agent (NEW)"
+                title="Readability Agent"
                 items={[
                   'Flesch-Kincaid Grade Level scoring',
-                  'Target: ≤ Grade 8 readability',
+                  'Target: Grade 8 or below',
                   'Long sentence detection (>25 words)',
                   'Complex word flagging',
                   'Sentence structure analysis',
@@ -704,33 +957,67 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             </p>
           </Section>
 
-          {/* Section 7: Response Delivery */}
+          {/* ━━━ Section 9: Response & Feedback ━━━ */}
           <Section 
-            number={7} 
-            title="Response Delivery"
-            description="Your response appears with full context"
+            number={9} 
+            title="Response & Feedback Loop"
+            description="Your response appears with 5 feedback actions that drive learning"
           >
             <div className="grid grid-cols-2 gap-4 mb-4">
               <InfoCard 
-                title="Streaming Mode"
+                title="Response Display"
                 items={[
-                  'Words appear as they are generated',
-                  'Faster perceived response time',
-                  'Can be stopped mid-generation',
-                  'Enabled by default'
+                  'Streaming mode - Words appear as generated',
+                  'Trust badge shows content certification level',
+                  'Click badge for detailed agent breakdown',
+                  'Generation context preserved per message',
+                  'Copy / regenerate options'
                 ]}
                 icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
               />
               <InfoCard 
-                title="Response Display"
+                title="5 Feedback Actions"
                 items={[
-                  'Trust badge shows content certification',
-                  'Click badge for detailed breakdown',
-                  'Generation context preserved',
-                  'Copy/regenerate options available'
+                  'Thumbs Up - Positive reinforcement (green highlight)',
+                  'Thumbs Down - Negative signal + optional reason input',
+                  'Edit - Textarea pre-filled with original, save delta',
+                  'Comment - Free-text style/preference feedback',
+                  'Save as Example - Bookmark approved content for reuse'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>}
               />
+            </div>
+
+            <div 
+              className="p-4 rounded-lg mb-4"
+              style={{ 
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`
+              }}
+            >
+              <h4 className="font-medium text-sm mb-2" style={{ color: theme.text.high }}>
+                Feedback UX Details
+              </h4>
+              <ul className="space-y-1.5">
+                {[
+                  'Only one feedback action per message (mutual exclusion)',
+                  'Thumbs down and comment expand an input field inline',
+                  'Edit expands a resizable textarea (4 rows, 80-200px height)',
+                  'Submit with Enter key or check icon; cancel with Escape',
+                  'After submission, collapses to a confirmation message',
+                  'Save as Example only appears if the feature is enabled',
+                  'Feedback is tagged with the ecosystem/channel at generation time (not current UI state)',
+                ].map((item, index) => (
+                  <li 
+                    key={index}
+                    className="text-sm flex items-start gap-2"
+                    style={{ color: theme.text.medium }}
+                  >
+                    <span style={{ color: theme.accent }}>•</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
             </div>
 
             <div 
@@ -744,14 +1031,202 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 Persistence
               </h4>
               <p className="text-sm" style={{ color: theme.text.medium }}>
-                Messages are automatically saved to <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>localStorage</code> for quick access, with audio data stored in <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>IndexedDB</code> for larger files. Your conversations persist across sessions and are scoped to each project.
+                Messages are saved to <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>localStorage</code> for quick access, audio data in <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>IndexedDB</code>. Conversations persist across sessions and are scoped to each project. Feedback is saved locally and synced to Convex for admin visibility.
               </p>
             </div>
           </Section>
 
-          {/* Section 8: Error Handling & Abort */}
+          {/* ━━━ Section 10: Learning Engine ━━━ */}
           <Section 
-            number={8} 
+            number={10} 
+            title="Learning from Feedback"
+            description="The system learns from every user interaction and improves over time"
+          >
+            <CompactTable 
+              title="Feedback Signal Strengths"
+              headers={['Feedback Type', 'Signal', 'What the System Learns']}
+              rows={[
+                ['Thumbs Up', 'Positive', 'Reinforcement - content saved as example for reuse'],
+                ['Thumbs Down', 'Negative', 'Avoidance patterns extracted from optional reason'],
+                ['Edit', 'Strongest', 'Original vs. edited delta - learns before/after corrections (200 char cap)'],
+                ['Comment', 'Qualitative', 'Style preferences and tone guidance'],
+                ['Save as Example', 'Approval', 'Bookmarked content becomes a prompt example (max 50 locally)'],
+              ]}
+            />
+
+            <div className="grid grid-cols-2 gap-4 mt-4 mb-4">
+              <InfoCard 
+                title="Learning Pipeline"
+                items={[
+                  'extractLearningInsights() processes corrections by ecosystem/channel',
+                  'Edits (up to 10) become before/after correction pairs',
+                  'Thumbs down (up to 5) become avoidance patterns',
+                  'Comments (up to 5) become style preferences',
+                  'Builds a composite "Learned from User Corrections" prompt section',
+                  'Merged into the Knowledge Retriever output'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>}
+              />
+              <InfoCard 
+                title="How Learning Improves the Prompt"
+                items={[
+                  'Avoid patterns merged into avoidWords (deduplicated)',
+                  'Style preferences injected as a dedicated section',
+                  'Corrections shown as numbered BEFORE/AFTER pairs',
+                  'Saved examples become approved content in the prompt (max 5)',
+                  'All filtered by current ecosystem/channel context',
+                  'Local corrections cache: max 100 entries in localStorage'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
+              />
+            </div>
+
+            <p className="text-sm" style={{ color: theme.text.medium }}>
+              Every piece of feedback creates a learning signal. The Learning Engine extracts patterns from corrections, filters them by the current ecosystem and channel context, and injects them into the next generation's prompt. This means the system progressively adapts to each user's preferences. Corrections are stored locally (max 100) and synced to Convex for cross-user learning in the admin panel.
+            </p>
+          </Section>
+
+          {/* ━━━ Section 11: Multi-User Sync ━━━ */}
+          <Section 
+            number={11} 
+            title="Multi-User Data Sync"
+            description="Background synchronisation to Convex for multi-user access"
+          >
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <InfoCard 
+                title="What Gets Synced"
+                items={[
+                  'User profiles (name, role, product, device ID)',
+                  'Heartbeat pings (last seen tracking)',
+                  'Analytics events (generation, feedback, session)',
+                  'Corrections and feedback (all 5 types)',
+                  'Saved examples (approved content)'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>}
+              />
+              <InfoCard 
+                title="Sync Architecture"
+                items={[
+                  'ConvexSyncService - Singleton, non-blocking',
+                  'Events queued in localStorage (max 100)',
+                  'Analytics buffered in memory (5s flush interval)',
+                  'safeMutation() - Never throws, returns {ok} result',
+                  'Offline: queues events, replays on reconnect',
+                  'Queue flush order: user_sync first, then heartbeat, analytics (batched), corrections'
+                ]}
+                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>}
+              />
+            </div>
+
+            <div 
+              className="p-4 rounded-lg mb-4"
+              style={{ 
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`
+              }}
+            >
+              <h4 className="font-medium text-sm mb-2" style={{ color: theme.text.high }}>
+                Convex Database Tables
+              </h4>
+              <div className="space-y-1.5">
+                {[
+                  { table: 'users', desc: 'User profiles (one per device) with deviceId, name, role, product, lastSeenAt' },
+                  { table: 'corrections', desc: 'All feedback/edits with original content, edited content, comment, ecosystem, channel, adminStatus' },
+                  { table: 'analyticsEvents', desc: 'Generation/session/feedback events with trustScore, violations, token counts, LLM provider' },
+                  { table: 'knowledgeItems', desc: 'Dynamic knowledge base with type, category, content, metadata, tags, 384-dim embedding vector' },
+                  { table: 'adminConfig', desc: 'System-level key-value settings (JSON values)' },
+                ].map((item) => (
+                  <div key={item.table} className="flex items-start gap-2 text-sm">
+                    <code className="px-1.5 py-0.5 rounded text-xs flex-shrink-0" style={{ backgroundColor: theme.accent, color: '#fff' }}>
+                      {item.table}
+                    </code>
+                    <span style={{ color: theme.text.medium }}>{item.desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-sm" style={{ color: theme.text.medium }}>
+              User identification is lightweight and login-free: a unique UUID is generated per device on first visit. The Convex user ID is cached in localStorage (<code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>voicelab_convex_user_id</code>) for persistence across sessions. The sync bridge is injected into the React tree via a <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>ConvexSyncBridge</code> component that provides the real mutation function.
+            </p>
+          </Section>
+
+          {/* ━━━ Section 12: Admin Panel ━━━ */}
+          <Section 
+            number={12} 
+            title="Admin Panel (/admin)"
+            description="Passphrase-protected admin interface for system oversight"
+          >
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <InfoCard 
+                title="Dashboard"
+                items={[
+                  '4 stat cards (today, this week, total, examples)',
+                  'Feedback breakdown by type with percentages',
+                  'Recent feedback table (last 10 entries)',
+                  'Type badges and content previews'
+                ]}
+              />
+              <InfoCard 
+                title="Analytics"
+                items={[
+                  'Feedback by Ecosystem (sorted by count)',
+                  'Feedback by Channel (sorted by count)',
+                  'Feedback Type Distribution',
+                  'Designed for Convex real-time data'
+                ]}
+              />
+              <InfoCard 
+                title="Memory & Learnings"
+                items={[
+                  'Filter bar: All / thumbs_up / thumbs_down / edit / comment',
+                  'Full corrections table with content preview',
+                  'Original, edited, and comment columns',
+                  'Paginated to 50 items'
+                ]}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <InfoCard 
+                title="Knowledge Base"
+                items={[
+                  '6 knowledge type cards with counts',
+                  '~283 avoid words, ~200+ vocabulary',
+                  '~33 auto-fix rules, 14 products, 11 festivals',
+                  'Management guide (seed & embed commands)',
+                  'Locally saved examples table'
+                ]}
+              />
+              <InfoCard 
+                title="Users"
+                items={[
+                  'Device-based identification explained',
+                  'Current device profile display',
+                  'Name, role, product, device ID',
+                  'Designed for multi-user listing from Convex'
+                ]}
+              />
+              <InfoCard 
+                title="System Config"
+                items={[
+                  '5 feature flags with env var names',
+                  'Convex URL and deployment info',
+                  'Default LLM and fallback chain',
+                  'HuggingFace embedding model info',
+                  'Environment diagnostics'
+                ]}
+              />
+            </div>
+
+            <p className="text-sm" style={{ color: theme.text.medium }}>
+              Access the admin panel at <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>/admin</code>. Default passphrase: <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>voicelab-admin</code> (configurable via <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>VITE_ADMIN_PASSPHRASE</code> env var). Session stored in sessionStorage -- re-enter after browser close. The admin panel reads from localStorage with a 5-second polling interval and is designed to also pull directly from Convex when connected.
+            </p>
+          </Section>
+
+          {/* ━━━ Section 13: Error Handling & Abort ━━━ */}
+          <Section 
+            number={13} 
             title="Error Handling & Abort"
             description="Graceful handling of issues and cancellations"
           >
@@ -772,7 +1247,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 <ul className="space-y-2 text-sm" style={{ color: theme.text.medium }}>
                   <li className="flex items-start gap-2">
                     <span style={{ color: theme.accent }}>1.</span>
-                    API failure triggers automatic retry
+                    API failure triggers automatic retry with exponential backoff
                   </li>
                   <li className="flex items-start gap-2">
                     <span style={{ color: theme.accent }}>2.</span>
@@ -784,7 +1259,11 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   </li>
                   <li className="flex items-start gap-2">
                     <span style={{ color: theme.accent }}>4.</span>
-                    Rate limits handled with backoff
+                    localStorage QuotaExceededError handled gracefully (warns, never crashes)
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span style={{ color: theme.accent }}>5.</span>
+                    Convex sync failures queue events for later replay
                   </li>
                 </ul>
               </div>
@@ -824,16 +1303,16 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             </div>
           </Section>
 
-          {/* Section 9: Real Examples */}
+          {/* ━━━ Section 14: Real Examples ━━━ */}
           <Section 
-            number={9} 
+            number={14} 
             title="Real Examples"
             description="See how different settings affect the output"
           >
             <ExampleComparison
               title="Brand Guardrails Applied"
-              before={{ label: "❌ Title Case, Wrong Currency", content: "Light Up Your Home With JioFiber! Get Rs. 100,000 Off Now!" }}
-              after={{ label: "✓ Sentence case, ₹ symbol", content: "Light up your home with JioFiber. Get ₹1,00,000 off now." }}
+              before={{ label: "Title Case, Wrong Currency", content: "Light Up Your Home With JioFiber! Get Rs. 100,000 Off Now!" }}
+              after={{ label: "Sentence case, correct format", content: "Light up your home with JioFiber. Get ₹1,00,000 off now." }}
             />
 
             <ExampleComparison
@@ -843,25 +1322,25 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             />
 
             <ExampleComparison
-              title="Ecosystem Effect"
-              before={{ label: "Finance (Calm, trustworthy)", content: "Your JioPay transaction of ₹2,500 was successful. Reference: JIO123456. Your updated balance is ₹15,420. For any concerns, we are here 24/7." }}
-              after={{ label: "Entertainment (Playful, energetic)", content: "You just unlocked premium access. Get ready for unlimited movies, shows, and live sports. Your entertainment journey starts now - grab some popcorn and dive in." }}
+              title="Persona Effect"
+              before={{ label: "Support Persona (Warm, empathetic)", content: "I understand this has been frustrating. Let me personally look into this for you right away. Here is exactly what we are doing to resolve this - I will keep you updated every step of the way." }}
+              after={{ label: "Marketing Persona (Engaging, punchy)", content: "Your entertainment just got an upgrade. Unlimited movies, shows, and live sports are now at your fingertips. Dive in and explore what is new today." }}
             />
 
             <ExampleComparison
-              title="Emotion Detection (Navarasa)"
-              before={{ label: "User frustrated (Raudra)", content: "I am truly sorry. This is not the experience you deserve. I am personally going to make sure this is resolved today. Here is exactly what we are doing to fix this." }}
-              after={{ label: "User grateful (Shringara)", content: "Thank you for being with us. It means the world to us. Here is a little something to show our appreciation." }}
+              title="Learning Effect (After User Edits)"
+              before={{ label: "Before learning", content: "Get excited! This amazing offer is just for you! Don't miss out on this incredible deal!" }}
+              after={{ label: "After user corrected tone", content: "Here is a thoughtful offer based on your usage. Take a look when you have a moment - it might be a good fit." }}
             />
           </Section>
 
-          {/* Section 10: Settings Reference */}
+          {/* ━━━ Section 15: Settings & Configuration ━━━ */}
           <Section 
-            number={10} 
-            title="Settings Reference"
-            description="All settings that affect content generation"
+            number={15} 
+            title="Settings & Configuration"
+            description="All settings that affect content generation and system behaviour"
           >
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <div 
                 className="p-4 rounded-lg"
                 style={{ 
@@ -924,6 +1403,35 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                     </tr>
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            <div 
+              className="p-4 rounded-lg"
+              style={{ 
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`
+              }}
+            >
+              <h4 className="font-medium text-sm mb-3" style={{ color: theme.text.high }}>
+                Feature Flags (Environment Variables)
+              </h4>
+              <div className="space-y-1">
+                {[
+                  { flag: 'VITE_ENABLE_CONVEX_SYNC', desc: 'Enable/disable background Convex synchronisation' },
+                  { flag: 'VITE_ENABLE_PERSONA', desc: 'Enable/disable role-based persona auto-configuration' },
+                  { flag: 'VITE_ENABLE_KNOWLEDGE_BASE', desc: 'Enable/disable dynamic knowledge retrieval from Convex' },
+                  { flag: 'VITE_ENABLE_LEARNING', desc: 'Enable/disable learning from user feedback' },
+                  { flag: 'VITE_ENABLE_RAG', desc: 'Enable/disable semantic search (vector embeddings)' },
+                  { flag: 'VITE_ADMIN_PASSPHRASE', desc: 'Custom admin panel passphrase (default: voicelab-admin)' },
+                ].map((item) => (
+                  <div key={item.flag} className="flex items-start gap-2 text-xs py-1">
+                    <code className="px-1.5 py-0.5 rounded flex-shrink-0" style={{ backgroundColor: theme.stroke.low, color: theme.text.high }}>
+                      {item.flag}
+                    </code>
+                    <span style={{ color: theme.text.medium }}>{item.desc}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </Section>
