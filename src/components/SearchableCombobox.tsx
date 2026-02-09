@@ -252,24 +252,35 @@ export default function SearchableCombobox({
               >
                 <div
                   style={{
-                    color: value === option.id ? '#0066ff' : '#1a1a1a',
-                    fontSize: '0.8125rem',
-                    fontWeight: value === option.id ? 600 : 400,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    flexWrap: 'wrap',
                   }}
                 >
-                  {option.label}
-                </div>
-                {option.description && (
-                  <div
+                  <span
                     style={{
-                      color: '#666',
-                      fontSize: '0.6875rem',
-                      marginTop: '0.125rem',
+                      color: value === option.id ? '#0066ff' : '#1a1a1a',
+                      fontSize: '0.8125rem',
+                      fontWeight: value === option.id ? 600 : 400,
                     }}
                   >
-                    {option.description}
-                  </div>
-                )}
+                    {option.label}
+                  </span>
+                  {option.description && (
+                    <>
+                      <span style={{ color: '#ccc', fontSize: '0.75rem' }}>•</span>
+                      <span
+                        style={{
+                          color: '#666',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        {option.description}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
             ))
           )}

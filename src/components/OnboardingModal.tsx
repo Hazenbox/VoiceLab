@@ -210,62 +210,64 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
         </div>
 
         {/* Content - Scrollable */}
-        <div style={{ padding: '0 1.25rem 1.25rem', overflowY: 'auto', flex: 1 }}>
-          {/* Name Field */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label
-              style={{
-                display: 'block',
-                color: '#1a1a1a',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                marginBottom: '0.375rem',
-              }}
-            >
-              Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => { setName(e.target.value); setNameError(''); }}
-              placeholder="Enter your name"
-              autoFocus={!isEditMode}
-              style={{
-                width: '100%',
-                padding: '0.625rem 0.75rem',
-                borderRadius: '8px',
-                border: `1px solid ${nameError ? '#ef4444' : '#e0e0e0'}`,
-                background: '#f9f9f9',
-                color: '#1a1a1a',
-                fontSize: '0.8125rem',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
+        <div style={{ padding: '0 1.25rem 1.25rem', flex: 1, position: 'relative' }}>
+          <div style={{ overflowY: 'auto', maxHeight: '100%' }}>
+            {/* Name Field */}
+            <div style={{ marginBottom: '1rem' }}>
+              <label
+                style={{
+                  display: 'block',
+                  color: '#1a1a1a',
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  marginBottom: '0.375rem',
+                }}
+              >
+                Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => { setName(e.target.value); setNameError(''); }}
+                placeholder="Enter your name"
+                autoFocus={!isEditMode}
+                style={{
+                  width: '100%',
+                  padding: '0.625rem 0.75rem',
+                  borderRadius: '8px',
+                  border: `1px solid ${nameError ? '#ef4444' : '#e0e0e0'}`,
+                  background: '#f9f9f9',
+                  color: '#1a1a1a',
+                  fontSize: '0.8125rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              {nameError && (
+                <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                  {nameError}
+                </p>
+              )}
+            </div>
+
+            {/* Role Field */}
+            <SearchableCombobox
+              label="Role"
+              placeholder="Select your role"
+              options={ROLES_WITH_SEARCH}
+              value={role}
+              onChange={(id) => setRole(id as UserRole)}
             />
-            {nameError && (
-              <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                {nameError}
-              </p>
-            )}
+
+            {/* Ecosystem Field */}
+            <SearchableCombobox
+              label="Product Ecosystem"
+              placeholder="Select product ecosystem"
+              options={ECOSYSTEMS_WITH_SEARCH}
+              value={product}
+              onChange={setProduct}
+            />
           </div>
-
-          {/* Role Field */}
-          <SearchableCombobox
-            label="Role"
-            placeholder="Select your role"
-            options={ROLES_WITH_SEARCH}
-            value={role}
-            onChange={(id) => setRole(id as UserRole)}
-          />
-
-          {/* Ecosystem Field */}
-          <SearchableCombobox
-            label="Product Ecosystem"
-            placeholder="Select product ecosystem"
-            options={ECOSYSTEMS_WITH_SEARCH}
-            value={product}
-            onChange={setProduct}
-          />
         </div>
 
         {/* Footer */}
