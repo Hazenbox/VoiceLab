@@ -92,6 +92,7 @@ interface ProjectMenuProps {
   onSelect: (value: string) => void;
   isOpen: boolean;
   onToggle: () => void;
+  direction?: 'up' | 'down';
 }
 
 const ProjectMenu = memo(function ProjectMenu({
@@ -99,6 +100,7 @@ const ProjectMenu = memo(function ProjectMenu({
   onSelect,
   isOpen,
   onToggle,
+  direction = 'down',
 }: ProjectMenuProps) {
   const theme = useThemeColors();
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -175,8 +177,12 @@ const ProjectMenu = memo(function ProjectMenu({
       {isOpen && (
         <div
           ref={menuRef}
-          className="absolute z-50 min-w-[120px] rounded-lg overflow-hidden py-1 top-full mt-1 right-0"
+          className="absolute z-50 min-w-[120px] rounded-lg overflow-hidden py-1 right-0"
           style={{
+            ...(direction === 'up'
+              ? { bottom: 'calc(100% + 0.25rem)' }
+              : { top: 'calc(100% + 0.25rem)' }
+            ),
             backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
             border: `1px solid ${theme.stroke.low}`,
           }}
@@ -306,6 +312,8 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   const theme = useThemeColors();
   const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
   
+  // User menu state
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   
   // Rename state
   const [renamingProject, setRenamingProject] = useState<string | null>(null);
@@ -346,6 +354,62 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     setRenameValue('');
   }, []);
 
+  // User menu options
+  const userMenuOptions: DropdownOption[] = [
+    {
+      value: 'edit-profile',
+      label: 'Edit Profile',
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+          />
+        </svg>
+      ),
+    },
+    ...(onNavigateToDesignSystem ? [{
+      value: 'design-system',
+      label: 'Design System',
+      icon: (
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
+        </svg>
+      ),
+    }] : []),
+    {
+      value: 'toggle-theme',
+      label: `${colorMode === 'Light' ? 'Dark' : 'Light'} Mode`,
+      icon:
+        colorMode === 'Light' ? (
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
+          </svg>
+        ) : (
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4" strokeWidth="2" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+          </svg>
+        ),
+    },
+  ];
+
+  // Handle user menu actions
+  const handleUserMenuAction = useCallback((action: string) => {
+    switch (action) {
+      case 'edit-profile':
+        onEditProfile?.();
+        break;
+      case 'design-system':
+        onNavigateToDesignSystem?.();
+        break;
+      case 'toggle-theme':
+        onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light');
+        break;
+    }
+    setIsUserMenuOpen(false);
+  }, [onEditProfile, onNavigateToDesignSystem, onColorModeChange, colorMode]);
 
   return (
     <aside 
@@ -458,91 +522,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         </div>
       </div>
 
-      {/* Profile Section */}
-      {userName && onEditProfile && (
-        <div
-          onClick={onEditProfile}
-          className="px-3 py-3 flex items-center gap-3 cursor-pointer transition-colors"
-          style={{
-            borderTop: `1px solid ${theme.stroke.low}`,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = theme.stroke.low;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-          }}
-          role="button"
-          aria-label="Edit profile"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onEditProfile();
-            }
-          }}
-        >
-          {/* Avatar with initials */}
-          <div
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: theme.stroke.medium,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: theme.text.medium,
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              flexShrink: 0,
-            }}
-          >
-            {getInitials(userName)}
-          </div>
-
-          {/* Name and role */}
-          <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-            <div
-              className="truncate"
-              style={{
-                color: theme.text.high,
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                lineHeight: 1.2,
-              }}
-            >
-              {userName}
-            </div>
-            <div
-              style={{
-                color: theme.text.medium,
-                fontSize: '0.6875rem',
-                lineHeight: 1.2,
-              }}
-            >
-              {formatRole(userRole)}
-            </div>
-          </div>
-
-          {/* Edit icon */}
-          <svg
-            className="w-3.5 h-3.5 flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            style={{ color: theme.text.low }}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-            />
-          </svg>
-        </div>
-      )}
-
       {/* Bottom Navigation */}
       <div 
         className="p-2.5 space-y-0.5"
@@ -568,49 +547,71 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             ariaLabel="Learn how the system works"
           />
         )}
-
-        {/* Design System Nav Item */}
-        {onNavigateToDesignSystem && (
-          <SidebarNavItem
-            icon={
-              <svg 
-                className="w-4 h-4" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-                style={{ color: isDesignSystemActive ? theme.accent : theme.text.high }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
-              </svg>
-            }
-            label="Design System"
-            onClick={onNavigateToDesignSystem}
-            isActive={isDesignSystemActive}
-            ariaLabel="Open design system library"
-          />
-        )}
-
-        {/* Dark Mode Toggle */}
-        <SidebarNavItem
-          icon={
-            colorMode === 'Light' ? (
-              // Moon icon for dark mode
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" style={{ color: theme.text.high }}>
-                <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
-              </svg>
-            ) : (
-              // Sun icon for light mode
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.text.high }}>
-                <circle cx="12" cy="12" r="4" strokeWidth="2" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-              </svg>
-            )
-          }
-          label={`${colorMode === 'Light' ? 'Dark' : 'Light'} Mode`}
-          onClick={() => onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light')}
-          ariaLabel={`Switch to ${colorMode === 'Light' ? 'dark' : 'light'} mode`}
-        />
       </div>
+
+      {/* User Profile Menu - Bottommost */}
+      {userName && onEditProfile && (
+        <div 
+          className="px-3 py-3 relative"
+          style={{
+            borderTop: `1px solid ${theme.stroke.low}`,
+          }}
+        >
+          <div className="flex items-center gap-3">
+            {/* Avatar with initials */}
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: theme.stroke.medium,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: theme.text.medium,
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                flexShrink: 0,
+              }}
+            >
+              {getInitials(userName)}
+            </div>
+
+            {/* Name and role */}
+            <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+              <div
+                className="truncate"
+                style={{
+                  color: theme.text.high,
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  lineHeight: 1.2,
+                }}
+              >
+                {userName}
+              </div>
+              <div
+                style={{
+                  color: theme.text.medium,
+                  fontSize: '0.6875rem',
+                  lineHeight: 1.2,
+                }}
+              >
+                {formatRole(userRole)}
+              </div>
+            </div>
+
+            {/* Menu trigger button */}
+            <ProjectMenu
+              options={userMenuOptions}
+              onSelect={handleUserMenuAction}
+              isOpen={isUserMenuOpen}
+              onToggle={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              direction="up"
+            />
+          </div>
+        </div>
+      )}
     </aside>
   );
 });
