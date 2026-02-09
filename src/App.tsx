@@ -60,6 +60,9 @@ import { useThemeColors } from './theme';
 import { useProject } from './context/ProjectContext';
 import { useAudioLibrary } from './context/AudioLibraryContext';
 import { useAbortController } from './hooks';
+// Onboarding & Sync
+import OnboardingModal, { loadUserProfile, getDeviceId, type UserProfile } from './components/OnboardingModal';
+import { initSyncService, getSyncService } from './services/sync/convexSync';
 
 // Storage key for chat mode persistence
 const CHAT_MODE_STORAGE_KEY = 'voiceDesigner_chatMode';
@@ -89,6 +92,42 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   } = useProject();
   const { saveAudio } = useAudioLibrary();
   
+  // ── Onboarding State ──────────────────────────────────────────
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
+  const [showOnboarding, setShowOnboarding] = useState(() => !getDeviceId());
+  
+  // Initialize sync service on mount
+  useEffect(() => {
+    const syncService = initSyncService();
+    
+    if (userProfile?.deviceId) {
+      syncService.setDeviceId(userProfile.deviceId);
+      // Heartbeat on mount (non-blocking)
+      syncService.heartbeat();
+    }
+
+    return () => syncService.destroy();
+  }, [userProfile?.deviceId]);
+
+  const handleOnboardingComplete = useCallback((profile: UserProfile) => {
+    setUserProfile(profile);
+    setShowOnboarding(false);
+    
+    // Sync profile to Convex (non-blocking)
+    const syncService = getSyncService();
+    if (syncService) {
+      syncService.syncUserProfile({
+        deviceId: profile.deviceId,
+        name: profile.name,
+        role: profile.role,
+        product: profile.product,
+      });
+    }
+
+    // Auto-configure ecosystem from profile
+    setEcosystem(profile.product as EcosystemType);
+  }, []);
+
   // UI State - chatMode persisted to localStorage
   const [chatMode, setChatMode] = useState<ChatMode>(() => {
     try {
@@ -1188,6 +1227,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         isOpen={showUsageModal}
         onClose={() => setShowUsageModal(false)}
       />
+
+      {/* Onboarding Modal */}
+      {showOnboarding && (
+        <OnboardingModal onComplete={handleOnboardingComplete} />
+      )}
 
       {/* Error Toast */}
       {error && (
