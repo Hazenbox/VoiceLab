@@ -96,7 +96,7 @@ export default defineSchema({
     .index("by_type_category", ["type", "category"])
     .vectorIndex("by_embedding", {
       vectorField: "embedding",
-      dimensions: 1536,
+      dimensions: 384, // sentence-transformers/all-MiniLM-L6-v2 via Hugging Face
       filterFields: ["type", "category", "isActive"],
     }),
 

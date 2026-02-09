@@ -6,7 +6,8 @@
  * 
  * Step 2 - Generate embeddings for vector search (Phase 4):
  *   npx convex run embeddings:backfillEmbeddings
- *   (requires OPENAI_API_KEY env var set in Convex dashboard)
+ *   (requires HUGGINGFACE_API_KEY env var set in Convex dashboard)
+ *   Uses sentence-transformers/all-MiniLM-L6-v2 (384 dims, free tier)
  *   Run multiple times if needed -- it processes 50 items per call.
  * 
  * Seeds:

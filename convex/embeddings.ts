@@ -1,42 +1,124 @@
 /**
  * Embeddings & Vector Search for Knowledge Base (Phase 4)
  * 
- * Uses OpenAI text-embedding-3-small (1536 dimensions) to generate
- * embeddings for knowledge items, enabling semantic search.
+ * Uses Hugging Face Inference API with sentence-transformers/all-MiniLM-L6-v2
+ * (384 dimensions) to generate embeddings for knowledge items.
  * 
  * Architecture:
- * - generateEmbedding: action → calls OpenAI, stores embedding
+ * - generateEmbedding: action → calls HuggingFace, stores embedding
  * - backfillEmbeddings: action → batch-generates embeddings for items missing them
  * - semanticSearch: action → embeds query, runs vectorSearch, fetches docs
  * - fetchDocuments: internalQuery → loads documents by IDs (for action → query bridge)
+ * 
+ * Setup:
+ * - Set HUGGINGFACE_API_KEY in Convex dashboard env vars
+ * - Model: sentence-transformers/all-MiniLM-L6-v2 (384 dims, free tier)
  */
 
 import { v } from "convex/values";
 import { action, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 
-// ── OpenAI Embedding Helper ──────────────────────────────────────
+// ── Configuration ────────────────────────────────────────────────
 
-async function getOpenAIEmbedding(text: string, apiKey: string): Promise<number[]> {
-  const response = await fetch("https://api.openai.com/v1/embeddings", {
+const HF_MODEL = "sentence-transformers/all-MiniLM-L6-v2";
+const HF_API_URL = `https://api-inference.huggingface.co/pipeline/feature-extraction/${HF_MODEL}`;
+const EXPECTED_DIMENSIONS = 384;
+
+// ── Hugging Face Embedding Helper ────────────────────────────────
+
+async function getHuggingFaceEmbedding(text: string, apiKey: string): Promise<number[]> {
+  const response = await fetch(HF_API_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "text-embedding-3-small",
-      input: text,
+      inputs: text,
+      options: { wait_for_model: true },
     }),
   });
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`OpenAI embedding API error (${response.status}): ${errorBody}`);
+    // HF free tier may return 503 when model is loading
+    if (response.status === 503) {
+      throw new Error(
+        `Model is loading on Hugging Face. Retry in a few seconds. (${errorBody})`
+      );
+    }
+    throw new Error(
+      `Hugging Face API error (${response.status}): ${errorBody}`
+    );
   }
 
   const data = await response.json();
-  return data.data[0].embedding;
+
+  // HF feature-extraction returns a nested array: [[...384 floats...]]
+  // For a single input, we get the first (and only) result
+  let embedding: number[];
+  if (Array.isArray(data) && Array.isArray(data[0]) && typeof data[0][0] === "number") {
+    embedding = data[0];
+  } else if (Array.isArray(data) && typeof data[0] === "number") {
+    // Some models return a flat array directly
+    embedding = data;
+  } else {
+    throw new Error(
+      `Unexpected embedding response shape: ${JSON.stringify(data).slice(0, 200)}`
+    );
+  }
+
+  if (embedding.length !== EXPECTED_DIMENSIONS) {
+    throw new Error(
+      `Expected ${EXPECTED_DIMENSIONS} dimensions, got ${embedding.length}`
+    );
+  }
+
+  return embedding;
+}
+
+/**
+ * Batch embed multiple texts in one API call (HF supports this).
+ */
+async function getHuggingFaceBatchEmbeddings(
+  texts: string[],
+  apiKey: string
+): Promise<number[][]> {
+  const response = await fetch(HF_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      inputs: texts,
+      options: { wait_for_model: true },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    if (response.status === 503) {
+      throw new Error(
+        `Model is loading on Hugging Face. Retry in a few seconds. (${errorBody})`
+      );
+    }
+    throw new Error(
+      `Hugging Face API error (${response.status}): ${errorBody}`
+    );
+  }
+
+  const data = await response.json();
+
+  // HF returns [[...384...], [...384...], ...] for batch input
+  if (!Array.isArray(data) || !Array.isArray(data[0])) {
+    throw new Error(
+      `Unexpected batch response shape: ${JSON.stringify(data).slice(0, 200)}`
+    );
+  }
+
+  return data as number[][];
 }
 
 // ── Generate Embedding for a Single Item ─────────────────────────
@@ -46,9 +128,11 @@ export const generateEmbedding = action({
     knowledgeItemId: v.id("knowledgeItems"),
   },
   handler: async (ctx, args) => {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.HUGGINGFACE_API_KEY;
     if (!apiKey) {
-      throw new Error("OPENAI_API_KEY environment variable is not set");
+      throw new Error(
+        "HUGGINGFACE_API_KEY environment variable is not set in Convex dashboard"
+      );
     }
 
     // Fetch the item
@@ -59,11 +143,11 @@ export const generateEmbedding = action({
       throw new Error(`Knowledge item ${args.knowledgeItemId} not found`);
     }
 
-    // Build text for embedding: combine type, category, content, and tags
+    // Build text for embedding
     const embeddingText = buildEmbeddingText(item);
 
-    // Generate embedding
-    const embedding = await getOpenAIEmbedding(embeddingText, apiKey);
+    // Generate embedding via Hugging Face
+    const embedding = await getHuggingFaceEmbedding(embeddingText, apiKey);
 
     // Store embedding
     await ctx.runMutation(internal.embeddings.storeEmbedding, {
@@ -71,7 +155,7 @@ export const generateEmbedding = action({
       embedding,
     });
 
-    return { success: true, dimensions: embedding.length };
+    return { success: true, dimensions: embedding.length, model: HF_MODEL };
   },
 });
 
@@ -82,17 +166,20 @@ export const backfillEmbeddings = action({
     batchSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.HUGGINGFACE_API_KEY;
     if (!apiKey) {
-      throw new Error("OPENAI_API_KEY environment variable is not set");
+      throw new Error(
+        "HUGGINGFACE_API_KEY environment variable is not set in Convex dashboard"
+      );
     }
 
     const batchSize = args.batchSize ?? 50;
 
     // Fetch items without embeddings
-    const items = await ctx.runQuery(internal.embeddings.getItemsWithoutEmbeddings, {
-      limit: batchSize,
-    });
+    const items = await ctx.runQuery(
+      internal.embeddings.getItemsWithoutEmbeddings,
+      { limit: batchSize }
+    );
 
     if (items.length === 0) {
       return { processed: 0, message: "All items already have embeddings" };
@@ -101,26 +188,55 @@ export const backfillEmbeddings = action({
     let processed = 0;
     let errors = 0;
 
-    for (const item of items) {
+    // Process in mini-batches of 10 (HF handles batch inputs well)
+    const miniBatchSize = 10;
+    for (let i = 0; i < items.length; i += miniBatchSize) {
+      const batch = items.slice(i, i + miniBatchSize);
+      const texts = batch.map((item) => buildEmbeddingText(item));
+
       try {
-        const embeddingText = buildEmbeddingText(item);
-        const embedding = await getOpenAIEmbedding(embeddingText, apiKey);
+        const embeddings = await getHuggingFaceBatchEmbeddings(texts, apiKey);
 
-        await ctx.runMutation(internal.embeddings.storeEmbedding, {
-          id: item._id,
-          embedding,
-        });
-
-        processed++;
-
-        // Rate limit: ~3000 RPM for text-embedding-3-small
-        // Add small delay every 20 items to stay safe
-        if (processed % 20 === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
+        for (let j = 0; j < batch.length; j++) {
+          try {
+            await ctx.runMutation(internal.embeddings.storeEmbedding, {
+              id: batch[j]._id,
+              embedding: embeddings[j],
+            });
+            processed++;
+          } catch (storeErr) {
+            console.error(`Failed to store embedding for ${batch[j]._id}:`, storeErr);
+            errors++;
+          }
         }
-      } catch (error) {
-        console.error(`Failed to embed item ${item._id}:`, error);
-        errors++;
+
+        // Small delay between mini-batches to respect rate limits
+        if (i + miniBatchSize < items.length) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+        }
+      } catch (batchErr) {
+        console.error(`Batch embedding failed for items ${i}-${i + batch.length}:`, batchErr);
+        errors += batch.length;
+
+        // If model is loading, wait and retry once
+        if (String(batchErr).includes("loading")) {
+          console.log("Model loading, waiting 5s before retry...");
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+
+          try {
+            const embeddings = await getHuggingFaceBatchEmbeddings(texts, apiKey);
+            for (let j = 0; j < batch.length; j++) {
+              await ctx.runMutation(internal.embeddings.storeEmbedding, {
+                id: batch[j]._id,
+                embedding: embeddings[j],
+              });
+              processed++;
+              errors--; // Undo the error count
+            }
+          } catch {
+            console.error("Retry also failed, skipping batch.");
+          }
+        }
       }
     }
 
@@ -128,6 +244,7 @@ export const backfillEmbeddings = action({
       processed,
       errors,
       remaining: items.length - processed,
+      model: HF_MODEL,
       message: `Embedded ${processed}/${items.length} items (${errors} errors)`,
     };
   },
@@ -143,15 +260,17 @@ export const semanticSearch = action({
     filterActiveOnly: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.HUGGINGFACE_API_KEY;
     if (!apiKey) {
-      throw new Error("OPENAI_API_KEY environment variable is not set");
+      throw new Error(
+        "HUGGINGFACE_API_KEY environment variable is not set in Convex dashboard"
+      );
     }
 
     const limit = args.limit ?? 10;
 
-    // 1. Generate embedding for the search query
-    const queryEmbedding = await getOpenAIEmbedding(args.query, apiKey);
+    // 1. Generate embedding for the search query via Hugging Face
+    const queryEmbedding = await getHuggingFaceEmbedding(args.query, apiKey);
 
     // 2. Build filter
     type FilterExpression = {
@@ -189,18 +308,21 @@ export const semanticSearch = action({
     }
 
     // 4. Fetch full documents
-    const documents = await ctx.runQuery(internal.embeddings.fetchDocumentsByIds, {
-      ids: searchResults.map((r) => r._id),
-    });
+    const documents = await ctx.runQuery(
+      internal.embeddings.fetchDocumentsByIds,
+      { ids: searchResults.map((r) => r._id) }
+    );
 
     // 5. Combine with scores
-    return searchResults.map((result) => {
-      const doc = documents.find((d) => d?._id === result._id);
-      return {
-        ...doc,
-        _score: result._score,
-      };
-    }).filter((r) => r._id); // Filter out any not-found docs
+    return searchResults
+      .map((result) => {
+        const doc = documents.find((d) => d?._id === result._id);
+        return {
+          ...doc,
+          _score: result._score,
+        };
+      })
+      .filter((r) => r._id); // Filter out any not-found docs
   },
 });
 
@@ -218,7 +340,6 @@ export const getItem = internalQuery({
 export const getItemsWithoutEmbeddings = internalQuery({
   args: { limit: v.number() },
   handler: async (ctx, args) => {
-    // Fetch all active items and filter for missing embeddings
     const items = await ctx.db
       .query("knowledgeItems")
       .order("asc")
