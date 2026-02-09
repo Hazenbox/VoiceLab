@@ -58,7 +58,7 @@ const MAX_QUEUE_SIZE = 100;
 // ── Queue Management ─────────────────────────────────────────────
 
 interface QueuedEvent {
-  type: 'analytics' | 'correction' | 'heartbeat';
+  type: 'analytics' | 'correction' | 'heartbeat' | 'user_sync';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
   timestamp: number;
@@ -77,7 +77,9 @@ function saveQueue(queue: QueuedEvent[]): void {
   try {
     const trimmed = queue.slice(-MAX_QUEUE_SIZE);
     localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(trimmed));
-  } catch { /* ignore quota errors */ }
+  } catch (e) {
+    console.warn('[ConvexSync] Failed to save queue (quota?):', e);
+  }
 }
 
 function addToQueue(event: QueuedEvent): void {
@@ -118,18 +120,23 @@ export class ConvexSyncService {
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private eventBuffer: AnalyticsEvent[] = [];
   private bufferFlushMs = 5000;
+  // Store bound handlers so we can remove them in destroy()
+  private handleOnline: (() => void) | null = null;
+  private handleOffline: (() => void) | null = null;
 
   constructor() {
     this.convexUserId = getCachedConvexUserId();
 
     if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => {
+      this.handleOnline = () => {
         this.isOnline = true;
         this.flushQueue();
-      });
-      window.addEventListener('offline', () => {
+      };
+      this.handleOffline = () => {
         this.isOnline = false;
-      });
+      };
+      window.addEventListener('online', this.handleOnline);
+      window.addEventListener('offline', this.handleOffline);
     }
   }
 
@@ -156,35 +163,45 @@ export class ConvexSyncService {
 
   // ── Safe mutation call ───────────────────────────────────────
 
+  // Returns { ok: true, value } on success, { ok: false } on failure.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async safeMutation(name: string, args: Record<string, any>): Promise<any> {
-    if (!this.mutationFn) return null;
+  private async safeMutation(name: string, args: Record<string, any>): Promise<{ ok: true; value: any } | { ok: false }> {
+    if (!this.mutationFn) return { ok: false };
     try {
-      return await this.mutationFn(name, args);
+      const result = await this.mutationFn(name, args);
+      return { ok: true, value: result };
     } catch (error) {
       console.warn('[ConvexSync] Mutation failed:', error);
-      return null;
+      return { ok: false };
     }
   }
 
   // ── User Profile Sync ────────────────────────────────────────
 
   async syncUserProfile(profile: UserProfileSync): Promise<string | null> {
-    if (!this.isAvailable) return null;
+    if (!this.isAvailable) {
+      addToQueue({
+        type: 'user_sync',
+        data: { ...profile },
+        timestamp: Date.now(),
+      });
+      return null;
+    }
 
     this.deviceId = profile.deviceId;
 
-    const userId = await this.safeMutation('users:createOrUpdate', {
+    const result = await this.safeMutation('users:createOrUpdate', {
       deviceId: profile.deviceId,
       name: profile.name,
       role: profile.role,
       product: profile.product,
     });
 
-    if (userId) {
-      this.setConvexUserId(userId);
+    if (result.ok && result.value) {
+      this.setConvexUserId(result.value);
+      return result.value;
     }
-    return userId;
+    return null;
   }
 
   // ── Heartbeat ────────────────────────────────────────────────
@@ -196,7 +213,7 @@ export class ConvexSyncService {
       deviceId: this.deviceId,
     });
 
-    if (result === null && this.deviceId) {
+    if (!result.ok && this.deviceId) {
       addToQueue({
         type: 'heartbeat',
         data: { deviceId: this.deviceId },
@@ -250,7 +267,7 @@ export class ConvexSyncService {
       })),
     });
 
-    if (result === null) {
+    if (!result.ok) {
       for (const event of events) {
         addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
       }
@@ -275,7 +292,7 @@ export class ConvexSyncService {
       deviceId: this.deviceId,
     });
 
-    if (result === null) {
+    if (!result.ok) {
       addToQueue({
         type: 'correction',
         data: { ...correction },
@@ -296,9 +313,33 @@ export class ConvexSyncService {
 
     const failed: QueuedEvent[] = [];
 
-    // Group analytics events for batch flush
+    // Group events by type for batch flush
     const analyticsEvents = queue.filter((e) => e.type === 'analytics');
     const correctionEvents = queue.filter((e) => e.type === 'correction');
+    const heartbeatEvents = queue.filter((e) => e.type === 'heartbeat');
+    const userSyncEvents = queue.filter((e) => e.type === 'user_sync');
+
+    // Replay user_sync events first (needed for convexUserId)
+    for (const event of userSyncEvents) {
+      const result = await this.safeMutation('users:createOrUpdate', {
+        ...event.data,
+      });
+      if (!result.ok) {
+        failed.push(event);
+      } else if (result.value) {
+        this.setConvexUserId(result.value);
+      }
+    }
+
+    // Replay heartbeat events
+    for (const event of heartbeatEvents) {
+      const result = await this.safeMutation('users:heartbeat', {
+        ...event.data,
+      });
+      if (!result.ok) {
+        failed.push(event);
+      }
+    }
 
     if (analyticsEvents.length > 0) {
       const result = await this.safeMutation('analytics:batchLogEvents', {
@@ -310,7 +351,7 @@ export class ConvexSyncService {
         })),
       });
 
-      if (result === null) {
+      if (!result.ok) {
         failed.push(...analyticsEvents);
       }
     }
@@ -322,7 +363,7 @@ export class ConvexSyncService {
         deviceId: this.deviceId!,
       });
 
-      if (result === null) {
+      if (!result.ok) {
         failed.push(event);
       }
     }
@@ -340,6 +381,12 @@ export class ConvexSyncService {
     if (this.flushTimer) {
       clearTimeout(this.flushTimer);
     }
+    // Remove event listeners to prevent leaks
+    if (typeof window !== 'undefined') {
+      if (this.handleOnline) window.removeEventListener('online', this.handleOnline);
+      if (this.handleOffline) window.removeEventListener('offline', this.handleOffline);
+    }
+    // Flush remaining buffered events to queue
     for (const event of this.eventBuffer) {
       addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
     }

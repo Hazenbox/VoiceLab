@@ -11,6 +11,7 @@
 
 import { ALL_WORDS_TO_AVOID, WORD_CATEGORIES } from '../guidelines/avoidWords';
 import { ALL_PREFERRED_WORDS, SIMPLE_ALTERNATIVES, GENDER_NEUTRAL_ALTERNATIVES } from '../guidelines/vocabulary';
+import { getLocalExamples } from './saveExample';
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -37,6 +38,10 @@ export interface RetrievedKnowledge {
   autoFixRules: Array<{ from: string; to: string }>;
   approvedExamples: string[];
   corrections: Array<{ original: string; edited: string; context: string }>;
+  /** Style preferences from user comments (Phase 3) */
+  stylePreferences?: string[];
+  /** Pre-built learning prompt section combining corrections, avoidPatterns, stylePreferences */
+  learningPromptSection?: string;
   /** Semantically relevant items from vector search (Phase 4) */
   semanticResults?: SemanticSearchResult[];
   source: 'convex' | 'code_defaults' | 'convex_with_rag';
@@ -153,7 +158,7 @@ export function retrieveKnowledge(
 /**
  * Get code-level defaults (used when Convex is unavailable).
  */
-export function getCodeDefaults(): RetrievedKnowledge {
+export function getCodeDefaults(ecosystem?: string, channel?: string): RetrievedKnowledge {
   return {
     avoidWords: [...ALL_WORDS_TO_AVOID],
     preferredWords: [...ALL_PREFERRED_WORDS],
@@ -161,7 +166,7 @@ export function getCodeDefaults(): RetrievedKnowledge {
       ...Object.entries(SIMPLE_ALTERNATIVES).map(([from, to]) => ({ from, to })),
       ...Object.entries(GENDER_NEUTRAL_ALTERNATIVES).map(([from, to]) => ({ from, to })),
     ],
-    approvedExamples: [],
+    approvedExamples: getLocalExamples(ecosystem, channel),
     corrections: [],
     source: 'code_defaults',
   };
@@ -220,6 +225,19 @@ ${sample.map((ex, i) => `${i + 1}. "${ex}"`).join('\n')}`);
 
 Previous content was edited by users. Learn from these corrections:
 ${sample.map((c) => `- Original: "${c.original}" → Edited: "${c.edited}" (Context: ${c.context})`).join('\n')}`);
+  }
+
+  // Style preferences from user comments
+  if (knowledge.stylePreferences && knowledge.stylePreferences.length > 0) {
+    sections.push(`## User Style Preferences (From Comments)
+
+Users have shared these preferences -- apply them to generated content:
+${knowledge.stylePreferences.map((p) => `- ${p}`).join('\n')}`);
+  }
+
+  // Pre-built learning prompt section (includes avoidPatterns + more from learningEngine)
+  if (knowledge.learningPromptSection) {
+    sections.push(knowledge.learningPromptSection);
   }
 
   if (sections.length === 0) {

@@ -66,7 +66,19 @@ export function loadUserProfile(): UserProfile | null {
   try {
     const stored = localStorage.getItem(USER_PROFILE_KEY);
     if (!stored) return null;
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored);
+    // Runtime shape validation -- guard against corrupted/outdated localStorage data
+    if (
+      typeof parsed === 'object' && parsed !== null &&
+      typeof parsed.deviceId === 'string' &&
+      typeof parsed.name === 'string' &&
+      typeof parsed.role === 'string' &&
+      typeof parsed.product === 'string'
+    ) {
+      return parsed as UserProfile;
+    }
+    console.warn('[OnboardingModal] Invalid stored profile shape, ignoring');
+    return null;
   } catch {
     return null;
   }

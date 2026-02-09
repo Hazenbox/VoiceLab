@@ -21,7 +21,7 @@ export interface CorrectionEntry {
   _id?: string;
   originalContent: string;
   editedContent?: string;
-  feedbackType: 'thumbs_up' | 'thumbs_down' | 'edit' | 'comment';
+  feedbackType: 'thumbs_up' | 'thumbs_down' | 'edit' | 'comment' | 'save_example';
   comment?: string;
   ecosystem: string;
   channel: string;
@@ -69,10 +69,10 @@ export function extractLearningInsights(
 
   if (!corrections.length) return insights;
 
-  // Filter by context if provided
+  // Filter by context if provided. Guard against old entries missing ecosystem/channel.
   const relevant = corrections.filter((c) => {
-    if (ecosystem && c.ecosystem !== ecosystem) return false;
-    if (channel && c.channel !== channel) return false;
+    if (ecosystem && (!c.ecosystem || c.ecosystem !== ecosystem)) return false;
+    if (channel && (!c.channel || c.channel !== channel)) return false;
     return true;
   });
 
@@ -154,7 +154,17 @@ export function mergeLearnedCorrections(
 
   return {
     ...knowledge,
+    // Merge edit-based corrections
     corrections: insights.corrections,
+    // Merge thumbs-down avoidPatterns into avoidWords
+    avoidWords: [
+      ...knowledge.avoidWords,
+      ...insights.avoidPatterns.filter((p) => !knowledge.avoidWords.includes(p)),
+    ],
+    // Add style preferences from comments
+    stylePreferences: insights.stylePreferences,
+    // Include the fully formatted learning prompt section
+    learningPromptSection: insights.promptSection || undefined,
   };
 }
 
@@ -173,7 +183,9 @@ export function storeLocalCorrection(correction: CorrectionEntry): void {
     corrections.unshift(correction);
     const trimmed = corrections.slice(0, MAX_LOCAL_CORRECTIONS);
     localStorage.setItem(LOCAL_CORRECTIONS_KEY, JSON.stringify(trimmed));
-  } catch { /* ignore quota errors */ }
+  } catch (e) {
+    console.warn('[LearningEngine] Failed to store correction (quota?):', e);
+  }
 }
 
 /**
@@ -188,8 +200,9 @@ export function getLocalCorrections(
     if (!stored) return [];
     const corrections: CorrectionEntry[] = JSON.parse(stored);
     return corrections.filter((c) => {
-      if (ecosystem && c.ecosystem !== ecosystem) return false;
-      if (channel && c.channel !== channel) return false;
+      // Guard against old entries missing ecosystem/channel fields
+      if (ecosystem && (!c.ecosystem || c.ecosystem !== ecosystem)) return false;
+      if (channel && (!c.channel || c.channel !== channel)) return false;
       return true;
     });
   } catch {

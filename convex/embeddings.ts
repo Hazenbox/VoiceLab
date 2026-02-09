@@ -199,6 +199,14 @@ export const backfillEmbeddings = action({
 
         for (let j = 0; j < batch.length; j++) {
           try {
+            // Validate individual embedding dimensions before storing
+            if (!embeddings[j] || embeddings[j].length !== EXPECTED_DIMENSIONS) {
+              console.warn(
+                `Skipping item ${batch[j]._id}: expected ${EXPECTED_DIMENSIONS} dims, got ${embeddings[j]?.length ?? 0}`
+              );
+              errors++;
+              continue;
+            }
             await ctx.runMutation(internal.embeddings.storeEmbedding, {
               id: batch[j]._id,
               embedding: embeddings[j],
@@ -273,24 +281,26 @@ export const semanticSearch = action({
     const queryEmbedding = await getHuggingFaceEmbedding(args.query, apiKey);
 
     // 2. Build filter
+    // NOTE: Convex vectorSearch doesn't support q.and(), so we use the more
+    // selective single filter and post-filter JavaScript results for the other condition.
     type FilterExpression = {
       eq: (field: string, value: string | boolean) => FilterExpression;
       or: (...exprs: FilterExpression[]) => FilterExpression;
     };
 
     let filter: ((q: FilterExpression) => FilterExpression) | undefined;
+    const shouldFilterActive = args.filterActiveOnly !== false;
 
-    if (args.filterType && args.filterActiveOnly !== false) {
-      filter = (q: FilterExpression) =>
-        q.or(
-          q.eq("type", args.filterType!),
-          q.eq("isActive", true)
-        );
-    } else if (args.filterType) {
+    // Use filterType as the primary vector search filter (more selective).
+    // isActive is post-filtered below after fetching documents.
+    if (args.filterType) {
       filter = (q: FilterExpression) => q.eq("type", args.filterType!);
-    } else if (args.filterActiveOnly !== false) {
+    } else if (shouldFilterActive) {
       filter = (q: FilterExpression) => q.eq("isActive", true);
     }
+
+    // Request extra results to account for post-filter removal
+    const fetchLimit = shouldFilterActive && args.filterType ? limit * 2 : limit;
 
     // 3. Run vector search
     const searchResults = await ctx.vectorSearch(
@@ -298,7 +308,7 @@ export const semanticSearch = action({
       "by_embedding",
       {
         vector: queryEmbedding,
-        limit,
+        limit: fetchLimit,
         ...(filter ? { filter } : {}),
       },
     );
@@ -313,8 +323,8 @@ export const semanticSearch = action({
       { ids: searchResults.map((r) => r._id) }
     );
 
-    // 5. Combine with scores
-    return searchResults
+    // 5. Combine with scores and post-filter for isActive (AND condition)
+    const combined = searchResults
       .map((result) => {
         const doc = documents.find((d) => d?._id === result._id);
         return {
@@ -323,6 +333,13 @@ export const semanticSearch = action({
         };
       })
       .filter((r) => r._id); // Filter out any not-found docs
+
+    // Post-filter: if both filterType and filterActiveOnly, apply the isActive check here
+    const finalResults = shouldFilterActive && args.filterType
+      ? combined.filter((r) => (r as { isActive?: boolean }).isActive === true)
+      : combined;
+
+    return finalResults.slice(0, limit);
   },
 });
 

@@ -45,15 +45,25 @@ interface SeedItem {
 export const seedAll = mutation({
   args: {},
   handler: async (ctx) => {
-    // Check if already seeded
-    const existing = await ctx.db
+    // Check if already seeded (count multiple types to detect partial seeds)
+    const avoidWordCount = (await ctx.db
       .query("knowledgeItems")
       .withIndex("by_type", (q) => q.eq("type", "avoid_word"))
-      .first();
+      .collect()).length;
+    const prefWordCount = (await ctx.db
+      .query("knowledgeItems")
+      .withIndex("by_type", (q) => q.eq("type", "preferred_word"))
+      .collect()).length;
 
-    if (existing) {
-      console.log("Knowledge base already seeded. Skipping.");
+    // If both categories have data, assume fully seeded
+    if (avoidWordCount > 100 && prefWordCount > 100) {
+      console.log(`Knowledge base already seeded (${avoidWordCount} avoid, ${prefWordCount} preferred). Skipping.`);
       return { status: "already_seeded", count: 0 };
+    }
+
+    // If partially seeded, log a warning but continue (will create duplicates for safety)
+    if (avoidWordCount > 0 || prefWordCount > 0) {
+      console.log(`Partial seed detected (${avoidWordCount} avoid, ${prefWordCount} preferred). Re-seeding all data.`);
     }
 
     const now = Date.now();

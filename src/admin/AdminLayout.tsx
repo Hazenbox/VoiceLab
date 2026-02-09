@@ -2,6 +2,10 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useThemeColors } from '../theme/useColors';
 
 // ── Admin Auth Gate ──────────────────────────────────────────────
+// SECURITY NOTE (POC limitation): This passphrase is bundled into client-side JS
+// via the VITE_ prefix and is visible in browser DevTools / source maps.
+// The sessionStorage-based auth is trivially bypassable (sessionStorage.setItem('voicelab_admin_auth','true')).
+// For production, this MUST move to server-side authentication (e.g., Convex auth, OAuth, or a backend session).
 const ADMIN_PASSPHRASE = import.meta.env.VITE_ADMIN_PASSPHRASE || 'voicelab-admin';
 const SESSION_KEY = 'voicelab_admin_auth';
 

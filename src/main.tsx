@@ -6,6 +6,7 @@ import { DsProvider } from '@marcelinodzn/ds-react'
 import { DesignSystemProvider } from './context/DesignSystemContext'
 import { ProjectProvider } from './context/ProjectContext'
 import { AudioLibraryProvider } from './context/AudioLibraryContext'
+import { getSyncService } from './services/sync/convexSync'
 import './index.css'
 import App from './App.tsx'
 import AdminLayout from './admin/AdminLayout'
@@ -18,6 +19,31 @@ const COLOR_MODE_KEY = 'voiceDesigner_colorMode';
 // When not configured, the app works in local-only mode.
 const convexUrl = import.meta.env.VITE_CONVEX_URL;
 const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
+
+/**
+ * Bridge component that wires up the ConvexSyncService with
+ * a real mutation function from the Convex client.
+ * Must be rendered inside a ConvexProvider.
+ */
+function ConvexSyncBridge({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    if (!convex) return;
+    const syncService = getSyncService();
+    if (syncService) {
+      // Inject a real mutation function using the Convex client
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      syncService.setMutationFn(async (name: string, args: Record<string, any>) => {
+        // Convex client.mutation expects an api reference, but we use string names.
+        // The ConvexReactClient exposes .mutation() for dynamic function references.
+        // Use the generic mutation method with the function path string.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return await (convex as any).mutation(name as any, args);
+      });
+    }
+  }, []);
+
+  return <>{children}</>;
+}
 
 function Root() {
   // Initialize from localStorage to prevent flash
@@ -65,7 +91,9 @@ function Root() {
   if (convex) {
     return (
       <ConvexProvider client={convex}>
-        {appTree}
+        <ConvexSyncBridge>
+          {appTree}
+        </ConvexSyncBridge>
       </ConvexProvider>
     );
   }

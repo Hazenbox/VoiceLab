@@ -77,7 +77,9 @@ function storeLocalExample(payload: SaveExamplePayload): void {
     // Trim to max
     const trimmed = examples.slice(0, MAX_LOCAL_EXAMPLES);
     localStorage.setItem(LOCAL_EXAMPLES_KEY, JSON.stringify(trimmed));
-  } catch { /* ignore quota errors */ }
+  } catch (e) {
+    console.warn('[SaveExample] Failed to store example (quota?):', e);
+  }
 }
 
 /**

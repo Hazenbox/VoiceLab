@@ -108,33 +108,33 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
   const [showOnboarding, setShowOnboarding] = useState(() => !getDeviceId());
   
-  // Initialize sync service on mount
+  // Initialize sync service on mount or when profile changes
   useEffect(() => {
     const syncService = initSyncService();
     
     if (userProfile?.deviceId) {
       syncService.setDeviceId(userProfile.deviceId);
+      // Sync full profile to Convex (non-blocking) -- also handles first-time onboarding
+      syncService.syncUserProfile({
+        deviceId: userProfile.deviceId,
+        name: userProfile.name,
+        role: userProfile.role,
+        product: userProfile.product,
+      });
       // Heartbeat on mount (non-blocking)
       syncService.heartbeat();
     }
 
     return () => syncService.destroy();
-  }, [userProfile?.deviceId]);
+  }, [userProfile?.deviceId, userProfile?.name, userProfile?.role, userProfile?.product]);
 
   const handleOnboardingComplete = useCallback((profile: UserProfile) => {
     setUserProfile(profile);
     setShowOnboarding(false);
-    
-    // Sync profile to Convex (non-blocking)
-    const syncService = getSyncService();
-    if (syncService) {
-      syncService.syncUserProfile({
-        deviceId: profile.deviceId,
-        name: profile.name,
-        role: profile.role,
-        product: profile.product,
-      });
-    }
+
+    // NOTE: Profile sync to Convex is handled by the useEffect below
+    // (triggers on userProfile?.deviceId change), avoiding a race condition
+    // where initSyncService() would destroy an in-flight sync call.
 
     // Phase 1: Auto-configure from persona engine
     const autoConfig = getAutoConfig(profile.role as PersonaRole, profile.product);
@@ -191,17 +191,25 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   
   // Sync ecosystem/channel changes to storage
   useEffect(() => {
-    const currentDefaults = storageProjectDefaults.get() || DEFAULT_PROJECT_DEFAULTS;
-    storageProjectDefaults.save({ 
-      ...currentDefaults, 
-      ecosystem, 
-      channel: contentChannel,
-    });
+    try {
+      const currentDefaults = storageProjectDefaults.get() || DEFAULT_PROJECT_DEFAULTS;
+      storageProjectDefaults.save({ 
+        ...currentDefaults, 
+        ecosystem, 
+        channel: contentChannel,
+      });
+    } catch (e) {
+      console.warn('[App] Failed to save project defaults to storage:', e);
+    }
   }, [ecosystem, contentChannel]);
   
   // Sync trust settings to storage
   useEffect(() => {
-    storageTrustSettings.save(trustSettings);
+    try {
+      storageTrustSettings.save(trustSettings);
+    } catch (e) {
+      console.warn('[App] Failed to save trust settings to storage:', e);
+    }
   }, [trustSettings]);
   
   // Sync ecosystem/channel with active project changes
@@ -244,7 +252,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   
   // Filter messages by current mode
   const filteredMessages = useMemo(() => {
-    return chatMessages.filter(m => m.sourceMode === chatMode);
+    return chatMessages.filter(m => m.sourceMode === chatMode || !m.sourceMode);
   }, [chatMessages, chatMode]);
 
   // Request cancellation - use getSignal() to get fresh signal after reset
@@ -332,7 +340,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       });
 
       // Build knowledge + learning data for prompt injection (Phase 2-3)
-      const baseKnowledge = getCodeDefaults();
+      const baseKnowledge = getCodeDefaults(ecosystem, contentChannel);
       const localCorrections = getLocalCorrections(ecosystem, contentChannel);
       const enrichedKnowledge = mergeLearnedCorrections(
         baseKnowledge,
@@ -428,21 +436,27 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     } finally {
       setIsChatLoading(false);
     }
-  }, [resetChatAbort, chatMode, addMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings]);
+  }, [resetChatAbort, chatMode, addMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings, temperature, maxTokens, streamResponse, userProfile]);
 
   // ========================================================================
   // Phase 3: Feedback & Learning Handlers
   // ========================================================================
 
   const handleMessageFeedback = useCallback((payload: FeedbackPayload) => {
+    // Look up the original message to get its generation-time context
+    const originalMessage = chatMessages.find(m => m.id === payload.messageId);
+    // Use generation-time context if available, fall back to current UI state
+    const feedbackEcosystem = originalMessage?.generationContext?.ecosystem || ecosystem;
+    const feedbackChannel = originalMessage?.generationContext?.channel || contentChannel;
+
     // Store locally for immediate learning
     const correction: CorrectionEntry = {
       originalContent: payload.originalContent,
       editedContent: payload.editedContent,
       feedbackType: payload.feedbackType as CorrectionEntry['feedbackType'],
       comment: payload.comment,
-      ecosystem,
-      channel: contentChannel,
+      ecosystem: feedbackEcosystem,
+      channel: feedbackChannel,
       persona: userProfile?.role || '',
       timestamp: Date.now(),
     };
@@ -457,12 +471,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         editedContent: payload.editedContent,
         feedbackType: payload.feedbackType,
         comment: payload.comment,
-        ecosystem,
-        channel: contentChannel,
+        ecosystem: feedbackEcosystem,
+        channel: feedbackChannel,
         persona: userProfile?.role || '',
       });
     }
-  }, [ecosystem, contentChannel, userProfile]);
+  }, [chatMessages, ecosystem, contentChannel, userProfile]);
 
   const handleSaveAsExample = useCallback((content: string) => {
     saveAsExample({
