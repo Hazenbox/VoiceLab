@@ -1,8 +1,8 @@
 /**
  * Embeddings & Vector Search for Knowledge Base (Phase 4)
  * 
- * Uses Hugging Face Inference API with sentence-transformers/all-MiniLM-L6-v2
- * (384 dimensions) to generate embeddings for knowledge items.
+ * Uses Hugging Face Inference API with BAAI/bge-small-en-v1.5
+ * (384 dimensions, pipeline_tag: feature-extraction) to generate embeddings.
  * 
  * Architecture:
  * - generateEmbedding: action → calls HuggingFace, stores embedding
@@ -12,7 +12,11 @@
  * 
  * Setup:
  * - Set HUGGINGFACE_API_KEY in Convex dashboard env vars
- * - Model: sentence-transformers/all-MiniLM-L6-v2 (384 dims, free tier)
+ * - Model: BAAI/bge-small-en-v1.5 (384 dims, feature-extraction pipeline, free tier)
+ * 
+ * NOTE: sentence-transformers/all-MiniLM-L6-v2 was replaced because the HF router
+ * routes it to SentenceSimilarityPipeline (wrong input format). bge-small-en-v1.5
+ * has pipeline_tag: "feature-extraction" and routes correctly.
  */
 
 import { v } from "convex/values";
@@ -22,40 +26,22 @@ import type { Id, Doc } from "./_generated/dataModel";
 
 // ── Configuration ────────────────────────────────────────────────
 
-const HF_MODEL = "sentence-transformers/all-MiniLM-L6-v2";
-// Use the OpenAI-compatible /v1/embeddings endpoint via HF Inference Providers
-const HF_EMBEDDINGS_URL = "https://router.huggingface.co/hf-inference/v1/embeddings";
+const HF_MODEL = "BAAI/bge-small-en-v1.5";
+const HF_API_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`;
 const EXPECTED_DIMENSIONS = 384;
 
-// ── Hugging Face Embedding Helper (OpenAI-compatible format) ─────
-
-/**
- * OpenAI-compatible embeddings response shape from HF TEI
- */
-interface EmbeddingResponse {
-  object: string;
-  data: Array<{
-    object: string;
-    embedding: number[];
-    index: number;
-  }>;
-  model: string;
-  usage: {
-    prompt_tokens: number;
-    total_tokens: number;
-  };
-}
+// ── Hugging Face Feature Extraction Helper ───────────────────────
 
 async function getHuggingFaceEmbedding(text: string, apiKey: string): Promise<number[]> {
-  const response = await fetch(HF_EMBEDDINGS_URL, {
+  const response = await fetch(HF_API_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: HF_MODEL,
-      input: text,
+      inputs: text,
+      options: { wait_for_model: true },
     }),
   });
 
@@ -71,15 +57,21 @@ async function getHuggingFaceEmbedding(text: string, apiKey: string): Promise<nu
     );
   }
 
-  const data: EmbeddingResponse = await response.json();
+  const data = await response.json();
 
-  if (!data.data || !data.data[0] || !data.data[0].embedding) {
+  // HF feature-extraction returns a nested array: [[...384 floats...]]
+  // For a single input, we get the first (and only) result
+  let embedding: number[];
+  if (Array.isArray(data) && Array.isArray(data[0]) && typeof data[0][0] === "number") {
+    embedding = data[0];
+  } else if (Array.isArray(data) && typeof data[0] === "number") {
+    // Some models return a flat array directly
+    embedding = data;
+  } else {
     throw new Error(
       `Unexpected embedding response shape: ${JSON.stringify(data).slice(0, 200)}`
     );
   }
-
-  const embedding = data.data[0].embedding;
 
   if (embedding.length !== EXPECTED_DIMENSIONS) {
     throw new Error(
@@ -91,22 +83,22 @@ async function getHuggingFaceEmbedding(text: string, apiKey: string): Promise<nu
 }
 
 /**
- * Batch embed multiple texts in one API call using OpenAI-compatible format.
- * The /v1/embeddings endpoint accepts an array of strings as `input`.
+ * Batch embed multiple texts in one API call.
+ * HF feature-extraction accepts an array of strings as `inputs`.
  */
 async function getHuggingFaceBatchEmbeddings(
   texts: string[],
   apiKey: string
 ): Promise<number[][]> {
-  const response = await fetch(HF_EMBEDDINGS_URL, {
+  const response = await fetch(HF_API_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: HF_MODEL,
-      input: texts,
+      inputs: texts,
+      options: { wait_for_model: true },
     }),
   });
 
@@ -122,18 +114,16 @@ async function getHuggingFaceBatchEmbeddings(
     );
   }
 
-  const data: EmbeddingResponse = await response.json();
+  const data = await response.json();
 
-  if (!data.data || !Array.isArray(data.data)) {
+  // HF feature-extraction returns [[...384...], [...384...], ...] for batch input
+  if (!Array.isArray(data) || !Array.isArray(data[0])) {
     throw new Error(
       `Unexpected batch response shape: ${JSON.stringify(data).slice(0, 200)}`
     );
   }
 
-  // Sort by index to ensure correct ordering, then extract embeddings
-  return data.data
-    .sort((a, b) => a.index - b.index)
-    .map((item) => item.embedding);
+  return data as number[][];
 }
 
 // ── Generate Embedding for a Single Item ─────────────────────────
