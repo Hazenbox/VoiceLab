@@ -26,7 +26,7 @@ import type {
 
 // ── Persona Types ────────────────────────────────────────────────
 
-export type PersonaRole = 'marketing' | 'product' | 'ux_writer' | 'sales' | 'support' | 'leadership';
+export type PersonaRole = 'marketing' | 'product' | 'ux_writer' | 'designer' | 'sales' | 'support' | 'leadership';
 
 /**
  * Complete persona preset -- derived from role.
@@ -118,6 +118,29 @@ const PERSONA_PRESETS: Record<PersonaRole, PersonaPreset> = {
       'Technical jargon in UI',
       'Passive voice in instructions',
       'Ambiguous button labels',
+    ],
+  },
+
+  designer: {
+    role: 'designer',
+    label: 'Designer',
+    description: 'UI, UX, and product design',
+    preferredChannels: [
+      'onboarding_screen', 'app_notification', 'push_notification',
+      'chatbot_faq', 'voice_prompts',
+    ],
+    defaultChannel: 'onboarding_screen',
+    defaultGoal: 'Instructional',
+    defaultWarmth: 7,
+    defaultDetail: 5,
+    defaultEmotion: 'shanta',
+    promptPersonality: `You are writing for a design team (UI, UX, product designers). Prioritise visual hierarchy in text, scannability, and user delight. Content should complement design systems and enhance the user experience. Think in terms of design patterns, user flows, accessibility, and consistent voice across touch points.`,
+    contentFocus: 'Visual hierarchy, scannability, design-system alignment, user delight, accessibility',
+    avoidPatterns: [
+      'Walls of text that break visual hierarchy',
+      'Inconsistent terminology across screens',
+      'Content that ignores the visual context',
+      'Inaccessible or jargon-heavy labels',
     ],
   },
 

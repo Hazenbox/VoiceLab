@@ -4,7 +4,7 @@ import { useThemeColors } from '../theme/useColors';
 
 // ── Types ────────────────────────────────────────────────────────
 
-export type UserRole = 'marketing' | 'product' | 'ux_writer' | 'sales' | 'support' | 'leadership';
+export type UserRole = 'marketing' | 'product' | 'ux_writer' | 'designer' | 'sales' | 'support' | 'leadership';
 
 export interface UserProfile {
   deviceId: string;
@@ -19,6 +19,7 @@ const ROLES: { id: UserRole; label: string; description: string }[] = [
   { id: 'marketing', label: 'Marketing', description: 'Campaigns, promotions, brand content' },
   { id: 'product', label: 'Product', description: 'Feature copy, release notes, in-app content' },
   { id: 'ux_writer', label: 'UX Writer', description: 'Interface copy, microcopy, flows' },
+  { id: 'designer', label: 'Designer', description: 'UI, UX, and product design' },
   { id: 'sales', label: 'Sales', description: 'Pitches, proposals, outreach' },
   { id: 'support', label: 'Support', description: 'Help articles, chat responses, FAQs' },
   { id: 'leadership', label: 'Leadership', description: 'Internal comms, strategy, memos' },
@@ -105,8 +106,23 @@ interface OnboardingModalProps {
   onComplete: (profile: UserProfile) => void;
 }
 
+// ── Helper: Role label for display ────────────────────────────────
+const ROLE_LABELS: Record<UserRole, string> = {
+  marketing: 'Marketing',
+  product: 'Product',
+  ux_writer: 'UX Writer',
+  designer: 'Designer',
+  sales: 'Sales',
+  support: 'Support',
+  leadership: 'Leadership',
+};
+
+const ECOSYSTEM_LABELS: Record<string, string> = Object.fromEntries(
+  ECOSYSTEMS.map((e) => [e.id, e.label])
+);
+
 export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole | null>(null);
   const [product, setProduct] = useState<string>('');
@@ -114,19 +130,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const colors = useThemeColors();
 
   const handleComplete = useCallback(() => {
-    if (!name.trim()) {
-      setNameError('Please enter your name');
-      setStep(1);
-      return;
-    }
-    if (!role) {
-      setStep(2);
-      return;
-    }
-    if (!product) {
-      setStep(3);
-      return;
-    }
+    if (!name.trim() || !role || !product) return;
 
     const deviceId = getDeviceId() || generateDeviceId();
     const profile: UserProfile = {
@@ -153,11 +157,14 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
       return;
     }
     if (step < 3) {
-      setStep((s) => Math.min(s + 1, 3) as 1 | 2 | 3);
-    } else {
-      handleComplete();
+      setStep((s) => Math.min(s + 1, 3) as 1 | 2 | 3 | 4);
+    } else if (step === 3) {
+      // Show confirmation step
+      setStep(4);
     }
   };
+
+  const totalSteps = 3; // progress bar only shows 3 steps (step 4 is confirmation)
 
   return (
     <div
@@ -168,49 +175,53 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(0,0,0,0.6)',
-        backdropFilter: 'blur(4px)',
+        background: 'rgba(0,0,0,0.65)',
+        backdropFilter: 'blur(8px)',
       }}
     >
         <div
           style={{
-            background: colors.background.ghost,
-            borderRadius: '16px',
+            background: colors.background.elevated || '#1a1a2e',
+            borderRadius: '12px',
             border: `1px solid ${colors.stroke.medium}`,
-            maxWidth: '480px',
-            width: '90%',
+            maxWidth: '420px',
+            width: '92%',
             overflow: 'hidden',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
           }}
         >
           {/* Header */}
-          <div style={{ padding: '1.5rem 1.5rem 0' }}>
-            <h2 style={{ color: colors.text.high, fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
-              Welcome to Voice Lab
+          <div style={{ padding: '1.25rem 1.25rem 0' }}>
+            <h2 style={{ color: colors.text.high, fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>
+              {step === 4 ? 'You\'re all set!' : 'Welcome to Voice Lab'}
             </h2>
-            <p style={{ color: colors.text.medium, fontSize: '0.875rem', margin: '0.5rem 0 0' }}>
-              Let us set up your experience. This takes 30 seconds.
+            <p style={{ color: colors.text.medium, fontSize: '0.8125rem', margin: '0.375rem 0 0', lineHeight: 1.4 }}>
+              {step === 4
+                ? `Here's how we've configured Voice Lab for you.`
+                : 'Your role and product help fine-tune AI content generation to match your context, tone, and goals.'}
             </p>
 
-            {/* Step Indicator */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem' }}>
-              {[1, 2, 3].map((s) => (
-                <div
-                  key={s}
-                  style={{
-                    flex: 1,
-                    height: '3px',
-                    borderRadius: '2px',
-                    background: s <= step ? colors.accent : colors.stroke.low,
-                    transition: 'background 0.2s ease',
-                  }}
-                />
-              ))}
-            </div>
+            {/* Step Indicator -- hidden on confirmation step */}
+            {step <= totalSteps && (
+              <div style={{ display: 'flex', gap: '0.375rem', marginTop: '1rem' }}>
+                {[1, 2, 3].map((s) => (
+                  <div
+                    key={s}
+                    style={{
+                      flex: 1,
+                      height: '3px',
+                      borderRadius: '2px',
+                      background: s <= step ? colors.accent : colors.stroke.low,
+                      transition: 'background 0.2s ease',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
         {/* Content */}
-        <div style={{ padding: '1.5rem' }}>
+        <div style={{ padding: '1.25rem' }}>
           {/* Step 1: Name */}
           {step === 1 && (
             <div>
@@ -218,9 +229,9 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 style={{
                   display: 'block',
                   color: colors.text.high,
-                  fontSize: '0.875rem',
+                  fontSize: '0.8125rem',
                   fontWeight: 600,
-                  marginBottom: '0.5rem',
+                  marginBottom: '0.375rem',
                 }}
               >
                 What's your name?
@@ -234,12 +245,12 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 onKeyDown={(e) => e.key === 'Enter' && canProceed() && handleNext()}
                 style={{
                   width: '100%',
-                  padding: '0.75rem',
+                  padding: '0.625rem 0.75rem',
                   borderRadius: '8px',
                   border: `1px solid ${nameError ? '#ef4444' : colors.stroke.medium}`,
                   background: colors.background.subtle,
                   color: colors.text.high,
-                  fontSize: '0.875rem',
+                  fontSize: '0.8125rem',
                   outline: 'none',
                   boxSizing: 'border-box',
                 }}
@@ -259,14 +270,14 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 style={{
                   display: 'block',
                   color: colors.text.high,
-                  fontSize: '0.875rem',
+                  fontSize: '0.8125rem',
                   fontWeight: 600,
-                  marginBottom: '0.75rem',
+                  marginBottom: '0.5rem',
                 }}
               >
                 What's your role?
               </label>
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gap: '0.375rem' }}>
                 {ROLES.map((r) => (
                   <button
                     key={r.id}
@@ -275,7 +286,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'flex-start',
-                      padding: '0.75rem 1rem',
+                      padding: '0.5rem 0.75rem',
                       borderRadius: '8px',
                       border: `1.5px solid ${role === r.id ? colors.accent : colors.stroke.medium}`,
                       background: role === r.id ? colors.accent + '10' : 'transparent',
@@ -286,15 +297,15 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   >
                     <span style={{
                       color: role === r.id ? colors.accent : colors.text.high,
-                      fontSize: '0.875rem',
+                      fontSize: '0.8125rem',
                       fontWeight: 600,
                     }}>
                       {r.label}
                     </span>
                     <span style={{
                       color: colors.text.medium,
-                      fontSize: '0.75rem',
-                      marginTop: '0.125rem',
+                      fontSize: '0.6875rem',
+                      marginTop: '0.0625rem',
                     }}>
                       {r.description}
                     </span>
@@ -311,17 +322,17 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 style={{
                   display: 'block',
                   color: colors.text.high,
-                  fontSize: '0.875rem',
+                  fontSize: '0.8125rem',
                   fontWeight: 600,
-                  marginBottom: '0.75rem',
+                  marginBottom: '0.5rem',
                 }}
               >
                 Which product ecosystem do you primarily work on?
               </label>
               <div style={{
                 display: 'grid',
-                gap: '0.375rem',
-                maxHeight: '320px',
+                gap: '0.25rem',
+                maxHeight: '280px',
                 overflowY: 'auto',
               }}>
                 {ECOSYSTEMS.map((eco) => (
@@ -331,12 +342,12 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                     style={{
                       display: 'block',
                       width: '100%',
-                      padding: '0.625rem 1rem',
+                      padding: '0.5rem 0.75rem',
                       borderRadius: '8px',
                       border: `1.5px solid ${product === eco.id ? colors.accent : colors.stroke.medium}`,
                       background: product === eco.id ? colors.accent + '10' : 'transparent',
                       color: product === eco.id ? colors.accent : colors.text.high,
-                      fontSize: '0.8125rem',
+                      fontSize: '0.75rem',
                       fontWeight: product === eco.id ? 600 : 400,
                       cursor: 'pointer',
                       textAlign: 'left',
@@ -349,24 +360,68 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
               </div>
             </div>
           )}
+
+          {/* Step 4: Confirmation */}
+          {step === 4 && role && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {[
+                { label: 'Name', value: name.trim() },
+                { label: 'Role', value: ROLE_LABELS[role] || role },
+                { label: 'Product', value: ECOSYSTEM_LABELS[product] || product },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '8px',
+                    background: colors.background.subtle,
+                    border: `1px solid ${colors.stroke.low}`,
+                  }}
+                >
+                  <span style={{ color: colors.text.medium, fontSize: '0.75rem' }}>
+                    {item.label}
+                  </span>
+                  <span style={{ color: colors.text.high, fontSize: '0.8125rem', fontWeight: 600 }}>
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+
+              <p style={{
+                color: colors.text.medium,
+                fontSize: '0.75rem',
+                lineHeight: 1.4,
+                margin: '0.25rem 0 0',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '8px',
+                background: colors.accent + '08',
+                border: `1px solid ${colors.accent}20`,
+              }}>
+                Voice Lab will auto-tune tone, vocabulary, channels, and content style based on your profile. You can change these anytime in Settings.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div style={{
-          padding: '0 1.5rem 1.5rem',
+          padding: '0 1.25rem 1.25rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
         }}>
-          {step > 1 ? (
+          {step > 1 && step <= 3 ? (
             <button
-              onClick={() => setStep((s) => Math.max(s - 1, 1) as 1 | 2 | 3)}
+              onClick={() => setStep((s) => Math.max(s - 1, 1) as 1 | 2 | 3 | 4)}
               style={{
                 background: 'none',
                 border: 'none',
                 color: colors.text.medium,
                 cursor: 'pointer',
-                fontSize: '0.875rem',
+                fontSize: '0.8125rem',
                 padding: '0.5rem 0',
               }}
             >
@@ -379,10 +434,10 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
           <Button
             appearance="primary"
             size="M"
-            onPress={handleNext}
-            isDisabled={!canProceed()}
+            onPress={step === 4 ? handleComplete : handleNext}
+            isDisabled={step <= 3 && !canProceed()}
           >
-            {step === 3 ? 'Get Started' : 'Continue'}
+            {step === 4 ? 'Start Creating' : step === 3 ? 'Get Started' : 'Continue'}
           </Button>
         </div>
       </div>
