@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import { useThemeColors } from '../theme/useColors';
 import { AdminSidebar, type AdminSection } from './components/AdminSidebar';
 import { AdminStatCard } from './components/AdminStatCard';
@@ -702,9 +704,26 @@ function AdminKnowledge() {
   );
 }
 
+// ── Utility: Format relative time ────────────────────────────────
+function formatRelativeTime(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  if (minutes > 0) return `${minutes}m ago`;
+  return 'just now';
+}
+
 // ── Users ────────────────────────────────────────────────────────
 function AdminUsers() {
   const theme = useThemeColors();
+  const [searchQuery, setSearchQuery] = useState('');
+  const users = useQuery(api.users.listAll);
   const [localProfile, setLocalProfile] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
@@ -714,63 +733,132 @@ function AdminUsers() {
     } catch { /* ignore */ }
   }, []);
 
+  const filteredUsers = useMemo(() => {
+    if (!users) return [];
+    if (!searchQuery) return users;
+    
+    const query = searchQuery.toLowerCase();
+    return users.filter(user => 
+      user.name.toLowerCase().includes(query) ||
+      user.role.toLowerCase().includes(query) ||
+      user.product.toLowerCase().includes(query) ||
+      user.deviceId.toLowerCase().includes(query)
+    );
+  }, [users, searchQuery]);
+
   return (
     <>
       <SectionHeader title="Users" subtitle="Registered user profiles (device-based)" />
 
-      {/* Info */}
-      <AdminCard className="p-4 mb-5">
-        <span style={{ color: theme.text.medium, fontSize: '12px' }}>
-          Users are identified by device UUID (no login required). Profile data is collected during onboarding and synced to Convex.
-        </span>
-      </AdminCard>
-
-      {/* Local User */}
-      <AdminCard className="p-4">
-        <CardLabel>Current Device Profile</CardLabel>
-        {localProfile ? (
-          <div className="space-y-3">
-            {/* Name & product */}
-            <div className="flex items-center gap-3">
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center font-semibold"
-                style={{
-                  backgroundColor: theme.accent,
-                  color: '#fff',
-                  fontSize: '14px',
-                }}
-              >
-                {(localProfile.name as string || '?')[0].toUpperCase()}
+      {/* If Convex not connected */}
+      {users === undefined ? (
+        <AdminCard className="p-4 mb-5">
+          <span className="block font-medium mb-2" style={{ color: theme.text.high, fontSize: '13px' }}>
+            Convex Not Connected
+          </span>
+          <span className="block mb-3" style={{ color: theme.text.medium, fontSize: '12px' }}>
+            Users are identified by device UUID (no login required). Profile data is collected during onboarding and synced to Convex when available.
+          </span>
+          {localProfile && (
+            <>
+              <CardLabel>Current Device Profile</CardLabel>
+              <div className="flex items-center gap-3 mt-2">
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center font-semibold"
+                  style={{
+                    backgroundColor: theme.accent,
+                    color: '#fff',
+                    fontSize: '12px',
+                  }}
+                >
+                  {(localProfile.name as string || '?')[0].toUpperCase()}
+                </div>
+                <div>
+                  <span className="block font-medium" style={{ fontSize: '13px', color: theme.text.high }}>
+                    {localProfile.name as string}
+                  </span>
+                  <span className="block" style={{ fontSize: '11px', color: theme.text.low }}>
+                    {localProfile.role as string} • {localProfile.product as string}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="block font-medium" style={{ fontSize: '14px', color: theme.text.high }}>
-                  {localProfile.name as string}
-                </span>
-                <span className="block" style={{ fontSize: '12px', color: theme.text.low }}>
-                  {localProfile.product as string}
-                </span>
-              </div>
-            </div>
-
-            <div style={{ borderTop: `1px solid ${theme.stroke.low}`, marginTop: '8px', paddingTop: '8px' }}>
-              <div className="grid grid-cols-[100px_1fr] gap-y-2 gap-x-3" style={{ fontSize: '13px' }}>
-                <span style={{ color: theme.text.low }}>Role</span>
-                <span><FeedbackBadge type={localProfile.role as string || ''} /></span>
-
-                <span style={{ color: theme.text.low }}>Product</span>
-                <span style={{ color: theme.text.high }}>{localProfile.product as string}</span>
-
-                <span style={{ color: theme.text.low }}>Device ID</span>
-                <span className="font-mono" style={{ color: theme.text.low, fontSize: '11px' }}>
-                  {localProfile.deviceId as string}
-                </span>
-              </div>
-            </div>
+            </>
+          )}
+        </AdminCard>
+      ) : (
+        <>
+          {/* Search */}
+          <div className="mb-4">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search users..."
+              aria-label="Search users"
+              className="rounded-lg px-3 outline-none"
+              style={{
+                height: '28px',
+                width: '200px',
+                fontSize: '12px',
+                backgroundColor: theme.background.ghost,
+                color: theme.text.high,
+                border: `1px solid ${theme.stroke.low}`,
+              }}
+            />
           </div>
-        ) : (
-          <span style={{ color: theme.text.low, fontSize: '13px' }}>No local profile found. Complete onboarding first.</span>
-        )}
-      </AdminCard>
+
+          {/* Users Table */}
+          <AdminCard className="p-4">
+            <AdminTable
+              columns={[
+                { key: 'name', label: 'Name' },
+                { key: 'role', label: 'Role' },
+                { key: 'product', label: 'Product' },
+                { key: 'deviceId', label: 'Device ID' },
+                { key: 'lastSeen', label: 'Last Seen' },
+              ]}
+              isEmpty={filteredUsers.length === 0}
+              emptyMessage={searchQuery ? 'No users match your search.' : 'No users registered yet.'}
+            >
+              {filteredUsers.map((user) => (
+                <AdminTableRow key={user._id}>
+                  <AdminTableCell>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center font-semibold flex-shrink-0"
+                        style={{
+                          backgroundColor: theme.accent,
+                          color: '#fff',
+                          fontSize: '12px',
+                        }}
+                      >
+                        {user.name[0].toUpperCase()}
+                      </div>
+                      <span style={{ fontSize: '13px', color: theme.text.high }}>
+                        {user.name}
+                      </span>
+                    </div>
+                  </AdminTableCell>
+                  <AdminTableCell>
+                    <FeedbackBadge type={user.role} />
+                  </AdminTableCell>
+                  <AdminTableCell>{user.product}</AdminTableCell>
+                  <AdminTableCell>
+                    <span className="font-mono" style={{ fontSize: '11px', color: theme.text.low }}>
+                      {user.deviceId.slice(0, 20)}...
+                    </span>
+                  </AdminTableCell>
+                  <AdminTableCell className="whitespace-nowrap">
+                    <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                      {formatRelativeTime(user.lastSeenAt)}
+                    </span>
+                  </AdminTableCell>
+                </AdminTableRow>
+              ))}
+            </AdminTable>
+          </AdminCard>
+        </>
+      )}
     </>
   );
 }
