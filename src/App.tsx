@@ -219,12 +219,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Voice feature support detection
   const [voiceSupported, setVoiceSupported] = useState<boolean | null>(null);
 
-  // TTS State (for standalone TTS generation within voice mode)
-  const [ttsText] = useState('');
-  // const [isTtsLoading] = useState(false);
-  const [generatedAudio] = useState<AudioBuffer | null>(null);
-  const [lastGeneratedVoice] = useState<string>('');
-
   // Conversation State
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [transcript, setTranscript] = useState('');

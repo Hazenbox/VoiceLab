@@ -169,8 +169,4 @@ export const AdminSidebar = memo(function AdminSidebar({
   );
 });
 
-function isActive(id: AdminSection, activeSection: AdminSection): boolean {
-  return id === activeSection;
-}
-
 export default AdminSidebar;
