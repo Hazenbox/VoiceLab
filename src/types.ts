@@ -388,6 +388,9 @@ export interface GenerationContext {
   
   // Detected product context (for transparency layer)
   detectedProduct?: DetectedProductContext;
+  
+  // Persona context (Phase 1) -- optional, additive
+  persona?: string;  // PersonaRole -- kept as string for serialization
 }
 
 /**

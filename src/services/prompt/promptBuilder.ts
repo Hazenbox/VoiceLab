@@ -18,6 +18,7 @@ import { getToneInstructions, getToneAdjustments } from '../guidelines/userProfi
 import { getEmotionInstructions, getEmotion } from '../guidelines/navarasa';
 import { getTimingGuidance } from '../context/timingEngine';
 import { getTriggerEventGuidance } from '../context/contextEngine';
+import { buildPersonaPromptSection, type PersonaRole } from '../persona';
 
 // =============================================================================
 // BRAND GUARDRAILS (From Training 1.pdf - The 10 Official Jio Guidelines)
@@ -465,6 +466,11 @@ export function buildSystemPrompt(context: GenerationContext): string {
   const timingGuidance = getTimingGuidance(context.timing);
   const productContext = buildProductContextPrompt(context);
   
+  // Persona section (Phase 1) -- only if a persona role is set
+  const personaSection = context.persona
+    ? buildPersonaPromptSection(context.persona as PersonaRole)
+    : '';
+  
   // Build the complete system prompt
   return `# Jio Content Generation System
 
@@ -488,7 +494,7 @@ ${productContext}
 
 ${guardrails}
 
-${channelFormatting}
+${personaSection ? `${personaSection}\n\n` : ''}${channelFormatting}
 
 ## User Profile Adaptations
 

@@ -240,6 +240,9 @@ export interface ContextBuilderOptions {
   // For auto-detection
   userMessage?: string;
   isUserInitiated?: boolean;
+  
+  // Persona (Phase 1)
+  persona?: string;  // PersonaRole string
 }
 
 /**
@@ -328,7 +331,12 @@ export function buildGenerationContext(options: ContextBuilderOptions): Generati
     context.overrides = overrides;
   }
   
-  // 9. Validate marketing restrictions
+  // 9. Set persona if provided
+  if (options.persona) {
+    context.persona = options.persona;
+  }
+  
+  // 10. Validate marketing restrictions
   if (
     context.goal === 'Engagement' &&
     !allowsPromotionalContent(context.timing)

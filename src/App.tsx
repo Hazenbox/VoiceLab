@@ -63,6 +63,8 @@ import { useAbortController } from './hooks';
 // Onboarding & Sync
 import OnboardingModal, { loadUserProfile, getDeviceId, type UserProfile } from './components/OnboardingModal';
 import { initSyncService, getSyncService } from './services/sync/convexSync';
+// Persona Engine (Phase 1)
+import { getAutoConfig, type PersonaRole } from './services/persona';
 
 // Storage key for chat mode persistence
 const CHAT_MODE_STORAGE_KEY = 'voiceDesigner_chatMode';
@@ -124,8 +126,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       });
     }
 
-    // Auto-configure ecosystem from profile
-    setEcosystem(profile.product as EcosystemType);
+    // Phase 1: Auto-configure from persona engine
+    const autoConfig = getAutoConfig(profile.role as PersonaRole, profile.product);
+    setEcosystem(autoConfig.ecosystem);
+    setContentChannel(autoConfig.channel);
   }, []);
 
   // UI State - chatMode persisted to localStorage
@@ -313,6 +317,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         userMessage: message,
         // Optional: add profile/timing if available from project
         userProfile: activeProject?.defaultUserProfile,
+        // Phase 1: Pass persona role for prompt personality injection
+        persona: userProfile?.role,
       });
 
       // Build comprehensive prompt using Content Trust System
@@ -859,6 +865,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           <DocPanelComponent onBack={() => setActiveView('main')} />
         </main>
         <AdvancedSettingsPanel
+          userName={userProfile?.name}
+          userRole={userProfile?.role}
+          userProduct={userProfile?.product}
+          onEditProfile={() => setShowOnboarding(true)}
           voiceGender={activeProject.voiceGender}
           onVoiceGenderChange={updateProjectVoiceGender}
           config={activeProject.config}
@@ -934,6 +944,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           <LibraryPage onBack={() => setActiveView('main')} />
         </main>
         <AdvancedSettingsPanel
+          userName={userProfile?.name}
+          userRole={userProfile?.role}
+          userProduct={userProfile?.product}
+          onEditProfile={() => setShowOnboarding(true)}
           voiceGender={activeProject.voiceGender}
           onVoiceGenderChange={updateProjectVoiceGender}
           config={activeProject.config}
@@ -1161,6 +1175,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
       {/* Right Sidebar - Advanced Settings */}
       <AdvancedSettingsPanel
+        userName={userProfile?.name}
+        userRole={userProfile?.role}
+        userProduct={userProfile?.product}
+        onEditProfile={() => setShowOnboarding(true)}
         voiceGender={activeProject.voiceGender}
         onVoiceGenderChange={updateProjectVoiceGender}
         config={activeProject.config}
