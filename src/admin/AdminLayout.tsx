@@ -1,37 +1,15 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useThemeColors } from '../theme/useColors';
-import { 
-  Card, 
-  Input, 
-  Button, 
-  Title, 
-  Text, 
-  Label,
-  Display,
-  Headline,
-  Chip,
-  Switch,
-  Tabs,
-  TabList,
-  Tab,
-  TabPanel,
-  SearchField,
-  Avatar,
-  Divider,
-  Icon,
-} from '@marcelinodzn/ds-react';
-import { LazyIcon } from '@marcelinodzn/ds-react/icons';
-import { SearchableDropdown } from '../components/SearchableDropdown';
+import { AdminSidebar, type AdminSection } from './components/AdminSidebar';
+import { AdminStatCard } from './components/AdminStatCard';
+import { AdminTable, AdminTableRow, AdminTableCell } from './components/AdminTable';
 
 // ── Admin Auth Gate ──────────────────────────────────────────────
-// SECURITY NOTE (POC limitation): This passphrase is bundled into client-side JS
-// via the VITE_ prefix and is visible in browser DevTools / source maps.
-// The sessionStorage-based auth is trivially bypassable (sessionStorage.setItem('voicelab_admin_auth','true')).
-// For production, this MUST move to server-side authentication (e.g., Convex auth, OAuth, or a backend session).
 const ADMIN_PASSPHRASE = import.meta.env.VITE_ADMIN_PASSPHRASE || 'voicelab-admin';
 const SESSION_KEY = 'voicelab_admin_auth';
 
 function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
+  const theme = useThemeColors();
   const [passphrase, setPassphrase] = useState('');
   const [error, setError] = useState('');
 
@@ -47,83 +25,146 @@ function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
   }, [passphrase, onAuthenticated]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Card variant="elevated" padding="L" className="w-full max-w-md">
-        <div className="space-y-4">
-          <div>
-            <Title>Voice Lab Admin</Title>
-            <Text variant="body" className="mt-2">
-              Enter the admin passphrase to continue.
-            </Text>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Input
-                type="password"
-                value={passphrase}
-                onChange={(e) => { 
-                  setPassphrase(e.target.value); 
-                  setError(''); 
-                }}
-                placeholder="Passphrase"
-                autoFocus
-                aria-label="Admin passphrase"
-                className="w-full"
-              />
-              {error && (
-                <Text variant="caption" className="text-red-500 mt-1">
-                  {error}
-                </Text>
-              )}
-            </div>
-            
-            <Button 
-              type="submit" 
-              appearance="primary" 
-              size="L"
-              onPress={() => {}}
-              className="w-full"
-            >
-              Enter Admin Panel
-            </Button>
-          </form>
+    <div
+      className="flex items-center justify-center min-h-screen"
+      style={{ backgroundColor: theme.background.ghost }}
+    >
+      <div
+        className="w-full max-w-sm rounded-xl px-6 py-8"
+        style={{
+          backgroundColor: theme.background.subtle,
+          border: `1px solid ${theme.stroke.low}`,
+        }}
+      >
+        <div className="mb-1">
+          <img
+            src={theme.isLight ? '/jio-voice-lab-light.svg?v=3' : '/jio-voice-lab-dark.svg?v=3'}
+            alt="Jio Voice Lab"
+            className="h-7"
+          />
         </div>
-      </Card>
+        <span
+          className="block mb-6"
+          style={{ color: theme.text.low, fontSize: '13px' }}
+        >
+          Enter the admin passphrase to continue.
+        </span>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            value={passphrase}
+            onChange={(e) => { setPassphrase(e.target.value); setError(''); }}
+            placeholder="Passphrase"
+            autoFocus
+            aria-label="Admin passphrase"
+            className="w-full rounded-lg px-3 outline-none"
+            style={{
+              height: '36px',
+              fontSize: '13px',
+              backgroundColor: theme.background.ghost,
+              color: theme.text.high,
+              border: `1px solid ${error ? '#ef4444' : theme.stroke.medium}`,
+            }}
+          />
+          {error && (
+            <span className="block mt-1" style={{ color: '#ef4444', fontSize: '12px' }}>
+              {error}
+            </span>
+          )}
+          <button
+            type="submit"
+            className="w-full rounded-lg mt-4 font-medium cursor-pointer transition-opacity hover:opacity-90"
+            style={{
+              height: '36px',
+              fontSize: '13px',
+              backgroundColor: theme.accent,
+              color: '#fff',
+              border: 'none',
+            }}
+          >
+            Enter Admin Panel
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
 
-// ── Types ────────────────────────────────────────────────────────
-type AdminSection = 'dashboard' | 'analytics' | 'memory' | 'knowledge' | 'users' | 'config';
-
-const NAV_ITEMS: { id: AdminSection; label: string; iconName: string }[] = [
-  { id: 'dashboard', label: 'Dashboard', iconName: 'IcBarChart3' },
-  { id: 'analytics', label: 'Analytics', iconName: 'IcTrendingUp' },
-  { id: 'memory', label: 'Memory & Learnings', iconName: 'IcDatabase' },
-  { id: 'knowledge', label: 'Knowledge Base', iconName: 'IcBook' },
-  { id: 'users', label: 'Users', iconName: 'IcUsers' },
-  { id: 'config', label: 'System Config', iconName: 'IcSettings' },
-];
-
-// ── Utility Components ───────────────────────────────────────────
-
-// Feedback badge color mapper
-function getFeedbackChipAppearance(feedbackType: string): 'filled' | 'outlined' {
-  return 'filled';
-}
-
-function getFeedbackChipColor(feedbackType: string): string {
-  const colors: Record<string, string> = {
-    'thumbs_up': 'text-green-600 bg-green-50 dark:bg-green-950',
-    'thumbs_down': 'text-red-600 bg-red-50 dark:bg-red-950',
-    'edit': 'text-blue-600 bg-blue-50 dark:bg-blue-950',
-    'comment': 'text-yellow-600 bg-yellow-50 dark:bg-yellow-950',
+// ── Utility: Feedback badge ──────────────────────────────────────
+function FeedbackBadge({ type }: { type: string }) {
+  const colorMap: Record<string, { bg: string; fg: string }> = {
+    thumbs_up: { bg: 'rgba(34,197,94,0.12)', fg: '#22c55e' },
+    thumbs_down: { bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
+    edit: { bg: 'rgba(59,130,246,0.12)', fg: '#3b82f6' },
+    comment: { bg: 'rgba(245,158,11,0.12)', fg: '#f59e0b' },
   };
-  return colors[feedbackType] || 'text-gray-600 bg-gray-50 dark:bg-gray-950';
+  const c = colorMap[type] || { bg: 'rgba(107,114,128,0.12)', fg: '#6b7280' };
+  return (
+    <span
+      className="inline-block rounded-full font-medium whitespace-nowrap"
+      style={{
+        fontSize: '11px',
+        padding: '1px 8px',
+        backgroundColor: c.bg,
+        color: c.fg,
+      }}
+    >
+      {type.replace('_', ' ')}
+    </span>
+  );
 }
 
-// ── Local data hooks (localStorage-based for offline/no-Convex) ──
+// ── Utility: Section Header ──────────────────────────────────────
+function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
+  const theme = useThemeColors();
+  return (
+    <div className="mb-5">
+      <h2
+        className="font-semibold"
+        style={{ color: theme.text.high, fontSize: '16px', letterSpacing: '-0.3px', margin: 0 }}
+      >
+        {title}
+      </h2>
+      <span
+        className="block mt-0.5"
+        style={{ color: theme.text.low, fontSize: '12px' }}
+      >
+        {subtitle}
+      </span>
+    </div>
+  );
+}
+
+// ── Utility: Card wrapper ────────────────────────────────────────
+function AdminCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const theme = useThemeColors();
+  return (
+    <div
+      className={`rounded-lg ${className}`}
+      style={{
+        border: `1px solid ${theme.stroke.low}`,
+        backgroundColor: theme.background.subtle,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function CardLabel({ children }: { children: React.ReactNode }) {
+  const theme = useThemeColors();
+  return (
+    <span
+      className="block uppercase tracking-wider font-medium mb-3"
+      style={{ color: theme.text.low, fontSize: '11px' }}
+    >
+      {children}
+    </span>
+  );
+}
+
+// ── Local data hooks ─────────────────────────────────────────────
 function useLocalData<T>(key: string, fallback: T): T {
   const [data, setData] = useState<T>(() => {
     try {
@@ -143,475 +184,346 @@ function useLocalData<T>(key: string, fallback: T): T {
   return data;
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// SECTIONS
+// ═══════════════════════════════════════════════════════════════════
+
 // ── Dashboard ────────────────────────────────────────────────────
 function AdminDashboard() {
-  const colors = useThemeColors();
+  const theme = useThemeColors();
   const corrections = useLocalData<Array<{ feedbackType: string; timestamp: number; originalContent?: string }>>('voicelab_corrections_cache', []);
   const examples = useLocalData<Array<{ timestamp: number }>>('voicelab_saved_examples', []);
 
-  const today = useMemo(() => {
-    const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime();
-  }, []);
+  const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); }, []);
   const week = useMemo(() => Date.now() - 7 * 24 * 60 * 60 * 1000, []);
 
-  const todayCorrections = corrections.filter(c => c.timestamp >= today).length;
-  const weekCorrections = corrections.filter(c => c.timestamp >= week).length;
+  const todayCount = corrections.filter(c => c.timestamp >= today).length;
+  const weekCount = corrections.filter(c => c.timestamp >= week).length;
   const thumbsUp = corrections.filter(c => c.feedbackType === 'thumbs_up').length;
   const thumbsDown = corrections.filter(c => c.feedbackType === 'thumbs_down').length;
   const edits = corrections.filter(c => c.feedbackType === 'edit').length;
   const comments = corrections.filter(c => c.feedbackType === 'comment').length;
 
-  const stats = [
-    { label: 'Today\'s Feedback', value: todayCorrections, colorClass: 'text-orange-500' },
-    { label: 'This Week', value: weekCorrections, colorClass: 'text-blue-500' },
-    { label: 'Total Feedback', value: corrections.length, colorClass: 'text-purple-500' },
-    { label: 'Saved Examples', value: examples.length, colorClass: 'text-green-500' },
-  ];
-
-  const feedbackBreakdown = [
-    { label: 'Thumbs Up', value: thumbsUp, iconName: 'IcThumbsUp', pct: corrections.length ? Math.round(thumbsUp / corrections.length * 100) : 0 },
-    { label: 'Thumbs Down', value: thumbsDown, iconName: 'IcThumbsDown', pct: corrections.length ? Math.round(thumbsDown / corrections.length * 100) : 0 },
-    { label: 'Edits', value: edits, iconName: 'IcEdit', pct: corrections.length ? Math.round(edits / corrections.length * 100) : 0 },
-    { label: 'Comments', value: comments, iconName: 'IcMessageSquare', pct: corrections.length ? Math.round(comments / corrections.length * 100) : 0 },
-  ];
-
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <Headline>Dashboard</Headline>
-        <Text variant="body" className="mt-1">System overview and recent activity</Text>
-      </div>
+    <>
+      <SectionHeader title="Dashboard" subtitle="System overview and recent activity" />
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.label} variant="outlined" padding="M">
-            <Label className="uppercase text-xs opacity-60">{stat.label}</Label>
-            <Display className={`mt-2 ${stat.colorClass}`}>{stat.value}</Display>
-          </Card>
-        ))}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <AdminStatCard label="Today" value={todayCount} colorClass="text-orange-500" />
+        <AdminStatCard label="This Week" value={weekCount} colorClass="text-blue-500" />
+        <AdminStatCard label="Total Feedback" value={corrections.length} colorClass="text-purple-500" />
+        <AdminStatCard label="Saved Examples" value={examples.length} colorClass="text-green-500" />
       </div>
 
       {/* Feedback Breakdown */}
-      <Card variant="outlined" padding="M">
-        <Label className="uppercase text-xs opacity-60 mb-4">Feedback Breakdown</Label>
-        <div className="flex flex-wrap gap-8">
-          {feedbackBreakdown.map((fb) => (
-            <div key={fb.label} className="text-center min-w-[100px]">
-              <Icon size="L">
-                <LazyIcon name={fb.iconName} />
-              </Icon>
-              <Headline className="mt-2">{fb.value}</Headline>
-              <Text variant="caption" className="opacity-60">
-                {fb.label} ({fb.pct}%)
-              </Text>
+      <AdminCard className="p-4 mb-5">
+        <CardLabel>Feedback Breakdown</CardLabel>
+        <div className="flex flex-wrap gap-6">
+          {[
+            { label: 'Thumbs Up', value: thumbsUp, pct: corrections.length ? Math.round(thumbsUp / corrections.length * 100) : 0 },
+            { label: 'Thumbs Down', value: thumbsDown, pct: corrections.length ? Math.round(thumbsDown / corrections.length * 100) : 0 },
+            { label: 'Edits', value: edits, pct: corrections.length ? Math.round(edits / corrections.length * 100) : 0 },
+            { label: 'Comments', value: comments, pct: corrections.length ? Math.round(comments / corrections.length * 100) : 0 },
+          ].map((fb) => (
+            <div key={fb.label} className="text-center min-w-[80px]">
+              <span className="block font-semibold" style={{ fontSize: '20px', color: theme.text.high }}>{fb.value}</span>
+              <span className="block" style={{ fontSize: '11px', color: theme.text.low }}>{fb.label} ({fb.pct}%)</span>
             </div>
           ))}
         </div>
-      </Card>
+      </AdminCard>
 
       {/* Recent Activity */}
-      <Card variant="outlined" padding="M">
-        <Label className="uppercase text-xs opacity-60 mb-4">Recent Feedback</Label>
-        {corrections.length === 0 ? (
-          <Text variant="body" className="opacity-60">No feedback recorded yet.</Text>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${colors.stroke.low}` }}>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Type</Text>
-                  </th>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Content (preview)</Text>
-                  </th>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Time</Text>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {corrections.slice(0, 10).map((c, i) => (
-                  <tr key={i} style={{ borderBottom: `1px solid ${colors.stroke.low}` }}>
-                    <td className="py-2 px-3">
-                      <Chip 
-                        appearance="filled" 
-                        isSelected={false}
-                        className={getFeedbackChipColor(c.feedbackType)}
-                      >
-                        {c.feedbackType}
-                      </Chip>
-                    </td>
-                    <td className="py-2 px-3 max-w-md truncate">
-                      <Text variant="body">{(c.originalContent || '').slice(0, 80)}</Text>
-                    </td>
-                    <td className="py-2 px-3">
-                      <Text variant="caption" className="opacity-60">
-                        {new Date(c.timestamp).toLocaleString()}
-                      </Text>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
-    </div>
+      <AdminCard className="p-4">
+        <CardLabel>Recent Feedback</CardLabel>
+        <AdminTable
+          columns={[
+            { key: 'type', label: 'Type' },
+            { key: 'content', label: 'Content (preview)' },
+            { key: 'time', label: 'Time' },
+          ]}
+          isEmpty={corrections.length === 0}
+          emptyMessage="No feedback recorded yet."
+        >
+          {corrections.slice(0, 10).map((c, i) => (
+            <AdminTableRow key={i}>
+              <AdminTableCell><FeedbackBadge type={c.feedbackType} /></AdminTableCell>
+              <AdminTableCell className="max-w-sm truncate">{(c.originalContent || '').slice(0, 80)}</AdminTableCell>
+              <AdminTableCell className="whitespace-nowrap">
+                <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                  {new Date(c.timestamp).toLocaleString()}
+                </span>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+      </AdminCard>
+    </>
   );
 }
 
 // ── Analytics ────────────────────────────────────────────────────
 function AdminAnalytics() {
-  const colors = useThemeColors();
+  const theme = useThemeColors();
   const corrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
 
   const byEcosystem = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const c of corrections) { 
-      const eco = c.ecosystem as string || 'Unknown';
-      counts[eco] = (counts[eco] || 0) + 1; 
-    }
+    for (const c of corrections) { const eco = c.ecosystem as string || 'Unknown'; counts[eco] = (counts[eco] || 0) + 1; }
     return Object.entries(counts).sort(([, a], [, b]) => b - a);
   }, [corrections]);
 
   const byChannel = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const c of corrections) { 
-      const ch = c.channel as string || 'Unknown';
-      counts[ch] = (counts[ch] || 0) + 1; 
-    }
+    for (const c of corrections) { const ch = c.channel as string || 'Unknown'; counts[ch] = (counts[ch] || 0) + 1; }
     return Object.entries(counts).sort(([, a], [, b]) => b - a);
   }, [corrections]);
 
   const byType = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const c of corrections) { 
-      const type = c.feedbackType as string || 'Unknown';
-      counts[type] = (counts[type] || 0) + 1; 
-    }
+    for (const c of corrections) { const t = c.feedbackType as string || 'Unknown'; counts[t] = (counts[t] || 0) + 1; }
     return Object.entries(counts).sort(([, a], [, b]) => b - a);
   }, [corrections]);
 
+  const BarRow = ({ label, count, color }: { label: string; count: number; color: string }) => {
+    const max = Math.max(...(byEcosystem.length ? byEcosystem.map(([, c]) => c) : [1]));
+    const pct = max > 0 ? (count / max) * 100 : 0;
+    return (
+      <div className="flex items-center gap-3 py-1" style={{ borderBottom: `1px solid ${theme.stroke.low}` }}>
+        <span className="w-28 truncate" style={{ fontSize: '13px', color: theme.text.high }}>{label}</span>
+        <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: theme.stroke.low }}>
+          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+        </div>
+        <span className="font-semibold w-8 text-right" style={{ fontSize: '13px', color }}>{count}</span>
+      </div>
+    );
+  };
+
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <Headline>Analytics</Headline>
-        <Text variant="body" className="mt-1">Content quality metrics and usage patterns</Text>
+    <>
+      <SectionHeader title="Analytics" subtitle="Content quality metrics and usage patterns" />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+        <AdminCard className="p-4">
+          <CardLabel>By Ecosystem</CardLabel>
+          {byEcosystem.length === 0
+            ? <span style={{ color: theme.text.low, fontSize: '13px' }}>No data yet</span>
+            : byEcosystem.map(([eco, count]) => <BarRow key={eco} label={eco} count={count} color={theme.accent} />)
+          }
+        </AdminCard>
+
+        <AdminCard className="p-4">
+          <CardLabel>By Channel</CardLabel>
+          {byChannel.length === 0
+            ? <span style={{ color: theme.text.low, fontSize: '13px' }}>No data yet</span>
+            : byChannel.map(([ch, count]) => <BarRow key={ch} label={ch} count={count} color="#3b82f6" />)
+          }
+        </AdminCard>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* By Ecosystem */}
-        <Card variant="outlined" padding="M">
-          <Label className="uppercase text-xs opacity-60 mb-3">Feedback by Ecosystem</Label>
-          {byEcosystem.length === 0 ? (
-            <Text variant="body" className="opacity-60">No data yet</Text>
-          ) : (
-            <div className="space-y-2">
-              {byEcosystem.map(([eco, count]) => (
-                <div 
-                  key={eco} 
-                  className="flex justify-between items-center py-1.5"
-                  style={{ borderBottom: `1px solid ${colors.stroke.low}` }}
-                >
-                  <Text variant="body">{eco}</Text>
-                  <Text variant="body" className="text-orange-500 font-semibold">{count}</Text>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        {/* By Channel */}
-        <Card variant="outlined" padding="M">
-          <Label className="uppercase text-xs opacity-60 mb-3">Feedback by Channel</Label>
-          {byChannel.length === 0 ? (
-            <Text variant="body" className="opacity-60">No data yet</Text>
-          ) : (
-            <div className="space-y-2">
-              {byChannel.map(([ch, count]) => (
-                <div 
-                  key={ch} 
-                  className="flex justify-between items-center py-1.5"
-                  style={{ borderBottom: `1px solid ${colors.stroke.low}` }}
-                >
-                  <Text variant="body">{ch}</Text>
-                  <Text variant="body" className="text-blue-500 font-semibold">{count}</Text>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
-
-      {/* By Type */}
-      <Card variant="outlined" padding="M">
-        <Label className="uppercase text-xs opacity-60 mb-4">Feedback Type Distribution</Label>
-        <div className="flex flex-wrap gap-4">
+      <AdminCard className="p-4">
+        <CardLabel>Feedback Type Distribution</CardLabel>
+        <div className="flex flex-wrap gap-3">
           {byType.map(([type, count]) => (
-            <div 
-              key={type} 
-              className="flex-1 min-w-[120px] text-center p-3 rounded-lg"
-              style={{ background: colors.background.ghost }}
+            <div
+              key={type}
+              className="flex-1 min-w-[100px] text-center py-2 px-3 rounded-lg"
+              style={{ backgroundColor: theme.background.ghost }}
             >
-              <Headline>{count}</Headline>
-              <Text variant="caption" className="opacity-60 mt-1">{type}</Text>
+              <span className="block font-semibold" style={{ fontSize: '20px', color: theme.text.high }}>{count}</span>
+              <span className="block" style={{ fontSize: '11px', color: theme.text.low }}>{type}</span>
             </div>
           ))}
         </div>
-      </Card>
-    </div>
+      </AdminCard>
+    </>
   );
 }
 
 // ── Memory & Learnings ───────────────────────────────────────────
 function AdminMemory() {
-  const colors = useThemeColors();
+  const theme = useThemeColors();
   const corrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
   const [filter, setFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filtered = useMemo(() => {
     let result = filter === 'all' ? corrections : corrections.filter(c => c.feedbackType === filter);
-    
     if (searchQuery) {
-      result = result.filter(c => 
+      result = result.filter(c =>
         (c.originalContent as string || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (c.editedContent as string || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (c.comment as string || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
     return result;
   }, [corrections, filter, searchQuery]);
 
   const filterOptions = ['all', 'thumbs_up', 'thumbs_down', 'edit', 'comment'];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <Headline>Memory & Learnings</Headline>
-        <Text variant="body" className="mt-1">All user feedback and corrections across users</Text>
-      </div>
+    <>
+      <SectionHeader title="Memory & Learnings" subtitle="All user feedback and corrections" />
 
-      {/* Filters & Search */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex flex-wrap gap-2">
-          {filterOptions.map((f) => (
-            <Chip
-              key={f}
-              appearance="filled"
-              isSelected={filter === f}
-              onPress={() => setFilter(f)}
-            >
-              {f === 'all' ? 'All' : f.replace('_', ' ')}
-              {f !== 'all' && ` (${corrections.filter(c => c.feedbackType === f).length})`}
-            </Chip>
-          ))}
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="flex flex-wrap gap-1.5">
+          {filterOptions.map((f) => {
+            const isActive = filter === f;
+            return (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className="rounded-md px-2.5 cursor-pointer transition-colors"
+                style={{
+                  height: '28px',
+                  fontSize: '12px',
+                  fontWeight: isActive ? 600 : 400,
+                  backgroundColor: isActive ? theme.accent : 'transparent',
+                  color: isActive ? '#fff' : theme.text.medium,
+                  border: isActive ? 'none' : `1px solid ${theme.stroke.low}`,
+                }}
+              >
+                {f === 'all' ? 'All' : f.replace('_', ' ')}
+                {f !== 'all' && ` (${corrections.filter(c => c.feedbackType === f).length})`}
+              </button>
+            );
+          })}
         </div>
-        
-        <div className="sm:ml-auto sm:w-64">
-          <SearchField
+
+        <div className="sm:ml-auto">
+          <input
+            type="text"
             value={searchQuery}
-            onChange={setSearchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search feedback..."
-            onClear={() => setSearchQuery('')}
             aria-label="Search feedback"
+            className="rounded-lg px-3 outline-none"
+            style={{
+              height: '28px',
+              width: '200px',
+              fontSize: '12px',
+              backgroundColor: theme.background.ghost,
+              color: theme.text.high,
+              border: `1px solid ${theme.stroke.low}`,
+            }}
           />
         </div>
       </div>
 
       {/* Table */}
-      <Card variant="outlined" padding="M">
-        {filtered.length === 0 ? (
-          <Text variant="body" className="opacity-60">
-            {searchQuery ? 'No feedback matches your search.' : 'No feedback matches this filter.'}
-          </Text>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${colors.stroke.low}` }}>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Type</Text>
-                  </th>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Original Content</Text>
-                  </th>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Edited / Comment</Text>
-                  </th>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Ecosystem</Text>
-                  </th>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Channel</Text>
-                  </th>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Time</Text>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.slice(0, 50).map((c, i) => (
-                  <tr key={i} style={{ borderBottom: `1px solid ${colors.stroke.low}` }}>
-                    <td className="py-2 px-3">
-                      <Chip 
-                        appearance="filled" 
-                        isSelected={false}
-                        className={getFeedbackChipColor(c.feedbackType as string)}
-                      >
-                        {c.feedbackType as string}
-                      </Chip>
-                    </td>
-                    <td className="py-2 px-3 max-w-xs truncate">
-                      <Text variant="body">{(c.originalContent as string || '').slice(0, 100)}</Text>
-                    </td>
-                    <td className="py-2 px-3 max-w-xs truncate">
-                      <Text variant="body">{(c.editedContent as string) || (c.comment as string) || '—'}</Text>
-                    </td>
-                    <td className="py-2 px-3">
-                      <Text variant="body">{c.ecosystem as string || '—'}</Text>
-                    </td>
-                    <td className="py-2 px-3">
-                      <Text variant="body">{c.channel as string || '—'}</Text>
-                    </td>
-                    <td className="py-2 px-3 whitespace-nowrap">
-                      <Text variant="caption" className="opacity-60">
-                        {new Date(c.timestamp as number).toLocaleString()}
-                      </Text>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {filtered.length > 50 && (
-              <Text variant="caption" className="opacity-60 mt-3">
-                Showing 50 of {filtered.length} items.
-              </Text>
-            )}
-          </div>
+      <AdminCard className="p-4">
+        <AdminTable
+          columns={[
+            { key: 'type', label: 'Type' },
+            { key: 'original', label: 'Original Content' },
+            { key: 'edited', label: 'Edited / Comment' },
+            { key: 'eco', label: 'Ecosystem' },
+            { key: 'ch', label: 'Channel' },
+            { key: 'time', label: 'Time' },
+          ]}
+          isEmpty={filtered.length === 0}
+          emptyMessage={searchQuery ? 'No feedback matches your search.' : 'No feedback matches this filter.'}
+        >
+          {filtered.slice(0, 50).map((c, i) => (
+            <AdminTableRow key={i}>
+              <AdminTableCell><FeedbackBadge type={c.feedbackType as string} /></AdminTableCell>
+              <AdminTableCell className="max-w-[200px] truncate">{(c.originalContent as string || '').slice(0, 100)}</AdminTableCell>
+              <AdminTableCell className="max-w-[200px] truncate">{(c.editedContent as string) || (c.comment as string) || '—'}</AdminTableCell>
+              <AdminTableCell>{c.ecosystem as string || '—'}</AdminTableCell>
+              <AdminTableCell>{c.channel as string || '—'}</AdminTableCell>
+              <AdminTableCell className="whitespace-nowrap">
+                <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                  {new Date(c.timestamp as number).toLocaleString()}
+                </span>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+        {filtered.length > 50 && (
+          <span className="block mt-2" style={{ color: theme.text.low, fontSize: '12px' }}>
+            Showing 50 of {filtered.length} items.
+          </span>
         )}
-      </Card>
-    </div>
+      </AdminCard>
+    </>
   );
 }
 
 // ── Knowledge Base ───────────────────────────────────────────────
 function AdminKnowledge() {
-  const colors = useThemeColors();
+  const theme = useThemeColors();
 
-  // Static counts from the seed data categories
   const knowledgeTypes = [
     { type: 'avoid_word', label: 'Avoid Words', count: '~283', colorClass: 'text-red-500' },
-    { type: 'preferred_word', label: 'Preferred Vocabulary', count: '~200', colorClass: 'text-green-500' },
+    { type: 'preferred_word', label: 'Preferred Vocab', count: '~200', colorClass: 'text-green-500' },
     { type: 'auto_fix', label: 'Auto-Fix Rules', count: '~33', colorClass: 'text-blue-500' },
-    { type: 'product_definition', label: 'Product Definitions', count: '14', colorClass: 'text-purple-500' },
+    { type: 'product_definition', label: 'Product Defs', count: '14', colorClass: 'text-purple-500' },
     { type: 'festival', label: 'Festivals', count: '11', colorClass: 'text-yellow-500' },
-    { type: 'approved_example', label: 'Approved Examples', count: '—', colorClass: 'text-cyan-500' },
+    { type: 'approved_example', label: 'Examples', count: '—', colorClass: 'text-cyan-500' },
   ];
 
   const examples = useLocalData<Array<Record<string, unknown>>>('voicelab_saved_examples', []);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <Headline>Knowledge Base</Headline>
-        <Text variant="body" className="mt-1">Managed rules, vocabulary, and content examples</Text>
-      </div>
+    <>
+      <SectionHeader title="Knowledge Base" subtitle="Managed rules, vocabulary, and content examples" />
 
       {/* Type Overview */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2.5 mb-5">
         {knowledgeTypes.map((kt) => (
-          <Card key={kt.type} variant="outlined" padding="M">
-            <Label className="uppercase text-xs opacity-60">{kt.label}</Label>
-            <Headline className={`mt-2 ${kt.colorClass}`}>{kt.count}</Headline>
-            <Text variant="caption" className="opacity-60 mt-1">{kt.type}</Text>
-          </Card>
+          <AdminStatCard key={kt.type} label={kt.label} value={kt.count} colorClass={kt.colorClass} />
         ))}
       </div>
 
       {/* Info */}
-      <Card variant="outlined" padding="M" className="bg-orange-50 dark:bg-orange-950/20">
-        <Text variant="body" className="font-medium mb-2">
+      <AdminCard className="p-4 mb-5">
+        <span className="block font-medium mb-2" style={{ color: theme.text.high, fontSize: '13px' }}>
           How to manage knowledge
-        </Text>
-        <ul className="space-y-1 pl-5 text-sm opacity-80">
-          <li>
-            <strong>Seed data:</strong> Run <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: colors.stroke.low }}>npx convex run seed:seedAll</code> to populate the knowledge base
-          </li>
-          <li>
-            <strong>Embeddings:</strong> Run <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: colors.stroke.low }}>npx convex run embeddings:backfillEmbeddings</code> to enable RAG search
-          </li>
-          <li>
-            <strong>Vocab rules</strong> (avoid words, preferred words) are managed here — no code deploy needed
-          </li>
-          <li>
-            <strong>Regex rules</strong> require a code deploy to <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: colors.stroke.low }}>allAgents.ts</code>
-          </li>
+        </span>
+        <ul className="space-y-1 pl-4" style={{ fontSize: '12px', color: theme.text.medium, listStyleType: 'disc' }}>
+          <li><strong>Seed data:</strong> Run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run seed:seedAll</code></li>
+          <li><strong>Embeddings:</strong> Run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run embeddings:backfillEmbeddings</code></li>
+          <li><strong>Vocab rules</strong> are managed here -- no code deploy needed</li>
+          <li><strong>Regex rules</strong> require a code deploy to <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>allAgents.ts</code></li>
         </ul>
-      </Card>
+      </AdminCard>
 
       {/* Saved Examples */}
-      <Card variant="outlined" padding="M">
-        <Label className="uppercase text-xs opacity-60 mb-3">Locally Saved Examples ({examples.length})</Label>
-        {examples.length === 0 ? (
-          <Text variant="body" className="opacity-60">
-            No examples saved yet. Users can save approved content via the bookmark icon.
-          </Text>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${colors.stroke.low}` }}>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Content</Text>
-                  </th>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Ecosystem</Text>
-                  </th>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Channel</Text>
-                  </th>
-                  <th className="text-left py-2 px-3">
-                    <Text variant="caption" className="uppercase opacity-60">Saved</Text>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {examples.slice(0, 20).map((ex, i) => (
-                  <tr key={i} style={{ borderBottom: `1px solid ${colors.stroke.low}` }}>
-                    <td className="py-2 px-3 max-w-md truncate">
-                      <Text variant="body">{(ex.content as string || '').slice(0, 120)}</Text>
-                    </td>
-                    <td className="py-2 px-3">
-                      <Text variant="body">{ex.ecosystem as string || '—'}</Text>
-                    </td>
-                    <td className="py-2 px-3">
-                      <Text variant="body">{ex.channel as string || '—'}</Text>
-                    </td>
-                    <td className="py-2 px-3">
-                      <Text variant="caption" className="opacity-60">
-                        {new Date(ex.timestamp as number).toLocaleDateString()}
-                      </Text>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
-    </div>
+      <AdminCard className="p-4">
+        <CardLabel>Locally Saved Examples ({examples.length})</CardLabel>
+        <AdminTable
+          columns={[
+            { key: 'content', label: 'Content' },
+            { key: 'eco', label: 'Ecosystem' },
+            { key: 'ch', label: 'Channel' },
+            { key: 'saved', label: 'Saved' },
+          ]}
+          isEmpty={examples.length === 0}
+          emptyMessage="No examples saved yet. Users can save via the bookmark icon."
+        >
+          {examples.slice(0, 20).map((ex, i) => (
+            <AdminTableRow key={i}>
+              <AdminTableCell className="max-w-md truncate">{(ex.content as string || '').slice(0, 120)}</AdminTableCell>
+              <AdminTableCell>{ex.ecosystem as string || '—'}</AdminTableCell>
+              <AdminTableCell>{ex.channel as string || '—'}</AdminTableCell>
+              <AdminTableCell>
+                <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                  {new Date(ex.timestamp as number).toLocaleDateString()}
+                </span>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+      </AdminCard>
+    </>
   );
 }
 
 // ── Users ────────────────────────────────────────────────────────
 function AdminUsers() {
-  const colors = useThemeColors();
-
-  // Read local user profile + any synced profiles
+  const theme = useThemeColors();
   const [localProfile, setLocalProfile] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
@@ -622,68 +534,69 @@ function AdminUsers() {
   }, []);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <Headline>Users</Headline>
-        <Text variant="body" className="mt-1">Registered user profiles (device-based)</Text>
-      </div>
+    <>
+      <SectionHeader title="Users" subtitle="Registered user profiles (device-based)" />
 
       {/* Info */}
-      <Card variant="outlined" padding="M" className="bg-blue-50 dark:bg-blue-950/20">
-        <Text variant="body" className="opacity-80">
-          Users are identified by device UUID (no login required). Profile data is collected during onboarding
-          and synced to Convex. When Convex is connected, this page will show all users across devices.
-        </Text>
-      </Card>
+      <AdminCard className="p-4 mb-5">
+        <span style={{ color: theme.text.medium, fontSize: '12px' }}>
+          Users are identified by device UUID (no login required). Profile data is collected during onboarding and synced to Convex.
+        </span>
+      </AdminCard>
 
       {/* Local User */}
-      <Card variant="outlined" padding="M">
-        <Label className="uppercase text-xs opacity-60 mb-4">Current Device Profile</Label>
+      <AdminCard className="p-4">
+        <CardLabel>Current Device Profile</CardLabel>
         {localProfile ? (
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Avatar 
-                name={localProfile.name as string}
-                size="L"
-              />
+          <div className="space-y-3">
+            {/* Name & product */}
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center font-semibold"
+                style={{
+                  backgroundColor: theme.accent,
+                  color: '#fff',
+                  fontSize: '14px',
+                }}
+              >
+                {(localProfile.name as string || '?')[0].toUpperCase()}
+              </div>
               <div>
-                <Title>{localProfile.name as string}</Title>
-                <Text variant="body" className="opacity-60">{localProfile.product as string}</Text>
+                <span className="block font-medium" style={{ fontSize: '14px', color: theme.text.high }}>
+                  {localProfile.name as string}
+                </span>
+                <span className="block" style={{ fontSize: '12px', color: theme.text.low }}>
+                  {localProfile.product as string}
+                </span>
               </div>
             </div>
-            
-            <Divider orientation="horizontal" />
-            
-            <div className="grid grid-cols-[120px_1fr] gap-y-3 gap-x-4 text-sm">
-              <Text variant="body" className="opacity-60">Role</Text>
-              <div>
-                <Chip appearance="filled" isSelected={true} className="text-blue-600 bg-blue-50 dark:bg-blue-950">
-                  {localProfile.role as string}
-                </Chip>
+
+            <div style={{ borderTop: `1px solid ${theme.stroke.low}`, marginTop: '8px', paddingTop: '8px' }}>
+              <div className="grid grid-cols-[100px_1fr] gap-y-2 gap-x-3" style={{ fontSize: '13px' }}>
+                <span style={{ color: theme.text.low }}>Role</span>
+                <span><FeedbackBadge type={localProfile.role as string || ''} /></span>
+
+                <span style={{ color: theme.text.low }}>Product</span>
+                <span style={{ color: theme.text.high }}>{localProfile.product as string}</span>
+
+                <span style={{ color: theme.text.low }}>Device ID</span>
+                <span className="font-mono" style={{ color: theme.text.low, fontSize: '11px' }}>
+                  {localProfile.deviceId as string}
+                </span>
               </div>
-              
-              <Text variant="body" className="opacity-60">Product</Text>
-              <Text variant="body">{localProfile.product as string}</Text>
-              
-              <Text variant="body" className="opacity-60">Device ID</Text>
-              <Text variant="caption" className="font-mono opacity-60">
-                {localProfile.deviceId as string}
-              </Text>
             </div>
           </div>
         ) : (
-          <Text variant="body" className="opacity-60">
-            No local profile found. Complete onboarding first.
-          </Text>
+          <span style={{ color: theme.text.low, fontSize: '13px' }}>No local profile found. Complete onboarding first.</span>
         )}
-      </Card>
-    </div>
+      </AdminCard>
+    </>
   );
 }
 
 // ── System Config ────────────────────────────────────────────────
 function AdminConfig() {
-  const colors = useThemeColors();
+  const theme = useThemeColors();
 
   const featureFlags = [
     { key: 'VITE_ENABLE_CONVEX_SYNC', label: 'Convex Sync', value: import.meta.env.VITE_ENABLE_CONVEX_SYNC === 'true' },
@@ -701,175 +614,114 @@ function AdminConfig() {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div>
-        <Headline>System Config</Headline>
-        <Text variant="body" className="mt-1">Feature flags and environment configuration</Text>
-      </div>
+    <>
+      <SectionHeader title="System Config" subtitle="Feature flags and environment configuration" />
 
       {/* Feature Flags */}
-      <Card variant="outlined" padding="M">
-        <Label className="uppercase text-xs opacity-60 mb-4">Feature Flags</Label>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ borderBottom: `1px solid ${colors.stroke.low}` }}>
-                <th className="text-left py-2 px-3">
-                  <Text variant="caption" className="uppercase opacity-60">Feature</Text>
-                </th>
-                <th className="text-left py-2 px-3">
-                  <Text variant="caption" className="uppercase opacity-60">Env Variable</Text>
-                </th>
-                <th className="text-left py-2 px-3">
-                  <Text variant="caption" className="uppercase opacity-60">Status</Text>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {featureFlags.map((ff) => (
-                <tr key={ff.key} style={{ borderBottom: `1px solid ${colors.stroke.low}` }}>
-                  <td className="py-2 px-3">
-                    <Text variant="body" className="font-medium">{ff.label}</Text>
-                  </td>
-                  <td className="py-2 px-3">
-                    <Text variant="caption" className="font-mono opacity-60">{ff.key}</Text>
-                  </td>
-                  <td className="py-2 px-3">
-                    <Switch 
-                      isSelected={ff.value}
-                      isDisabled={true}
-                      aria-label={`${ff.label} status`}
-                    >
-                      {ff.value ? 'Enabled' : 'Disabled'}
-                    </Switch>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <Text variant="caption" className="opacity-60 mt-3">
-          Feature flags are set via environment variables. Change them in <code className="px-1.5 py-0.5 rounded text-xs" style={{ background: colors.stroke.low }}>.env</code> and restart the dev server.
-        </Text>
-      </Card>
-
-      {/* Environment Info */}
-      <Card variant="outlined" padding="M">
-        <Label className="uppercase text-xs opacity-60 mb-4">Environment</Label>
-        <div className="grid grid-cols-[160px_1fr] gap-y-2 gap-x-4 text-sm">
-          {envInfo.map((info) => (
-            <div key={info.label} className="contents">
-              <Text variant="body" className="opacity-60">{info.label}</Text>
-              <Text variant="body" className="font-mono text-xs">
-                {info.value}
-              </Text>
+      <AdminCard className="p-4 mb-5">
+        <CardLabel>Feature Flags</CardLabel>
+        <div className="space-y-0">
+          {featureFlags.map((ff) => (
+            <div
+              key={ff.key}
+              className="flex items-center justify-between py-2"
+              style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
+            >
+              <div>
+                <span className="block font-medium" style={{ fontSize: '13px', color: theme.text.high }}>
+                  {ff.label}
+                </span>
+                <span className="block font-mono" style={{ fontSize: '11px', color: theme.text.low }}>
+                  {ff.key}
+                </span>
+              </div>
+              <span
+                className="inline-block rounded-full font-medium"
+                style={{
+                  fontSize: '11px',
+                  padding: '1px 8px',
+                  backgroundColor: ff.value ? 'rgba(34,197,94,0.12)' : 'rgba(107,114,128,0.12)',
+                  color: ff.value ? '#22c55e' : '#6b7280',
+                }}
+              >
+                {ff.value ? 'Enabled' : 'Disabled'}
+              </span>
             </div>
           ))}
         </div>
-      </Card>
-    </div>
+        <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
+          Feature flags are set via environment variables. Change them in <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '10px' }}>.env</code> and restart the dev server.
+        </span>
+      </AdminCard>
+
+      {/* Environment Info */}
+      <AdminCard className="p-4">
+        <CardLabel>Environment</CardLabel>
+        <div className="grid grid-cols-[140px_1fr] gap-y-1.5 gap-x-3" style={{ fontSize: '13px' }}>
+          {envInfo.map((info) => (
+            <div key={info.label} className="contents">
+              <span style={{ color: theme.text.low }}>{info.label}</span>
+              <span className="font-mono" style={{ color: theme.text.high, fontSize: '12px' }}>
+                {info.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </AdminCard>
+    </>
   );
 }
 
-// ── Admin Layout ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+// MAIN LAYOUT
+// ═══════════════════════════════════════════════════════════════════
+
 export default function AdminLayout() {
   const [authenticated, setAuthenticated] = useState(
     () => sessionStorage.getItem(SESSION_KEY) === 'true'
   );
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
-  const colors = useThemeColors();
-
-  if (!authenticated) {
-    return <AdminAuthGate onAuthenticated={() => setAuthenticated(true)} />;
-  }
+  const theme = useThemeColors();
 
   const handleSignOut = useCallback(() => {
     sessionStorage.removeItem(SESSION_KEY);
     setAuthenticated(false);
   }, []);
 
-  return (
-    <div className="flex flex-col min-h-screen">
-      {/* Header */}
-      <header 
-        className="border-b px-6 py-4"
-        style={{ borderColor: colors.stroke.low }}
-      >
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div>
-            <Title>Voice Lab Admin</Title>
-            <Text variant="caption" className="opacity-60">Content System Management</Text>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <Button
-              appearance="secondary"
-              size="S"
-              onPress={handleSignOut}
-              aria-label="Sign out"
-            >
-              Sign out
-            </Button>
-            <Button
-              appearance="secondary"
-              size="S"
-              onPress={() => window.location.href = '/'}
-              aria-label="Back to Voice Lab"
-            >
-              <Icon size="S">
-                <LazyIcon name="IcArrowLeft" />
-              </Icon>
-            </Button>
-          </div>
-        </div>
-      </header>
+  if (!authenticated) {
+    return <AdminAuthGate onAuthenticated={() => setAuthenticated(true)} />;
+  }
 
-      {/* Navigation Tabs */}
-      <nav 
-        className="border-b px-6"
-        style={{ borderColor: colors.stroke.low }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <Tabs 
-            selectedKey={activeSection}
-            onSelectionChange={(key) => setActiveSection(key as AdminSection)}
-            aria-label="Admin navigation"
-          >
-            <TabList>
-              {NAV_ITEMS.map((item) => (
-                <Tab key={item.id} id={item.id}>
-                  <div className="flex items-center gap-2">
-                    <Icon size="S">
-                      <LazyIcon name={item.iconName} />
-                    </Icon>
-                    <span className="hidden sm:inline">{item.label}</span>
-                  </div>
-                </Tab>
-              ))}
-            </TabList>
-            
-            {/* Tab Panels */}
-            <TabPanel key="dashboard" id="dashboard">
-              <AdminDashboard />
-            </TabPanel>
-            <TabPanel key="analytics" id="analytics">
-              <AdminAnalytics />
-            </TabPanel>
-            <TabPanel key="memory" id="memory">
-              <AdminMemory />
-            </TabPanel>
-            <TabPanel key="knowledge" id="knowledge">
-              <AdminKnowledge />
-            </TabPanel>
-            <TabPanel key="users" id="users">
-              <AdminUsers />
-            </TabPanel>
-            <TabPanel key="config" id="config">
-              <AdminConfig />
-            </TabPanel>
-          </Tabs>
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'dashboard': return <AdminDashboard />;
+      case 'analytics': return <AdminAnalytics />;
+      case 'memory': return <AdminMemory />;
+      case 'knowledge': return <AdminKnowledge />;
+      case 'users': return <AdminUsers />;
+      case 'config': return <AdminConfig />;
+      default: return <AdminDashboard />;
+    }
+  };
+
+  return (
+    <div
+      className="flex h-screen overflow-hidden"
+      style={{ backgroundColor: theme.background.ghost }}
+    >
+      {/* Left Sidebar */}
+      <AdminSidebar
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        onSignOut={handleSignOut}
+      />
+
+      {/* Content Area */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-[1200px] mx-auto px-6 py-5">
+          {renderContent()}
         </div>
-      </nav>
+      </main>
     </div>
   );
 }
