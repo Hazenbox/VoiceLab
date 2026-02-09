@@ -23,27 +23,44 @@ import type { Id, Doc } from "./_generated/dataModel";
 // ── Configuration ────────────────────────────────────────────────
 
 const HF_MODEL = "sentence-transformers/all-MiniLM-L6-v2";
-const HF_API_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`;
+// Use the OpenAI-compatible /v1/embeddings endpoint via HF Inference Providers
+const HF_EMBEDDINGS_URL = "https://router.huggingface.co/hf-inference/v1/embeddings";
 const EXPECTED_DIMENSIONS = 384;
 
-// ── Hugging Face Embedding Helper ────────────────────────────────
+// ── Hugging Face Embedding Helper (OpenAI-compatible format) ─────
+
+/**
+ * OpenAI-compatible embeddings response shape from HF TEI
+ */
+interface EmbeddingResponse {
+  object: string;
+  data: Array<{
+    object: string;
+    embedding: number[];
+    index: number;
+  }>;
+  model: string;
+  usage: {
+    prompt_tokens: number;
+    total_tokens: number;
+  };
+}
 
 async function getHuggingFaceEmbedding(text: string, apiKey: string): Promise<number[]> {
-  const response = await fetch(HF_API_URL, {
+  const response = await fetch(HF_EMBEDDINGS_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      inputs: text,
-      options: { wait_for_model: true },
+      model: HF_MODEL,
+      input: text,
     }),
   });
 
   if (!response.ok) {
     const errorBody = await response.text();
-    // HF free tier may return 503 when model is loading
     if (response.status === 503) {
       throw new Error(
         `Model is loading on Hugging Face. Retry in a few seconds. (${errorBody})`
@@ -54,21 +71,15 @@ async function getHuggingFaceEmbedding(text: string, apiKey: string): Promise<nu
     );
   }
 
-  const data = await response.json();
+  const data: EmbeddingResponse = await response.json();
 
-  // HF feature-extraction returns a nested array: [[...384 floats...]]
-  // For a single input, we get the first (and only) result
-  let embedding: number[];
-  if (Array.isArray(data) && Array.isArray(data[0]) && typeof data[0][0] === "number") {
-    embedding = data[0];
-  } else if (Array.isArray(data) && typeof data[0] === "number") {
-    // Some models return a flat array directly
-    embedding = data;
-  } else {
+  if (!data.data || !data.data[0] || !data.data[0].embedding) {
     throw new Error(
       `Unexpected embedding response shape: ${JSON.stringify(data).slice(0, 200)}`
     );
   }
+
+  const embedding = data.data[0].embedding;
 
   if (embedding.length !== EXPECTED_DIMENSIONS) {
     throw new Error(
@@ -80,21 +91,22 @@ async function getHuggingFaceEmbedding(text: string, apiKey: string): Promise<nu
 }
 
 /**
- * Batch embed multiple texts in one API call (HF supports this).
+ * Batch embed multiple texts in one API call using OpenAI-compatible format.
+ * The /v1/embeddings endpoint accepts an array of strings as `input`.
  */
 async function getHuggingFaceBatchEmbeddings(
   texts: string[],
   apiKey: string
 ): Promise<number[][]> {
-  const response = await fetch(HF_API_URL, {
+  const response = await fetch(HF_EMBEDDINGS_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      inputs: texts,
-      options: { wait_for_model: true },
+      model: HF_MODEL,
+      input: texts,
     }),
   });
 
@@ -110,16 +122,18 @@ async function getHuggingFaceBatchEmbeddings(
     );
   }
 
-  const data = await response.json();
+  const data: EmbeddingResponse = await response.json();
 
-  // HF returns [[...384...], [...384...], ...] for batch input
-  if (!Array.isArray(data) || !Array.isArray(data[0])) {
+  if (!data.data || !Array.isArray(data.data)) {
     throw new Error(
       `Unexpected batch response shape: ${JSON.stringify(data).slice(0, 200)}`
     );
   }
 
-  return data as number[][];
+  // Sort by index to ensure correct ordering, then extract embeddings
+  return data.data
+    .sort((a, b) => a.index - b.index)
+    .map((item) => item.embedding);
 }
 
 // ── Generate Embedding for a Single Item ─────────────────────────
