@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@marcelinodzn/ds-react';
-import { useThemeColors } from '../theme/useColors';
+import SearchableCombobox from './SearchableCombobox';
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -41,6 +41,17 @@ const ECOSYSTEMS: { id: string; label: string }[] = [
   { id: 'energy', label: 'Energy (Solar, Clean Energy)' },
   { id: 'transport', label: 'Transport (Mobility, Logistics)' },
 ];
+
+// Prepare data for searchable combobox
+const ROLES_WITH_SEARCH = ROLES.map((r) => ({
+  ...r,
+  searchableText: `${r.label} ${r.description}`,
+}));
+
+const ECOSYSTEMS_WITH_SEARCH = ECOSYSTEMS.map((e) => ({
+  ...e,
+  searchableText: e.label, // includes parenthetical details
+}));
 
 // ── Storage Keys ─────────────────────────────────────────────────
 
@@ -239,99 +250,22 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
           </div>
 
           {/* Role Field */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label
-              style={{
-                display: 'block',
-                color: '#1a1a1a',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-              }}
-            >
-              Role
-            </label>
-            <div style={{ display: 'grid', gap: '0.375rem' }}>
-              {ROLES.map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => setRole(r.id)}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '8px',
-                    border: `1.5px solid ${role === r.id ? '#0066ff' : '#e0e0e0'}`,
-                    background: role === r.id ? '#0066ff10' : 'transparent',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <span style={{
-                    color: role === r.id ? '#0066ff' : '#1a1a1a',
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                  }}>
-                    {r.label}
-                  </span>
-                  <span style={{
-                    color: '#666',
-                    fontSize: '0.6875rem',
-                    marginTop: '0.0625rem',
-                  }}>
-                    {r.description}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <SearchableCombobox
+            label="Role"
+            placeholder="Select your role"
+            options={ROLES_WITH_SEARCH}
+            value={role}
+            onChange={(id) => setRole(id as UserRole)}
+          />
 
           {/* Ecosystem Field */}
-          <div>
-            <label
-              style={{
-                display: 'block',
-                color: '#1a1a1a',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-              }}
-            >
-              Product Ecosystem
-            </label>
-            <div style={{
-              display: 'grid',
-              gap: '0.25rem',
-              maxHeight: '200px',
-              overflowY: 'auto',
-              paddingRight: '0.25rem',
-            }}>
-              {ECOSYSTEMS.map((eco) => (
-                <button
-                  key={eco.id}
-                  onClick={() => setProduct(eco.id)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '8px',
-                    border: `1.5px solid ${product === eco.id ? '#0066ff' : '#e0e0e0'}`,
-                    background: product === eco.id ? '#0066ff10' : 'transparent',
-                    color: product === eco.id ? '#0066ff' : '#1a1a1a',
-                    fontSize: '0.75rem',
-                    fontWeight: product === eco.id ? 600 : 400,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {eco.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <SearchableCombobox
+            label="Product Ecosystem"
+            placeholder="Select product ecosystem"
+            options={ECOSYSTEMS_WITH_SEARCH}
+            value={product}
+            onChange={setProduct}
+          />
         </div>
 
         {/* Footer */}
