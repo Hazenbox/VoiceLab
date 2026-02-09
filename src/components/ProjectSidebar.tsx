@@ -5,6 +5,20 @@ import type { ColorMode } from '../types';
 import type { DropdownOption } from './Dropdown';
 import { Button } from '@marcelinodzn/ds-react';
 
+// ── Helper Functions ─────────────────────────────────────────────
+
+function getInitials(name?: string): string {
+  if (!name) return '?';
+  return name.charAt(0).toUpperCase();
+}
+
+function formatRole(role?: string): string {
+  if (!role) return 'Not set';
+  return role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ');
+}
+
+// ── Types ────────────────────────────────────────────────────────
+
 interface ProjectSidebarProps {
   onProjectSelect?: () => void;
   onNavigateToDesignSystem?: () => void;
@@ -13,6 +27,9 @@ interface ProjectSidebarProps {
   isHowItWorksActive?: boolean;
   colorMode: ColorMode;
   onColorModeChange: (mode: ColorMode) => void;
+  userName?: string;
+  userRole?: string;
+  onEditProfile?: () => void;
 }
 
 /**
@@ -282,6 +299,9 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   isHowItWorksActive = false,
   colorMode,
   onColorModeChange,
+  userName,
+  userRole,
+  onEditProfile,
 }: ProjectSidebarProps) {
   const theme = useThemeColors();
   const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
@@ -437,6 +457,91 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           </div>
         </div>
       </div>
+
+      {/* Profile Section */}
+      {userName && onEditProfile && (
+        <div
+          onClick={onEditProfile}
+          className="px-3 py-3 flex items-center gap-3 cursor-pointer transition-colors"
+          style={{
+            borderTop: `1px solid ${theme.stroke.low}`,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = theme.stroke.low;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          role="button"
+          aria-label="Edit profile"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onEditProfile();
+            }
+          }}
+        >
+          {/* Avatar with initials */}
+          <div
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: theme.stroke.medium,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: theme.text.medium,
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              flexShrink: 0,
+            }}
+          >
+            {getInitials(userName)}
+          </div>
+
+          {/* Name and role */}
+          <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+            <div
+              className="truncate"
+              style={{
+                color: theme.text.high,
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                lineHeight: 1.2,
+              }}
+            >
+              {userName}
+            </div>
+            <div
+              style={{
+                color: theme.text.medium,
+                fontSize: '0.6875rem',
+                lineHeight: 1.2,
+              }}
+            >
+              {formatRole(userRole)}
+            </div>
+          </div>
+
+          {/* Edit icon */}
+          <svg
+            className="w-3.5 h-3.5 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            style={{ color: theme.text.low }}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+            />
+          </svg>
+        </div>
+      )}
 
       {/* Bottom Navigation */}
       <div 

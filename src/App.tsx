@@ -876,15 +876,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           isHowItWorksActive={false}
           colorMode={colorMode}
           onColorModeChange={onColorModeChange}
+          userName={userProfile?.name}
+          userRole={userProfile?.role}
+          onEditProfile={() => setShowOnboarding(true)}
         />
         <main className="flex-1 overflow-hidden">
           <DocPanelComponent onBack={() => setActiveView('main')} />
         </main>
         <AdvancedSettingsPanel
-          userName={userProfile?.name}
-          userRole={userProfile?.role}
-          userProduct={userProfile?.product}
-          onEditProfile={() => setShowOnboarding(true)}
           voiceGender={activeProject.voiceGender}
           onVoiceGenderChange={updateProjectVoiceGender}
           config={activeProject.config}
@@ -952,6 +951,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           isHowItWorksActive={true}
           colorMode={colorMode}
           onColorModeChange={onColorModeChange}
+          userName={userProfile?.name}
+          userRole={userProfile?.role}
+          onEditProfile={() => setShowOnboarding(true)}
         />
         <main className="flex-1 overflow-hidden">
           <HowItWorksPage onBack={() => setActiveView('main')} />
@@ -977,6 +979,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         isHowItWorksActive={false}
         colorMode={colorMode}
         onColorModeChange={onColorModeChange}
+        userName={userProfile?.name}
+        userRole={userProfile?.role}
+        onEditProfile={() => setShowOnboarding(true)}
       />
 
       {/* Main Content */}
@@ -1117,10 +1122,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
       {/* Right Sidebar - Advanced Settings */}
       <AdvancedSettingsPanel
-        userName={userProfile?.name}
-        userRole={userProfile?.role}
-        userProduct={userProfile?.product}
-        onEditProfile={() => setShowOnboarding(true)}
         voiceGender={activeProject.voiceGender}
         onVoiceGenderChange={updateProjectVoiceGender}
         config={activeProject.config}

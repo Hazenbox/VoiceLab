@@ -41,12 +41,6 @@ import { Accordion } from './ui/Accordion';
 // =============================================================================
 
 interface AdvancedSettingsPanelProps {
-  // User profile (Phase 1)
-  userName?: string;
-  userRole?: string;
-  userProduct?: string;
-  onEditProfile?: () => void;
-  
   // Voice settings
   voiceGender: VoiceGender;
   onVoiceGenderChange: (gender: VoiceGender) => void;
@@ -132,17 +126,7 @@ const ChatIcon = () => (
 // Main Component
 // =============================================================================
 
-const PersonaIcon = () => (
-  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-  </svg>
-);
-
 export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
-  userName,
-  userRole,
-  userProduct,
-  onEditProfile,
   voiceGender,
   onVoiceGenderChange,
   config,
@@ -256,42 +240,6 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollable-container">
-          {/* Your Profile Section (Phase 1) */}
-          {userName && (
-            <Accordion title="Your Profile" icon={<PersonaIcon />} defaultOpen={false}>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium" style={{ color: theme.text.high }}>
-                      {userName}
-                    </p>
-                    <p className="text-xs" style={{ color: theme.text.medium }}>
-                      {userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1).replace('_', ' ') : 'Not set'}
-                      {userProduct ? ` · ${userProduct.charAt(0).toUpperCase() + userProduct.slice(1)}` : ''}
-                    </p>
-                  </div>
-                  {onEditProfile && (
-                    <button
-                      onClick={onEditProfile}
-                      className="text-xs px-2 py-1 rounded"
-                      style={{
-                        color: theme.accent,
-                        border: `1px solid ${theme.accent}30`,
-                        background: 'transparent',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Edit
-                    </button>
-                  )}
-                </div>
-                <p className="text-xs" style={{ color: theme.text.low }}>
-                  Your role and product auto-configure default settings like channel, warmth, detail level, and prompt personality.
-                </p>
-              </div>
-            </Accordion>
-          )}
-
           {/* Voice Settings Section - Merged Voice & TTS with Conversation Settings */}
           <Accordion title="Voice Settings" icon={<VoiceIcon />} defaultOpen>
             <VoiceSelector
