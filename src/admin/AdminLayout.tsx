@@ -144,7 +144,7 @@ function AdminCard({ children, className = '' }: { children: React.ReactNode; cl
       className={`rounded-lg ${className}`}
       style={{
         border: `1px solid ${theme.stroke.low}`,
-        backgroundColor: theme.background.subtle,
+        backgroundColor: 'transparent',
       }}
     >
       {children}
@@ -156,7 +156,7 @@ function CardLabel({ children }: { children: React.ReactNode }) {
   const theme = useThemeColors();
   return (
     <span
-      className="block uppercase tracking-wider font-medium mb-3"
+      className="block font-medium mb-3"
       style={{ color: theme.text.low, fontSize: '11px' }}
     >
       {children}
@@ -454,6 +454,7 @@ function AdminMemory() {
 // ── Knowledge Base ───────────────────────────────────────────────
 function AdminKnowledge() {
   const theme = useThemeColors();
+  const [selectedType, setSelectedType] = useState<string | null>(null);
 
   const knowledgeTypes = [
     { type: 'avoid_word', label: 'Avoid Words', count: '~283', colorClass: 'text-red-500' },
@@ -466,6 +467,202 @@ function AdminKnowledge() {
 
   const examples = useLocalData<Array<Record<string, unknown>>>('voicelab_saved_examples', []);
 
+  const handleCardClick = (type: string) => {
+    setSelectedType(prev => prev === type ? null : type);
+  };
+
+  // Sample data for drill-down views
+  const sampleAvoidWords = ['giveaway', 'free', 'cash', 'prize', 'winner', 'click here', 'urgent', 'limited time', 'act now', 'guarantee', 'risk-free', 'no obligation'];
+  const samplePreferredWords = ['explore', 'discover', 'learn more', 'find out', 'get started', 'join us', 'welcome', 'benefit', 'advantage', 'feature'];
+  const sampleAutoFix = [
+    { from: 'dont', to: "don't" },
+    { from: 'wont', to: "won't" },
+    { from: 'cant', to: "can't" },
+    { from: 'im', to: "I'm" },
+    { from: 'youre', to: "you're" },
+  ];
+  const sampleProducts = [
+    { name: 'JioFiber', definition: 'High-speed broadband internet service' },
+    { name: 'JioPhone', definition: 'Affordable 4G feature phone' },
+    { name: 'JioMart', definition: 'Online grocery and retail platform' },
+    { name: 'JioCinema', definition: 'Streaming service for movies and shows' },
+  ];
+  const sampleFestivals = ['Diwali', 'Holi', 'Eid', 'Christmas', 'New Year', 'Independence Day', 'Republic Day', 'Raksha Bandhan'];
+
+  const renderDetailPanel = () => {
+    if (!selectedType) return null;
+
+    switch (selectedType) {
+      case 'avoid_word':
+        return (
+          <AdminCard className="p-4 mt-4">
+            <CardLabel>Avoid Words - Sample</CardLabel>
+            <div className="flex flex-wrap gap-2">
+              {sampleAvoidWords.map((word, i) => (
+                <span
+                  key={i}
+                  className="inline-block rounded-md px-2 py-1"
+                  style={{
+                    fontSize: '12px',
+                    backgroundColor: 'rgba(239,68,68,0.12)',
+                    color: '#ef4444',
+                  }}
+                >
+                  {word}
+                </span>
+              ))}
+            </div>
+            <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
+              These words trigger warnings in the content editor.
+            </span>
+          </AdminCard>
+        );
+
+      case 'preferred_word':
+        return (
+          <AdminCard className="p-4 mt-4">
+            <CardLabel>Preferred Vocabulary - Sample</CardLabel>
+            <div className="flex flex-wrap gap-2">
+              {samplePreferredWords.map((word, i) => (
+                <span
+                  key={i}
+                  className="inline-block rounded-md px-2 py-1"
+                  style={{
+                    fontSize: '12px',
+                    backgroundColor: 'rgba(34,197,94,0.12)',
+                    color: '#22c55e',
+                  }}
+                >
+                  {word}
+                </span>
+              ))}
+            </div>
+            <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
+              These are recommended alternatives suggested by the content editor.
+            </span>
+          </AdminCard>
+        );
+
+      case 'auto_fix':
+        return (
+          <AdminCard className="p-4 mt-4">
+            <CardLabel>Auto-Fix Rules - Sample</CardLabel>
+            <AdminTable
+              columns={[
+                { key: 'from', label: 'Original' },
+                { key: 'to', label: 'Replacement' },
+              ]}
+              isEmpty={false}
+            >
+              {sampleAutoFix.map((rule, i) => (
+                <AdminTableRow key={i}>
+                  <AdminTableCell>
+                    <code className="px-1.5 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '12px' }}>
+                      {rule.from}
+                    </code>
+                  </AdminTableCell>
+                  <AdminTableCell>
+                    <code className="px-1.5 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '12px' }}>
+                      {rule.to}
+                    </code>
+                  </AdminTableCell>
+                </AdminTableRow>
+              ))}
+            </AdminTable>
+            <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
+              These rules automatically correct common typos and formatting issues.
+            </span>
+          </AdminCard>
+        );
+
+      case 'product_definition':
+        return (
+          <AdminCard className="p-4 mt-4">
+            <CardLabel>Product Definitions - Sample</CardLabel>
+            <AdminTable
+              columns={[
+                { key: 'name', label: 'Product' },
+                { key: 'def', label: 'Definition' },
+              ]}
+              isEmpty={false}
+            >
+              {sampleProducts.map((prod, i) => (
+                <AdminTableRow key={i}>
+                  <AdminTableCell>
+                    <span className="font-semibold" style={{ color: theme.text.high }}>
+                      {prod.name}
+                    </span>
+                  </AdminTableCell>
+                  <AdminTableCell>{prod.definition}</AdminTableCell>
+                </AdminTableRow>
+              ))}
+            </AdminTable>
+            <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
+              Official product definitions used for consistent messaging.
+            </span>
+          </AdminCard>
+        );
+
+      case 'festival':
+        return (
+          <AdminCard className="p-4 mt-4">
+            <CardLabel>Festivals - Sample</CardLabel>
+            <div className="flex flex-wrap gap-2">
+              {sampleFestivals.map((fest, i) => (
+                <span
+                  key={i}
+                  className="inline-block rounded-md px-2 py-1"
+                  style={{
+                    fontSize: '12px',
+                    backgroundColor: 'rgba(245,158,11,0.12)',
+                    color: '#f59e0b',
+                  }}
+                >
+                  {fest}
+                </span>
+              ))}
+            </div>
+            <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
+              Festival dates and cultural context for content planning.
+            </span>
+          </AdminCard>
+        );
+
+      case 'approved_example':
+        return (
+          <AdminCard className="p-4 mt-4">
+            <CardLabel>Locally Saved Examples ({examples.length})</CardLabel>
+            <AdminTable
+              columns={[
+                { key: 'content', label: 'Content' },
+                { key: 'eco', label: 'Ecosystem' },
+                { key: 'ch', label: 'Channel' },
+                { key: 'saved', label: 'Saved' },
+              ]}
+              isEmpty={examples.length === 0}
+              emptyMessage="No examples saved yet. Users can save via the bookmark icon."
+            >
+              {examples.slice(0, 20).map((ex, i) => (
+                <AdminTableRow key={i}>
+                  <AdminTableCell className="max-w-md truncate">{(ex.content as string || '').slice(0, 120)}</AdminTableCell>
+                  <AdminTableCell>{ex.ecosystem as string || '—'}</AdminTableCell>
+                  <AdminTableCell>{ex.channel as string || '—'}</AdminTableCell>
+                  <AdminTableCell>
+                    <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                      {new Date(ex.timestamp as number).toLocaleDateString()}
+                    </span>
+                  </AdminTableCell>
+                </AdminTableRow>
+              ))}
+            </AdminTable>
+          </AdminCard>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <SectionHeader title="Knowledge Base" subtitle="Managed rules, vocabulary, and content examples" />
@@ -473,50 +670,34 @@ function AdminKnowledge() {
       {/* Type Overview */}
       <div className="grid grid-cols-3 lg:grid-cols-6 gap-2.5 mb-5">
         {knowledgeTypes.map((kt) => (
-          <AdminStatCard key={kt.type} label={kt.label} value={kt.count} colorClass={kt.colorClass} />
+          <AdminStatCard
+            key={kt.type}
+            label={kt.label}
+            value={kt.count}
+            colorClass={kt.colorClass}
+            onClick={() => handleCardClick(kt.type)}
+            isSelected={selectedType === kt.type}
+          />
         ))}
       </div>
 
-      {/* Info */}
-      <AdminCard className="p-4 mb-5">
-        <span className="block font-medium mb-2" style={{ color: theme.text.high, fontSize: '13px' }}>
-          How to manage knowledge
-        </span>
-        <ul className="space-y-1 pl-4" style={{ fontSize: '12px', color: theme.text.medium, listStyleType: 'disc' }}>
-          <li><strong>Seed data:</strong> Run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run seed:seedAll</code></li>
-          <li><strong>Embeddings:</strong> Run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run embeddings:backfillEmbeddings</code></li>
-          <li><strong>Vocab rules</strong> are managed here -- no code deploy needed</li>
-          <li><strong>Regex rules</strong> require a code deploy to <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>allAgents.ts</code></li>
-        </ul>
-      </AdminCard>
+      {/* Detail Panel */}
+      {renderDetailPanel()}
 
-      {/* Saved Examples */}
-      <AdminCard className="p-4">
-        <CardLabel>Locally Saved Examples ({examples.length})</CardLabel>
-        <AdminTable
-          columns={[
-            { key: 'content', label: 'Content' },
-            { key: 'eco', label: 'Ecosystem' },
-            { key: 'ch', label: 'Channel' },
-            { key: 'saved', label: 'Saved' },
-          ]}
-          isEmpty={examples.length === 0}
-          emptyMessage="No examples saved yet. Users can save via the bookmark icon."
-        >
-          {examples.slice(0, 20).map((ex, i) => (
-            <AdminTableRow key={i}>
-              <AdminTableCell className="max-w-md truncate">{(ex.content as string || '').slice(0, 120)}</AdminTableCell>
-              <AdminTableCell>{ex.ecosystem as string || '—'}</AdminTableCell>
-              <AdminTableCell>{ex.channel as string || '—'}</AdminTableCell>
-              <AdminTableCell>
-                <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                  {new Date(ex.timestamp as number).toLocaleDateString()}
-                </span>
-              </AdminTableCell>
-            </AdminTableRow>
-          ))}
-        </AdminTable>
-      </AdminCard>
+      {/* Info - only show when no detail panel is open */}
+      {!selectedType && (
+        <AdminCard className="p-4 mb-5">
+          <span className="block font-medium mb-2" style={{ color: theme.text.high, fontSize: '13px' }}>
+            How to manage knowledge
+          </span>
+          <ul className="space-y-1 pl-4" style={{ fontSize: '12px', color: theme.text.medium, listStyleType: 'disc' }}>
+            <li><strong>Seed data:</strong> Run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run seed:seedAll</code></li>
+            <li><strong>Embeddings:</strong> Run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run embeddings:backfillEmbeddings</code></li>
+            <li><strong>Vocab rules</strong> are managed here -- no code deploy needed</li>
+            <li><strong>Regex rules</strong> require a code deploy to <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>allAgents.ts</code></li>
+          </ul>
+        </AdminCard>
+      )}
     </>
   );
 }

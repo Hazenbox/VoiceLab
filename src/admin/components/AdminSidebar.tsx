@@ -109,7 +109,7 @@ export const AdminSidebar = memo(function AdminSidebar({
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                style={{ color: isActive(item.id, activeSection) ? theme.accent : theme.text.high }}
+                style={{ color: theme.text.high }}
                 strokeWidth={1.5}
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d={item.svgPath} />
