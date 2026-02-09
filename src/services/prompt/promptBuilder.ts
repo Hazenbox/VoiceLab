@@ -19,7 +19,7 @@ import { getEmotionInstructions, getEmotion } from '../guidelines/navarasa';
 import { getTimingGuidance } from '../context/timingEngine';
 import { getTriggerEventGuidance } from '../context/contextEngine';
 import { buildPersonaPromptSection, type PersonaRole } from '../persona';
-import { type RetrievedKnowledge, buildKnowledgePromptSection, getCodeDefaults } from '../knowledge';
+import { type RetrievedKnowledge, buildKnowledgePromptSection, buildSemanticPromptSection, getCodeDefaults } from '../knowledge';
 
 // =============================================================================
 // BRAND GUARDRAILS (From Training 1.pdf - The 10 Official Jio Guidelines)
@@ -479,6 +479,11 @@ export function buildSystemPrompt(
   const knowledgeData = knowledge || getCodeDefaults();
   const knowledgeSection = buildKnowledgePromptSection(knowledgeData);
   
+  // Semantic RAG section (Phase 4) -- contextually relevant knowledge
+  const semanticSection = knowledgeData.semanticResults
+    ? buildSemanticPromptSection(knowledgeData.semanticResults)
+    : '';
+  
   // Build the complete system prompt
   return `# Jio Content Generation System
 
@@ -504,7 +509,7 @@ ${guardrails}
 
 ${personaSection ? `${personaSection}\n\n` : ''}${channelFormatting}
 
-${knowledgeSection ? `${knowledgeSection}\n\n` : ''}## User Profile Adaptations
+${knowledgeSection ? `${knowledgeSection}\n\n` : ''}${semanticSection ? `${semanticSection}\n\n` : ''}## User Profile Adaptations
 
 **Language**: ${context.userProfile.language}
 **Region**: ${context.userProfile.region}

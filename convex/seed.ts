@@ -1,7 +1,13 @@
 /**
  * Seed Convex Knowledge Base with Tier 1 data
  * 
- * Run via: npx convex run seed:seedAll
+ * Step 1 - Seed data:
+ *   npx convex run seed:seedAll
+ * 
+ * Step 2 - Generate embeddings for vector search (Phase 4):
+ *   npx convex run embeddings:backfillEmbeddings
+ *   (requires OPENAI_API_KEY env var set in Convex dashboard)
+ *   Run multiple times if needed -- it processes 50 items per call.
  * 
  * Seeds:
  * - Avoid words (7 categories, ~283 words)

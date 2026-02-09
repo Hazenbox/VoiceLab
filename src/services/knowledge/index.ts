@@ -2,11 +2,14 @@ export {
   retrieveKnowledge,
   getCodeDefaults,
   buildKnowledgePromptSection,
+  buildSemanticPromptSection,
+  enrichWithSemanticResults,
   getAvoidWordsByCategory,
   clearKnowledgeCache,
   type KnowledgeItem,
   type RetrievedKnowledge,
   type ConvexKnowledgeData,
+  type SemanticSearchResult,
 } from './knowledgeRetriever';
 
 export {

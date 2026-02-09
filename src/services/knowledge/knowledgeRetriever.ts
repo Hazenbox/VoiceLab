@@ -37,7 +37,27 @@ export interface RetrievedKnowledge {
   autoFixRules: Array<{ from: string; to: string }>;
   approvedExamples: string[];
   corrections: Array<{ original: string; edited: string; context: string }>;
-  source: 'convex' | 'code_defaults';
+  /** Semantically relevant items from vector search (Phase 4) */
+  semanticResults?: SemanticSearchResult[];
+  source: 'convex' | 'code_defaults' | 'convex_with_rag';
+}
+
+/** Result from Convex vector search with relevance score */
+export interface SemanticSearchResult {
+  _id: string;
+  type: string;
+  category: string;
+  content: string;
+  metadata: {
+    ecosystem?: string;
+    channel?: string;
+    persona?: string;
+    severity?: string;
+    suggestion?: string;
+    source?: string;
+  };
+  tags: string[];
+  _score: number;
 }
 
 // ── Local Cache ──────────────────────────────────────────────────
@@ -233,6 +253,114 @@ export function getAvoidWordsByCategory(knowledge: RetrievedKnowledge): Array<{
     severity: 'warning',
     words: knowledge.avoidWords,
   }];
+}
+
+// ── Semantic Search Enrichment (Phase 4) ─────────────────────────
+
+/**
+ * Enrich existing knowledge with semantic search results.
+ * Called after the Convex semanticSearch action returns results.
+ * 
+ * @param baseKnowledge - The base knowledge (from type-based retrieval or code defaults)
+ * @param semanticResults - Results from Convex vector search
+ * @param minScore - Minimum similarity score to include (0-1)
+ */
+export function enrichWithSemanticResults(
+  baseKnowledge: RetrievedKnowledge,
+  semanticResults: SemanticSearchResult[],
+  minScore: number = 0.3,
+): RetrievedKnowledge {
+  // Filter by minimum relevance score
+  const relevant = semanticResults.filter((r) => r._score >= minScore);
+
+  if (relevant.length === 0) {
+    return baseKnowledge;
+  }
+
+  // Categorize results and merge into knowledge
+  const newAvoidWords: string[] = [];
+  const newPreferredWords: string[] = [];
+  const newAutoFix: Array<{ from: string; to: string }> = [];
+  const newExamples: string[] = [];
+
+  for (const item of relevant) {
+    switch (item.type) {
+      case 'avoid_word':
+        if (!baseKnowledge.avoidWords.includes(item.content)) {
+          newAvoidWords.push(item.content);
+        }
+        break;
+      case 'preferred_word':
+        if (!baseKnowledge.preferredWords.includes(item.content)) {
+          newPreferredWords.push(item.content);
+        }
+        break;
+      case 'auto_fix':
+        if (item.metadata.suggestion) {
+          newAutoFix.push({ from: item.content, to: item.metadata.suggestion });
+        }
+        break;
+      case 'approved_example':
+        if (!baseKnowledge.approvedExamples.includes(item.content)) {
+          newExamples.push(item.content);
+        }
+        break;
+    }
+  }
+
+  return {
+    ...baseKnowledge,
+    avoidWords: [...baseKnowledge.avoidWords, ...newAvoidWords],
+    preferredWords: [...baseKnowledge.preferredWords, ...newPreferredWords],
+    autoFixRules: [...baseKnowledge.autoFixRules, ...newAutoFix],
+    approvedExamples: [...baseKnowledge.approvedExamples, ...newExamples],
+    semanticResults: relevant,
+    source: 'convex_with_rag',
+  };
+}
+
+/**
+ * Build a prompt section specifically for semantically relevant knowledge.
+ * This provides contextual rules that are most relevant to the user's query.
+ */
+export function buildSemanticPromptSection(results: SemanticSearchResult[]): string {
+  if (!results || results.length === 0) return '';
+
+  const sections: string[] = [];
+
+  // Group by type for organized display
+  const byType = new Map<string, SemanticSearchResult[]>();
+  for (const r of results) {
+    const group = byType.get(r.type) || [];
+    group.push(r);
+    byType.set(r.type, group);
+  }
+
+  // Build sections for each type
+  const typeLabels: Record<string, string> = {
+    avoid_word: 'Words to Avoid (Contextually Relevant)',
+    preferred_word: 'Preferred Words (Contextually Relevant)',
+    auto_fix: 'Suggested Replacements (Contextually Relevant)',
+    product_definition: 'Product Context',
+    festival: 'Cultural Context',
+    approved_example: 'Reference Examples',
+  };
+
+  for (const [type, items] of byType) {
+    const label = typeLabels[type] || type;
+    const itemLines = items.map((item) => {
+      if (item.metadata.suggestion) {
+        return `- "${item.content}" → "${item.metadata.suggestion}"`;
+      }
+      return `- ${item.content}`;
+    });
+
+    sections.push(`### ${label}\n${itemLines.join('\n')}`);
+  }
+
+  if (sections.length === 0) return '';
+
+  return `## Contextually Retrieved Knowledge (RAG)\n\nThe following rules and guidelines are semantically relevant to this specific request:\n\n${sections.join('\n\n')}`;
 }
 
 // ── Cache Management ─────────────────────────────────────────────
