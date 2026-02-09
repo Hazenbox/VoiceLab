@@ -19,6 +19,7 @@ import { getEmotionInstructions, getEmotion } from '../guidelines/navarasa';
 import { getTimingGuidance } from '../context/timingEngine';
 import { getTriggerEventGuidance } from '../context/contextEngine';
 import { buildPersonaPromptSection, type PersonaRole } from '../persona';
+import { type RetrievedKnowledge, buildKnowledgePromptSection, getCodeDefaults } from '../knowledge';
 
 // =============================================================================
 // BRAND GUARDRAILS (From Training 1.pdf - The 10 Official Jio Guidelines)
@@ -452,7 +453,10 @@ No specific Jio product was detected in the query. Generate content based on the
  * - Ecosystem controls TONE (how content sounds)
  * - Detected Product controls TOPIC (what content is about)
  */
-export function buildSystemPrompt(context: GenerationContext): string {
+export function buildSystemPrompt(
+  context: GenerationContext,
+  knowledge?: RetrievedKnowledge,
+): string {
   const ecosystem = getEcosystem(context.ecosystem);
   const channel = getChannel(context.channel);
   const emotion = getEmotion(context.emotion);
@@ -470,6 +474,10 @@ export function buildSystemPrompt(context: GenerationContext): string {
   const personaSection = context.persona
     ? buildPersonaPromptSection(context.persona as PersonaRole)
     : '';
+  
+  // Knowledge section (Phase 2) -- from Convex or code defaults
+  const knowledgeData = knowledge || getCodeDefaults();
+  const knowledgeSection = buildKnowledgePromptSection(knowledgeData);
   
   // Build the complete system prompt
   return `# Jio Content Generation System
@@ -496,7 +504,7 @@ ${guardrails}
 
 ${personaSection ? `${personaSection}\n\n` : ''}${channelFormatting}
 
-## User Profile Adaptations
+${knowledgeSection ? `${knowledgeSection}\n\n` : ''}## User Profile Adaptations
 
 **Language**: ${context.userProfile.language}
 **Region**: ${context.userProfile.region}
@@ -570,6 +578,7 @@ export function buildPrompt(
     previousMessages?: string[];
     triggerEvent?: string;
     customInstructions?: string;
+    knowledge?: RetrievedKnowledge;
   }
 ): {
   system: string;
@@ -577,7 +586,7 @@ export function buildPrompt(
   context: GenerationContext;
 } {
   return {
-    system: buildSystemPrompt(context),
+    system: buildSystemPrompt(context, options?.knowledge),
     user: buildUserPrompt(userRequest, options),
     context,
   };

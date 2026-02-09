@@ -215,6 +215,43 @@ export const batchCreate = mutation({
   },
 });
 
+// ── Save approved content as an example ──────────────────────────
+export const saveApprovedExample = mutation({
+  args: {
+    content: v.string(),
+    ecosystem: v.string(),
+    channel: v.string(),
+    persona: v.optional(v.string()),
+    trustScore: v.optional(v.number()),
+    createdBy: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    return await ctx.db.insert("knowledgeItems", {
+      type: "approved_example",
+      category: args.ecosystem,
+      content: args.content,
+      metadata: {
+        ecosystem: args.ecosystem,
+        channel: args.channel,
+        persona: args.persona,
+        source: "user_approved",
+      },
+      tags: [
+        "approved_example",
+        args.ecosystem,
+        args.channel,
+        "tier1",
+        ...(args.persona ? [args.persona] : []),
+      ],
+      isActive: true,
+      createdBy: args.createdBy,
+      createdAt: now,
+      updatedAt: now,
+    });
+  },
+});
+
 // ── Delete (soft) ────────────────────────────────────────────────
 export const softDelete = mutation({
   args: { id: v.id("knowledgeItems") },
@@ -223,6 +260,70 @@ export const softDelete = mutation({
       isActive: false,
       updatedAt: Date.now(),
     });
+  },
+});
+
+// ── Get all knowledge for prompt injection (Phase 2) ─────────────
+// Single query to fetch everything the prompt builder needs.
+export const getKnowledgeForPrompt = query({
+  args: {
+    ecosystem: v.optional(v.string()),
+    channel: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Fetch all types in parallel
+    const [avoidWords, preferredWords, autoFixRules, approvedExamples] =
+      await Promise.all([
+        ctx.db
+          .query("knowledgeItems")
+          .withIndex("by_type_active", (q) =>
+            q.eq("type", "avoid_word").eq("isActive", true)
+          )
+          .collect(),
+        ctx.db
+          .query("knowledgeItems")
+          .withIndex("by_type_active", (q) =>
+            q.eq("type", "preferred_word").eq("isActive", true)
+          )
+          .collect(),
+        ctx.db
+          .query("knowledgeItems")
+          .withIndex("by_type_active", (q) =>
+            q.eq("type", "auto_fix").eq("isActive", true)
+          )
+          .collect(),
+        ctx.db
+          .query("knowledgeItems")
+          .withIndex("by_type_active", (q) =>
+            q.eq("type", "approved_example").eq("isActive", true)
+          )
+          .collect(),
+      ]);
+
+    // Filter examples by ecosystem/channel if specified
+    const filteredExamples = approvedExamples.filter((item) => {
+      if (!item.metadata.ecosystem && !item.metadata.channel) return true;
+      if (
+        args.ecosystem &&
+        item.metadata.ecosystem &&
+        item.metadata.ecosystem !== args.ecosystem
+      )
+        return false;
+      if (
+        args.channel &&
+        item.metadata.channel &&
+        item.metadata.channel !== args.channel
+      )
+        return false;
+      return true;
+    });
+
+    return {
+      avoidWords,
+      preferredWords,
+      autoFixRules,
+      approvedExamples: filteredExamples,
+    };
   },
 });
 
