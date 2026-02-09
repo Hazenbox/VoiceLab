@@ -1170,7 +1170,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
       {/* Onboarding Modal */}
       {showOnboarding && (
-        <OnboardingModal onComplete={handleOnboardingComplete} />
+        <OnboardingModal
+          onComplete={handleOnboardingComplete}
+          existingProfile={userProfile ?? undefined}
+          onClose={userProfile ? () => setShowOnboarding(false) : undefined}
+        />
       )}
 
       {/* Error Toast */}

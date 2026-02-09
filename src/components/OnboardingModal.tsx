@@ -104,35 +104,26 @@ export function getDeviceId(): string | null {
 
 interface OnboardingModalProps {
   onComplete: (profile: UserProfile) => void;
+  existingProfile?: UserProfile;
+  onClose?: () => void;
 }
 
-// ── Helper: Role label for display ────────────────────────────────
-const ROLE_LABELS: Record<UserRole, string> = {
-  marketing: 'Marketing',
-  product: 'Product',
-  ux_writer: 'UX Writer',
-  designer: 'Designer',
-  sales: 'Sales',
-  support: 'Support',
-  leadership: 'Leadership',
-};
-
-const ECOSYSTEM_LABELS: Record<string, string> = Object.fromEntries(
-  ECOSYSTEMS.map((e) => [e.id, e.label])
-);
-
-export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [name, setName] = useState('');
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [product, setProduct] = useState<string>('');
+export default function OnboardingModal({ onComplete, existingProfile, onClose }: OnboardingModalProps) {
+  const [name, setName] = useState(existingProfile?.name || '');
+  const [role, setRole] = useState<UserRole | null>(existingProfile?.role || null);
+  const [product, setProduct] = useState<string>(existingProfile?.product || '');
   const [nameError, setNameError] = useState('');
-  const colors = useThemeColors();
 
-  const handleComplete = useCallback(() => {
-    if (!name.trim() || !role || !product) return;
+  const isEditMode = !!existingProfile;
 
-    const deviceId = getDeviceId() || generateDeviceId();
+  const handleSubmit = useCallback(() => {
+    if (!name.trim()) {
+      setNameError('Please enter your name');
+      return;
+    }
+    if (!role || !product) return;
+
+    const deviceId = existingProfile?.deviceId || getDeviceId() || generateDeviceId();
     const profile: UserProfile = {
       deviceId,
       name: name.trim(),
@@ -142,29 +133,9 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
     saveUserProfile(profile);
     onComplete(profile);
-  }, [name, role, product, onComplete]);
+  }, [name, role, product, existingProfile, onComplete]);
 
-  const canProceed = () => {
-    if (step === 1) return name.trim().length > 0;
-    if (step === 2) return role !== null;
-    if (step === 3) return product !== '';
-    return false;
-  };
-
-  const handleNext = () => {
-    if (step === 1 && !name.trim()) {
-      setNameError('Please enter your name');
-      return;
-    }
-    if (step < 3) {
-      setStep((s) => Math.min(s + 1, 3) as 1 | 2 | 3 | 4);
-    } else if (step === 3) {
-      // Show confirmation step
-      setStep(4);
-    }
-  };
-
-  const totalSteps = 3; // progress bar only shows 3 steps (step 4 is confirmation)
+  const isValid = name.trim().length > 0 && role !== null && product !== '';
 
   return (
     <div
@@ -178,266 +149,205 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
         background: 'rgba(0,0,0,0.65)',
         backdropFilter: 'blur(8px)',
       }}
+      onClick={onClose ? (e) => e.target === e.currentTarget && onClose() : undefined}
     >
-        <div
-          style={{
-            background: colors.background.elevated || '#1a1a2e',
-            borderRadius: '12px',
-            border: `1px solid ${colors.stroke.medium}`,
-            maxWidth: '420px',
-            width: '92%',
-            overflow: 'hidden',
-            boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
-          }}
-        >
-          {/* Header */}
-          <div style={{ padding: '1.25rem 1.25rem 0' }}>
-            <h2 style={{ color: colors.text.high, fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>
-              {step === 4 ? 'You\'re all set!' : 'Welcome to Voice Lab'}
-            </h2>
-            <p style={{ color: colors.text.medium, fontSize: '0.8125rem', margin: '0.375rem 0 0', lineHeight: 1.4 }}>
-              {step === 4
-                ? `Here's how we've configured Voice Lab for you.`
-                : 'Your role and product help fine-tune AI content generation to match your context, tone, and goals.'}
-            </p>
+      <div
+        style={{
+          background: '#ffffff',
+          borderRadius: '20px',
+          border: 'none',
+          maxWidth: '420px',
+          width: '92%',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
+          position: 'relative',
+        }}
+      >
+        {/* Close button - only in edit mode */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute',
+              top: '1rem',
+              right: '1rem',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0.25rem',
+              color: '#666',
+              zIndex: 1,
+            }}
+            aria-label="Close"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
 
-            {/* Step Indicator -- hidden on confirmation step */}
-            {step <= totalSteps && (
-              <div style={{ display: 'flex', gap: '0.375rem', marginTop: '1rem' }}>
-                {[1, 2, 3].map((s) => (
-                  <div
-                    key={s}
-                    style={{
-                      flex: 1,
-                      height: '3px',
-                      borderRadius: '2px',
-                      background: s <= step ? colors.accent : colors.stroke.low,
-                      transition: 'background 0.2s ease',
-                    }}
-                  />
-                ))}
-              </div>
+        {/* Header */}
+        <div style={{ padding: '1.25rem', paddingRight: onClose ? '3rem' : '1.25rem' }}>
+          <h2 style={{ color: '#1a1a1a', fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>
+            {isEditMode ? 'Edit Profile' : 'Welcome to Voice Lab'}
+          </h2>
+          <p style={{ color: '#666', fontSize: '0.8125rem', margin: '0.375rem 0 0', lineHeight: 1.4 }}>
+            Your role and product help fine-tune AI content generation to match your context, tone, and goals.
+          </p>
+        </div>
+
+        {/* Content - Scrollable */}
+        <div style={{ padding: '0 1.25rem 1.25rem', overflowY: 'auto', flex: 1 }}>
+          {/* Name Field */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label
+              style={{
+                display: 'block',
+                color: '#1a1a1a',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                marginBottom: '0.375rem',
+              }}
+            >
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => { setName(e.target.value); setNameError(''); }}
+              placeholder="Enter your name"
+              autoFocus={!isEditMode}
+              style={{
+                width: '100%',
+                padding: '0.625rem 0.75rem',
+                borderRadius: '8px',
+                border: `1px solid ${nameError ? '#ef4444' : '#e0e0e0'}`,
+                background: '#f9f9f9',
+                color: '#1a1a1a',
+                fontSize: '0.8125rem',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+            {nameError && (
+              <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                {nameError}
+              </p>
             )}
           </div>
 
-        {/* Content */}
-        <div style={{ padding: '1.25rem' }}>
-          {/* Step 1: Name */}
-          {step === 1 && (
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  color: colors.text.high,
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  marginBottom: '0.375rem',
-                }}
-              >
-                What's your name?
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => { setName(e.target.value); setNameError(''); }}
-                placeholder="Enter your name"
-                autoFocus
-                onKeyDown={(e) => e.key === 'Enter' && canProceed() && handleNext()}
-                style={{
-                  width: '100%',
-                  padding: '0.625rem 0.75rem',
-                  borderRadius: '8px',
-                  border: `1px solid ${nameError ? '#ef4444' : colors.stroke.medium}`,
-                  background: colors.background.subtle,
-                  color: colors.text.high,
-                  fontSize: '0.8125rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
-              {nameError && (
-                <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                  {nameError}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Step 2: Role */}
-          {step === 2 && (
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  color: colors.text.high,
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem',
-                }}
-              >
-                What's your role?
-              </label>
-              <div style={{ display: 'grid', gap: '0.375rem' }}>
-                {ROLES.map((r) => (
-                  <button
-                    key={r.id}
-                    onClick={() => setRole(r.id)}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-start',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: '8px',
-                      border: `1.5px solid ${role === r.id ? colors.accent : colors.stroke.medium}`,
-                      background: role === r.id ? colors.accent + '10' : 'transparent',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    <span style={{
-                      color: role === r.id ? colors.accent : colors.text.high,
-                      fontSize: '0.8125rem',
-                      fontWeight: 600,
-                    }}>
-                      {r.label}
-                    </span>
-                    <span style={{
-                      color: colors.text.medium,
-                      fontSize: '0.6875rem',
-                      marginTop: '0.0625rem',
-                    }}>
-                      {r.description}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Product/Ecosystem */}
-          {step === 3 && (
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  color: colors.text.high,
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  marginBottom: '0.5rem',
-                }}
-              >
-                Which product ecosystem do you primarily work on?
-              </label>
-              <div style={{
-                display: 'grid',
-                gap: '0.25rem',
-                maxHeight: '280px',
-                overflowY: 'auto',
-              }}>
-                {ECOSYSTEMS.map((eco) => (
-                  <button
-                    key={eco.id}
-                    onClick={() => setProduct(eco.id)}
-                    style={{
-                      display: 'block',
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: '8px',
-                      border: `1.5px solid ${product === eco.id ? colors.accent : colors.stroke.medium}`,
-                      background: product === eco.id ? colors.accent + '10' : 'transparent',
-                      color: product === eco.id ? colors.accent : colors.text.high,
-                      fontSize: '0.75rem',
-                      fontWeight: product === eco.id ? 600 : 400,
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    {eco.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Confirmation */}
-          {step === 4 && role && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {[
-                { label: 'Name', value: name.trim() },
-                { label: 'Role', value: ROLE_LABELS[role] || role },
-                { label: 'Product', value: ECOSYSTEM_LABELS[product] || product },
-              ].map((item) => (
-                <div
-                  key={item.label}
+          {/* Role Field */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label
+              style={{
+                display: 'block',
+                color: '#1a1a1a',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                marginBottom: '0.5rem',
+              }}
+            >
+              Role
+            </label>
+            <div style={{ display: 'grid', gap: '0.375rem' }}>
+              {ROLES.map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => setRole(r.id)}
                   style={{
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
                     padding: '0.5rem 0.75rem',
                     borderRadius: '8px',
-                    background: colors.background.subtle,
-                    border: `1px solid ${colors.stroke.low}`,
+                    border: `1.5px solid ${role === r.id ? '#0066ff' : '#e0e0e0'}`,
+                    background: role === r.id ? '#0066ff10' : 'transparent',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  <span style={{ color: colors.text.medium, fontSize: '0.75rem' }}>
-                    {item.label}
+                  <span style={{
+                    color: role === r.id ? '#0066ff' : '#1a1a1a',
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                  }}>
+                    {r.label}
                   </span>
-                  <span style={{ color: colors.text.high, fontSize: '0.8125rem', fontWeight: 600 }}>
-                    {item.value}
+                  <span style={{
+                    color: '#666',
+                    fontSize: '0.6875rem',
+                    marginTop: '0.0625rem',
+                  }}>
+                    {r.description}
                   </span>
-                </div>
+                </button>
               ))}
-
-              <p style={{
-                color: colors.text.medium,
-                fontSize: '0.75rem',
-                lineHeight: 1.4,
-                margin: '0.25rem 0 0',
-                padding: '0.5rem 0.75rem',
-                borderRadius: '8px',
-                background: colors.accent + '08',
-                border: `1px solid ${colors.accent}20`,
-              }}>
-                Voice Lab will auto-tune tone, vocabulary, channels, and content style based on your profile. You can change these anytime in Settings.
-              </p>
             </div>
-          )}
+          </div>
+
+          {/* Ecosystem Field */}
+          <div>
+            <label
+              style={{
+                display: 'block',
+                color: '#1a1a1a',
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                marginBottom: '0.5rem',
+              }}
+            >
+              Product Ecosystem
+            </label>
+            <div style={{
+              display: 'grid',
+              gap: '0.25rem',
+              maxHeight: '200px',
+              overflowY: 'auto',
+              paddingRight: '0.25rem',
+            }}>
+              {ECOSYSTEMS.map((eco) => (
+                <button
+                  key={eco.id}
+                  onClick={() => setProduct(eco.id)}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '8px',
+                    border: `1.5px solid ${product === eco.id ? '#0066ff' : '#e0e0e0'}`,
+                    background: product === eco.id ? '#0066ff10' : 'transparent',
+                    color: product === eco.id ? '#0066ff' : '#1a1a1a',
+                    fontSize: '0.75rem',
+                    fontWeight: product === eco.id ? 600 : 400,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {eco.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
         <div style={{
-          padding: '0 1.25rem 1.25rem',
+          padding: '1.25rem',
+          borderTop: '1px solid #f0f0f0',
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          justifyContent: 'flex-end',
         }}>
-          {step > 1 && step <= 3 ? (
-            <button
-              onClick={() => setStep((s) => Math.max(s - 1, 1) as 1 | 2 | 3 | 4)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: colors.text.medium,
-                cursor: 'pointer',
-                fontSize: '0.8125rem',
-                padding: '0.5rem 0',
-              }}
-            >
-              Back
-            </button>
-          ) : (
-            <div />
-          )}
-
           <Button
             appearance="primary"
-            size="M"
-            onPress={step === 4 ? handleComplete : handleNext}
-            isDisabled={step <= 3 && !canProceed()}
+            size="S"
+            onPress={handleSubmit}
+            isDisabled={!isValid}
           >
-            {step === 4 ? 'Start Creating' : step === 3 ? 'Get Started' : 'Continue'}
+            {isEditMode ? 'Save' : 'Get Started'}
           </Button>
         </div>
       </div>
