@@ -1,15 +1,11 @@
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { useProject } from '../context/ProjectContext';
-import { useAudioLibrary } from '../context/AudioLibraryContext';
 import { useThemeColors } from '../theme';
 import type { ColorMode } from '../types';
 import type { DropdownOption } from './Dropdown';
 import { Button } from '@marcelinodzn/ds-react';
 
 interface ProjectSidebarProps {
-  onNavigateToLibrary: () => void;
-  isLibraryActive: boolean;
-  onNavigateToUsage?: () => void;
   onProjectSelect?: () => void;
   onNavigateToDesignSystem?: () => void;
   isDesignSystemActive?: boolean;
@@ -276,9 +272,6 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
  * Memoized to prevent unnecessary re-renders
  */
 export const ProjectSidebar = memo(function ProjectSidebar({ 
-  onNavigateToLibrary, 
-  isLibraryActive,
-  onNavigateToUsage,
   onProjectSelect,
   onNavigateToDesignSystem,
   isDesignSystemActive = false,
@@ -289,7 +282,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 }: ProjectSidebarProps) {
   const theme = useThemeColors();
   const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
-  const { audios } = useAudioLibrary();
   
   
   // Rename state
@@ -443,42 +435,11 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         </div>
       </div>
 
-      {/* Bottom Navigation - Library & Usage */}
+      {/* Bottom Navigation */}
       <div 
         className="p-2.5 space-y-0.5"
         style={{ borderTop: `1px solid ${theme.stroke.low}` }}
       >
-        <SidebarNavItem
-          icon={
-            <svg 
-              className="w-4 h-4" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-              style={{ color: theme.text.high }}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-            </svg>
-          }
-          label="Library"
-          onClick={onNavigateToLibrary}
-          isActive={isLibraryActive}
-          ariaCurrent={isLibraryActive ? 'page' : undefined}
-          badge={
-            audios.length > 0 ? (
-              <span 
-                className="ml-auto text-xs px-2 py-0.5 rounded-full"
-                style={{ 
-                  backgroundColor: theme.stroke.low,
-                  color: theme.text.medium 
-                }}
-              >
-                {audios.length}
-              </span>
-            ) : undefined
-          }
-        />
-
         {/* How it Works Nav Item */}
         {onNavigateToHowItWorks && (
           <SidebarNavItem
@@ -497,25 +458,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             onClick={onNavigateToHowItWorks}
             isActive={isHowItWorksActive}
             ariaLabel="Learn how the system works"
-          />
-        )}
-
-        {onNavigateToUsage && (
-          <SidebarNavItem
-            icon={
-              <svg 
-                className="w-4 h-4" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-                style={{ color: theme.text.high }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            }
-            label="Usage"
-            onClick={onNavigateToUsage}
-            ariaLabel="View usage statistics"
           />
         )}
 

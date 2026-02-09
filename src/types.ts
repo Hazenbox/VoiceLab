@@ -501,7 +501,7 @@ export interface AppError {
 }
 
 // Active view type
-export type ActiveView = 'main' | 'docs' | 'design-system' | 'library' | 'how-it-works';
+export type ActiveView = 'main' | 'docs' | 'design-system' | 'how-it-works';
 
 // Active tab type
 export type ActiveTab = 'tts' | 'talk' | 'copy';

@@ -21,12 +21,10 @@ import {
   DocumentationPanel,
   ProjectSidebar,
   SaveAudioModal,
-  UsageModal,
   ChatPanel,
   ErrorBoundary,
   ModelSelector,
   DesignSystemLibrary,
-  LibraryPage,
   HowItWorksPage,
   AIOrb,
   // Content Trust System components
@@ -58,7 +56,6 @@ import { validateConfig } from './config/providers';
 import { useThemeColors } from './theme';
 // Design system context removed - locked to Jio only
 import { useProject } from './context/ProjectContext';
-import { useAudioLibrary } from './context/AudioLibraryContext';
 import { useAbortController } from './hooks';
 // Onboarding & Sync
 import OnboardingModal, { loadUserProfile, getDeviceId, type UserProfile } from './components/OnboardingModal';
@@ -156,7 +153,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [audioToSave, setAudioToSave] = useState<{ messageId: string; audioData: string; transcript: string } | null>(null);
   const [isConfigPanelCollapsed, setIsConfigPanelCollapsed] = useState(true);
-  const [showUsageModal, setShowUsageModal] = useState(false);
   
   // ==========================================================================
   // Content Trust System State
@@ -928,9 +924,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         style={{ backgroundColor: theme.background.ghost }}
       >
         <ProjectSidebar 
-          onNavigateToLibrary={() => setActiveView('library')}
-          isLibraryActive={false}
-          onNavigateToUsage={() => setShowUsageModal(true)}
           onProjectSelect={() => setActiveView('main')}
           onNavigateToDesignSystem={() => setActiveView('design-system')}
           isDesignSystemActive={false}
@@ -999,70 +992,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     );
   }
 
-  // Render audio library view
-  if (activeView === 'library') {
-    return (
-      <div 
-        className="flex h-screen"
-        style={{ backgroundColor: theme.background.ghost }}
-      >
-        <ProjectSidebar 
-          onNavigateToLibrary={() => setActiveView('library')}
-          isLibraryActive={true}
-          onNavigateToUsage={() => setShowUsageModal(true)}
-          onProjectSelect={() => setActiveView('main')}
-          onNavigateToDesignSystem={() => setActiveView('design-system')}
-          isDesignSystemActive={false}
-          onNavigateToHowItWorks={() => setActiveView('how-it-works')}
-          isHowItWorksActive={false}
-          colorMode={colorMode}
-          onColorModeChange={onColorModeChange}
-        />
-        <main className="flex-1 overflow-hidden">
-          <LibraryPage onBack={() => setActiveView('main')} />
-        </main>
-        <AdvancedSettingsPanel
-          userName={userProfile?.name}
-          userRole={userProfile?.role}
-          userProduct={userProfile?.product}
-          onEditProfile={() => setShowOnboarding(true)}
-          voiceGender={activeProject.voiceGender}
-          onVoiceGenderChange={updateProjectVoiceGender}
-          config={activeProject.config}
-          onConfigChange={updateProjectConfig}
-          defaultEcosystem={ecosystem}
-          defaultChannel={contentChannel}
-          defaultLanguage={activeProject.defaultLanguage || 'english'}
-          defaultRegion={activeProject.defaultRegion || 'pan_india'}
-          onDefaultEcosystemChange={(eco) => {
-            setEcosystem(eco);
-            updateProjectDefaultEcosystem(eco);
-          }}
-          onDefaultChannelChange={(ch) => {
-            setContentChannel(ch);
-            updateProjectDefaultChannel(ch);
-          }}
-          onDefaultLanguageChange={updateProjectDefaultLanguage}
-          onDefaultRegionChange={updateProjectDefaultRegion}
-          trustSettings={trustSettings}
-          onTrustSettingsChange={setTrustSettings}
-          colorMode={colorMode}
-          onColorModeChange={onColorModeChange}
-          temperature={temperature}
-          maxTokens={maxTokens}
-          streamResponse={streamResponse}
-          onTemperatureChange={setTemperature}
-          onMaxTokensChange={setMaxTokens}
-          onStreamResponseChange={setStreamResponse}
-          disabled={appState !== AppState.IDLE}
-          isCollapsed={isConfigPanelCollapsed}
-          onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
-          onShowDesignSystem={() => setActiveView('design-system')}
-        />
-      </div>
-    );
-  }
-
   // Render how it works view
   if (activeView === 'how-it-works') {
     return (
@@ -1071,9 +1000,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         style={{ backgroundColor: theme.background.ghost }}
       >
         <ProjectSidebar 
-          onNavigateToLibrary={() => setActiveView('library')}
-          isLibraryActive={false}
-          onNavigateToUsage={() => setShowUsageModal(true)}
           onProjectSelect={() => setActiveView('main')}
           onNavigateToDesignSystem={() => setActiveView('design-system')}
           isDesignSystemActive={false}
@@ -1085,12 +1011,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         <main className="flex-1 overflow-hidden">
           <HowItWorksPage onBack={() => setActiveView('main')} />
         </main>
-
-        {/* Usage Modal */}
-        <UsageModal
-          isOpen={showUsageModal}
-          onClose={() => setShowUsageModal(false)}
-        />
       </div>
     );
   }
@@ -1105,9 +1025,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     >
       {/* Left Sidebar - Projects */}
       <ProjectSidebar 
-        onNavigateToLibrary={() => setActiveView('library')}
-        isLibraryActive={false}
-        onNavigateToUsage={() => setShowUsageModal(true)}
         onProjectSelect={() => setActiveView('main')}
         onNavigateToDesignSystem={() => setActiveView('design-system')}
         isDesignSystemActive={false}
@@ -1319,12 +1236,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             ? audioToSave.transcript.slice(0, 30) + (audioToSave.transcript.length > 30 ? '...' : '')
             : ttsText.slice(0, 30) + (ttsText.length > 30 ? '...' : '')
         }
-      />
-
-      {/* Usage Modal */}
-      <UsageModal
-        isOpen={showUsageModal}
-        onClose={() => setShowUsageModal(false)}
       />
 
       {/* Onboarding Modal */}

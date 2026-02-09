@@ -5,7 +5,6 @@ import { ConvexProvider, ConvexReactClient } from 'convex/react'
 import { DsProvider } from '@marcelinodzn/ds-react'
 import { DesignSystemProvider } from './context/DesignSystemContext'
 import { ProjectProvider } from './context/ProjectContext'
-import { AudioLibraryProvider } from './context/AudioLibraryContext'
 import { getSyncService } from './services/sync/convexSync'
 import './index.css'
 import App from './App.tsx'
@@ -72,16 +71,14 @@ function Root() {
         density="Default"
       >
         <ProjectProvider>
-          <AudioLibraryProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/admin/*" element={<AdminLayout />} />
-                <Route path="/*" element={
-                  <App colorMode={colorMode} onColorModeChange={setColorMode} />
-                } />
-              </Routes>
-            </BrowserRouter>
-          </AudioLibraryProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/admin/*" element={<AdminLayout />} />
+              <Route path="/*" element={
+                <App colorMode={colorMode} onColorModeChange={setColorMode} />
+              } />
+            </Routes>
+          </BrowserRouter>
         </ProjectProvider>
       </DsProvider>
     </DesignSystemProvider>
