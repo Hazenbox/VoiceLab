@@ -60,9 +60,6 @@ export const TrustBadge = memo(function TrustBadge({
   messageContent,
 }: TrustBadgeProps) {
   const theme = useThemeColors();
-  const [isHoveredTrust, setIsHoveredTrust] = useState(false);
-  const [isHoveredCopy, setIsHoveredCopy] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
   
   // Development warning for deprecated prop
   // Note: Warning logged in constructor pattern to avoid every-render logs
@@ -85,68 +82,21 @@ export const TrustBadge = memo(function TrustBadge({
     );
   };
 
-  // Copy icon
-  const CopyIcon = () => (
-    copySuccess ? (
-      <DSIcon name="IcCheck" size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="high" />
-    ) : (
-      <DSIcon name="IcCopyDocument" size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="medium" />
-    )
-  );
-
-  // Handle copy to clipboard
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!messageContent) return;
-    
-    try {
-      await navigator.clipboard.writeText(messageContent);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
-    }
-  };
-
   return (
-    <div className="flex items-center gap-1">
-      {/* Trust Badge Button */}
-      <button
-        onClick={onClick}
-        className="rounded-full flex items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
-        style={{
-          width: buttonSize,
-          height: buttonSize,
-          color: theme.text.low,
-        }}
-        title={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : undefined}
-        type="button"
-        aria-label={`Trust badge: ${badge.label}`}
-      >
-        <ShieldIcon />
-      </button>
-
-      {/* Copy Button */}
-      {messageContent && (
-        <button
-          onClick={handleCopy}
-          className="rounded-full flex items-center justify-center transition-colors hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
-          style={{
-            width: buttonSize,
-            height: buttonSize,
-            backgroundColor: isHoveredCopy ? theme.stroke.low : 'transparent',
-            color: theme.text.medium,
-          }}
-          title={copySuccess ? 'Copied!' : 'Copy message'}
-          type="button"
-          aria-label={copySuccess ? 'Copied to clipboard' : 'Copy message to clipboard'}
-          onMouseEnter={() => setIsHoveredCopy(true)}
-          onMouseLeave={() => setIsHoveredCopy(false)}
-        >
-          <CopyIcon />
-        </button>
-      )}
-    </div>
+    <button
+      onClick={onClick}
+      className="rounded-full flex items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+      style={{
+        width: buttonSize,
+        height: buttonSize,
+        color: theme.text.low,
+      }}
+      title={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : undefined}
+      type="button"
+      aria-label={`Trust badge: ${badge.label}`}
+    >
+      <ShieldIcon />
+    </button>
   );
 });
 
