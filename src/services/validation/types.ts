@@ -19,7 +19,8 @@ export type ValidationAgentId =
   | 'compliance'
   | 'style_consistency'
   | 'brand_alignment'
-  | 'readability';
+  | 'readability'
+  | 'avoid_words';
 
 /**
  * Individual violation found by an agent (extends base Violation)
@@ -122,6 +123,7 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
     'style_consistency',
     'brand_alignment',
     'readability',
+    'avoid_words',
   ],
   skipPatternMatching: false,
   parallelExecution: true,
@@ -131,14 +133,20 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
 /**
  * Agent weights for score calculation
  * Updated to include readability (Training 1.pdf requirement: Grade 8 readability)
+ * Rebalanced to sum to 100 after adding avoid_words agent
+ * 
+ * Rationale: style_consistency gets the largest reduction (-2) because
+ * avoid_words agent covers overlapping jargon territory
  */
 export const AGENT_WEIGHTS: Record<ValidationAgentId, number> = {
-  gender_neutrality: 12,
-  inclusivity: 12,
-  cultural_sensitivity: 12,
-  accessibility: 10,
-  compliance: 14,
-  style_consistency: 14,
-  brand_alignment: 14,
-  readability: 12,  // Training 1.pdf: 100% of messages must test at ≤Grade 8
+  gender_neutrality: 11,      // was 12
+  inclusivity: 11,            // was 12
+  cultural_sensitivity: 11,   // was 12
+  accessibility: 9,           // was 10
+  compliance: 13,             // was 14
+  style_consistency: 12,      // was 14 (reduced more - overlaps with avoid_words)
+  brand_alignment: 13,        // was 14
+  readability: 10,            // was 12
+  avoid_words: 10,            // NEW
+  // Sum: 11+11+11+9+13+12+13+10+10 = 100
 };

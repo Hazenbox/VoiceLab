@@ -12,7 +12,9 @@ import {
   complianceAgent,
   styleConsistencyAgent,
   brandAlignmentAgent,
+  readabilityAgent,
 } from './allAgents';
+import { avoidWordsAgent } from './avoidWordsAgent';
 
 export {
   genderNeutralityAgent,
@@ -22,6 +24,8 @@ export {
   complianceAgent,
   styleConsistencyAgent,
   brandAlignmentAgent,
+  readabilityAgent,
+  avoidWordsAgent,
 };
 
 export const VALIDATION_AGENTS = ALL_AGENTS;

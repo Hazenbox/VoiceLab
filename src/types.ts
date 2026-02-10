@@ -241,6 +241,7 @@ export interface TrustScoreBreakdown {
   styleConsistency: number;
   brandAlignment: number;
   readability: number;  // Training 1.pdf: Grade 8 readability requirement
+  avoidWords?: number;  // Optional for backwards compat with stored messages
 }
 
 /**

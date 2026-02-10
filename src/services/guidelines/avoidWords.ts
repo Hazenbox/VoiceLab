@@ -18,6 +18,7 @@
 export const COMPLEX_WORDS = [
   // Jargon
   'utilize', 'leverage', 'synergy', 'paradigm', 'bandwidth',
+  'avail', 'availing', 'availed',  // Common in Indian telecom copy
   'deep dive', 'circle back', 'touch base', 'take offline',
   'move the needle', 'low-hanging fruit', 'boil the ocean',
   
@@ -338,42 +339,54 @@ export function getWordCategory(word: string): WordCategory | null {
 }
 
 /**
- * Scan text for words to avoid
+ * Escape special regex characters in a string
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Scan text for words to avoid using word-boundary matching
+ * Uses regex with \b word boundaries to prevent false positives
+ * (e.g., "just" should not match inside "adjust", "justice", "justify")
  */
 export function scanForAvoidWords(text: string): Array<{
   word: string;
   category: string;
   severity: 'error' | 'warning' | 'info';
-  position: number;
+  position: { start: number; end: number };
 }> {
   const results: Array<{
     word: string;
     category: string;
     severity: 'error' | 'warning' | 'info';
-    position: number;
+    position: { start: number; end: number };
   }> = [];
-  
-  const lowerText = text.toLowerCase();
   
   for (const category of WORD_CATEGORIES) {
     for (const word of category.words) {
-      const lowerWord = word.toLowerCase();
-      let position = lowerText.indexOf(lowerWord);
+      // Use word boundary regex to avoid false positives
+      // e.g., "just" should not match "adjust", "justice"
+      const escapedWord = escapeRegex(word);
+      const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
       
-      while (position !== -1) {
+      let match;
+      while ((match = regex.exec(text)) !== null) {
         results.push({
-          word: word,
+          word: match[0], // Use the actual matched text (preserves case)
           category: category.name,
           severity: category.severity,
-          position: position,
+          position: {
+            start: match.index,
+            end: match.index + match[0].length,
+          },
         });
-        position = lowerText.indexOf(lowerWord, position + 1);
       }
     }
   }
   
-  // Sort by position
-  results.sort((a, b) => a.position - b.position);
+  // Sort by position start
+  results.sort((a, b) => a.position.start - b.position.start);
   
   return results;
 }

@@ -443,6 +443,12 @@ export const readabilityAgent: ValidationAgent = {
 };
 
 // =============================================================================
+// Avoid Words Agent Import
+// =============================================================================
+
+import { avoidWordsAgent } from './avoidWordsAgent';
+
+// =============================================================================
 // All Agents Export
 // =============================================================================
 
@@ -455,4 +461,5 @@ export const ALL_AGENTS: Record<ValidationAgentId, ValidationAgent> = {
   style_consistency: styleConsistencyAgent,
   brand_alignment: brandAlignmentAgent,
   readability: readabilityAgent,
+  avoid_words: avoidWordsAgent,
 };

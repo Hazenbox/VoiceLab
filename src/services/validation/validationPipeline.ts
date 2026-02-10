@@ -15,6 +15,60 @@ import type {
 import { DEFAULT_VALIDATION_CONFIG, AGENT_WEIGHTS } from './types';
 import { getEnabledAgents, VALIDATION_AGENTS } from './agents';
 
+// =============================================================================
+// Position-Based Deduplication
+// =============================================================================
+
+/**
+ * Deduplicate violations by position overlap
+ * 
+ * When multiple agents flag the same word/phrase (e.g., "utilize" caught by
+ * both style_consistency regex and avoid_words agent), keep only the one
+ * with higher severity to avoid double-counting in scores.
+ */
+function deduplicateViolations(violations: ValidationViolation[]): ValidationViolation[] {
+  if (violations.length === 0) return [];
+  
+  const severityRank: Record<string, number> = { error: 3, warning: 2, info: 1 };
+  
+  // Sort by position start
+  const sorted = [...violations].sort((a, b) => {
+    const aStart = a.position?.start ?? 0;
+    const bStart = b.position?.start ?? 0;
+    return aStart - bStart;
+  });
+  
+  const result: ValidationViolation[] = [];
+  
+  for (const v of sorted) {
+    // Check if any existing result overlaps this position
+    const overlappingIndex = result.findIndex(existing => {
+      if (!existing.position || !v.position) return false;
+      // Check for overlap: ranges overlap if one starts before the other ends
+      return (
+        existing.position.start <= v.position.end &&
+        existing.position.end >= v.position.start
+      );
+    });
+    
+    if (overlappingIndex >= 0) {
+      const existing = result[overlappingIndex];
+      // Keep the higher-severity one
+      const existingSeverity = severityRank[existing.severity] || 0;
+      const newSeverity = severityRank[v.severity] || 0;
+      
+      if (newSeverity > existingSeverity) {
+        result[overlappingIndex] = v;
+      }
+      // Otherwise keep existing (skip this one)
+    } else {
+      result.push(v);
+    }
+  }
+  
+  return result;
+}
+
 /**
  * Run validation pipeline on content
  */
@@ -50,8 +104,9 @@ export async function runValidationPipeline(
     };
   });
   
-  // Calculate overall results
-  const allViolations = agentResults.flatMap(r => r.violations);
+  // Calculate overall results with position-based deduplication
+  const rawViolations = agentResults.flatMap(r => r.violations);
+  const allViolations = deduplicateViolations(rawViolations);
   const errorCount = allViolations.filter(v => v.severity === 'error').length;
   const autoFixableCount = allViolations.filter(v => v.autoFixable).length;
   
@@ -130,7 +185,8 @@ export function runQuickValidation(
     };
   });
   
-  const allViolations = agentResults.flatMap(r => r.violations);
+  const rawViolations = agentResults.flatMap(r => r.violations);
+  const allViolations = deduplicateViolations(rawViolations);
   const errorCount = allViolations.filter(v => v.severity === 'error').length;
   const autoFixableCount = allViolations.filter(v => v.autoFixable).length;
   
