@@ -33,4 +33,9 @@ export const featureFlags = {
   get rag(): boolean {
     return import.meta.env.VITE_ENABLE_RAG === 'true';
   },
+
+  /** Conversational-first mode: general-purpose assistant with conditional Jio guardrails */
+  get conversationalMode(): boolean {
+    return import.meta.env.VITE_ENABLE_CONVERSATIONAL_MODE === 'true';
+  },
 } as const;

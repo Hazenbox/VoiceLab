@@ -691,6 +691,20 @@ export interface ChatMessage {
    * Used to prevent double-submit and show feedback state after refresh
    */
   userFeedback?: 'like' | 'dislike';
+  
+  // ==========================================================================
+  // CONVERSATIONAL MODE: Intent Tracking
+  // ==========================================================================
+  
+  /**
+   * The classified intent for this message.
+   * - 'general_chat': Normal conversation (no guardrails, no validation)
+   * - 'content_generation': Branded Jio content (full pipeline)
+   * - 'jio_inquiry': Jio product questions (no validation, Jio-aware prompt)
+   * 
+   * Undefined for legacy messages or when conversational mode is disabled.
+   */
+  messageIntent?: 'general_chat' | 'content_generation' | 'jio_inquiry';
 }
 
 // Inworld configuration

@@ -317,4 +317,90 @@ export function getChannelDefaults(id: ContentChannelType): {
   };
 }
 
+// =============================================================================
+// CHANNEL AUTO-DETECTION (Conversational Mode)
+// =============================================================================
+
+/**
+ * Channel detection keywords mapping
+ * Maps keyword patterns to channel IDs for auto-detection from user messages.
+ * Order matters: more specific patterns are checked first.
+ */
+const CHANNEL_DETECTION_MAP: Array<{
+  channel: ContentChannelType;
+  patterns: RegExp[];
+  priority: number;
+}> = [
+  // Specific channels first (high priority)
+  { channel: 'transactional_email', patterns: [/\b(transactional\s+email|order\s+email|receipt\s+email|confirmation\s+email|order\s+confirmation)\b/i], priority: 10 },
+  { channel: 'marketing_email', patterns: [/\b(marketing\s+email|email\s+campaign|promotional\s+email|newsletter)\b/i], priority: 10 },
+  { channel: 'whatsapp_support', patterns: [/\b(whatsapp\s+support|whatsapp\s+reply|whatsapp\s+response)\b/i], priority: 10 },
+  { channel: 'whatsapp_alert', patterns: [/\b(whatsapp\s+message|whatsapp\s+alert|whatsapp\s+notification|whatsapp)\b/i], priority: 9 },
+  { channel: 'customer_care_chat', patterns: [/\b(customer\s+care|support\s+chat|care\s+script|support\s+script|care\s+response)\b/i], priority: 10 },
+  { channel: 'chatbot_faq', patterns: [/\b(faq|chatbot\s+response|bot\s+reply|chatbot)\b/i], priority: 9 },
+  { channel: 'push_notification', patterns: [/\b(push\s+notification|push\s+alert|push\s+message)\b/i], priority: 10 },
+  { channel: 'app_notification', patterns: [/\b(app\s+notification|in[\s-]app\s+notification|in[\s-]app\s+alert)\b/i], priority: 10 },
+  { channel: 'ivr_voice_menu', patterns: [/\b(ivr|voice\s+menu|ivr\s+script)\b/i], priority: 10 },
+  { channel: 'voice_assistant', patterns: [/\b(voice\s+assistant\s+response|voice\s+assistant\s+script)\b/i], priority: 10 },
+  { channel: 'voice_prompts', patterns: [/\b(voice\s+prompt|system\s+prompt\s+voice)\b/i], priority: 10 },
+  { channel: 'tv_video_ad', patterns: [/\b(tv\s+ad|video\s+ad|commercial|tv\s+script|video\s+script)\b/i], priority: 10 },
+  { channel: 'digital_ads', patterns: [/\b(ad\s+copy|google\s+ad|banner\s+ad|digital\s+ad|display\s+ad)\b/i], priority: 10 },
+  { channel: 'social_media_post', patterns: [/\b(social\s+media|social\s+post|tweet|instagram\s+post|facebook\s+post|linkedin\s+post)\b/i], priority: 9 },
+  { channel: 'onboarding_screen', patterns: [/\b(onboarding\s+copy|onboarding\s+screen|welcome\s+screen)\b/i], priority: 10 },
+  { channel: 'internal_announcement', patterns: [/\b(internal\s+announcement|internal\s+comms|memo)\b/i], priority: 9 },
+  { channel: 'training_module', patterns: [/\b(training\s+content|training\s+module|training\s+material)\b/i], priority: 10 },
+  // Generic/ambiguous channels (lower priority)
+  { channel: 'sms', patterns: [/\b(sms|text\s+message)\b/i], priority: 8 },
+  { channel: 'marketing_email', patterns: [/\bemail\b/i], priority: 5 }, // Generic "email" defaults to marketing
+  { channel: 'push_notification', patterns: [/\bnotification\b/i], priority: 4 }, // Generic "notification" defaults to push
+  { channel: 'digital_ads', patterns: [/\b(ad|advertisement)\b/i], priority: 4 }, // Generic "ad" defaults to digital
+];
+
+/**
+ * Auto-detect channel from user message text.
+ * 
+ * Mirrors the existing `detectProduct()` pattern from ecosystems.ts.
+ * Checks patterns in priority order, returns the highest-priority match.
+ * 
+ * @param text - The user's message text
+ * @returns Detected channel info, or null if no channel keywords found
+ */
+export function detectChannel(text: string): {
+  channel: ContentChannelType;
+  matchedKeywords: string[];
+  confidence: 'high' | 'medium' | 'low';
+} | null {
+  const lowerText = text.toLowerCase();
+  
+  let bestMatch: ContentChannelType | null = null;
+  let bestPriority = -1;
+  let matchedKeywords: string[] = [];
+
+  for (const entry of CHANNEL_DETECTION_MAP) {
+    for (const pattern of entry.patterns) {
+      const match = pattern.exec(lowerText);
+      if (match && entry.priority > bestPriority) {
+        bestMatch = entry.channel;
+        bestPriority = entry.priority;
+        matchedKeywords = [match[0]];
+      }
+    }
+  }
+
+  if (!bestMatch) {
+    return null;
+  }
+
+  // Determine confidence based on priority
+  let confidence: 'high' | 'medium' | 'low' = 'low';
+  if (bestPriority >= 9) confidence = 'high';
+  else if (bestPriority >= 6) confidence = 'medium';
+
+  return {
+    channel: bestMatch,
+    matchedKeywords,
+    confidence,
+  };
+}
+
 export default CONTENT_CHANNELS;

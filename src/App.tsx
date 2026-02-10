@@ -73,6 +73,9 @@ import {
   getLocalCorrections,
   type CorrectionEntry,
 } from './services/knowledge';
+// Conversational Mode: Intent Classification + Base Persona
+import { classifyIntent } from './services/intent';
+import { buildConversationalPrompt, buildJioInquiryPrompt } from './services/prompt/basePersona';
 import type { 
   FeedbackPayload, 
   SendMessageOptions, 
@@ -318,6 +321,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
   // Handle sending chat message via LLM Orchestrator
   // Extended with options for edit/regeneration flows
+  // Conversational Mode: branches into general chat vs content generation
   const handleSendChatMessage = useCallback(async (
     message: string,
     options: SendMessageOptions = {} // Backward compatible default
@@ -341,121 +345,183 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     setError(null);
 
     try {
-      // =======================================================================
-      // Content Trust System: Build Generation Context
-      // =======================================================================
-      const generationContext = buildGenerationContext({
-        ecosystem,
-        channel: contentChannel,
-        userMessage: message,
-        // Optional: add profile/timing if available from project
-        userProfile: activeProject?.defaultUserProfile,
-        // Phase 1: Pass persona role for prompt personality injection (gated)
-        persona: featureFlags.persona ? userProfile?.role : undefined,
-      });
+      // =====================================================================
+      // Conversational Mode: Classify intent and branch
+      // =====================================================================
+      const intentClassification = featureFlags.conversationalMode
+        ? classifyIntent(message, {
+            profileEcosystem: ecosystem,
+            profileChannel: contentChannel,
+          })
+        : null; // null = legacy mode, always content_generation pipeline
 
-      // Build knowledge + learning data for prompt injection (Phase 2-3, gated)
-      let promptKnowledge: import('./services/knowledge').RetrievedKnowledge | undefined;
-      if (featureFlags.knowledgeBase) {
-        const baseKnowledge = getCodeDefaults(ecosystem, contentChannel);
-        if (featureFlags.learning) {
-          const localCorrections = getLocalCorrections(ecosystem, contentChannel);
-          promptKnowledge = mergeLearnedCorrections(
-            baseKnowledge,
-            localCorrections,
-            ecosystem,
-            contentChannel,
-          );
-        } else {
-          promptKnowledge = baseKnowledge;
+      const isContentGeneration = !intentClassification || intentClassification.intent === 'content_generation';
+
+      if (isContentGeneration) {
+        // =================================================================
+        // CONTENT GENERATION PATH (Full Content Trust Pipeline)
+        // Uses auto-detected channel/ecosystem when available
+        // =================================================================
+        const effectiveEcosystem = intentClassification?.detectedEcosystem?.ecosystem || ecosystem;
+        const effectiveChannel = intentClassification?.detectedChannel?.channel || contentChannel;
+
+        const generationContext = buildGenerationContext({
+          ecosystem: effectiveEcosystem,
+          channel: effectiveChannel,
+          userMessage: message,
+          userProfile: activeProject?.defaultUserProfile,
+          persona: featureFlags.persona ? userProfile?.role : undefined,
+        });
+
+        // Build knowledge + learning data for prompt injection (Phase 2-3, gated)
+        let promptKnowledge: import('./services/knowledge').RetrievedKnowledge | undefined;
+        if (featureFlags.knowledgeBase) {
+          const baseKnowledge = getCodeDefaults(effectiveEcosystem, effectiveChannel);
+          if (featureFlags.learning) {
+            const localCorrections = getLocalCorrections(effectiveEcosystem, effectiveChannel);
+            promptKnowledge = mergeLearnedCorrections(
+              baseKnowledge,
+              localCorrections,
+              effectiveEcosystem,
+              effectiveChannel,
+            );
+          } else {
+            promptKnowledge = baseKnowledge;
+          }
         }
-      }
 
-      // Build comprehensive prompt using Content Trust System + Knowledge
-      const { system: systemPrompt, context: finalContext } = buildPrompt(
-        generationContext,
-        message,
-        promptKnowledge ? { knowledge: promptKnowledge } : {}
-      );
+        // Build comprehensive prompt using Content Trust System + Knowledge
+        const { system: systemPrompt, context: finalContext } = buildPrompt(
+          generationContext,
+          message,
+          promptKnowledge ? { knowledge: promptKnowledge } : {}
+        );
 
-      // Build messages with system prompt and history
-      const contextMessages = chatMessages
-        .filter(m => m.type === 'text') // Only use text messages for context
-        .slice(-20); // Limit context to last 20 messages
-      
-      const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-        { role: 'system', content: systemPrompt },
-        ...contextMessages.map(m => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-        })),
-        { role: 'user', content: message },
-      ];
-
-      // Use the orchestrator for generation with retry and fallback
-      const orchestrator = getOrchestratorInstance();
-      const result = await orchestrator.generate(
-        selectedLLMProvider,
-        {
-          messages,
-          maxTokens: maxTokens,
-          temperature: temperature,
-          stream: streamResponse,
-          signal: getChatAbortSignal(), // Get fresh signal after reset
-        },
-        createLLMProvider
-      );
-
-      // =======================================================================
-      // Content Trust System: Validate and Score Content
-      // =======================================================================
-      let trustScore: TrustScore | undefined;
-      let validationSummary: { passedCount: number; warningCount: number; errorCount: number; autoFixesApplied: number } | undefined;
-
-      try {
-        // Run validation on generated content
-        const validationResult = await runValidationPipeline(result.content, finalContext);
+        // Build messages with system prompt and history
+        const contextMessages = chatMessages
+          .filter(m => m.type === 'text')
+          .slice(-20);
         
-        // Calculate trust score
-        trustScore = calculateTrustScore(validationResult, trustSettings);
-        
-        // Create validation summary for quick display
-        validationSummary = {
-          passedCount: validationResult.agentResults.filter(r => r.passed).length,
-          warningCount: validationResult.agentResults
-            .flatMap(r => r.violations)
-            .filter(v => v.severity === 'warning').length,
-          errorCount: validationResult.agentResults
-            .flatMap(r => r.violations)
-            .filter(v => v.severity === 'error').length,
-          autoFixesApplied: 0, // No auto-fixes applied by default
+        const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+          { role: 'system', content: systemPrompt },
+          ...contextMessages.map(m => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          })),
+          { role: 'user', content: message },
+        ];
+
+        // Use the orchestrator for generation with retry and fallback
+        const orchestrator = getOrchestratorInstance();
+        const result = await orchestrator.generate(
+          selectedLLMProvider,
+          {
+            messages,
+            maxTokens: maxTokens,
+            temperature: temperature,
+            stream: streamResponse,
+            signal: getChatAbortSignal(),
+          },
+          createLLMProvider
+        );
+
+        // Content Trust System: Validate and Score Content
+        let trustScore: TrustScore | undefined;
+        let validationSummary: { passedCount: number; warningCount: number; errorCount: number; autoFixesApplied: number } | undefined;
+
+        try {
+          const validationResult = await runValidationPipeline(result.content, finalContext);
+          trustScore = calculateTrustScore(validationResult, trustSettings);
+          validationSummary = {
+            passedCount: validationResult.agentResults.filter(r => r.passed).length,
+            warningCount: validationResult.agentResults
+              .flatMap(r => r.violations)
+              .filter(v => v.severity === 'warning').length,
+            errorCount: validationResult.agentResults
+              .flatMap(r => r.violations)
+              .filter(v => v.severity === 'error').length,
+            autoFixesApplied: 0,
+          };
+        } catch (validationError) {
+          console.warn('Content validation failed:', validationError);
+        }
+
+        // Create AI response with trust data and intent tag
+        const aiMessage = {
+          ...createTextMessage('assistant', result.content, chatMode, userMessageId),
+          messageIntent: 'content_generation' as const,
+          trustScore,
+          generationContext: finalContext,
+          validationSummary,
         };
-      } catch (validationError) {
-        // Log validation error but don't block message
-        console.warn('Content validation failed:', validationError);
-      }
+        
+        if (replaceResponseId) {
+          replaceMessage(replaceResponseId, aiMessage);
+        } else {
+          addMessage(aiMessage);
+        }
+        
+        return {
+          userMessageId,
+          aiMessageId: aiMessage.id,
+          success: true,
+        } as SendMessageResult;
 
-      // Create AI response with trust data attached and parent link
-      const aiMessage = {
-        ...createTextMessage('assistant', result.content, chatMode, userMessageId),
-        trustScore,
-        generationContext: finalContext,
-        validationSummary,
-      };
-      
-      // Add or replace AI message based on options
-      if (replaceResponseId) {
-        replaceMessage(replaceResponseId, aiMessage);
       } else {
-        addMessage(aiMessage);
+        // =================================================================
+        // CONVERSATIONAL PATH (General Chat / Jio Inquiry)
+        // Lightweight prompt, NO validation, NO trust scoring
+        // =================================================================
+        const systemPrompt = intentClassification.intent === 'jio_inquiry'
+          ? buildJioInquiryPrompt()
+          : buildConversationalPrompt();
+
+        // Build messages with lightweight system prompt and history
+        const contextMessages = chatMessages
+          .filter(m => m.type === 'text')
+          .slice(-20);
+        
+        const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
+          { role: 'system', content: systemPrompt },
+          ...contextMessages.map(m => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          })),
+          { role: 'user', content: message },
+        ];
+
+        // Use the orchestrator for generation (same retry/fallback)
+        const orchestrator = getOrchestratorInstance();
+        const result = await orchestrator.generate(
+          selectedLLMProvider,
+          {
+            messages,
+            maxTokens: maxTokens,
+            temperature: temperature,
+            stream: streamResponse,
+            signal: getChatAbortSignal(),
+          },
+          createLLMProvider
+        );
+
+        // Create AI response -- NO trustScore, NO validation, NO generationContext
+        const aiMessage = {
+          ...createTextMessage('assistant', result.content, chatMode, userMessageId),
+          messageIntent: intentClassification.intent,
+        };
+        
+        if (replaceResponseId) {
+          replaceMessage(replaceResponseId, aiMessage);
+        } else {
+          addMessage(aiMessage);
+        }
+        
+        return {
+          userMessageId,
+          aiMessageId: aiMessage.id,
+          success: true,
+        } as SendMessageResult;
       }
-      
-      // Return result for atomic state updates in edit flow
-      return {
-        userMessageId,
-        aiMessageId: aiMessage.id,
-        success: true,
-      } as SendMessageResult;
     } catch (err) {
       // Don't show error if request was cancelled
       if ((err as Error).name === 'AbortError' || (err as Error).message?.includes('cancelled')) {
@@ -536,6 +602,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [editValue, setEditValue] = useState<string>('');
   // Ref to track which button triggered edit for focus restoration
   const editTriggerRef = useRef<string | null>(null);
+  
+  // Search button handler
+  const handleSearchClick = useCallback(() => {
+    // TODO: Implement search functionality
+    console.log('Search button clicked');
+  }, []);
   
   // Start editing a user message
   const handleStartEdit = useCallback((messageId: string, content: string) => {
@@ -1286,15 +1358,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   onSendMessage={handleSendChatMessage}
                   isLoading={isChatLoading}
                   mode={chatMode}
-                  placeholder="Ask or describe what you need..."
+                  placeholder={featureFlags.conversationalMode
+                    ? 'Chat about anything, or say "write an SMS for..." to generate content'
+                    : 'Ask or describe what you need...'}
                   showEmptyState={chatMode !== 'voice'}
                   emptyStateMessage={chatMode === 'copy'
-                    ? 'What would you like to create today?'
+                    ? (featureFlags.conversationalMode
+                      ? 'Ask me anything, or ask me to create content for you.'
+                      : 'What would you like to create today?')
                     : 'Start a voice conversation or type a message'}
                   inputDisabled={chatMode === 'voice' && appState !== AppState.IDLE && appState !== AppState.ERROR}
                   id={`${chatMode}-panel`}
                   onVoiceClick={() => handleModeChange(chatMode === 'voice' ? 'copy' : 'voice')}
                   voiceSupported={voiceSupported ?? true}
+                  onSearchClick={handleSearchClick}
                   // Voice streaming transcription props
                   streamingUserTranscript={chatMode === 'voice' && appState === AppState.LISTENING ? transcript : undefined}
                   streamingAIResponse={chatMode === 'voice' && appState === AppState.SPEAKING ? streamingAIResponse : undefined}
@@ -1309,8 +1386,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                       disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
                     />
                   }
-                  // Content Trust System: New context selector with settings toggle
-                  contextSelector={
+                  // Content Trust System: Context selector
+                  // In conversational mode, hide from chat input (auto-detected from message)
+                  // In legacy mode, show ecosystem + channel dropdowns
+                  contextSelector={featureFlags.conversationalMode ? undefined : (
                     <div className="flex items-center gap-2">
                       <ContentContextSelector
                         ecosystem={ecosystem}
@@ -1327,7 +1406,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                         disabled={isChatLoading}
                       />
                     </div>
-                  }
+                  )}
                   // Settings trigger
                   settingsTrigger={
                     <button

@@ -34,6 +34,7 @@ export {
   getChannelGroups,
   getChannelOptions,
   getChannelDefaults,
+  detectChannel,
   type ContentChannel,
   type ChannelGroup,
 } from './channels';

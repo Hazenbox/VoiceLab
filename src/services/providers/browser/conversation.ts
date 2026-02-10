@@ -228,7 +228,7 @@ export class BrowserConversationProvider implements ConversationProvider {
 
     const systemPrompt =
       this.sessionConfig?.systemPrompt ||
-      `You are a helpful Jio voice assistant. Keep responses concise (max ${maxWords} words).`;
+      `You are a friendly, knowledgeable voice assistant. You can discuss any topic. When asked about Jio services, be helpful and informed. Keep responses concise (max ${maxWords} words). Use natural Indian English.`;
 
     const messages = [
       { role: 'system' as const, content: systemPrompt },
