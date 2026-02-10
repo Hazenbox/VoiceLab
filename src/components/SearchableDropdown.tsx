@@ -14,6 +14,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
 import { useThemeColors } from '../theme';
 import { DropdownSectionHeader } from './DropdownSectionHeader';
+import { DSIcon } from './DSIcon';
 
 // =============================================================================
 // Types
@@ -266,14 +267,9 @@ export const SearchableDropdown = memo(function SearchableDropdown({
           <span className="flex-shrink-0 w-4 h-4">{selectedOption.icon}</span>
         )}
         <span className="truncate max-w-[120px]">{displayText}</span>
-        <svg
-          className={`w-3 h-3 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <span className={`flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+          <DSIcon name="IcChevronDown" size="XS" attention="low" />
+        </span>
       </button>
 
       {/* Dropdown Menu - Smart positioning (up/down based on viewport) */}
@@ -315,14 +311,9 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                 style={{ borderColor: theme.stroke.low }}
               >
                 <div className="relative">
-                  <svg
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5"
-                    fill="none"
-                    stroke={theme.text.low}
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2" style={{ color: theme.text.low }}>
+                    <DSIcon name="IcSearch" size="XS" attention="low" />
+                  </span>
                   <input
                     ref={searchInputRef}
                     type="text"
@@ -349,9 +340,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                       className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full flex items-center justify-center hover:bg-black/10"
                       style={{ color: theme.text.low }}
                     >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <DSIcon name="IcClose" size="XS" attention="low" />
                     </button>
                   )}
                 </div>
@@ -422,14 +411,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                           )}
                           <span className="flex-1 truncate">{option.label}</span>
                           {isSelected && (
-                            <svg
-                              className="w-3.5 h-3.5 flex-shrink-0"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <DSIcon name="IcCheck" size="XS" attention="high" />
                           )}
                         </button>
                       );

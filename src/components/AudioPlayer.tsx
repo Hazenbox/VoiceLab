@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { formatTime, getWaveformData } from '../services/audioUtils';
 import { useThemeColors } from '../theme';
+import { DSIcon } from './DSIcon';
 
 interface AudioPlayerProps {
   audioBuffer: AudioBuffer | null;
@@ -284,14 +285,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
             {isPlaying ? (
-              <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 24 24">
-                <rect x="6" y="4" width="4" height="16" rx="1" />
-                <rect x="14" y="4" width="4" height="16" rx="1" />
-              </svg>
+              <DSIcon name="IcPause" size="XS" attention="high" />
             ) : (
-              <svg style={{ width: '16px', height: '16px' }} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+              <DSIcon name="IcPlayArrow" size="XS" attention="high" />
             )}
           </button>
 
@@ -313,9 +309,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
             onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
-            <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            <DSIcon name="IcRefresh" size="XS" attention="medium" />
           </button>
         </div>
 

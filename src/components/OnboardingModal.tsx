@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@marcelinodzn/ds-react';
 import SearchableCombobox from './SearchableCombobox';
+import { DSIcon } from './DSIcon';
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -193,9 +194,7 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
             }}
             aria-label="Close"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <DSIcon name="IcClose" size="S" attention="medium" />
           </button>
         )}
 

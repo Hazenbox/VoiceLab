@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import Fuse from 'fuse.js';
+import { DSIcon } from './DSIcon';
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -192,9 +193,7 @@ export default function SearchableCombobox({
             color: '#666',
           }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <DSIcon name="IcChevronDown" size="XS" attention="low" />
         </div>
       </div>
 

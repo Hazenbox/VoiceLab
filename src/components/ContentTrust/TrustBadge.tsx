@@ -8,6 +8,7 @@ import { memo, useState } from 'react';
 import { useThemeColors } from '../../theme';
 import type { TrustScore, TrustCertification } from '../../types';
 import { getCertificationBadge } from '../../services/trust';
+import { DSIcon } from '../DSIcon';
 
 interface TrustBadgeProps {
   trustScore?: TrustScore;
@@ -71,43 +72,18 @@ export const TrustBadge = memo(function TrustBadge({
   
   // Shield icon with functional color based on score
   const ShieldIcon = () => (
-    <svg 
-      width={iconSize} 
-      height={iconSize}
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke={colors.text}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
+    <span style={{ color: colors.text }}>
+      <DSIcon name="IcShield" size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="high" />
+    </span>
   );
 
   // Copy icon
   const CopyIcon = () => (
-    <svg 
-      width={iconSize} 
-      height={iconSize}
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {copySuccess ? (
-        // Checkmark icon when copied
-        <path d="M20 6L9 17l-5-5" />
-      ) : (
-        // Copy icon
-        <>
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-        </>
-      )}
-    </svg>
+    copySuccess ? (
+      <DSIcon name="IcCheck" size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="high" />
+    ) : (
+      <DSIcon name="IcCopy" size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="medium" />
+    )
   );
 
   // Handle copy to clipboard
@@ -189,18 +165,7 @@ export const InlineTrustBadge = memo(function InlineTrustBadge({
       title={`${badge.label} - Click for details`}
       type="button"
     >
-      <svg 
-        width="12" 
-        height="12"
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke={colors.text}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
+      <DSIcon name="IcShield" size="XS" attention="high" />
       <span>{trustScore.overall}</span>
     </button>
   );
