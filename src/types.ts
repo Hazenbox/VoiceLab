@@ -574,6 +574,63 @@ export type ChatMode = 'copy' | 'voice';
 // Message type discriminator
 export type MessageType = 'text' | 'audio';
 
+// =============================================================================
+// Feedback Types (moved from MessageFeedback.tsx for centralization)
+// =============================================================================
+
+/** Feedback action types for learning system */
+export type FeedbackType = 'thumbs_up' | 'thumbs_down' | 'edit' | 'comment';
+
+/** Payload sent when user provides feedback on a message */
+export interface FeedbackPayload {
+  messageId: string;
+  feedbackType: FeedbackType;
+  originalContent: string;
+  editedContent?: string;
+  comment?: string;
+}
+
+// =============================================================================
+// Prompt Version Tracking (for edit history)
+// =============================================================================
+
+/**
+ * Represents a single version of a user message prompt
+ * Used for edit history tracking (ChatGPT-style 2/2 navigation)
+ */
+export interface PromptVersion {
+  /** The prompt content for this version */
+  content: string;
+  /** When this version was created */
+  timestamp: number;
+  /** The AI response ID generated from this prompt version */
+  responseId: string;
+}
+
+/**
+ * Result from handleSendChatMessage for atomic state updates
+ */
+export interface SendMessageResult {
+  /** The user message ID (existing or newly created) */
+  userMessageId: string;
+  /** The AI response message ID */
+  aiMessageId: string;
+  /** Whether generation was successful */
+  success: boolean;
+}
+
+/**
+ * Options for handleSendChatMessage
+ */
+export interface SendMessageOptions {
+  /** For edits/regeneration: reuse existing user message ID */
+  parentMessageId?: string;
+  /** Replace existing AI response in-place */
+  replaceResponseId?: string;
+  /** Skip creating user message (for edit flow) */
+  skipUserMessage?: boolean;
+}
+
 // Chat message for unified chat interface
 export interface ChatMessage {
   id: string;
@@ -608,6 +665,32 @@ export interface ChatMessage {
     errorCount: number;
     autoFixesApplied: number;
   };
+  
+  // ==========================================================================
+  // PROMPT VERSION TRACKING (for user messages - edit history)
+  // ==========================================================================
+  
+  /** 
+   * History of prompt versions (user messages only)
+   * First entry is the original, subsequent entries are edits
+   */
+  promptVersions?: PromptVersion[];
+  
+  /** 
+   * Currently displayed version index (1-indexed for UI display)
+   * If undefined, shows the latest version
+   */
+  displayVersion?: number;
+  
+  // ==========================================================================
+  // USER FEEDBACK TRACKING (for assistant messages)
+  // ==========================================================================
+  
+  /**
+   * User feedback for this message (persisted)
+   * Used to prevent double-submit and show feedback state after refresh
+   */
+  userFeedback?: 'like' | 'dislike';
 }
 
 // Inworld configuration
@@ -700,4 +783,40 @@ export function createAudioMessage(
     sourceMode,
     parentMessageId,
   };
+}
+
+// =============================================================================
+// Version Migration Helpers
+// =============================================================================
+
+/**
+ * Migrate legacy messages to include version tracking fields
+ * Call this during message load from storage for backward compatibility
+ */
+export function migrateMessageVersion(message: ChatMessage): ChatMessage {
+  // Only migrate user messages without version tracking
+  if (message.role === 'user' && !message.promptVersions) {
+    return {
+      ...message,
+      promptVersions: [{
+        content: message.content,
+        timestamp: message.timestamp,
+        responseId: '', // Unknown for legacy messages - will show current content
+      }],
+      // Don't set displayVersion - undefined means "show latest"
+    };
+  }
+  return message;
+}
+
+/**
+ * Get the display content for a user message (handles version navigation)
+ * Returns the content for the currently selected version, or latest if not set
+ */
+export function getDisplayContent(message: ChatMessage): string {
+  if (!message.promptVersions || message.promptVersions.length === 0) {
+    return message.content;
+  }
+  const version = message.displayVersion ?? message.promptVersions.length;
+  return message.promptVersions[version - 1]?.content ?? message.content;
 }
