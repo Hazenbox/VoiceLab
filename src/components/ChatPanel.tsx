@@ -240,7 +240,7 @@ export const ChatPanel = memo(function ChatPanel({
             )}
             {/* Assistant audio message actions */}
             {!isUser && onLike && onDislike && onTryAgain && (
-              <div className="flex items-center gap-2">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
                 <AssistantMessageActions
                   messageId={message.id}
                   content={message.content}
@@ -361,7 +361,7 @@ export const ChatPanel = memo(function ChatPanel({
           <MessageContent content={message.content} role="assistant" />
           
           {/* Actions row: Trust Badge + Message Actions */}
-          <div className="flex items-center gap-2 mt-1.5">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0', marginTop: '6px' }}>
             {message.trustScore && (
               <TrustBadge
                 trustScore={message.trustScore}
