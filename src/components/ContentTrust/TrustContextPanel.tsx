@@ -20,6 +20,7 @@ import {
 } from '../../services/trust';
 import { getContextSummary } from '../../services/context';
 import { Accordion } from '../ui/Accordion';
+import { DSIcon } from '../DSIcon';
 
 interface TrustContextPanelProps {
   isOpen: boolean;
@@ -73,10 +74,9 @@ const ViolationItem: React.FC<{ violation: Violation }> = ({ violation }) => {
           <p className="text-sm" style={{ color: theme.text.high }}>{violation.rule}</p>
           {violation.suggestion && (
             <p className="text-xs mt-1 flex items-start gap-1" style={{ color: theme.text.medium }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0 mt-0.5">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4M12 8h.01" />
-              </svg>
+              <span className="flex-shrink-0 mt-0.5">
+                <DSIcon name="IcInfo" size="XS" attention="medium" />
+              </span>
               <span>{violation.suggestion}</span>
             </p>
           )}
@@ -142,11 +142,7 @@ const DetectedProductBadge: React.FC<{
             color: '#eab308',
           }}
         >
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
+          <DSIcon name="IcWarning" size="XS" attention="medium" />
           Typically uses {suggestedEcosystem} tone
         </span>
       )}
@@ -191,10 +187,7 @@ const ContextSummarySection: React.FC<{ context: GenerationContext }> = ({ conte
       >
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: theme.text.high }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
+            <DSIcon name="IcSearch" size="XS" attention="high" />
             Detected Topic
           </span>
         </div>
@@ -234,10 +227,9 @@ const ContextSummarySection: React.FC<{ context: GenerationContext }> = ({ conte
  * Shield check icon for trust indicators
  */
 const ShieldCheckIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    <path d="M9 12l2 2 4-4" />
-  </svg>
+  <span className={className}>
+    <DSIcon name="IcShield" size="S" attention="high" />
+  </span>
 );
 
 /**
@@ -282,13 +274,13 @@ const GuardrailItem: React.FC<{ guardrail: GuardrailStatus }> = ({ guardrail }) 
         }}
       >
         {isFollowed ? (
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+          <span className="text-white scale-75">
+            <DSIcon name="IcCheck" size="XS" attention="high" />
+          </span>
         ) : (
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3">
-            <circle cx="12" cy="12" r="1" fill="#ffffff" />
-          </svg>
+          <span className="text-white scale-75">
+            <DSIcon name="IcCircle" size="XS" attention="high" />
+          </span>
         )}
       </div>
       <div className="flex-1 min-w-0">
@@ -453,9 +445,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
               }}
               aria-label="Close trust panel"
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <DSIcon name="IcClose" size="XS" attention="high" />
               <style>{`
                 .close-trust-btn:hover {
                   background-color: ${theme.stroke.low} !important;
@@ -530,9 +520,9 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                 <div className="text-center py-8">
                   <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
                     style={{ backgroundColor: 'rgba(0, 168, 89, 0.1)' }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00A859" strokeWidth="2">
-                      <path d="M5 13l4 4L19 7" />
-                    </svg>
+                    <span className="text-[#00A859]">
+                      <DSIcon name="IcCheck" size="M" attention="high" />
+                    </span>
                   </div>
                   <p className="text-sm" style={{ color: theme.text.medium }}>No violations found!</p>
                 </div>
@@ -549,9 +539,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
           <div className="px-4 py-3 border-t flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
             <button onClick={onAutoFix} className="w-full py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2"
               style={{ backgroundColor: theme.accent, color: '#ffffff' }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
+              <DSIcon name="IcStar" size="XS" attention="high" />
               Auto-Fix ({trustScore.autoFixableCount} fixable)
             </button>
           </div>
