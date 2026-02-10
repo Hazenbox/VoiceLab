@@ -131,16 +131,17 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         isDisabled={disabled}
         aria-label={isCopied ? "copied" : "copy"}
         appearance="ghost"
-        size="XS"
         style={{ 
           width: '32px', 
           height: '32px', 
           minHeight: '32px',
+          minWidth: '32px',
           padding: '0',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          backgroundColor: 'transparent',
         }}
       >
         {isCopied ? <CopyDoneIcon /> : <CopyIcon />}
@@ -150,16 +151,17 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         isDisabled={disabled || !!feedbackGiven}
         aria-label="good response"
         appearance="ghost"
-        size="XS"
         style={{ 
           width: '32px', 
           height: '32px', 
           minHeight: '32px',
+          minWidth: '32px',
           padding: '0',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          backgroundColor: 'transparent',
           opacity: feedbackGiven === 'like' ? '1' : undefined,
         }}
       >
@@ -170,16 +172,17 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         isDisabled={disabled || !!feedbackGiven}
         aria-label="bad response"
         appearance="ghost"
-        size="XS"
         style={{ 
           width: '32px', 
           height: '32px', 
           minHeight: '32px',
+          minWidth: '32px',
           padding: '0',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          backgroundColor: 'transparent',
           opacity: feedbackGiven === 'dislike' ? '1' : undefined,
         }}
       >
@@ -190,16 +193,17 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         isDisabled={disabled}
         aria-label="try again"
         appearance="ghost"
-        size="XS"
         style={{ 
           width: '32px', 
           height: '32px', 
           minHeight: '32px',
+          minWidth: '32px',
           padding: '0',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          backgroundColor: 'transparent',
         }}
       >
         <RefreshIcon />
@@ -256,16 +260,17 @@ export const UserMessageActions = memo(function UserMessageActions({
         isDisabled={disabled}
         aria-label={isCopied ? "copied" : "copy"}
         appearance="ghost"
-        size="XS"
         style={{ 
           width: '32px', 
           height: '32px', 
           minHeight: '32px',
+          minWidth: '32px',
           padding: '0',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          backgroundColor: 'transparent',
         }}
       >
         {isCopied ? <CopyDoneIcon /> : <CopyIcon />}
@@ -276,16 +281,17 @@ export const UserMessageActions = memo(function UserMessageActions({
           isDisabled={disabled}
           aria-label="edit"
           appearance="ghost"
-          size="XS"
           style={{ 
             width: '32px', 
             height: '32px', 
             minHeight: '32px',
+            minWidth: '32px',
             padding: '0',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            backgroundColor: 'transparent',
           }}
         >
           <EditIcon />
