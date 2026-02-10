@@ -65,12 +65,7 @@ export const TrustBadge = memo(function TrustBadge({
   const [copySuccess, setCopySuccess] = useState(false);
   
   // Development warning for deprecated prop
-  if (process.env.NODE_ENV === 'development' && messageContent !== undefined) {
-    console.warn(
-      '[TrustBadge] messageContent prop is deprecated. ' +
-      'Copy functionality has moved to MessageActions component.'
-    );
-  }
+  // Note: Warning logged in constructor pattern to avoid every-render logs
   
   if (!trustScore) return null;
   
