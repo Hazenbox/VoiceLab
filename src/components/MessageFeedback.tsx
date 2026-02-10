@@ -12,6 +12,7 @@
 
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { useThemeColors } from '../theme';
+import { DSIcon } from './DSIcon';
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -33,53 +34,31 @@ interface MessageFeedbackProps {
   onSaveAsExample?: (content: string) => void;
 }
 
-// ── Icons ────────────────────────────────────────────────────────
+// ── Icons - Using DSIcon wrapper ──────────────────────────────────
 
+// Note: For filled state icons, we still keep custom SVGs as DSIcon may not support fill toggle
+// These use DSIcon for standard icons where fill state isn't needed
 const ThumbsUpIcon = ({ filled }: { filled: boolean }) => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M7 10v12" />
-    <path d="M15 5.88L14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" />
-  </svg>
+  <span style={{ opacity: filled ? 1 : 0.7 }}>
+    <DSIcon name="IcThumbUp" size="XS" attention={filled ? "high" : "medium"} />
+  </span>
 );
 
 const ThumbsDownIcon = ({ filled }: { filled: boolean }) => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 14V2" />
-    <path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z" />
-  </svg>
+  <span style={{ opacity: filled ? 1 : 0.7 }}>
+    <DSIcon name="IcThumbDown" size="XS" attention={filled ? "high" : "medium"} />
+  </span>
 );
 
-const EditIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-  </svg>
-);
+const EditIcon = () => <DSIcon name="IcEdit" size="XS" attention="medium" />;
 
-const CommentIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-  </svg>
-);
+const CommentIcon = () => <DSIcon name="IcComment" size="XS" attention="medium" />;
 
-const BookmarkIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-  </svg>
-);
+const BookmarkIcon = () => <DSIcon name="IcBookmark" size="XS" attention="medium" />;
 
-const CheckIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
+const CheckIcon = () => <DSIcon name="IcCheck" size="XS" attention="medium" />;
 
-const CloseIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
+const CloseIcon = () => <DSIcon name="IcClose" size="XS" attention="medium" />;
 
 // ── Component ────────────────────────────────────────────────────
 

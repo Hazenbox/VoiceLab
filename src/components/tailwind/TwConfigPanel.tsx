@@ -6,6 +6,7 @@ import { TwLabeledSlider } from './TwLabeledSlider';
 import { TwTextArea } from './TwTextArea';
 import { VIBE_OPTIONS } from '../../constants';
 import { useDesignSystem } from '../../context/DesignSystemContext';
+import { DSIcon } from '../DSIcon';
 
 interface TwConfigPanelProps {
   voiceGender: VoiceGender;
@@ -165,7 +166,7 @@ export const TwConfigPanel: React.FC<TwConfigPanelProps> = ({
             className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700"
             aria-label={`Switch to ${designSystem === 'jio' ? 'Tailwind' : 'Jio DS'}`}
           >
-            <span>{designSystem === 'jio' ? '🎨 Jio DS' : '💨 Tailwind'}</span>
+            <span className="flex items-center gap-1">{designSystem === 'jio' ? <><DSIcon name="IcPalette" size="XS" attention="medium" /> Jio DS</> : <><DSIcon name="IcCode" size="XS" attention="medium" /> Tailwind</>}</span>
           </button>
 
           {/* Theme Toggle */}

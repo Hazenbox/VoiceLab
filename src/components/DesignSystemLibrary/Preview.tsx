@@ -13,6 +13,7 @@ import { LiveComponentPreview } from './LiveComponentPreview';
 import { TokenPreview } from './TokenPreview';
 import { IconBrowser } from './IconBrowser';
 import { PatternPreview } from './PatternPreview';
+import { DSIcon } from '../DSIcon';
 import { 
   COMPONENT_INFO, 
   DENSITY_OPTIONS,
@@ -38,7 +39,7 @@ export const Preview: React.FC<PreviewProps> = ({ item, colorMode: _colorMode })
         style={{ backgroundColor: theme.background.ghost }}
       >
         <div className="text-center">
-          <span className="text-4xl mb-4 block">📚</span>
+          <span className="mb-4 block"><DSIcon name="IcLibrary" size="XL" attention="medium" /></span>
           <p style={{ color: theme.text.medium }}>Select an item to preview</p>
         </div>
       </div>

@@ -21,6 +21,7 @@ import { TrustBadge } from './ContentTrust';
 import { MessageFeedback } from './MessageFeedback';
 import type { FeedbackPayload } from './MessageFeedback';
 import { Button } from '@marcelinodzn/ds-react';
+import { DSIcon } from './DSIcon';
 
 // =============================================================================
 // Types
@@ -278,33 +279,9 @@ export const ChatPanel = memo(function ChatPanel({
             }}
           >
             {_mode === 'voice' ? (
-              <svg 
-                width="18" 
-                height="18" 
-                viewBox="0 0 24 24" 
-                fill="currentColor" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <rect x="6" y="6" width="12" height="12" rx="2" />
-              </svg>
+              <DSIcon name="IcStop" size="S" attention="high" />
             ) : (
-              <svg 
-                width="18" 
-                height="18" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                <line x1="12" y1="19" x2="12" y2="22" />
-              </svg>
+              <DSIcon name="IcMic" size="S" attention="medium" />
             )}
           </button>
         )}
@@ -353,19 +330,7 @@ export const ChatPanel = memo(function ChatPanel({
               color: '#ffffff',
             }}
           >
-            <svg 
-              width="18" 
-              height="18" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="#ffffff"
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M12 19V5" />
-              <path d="M5 12l7-7 7 7" />
-            </svg>
+            <DSIcon name="IcArrowUp" size="S" attention="high" />
           </Button>
         </div>
       </div>

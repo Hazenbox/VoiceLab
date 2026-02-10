@@ -13,6 +13,7 @@
 
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { useThemeColors } from '../theme';
+import { DSIcon } from './DSIcon';
 
 // =============================================================================
 // Types
@@ -171,14 +172,9 @@ export const Dropdown = memo(function Dropdown({
           <span className="flex-shrink-0">{selectedOption.icon}</span>
         )}
         <span className="truncate">{selectedOption?.label || placeholder}</span>
-        <svg 
-          className={`w-3 h-3 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <span className={`flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+          <DSIcon name="IcChevronDown" size="XS" attention="low" />
+        </span>
       </button>
 
       {/* Dropdown Menu */}

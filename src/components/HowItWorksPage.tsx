@@ -10,6 +10,7 @@
 import { memo } from 'react';
 import { useThemeColors } from '../theme';
 import { FlowCanvas, FlowNode, FlowArrow, CurvedFlowArrow, DottedBackground } from './FlowDiagram';
+import { DSIcon } from './DSIcon';
 
 interface HowItWorksPageProps {
   onBack: () => void;
@@ -367,7 +368,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Support - Help articles, chat responses, FAQs',
                   'Leadership - Internal comms, strategy, memos'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
+                icon={<DSIcon name="IcUser" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="14 Product Ecosystems"
@@ -381,7 +382,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Business / Work / Government / Education',
                   'Sports / Agriculture / Energy / Transport'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                icon={<DSIcon name="IcApartment" size="XS" attention="high" />}
               />
             </div>
 
@@ -421,7 +422,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Content focus and priority areas',
                   'Anti-patterns specific to the role'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+                icon={<DSIcon name="IcSettings" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="Prompt Personality Injection"
@@ -433,7 +434,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Includes role-specific avoidance patterns',
                   'All overridable by the user in Settings'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
+                icon={<DSIcon name="IcDocument" size="XS" attention="high" />}
               />
             </div>
           </Section>
@@ -458,7 +459,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Agriculture - Farmer services, rural',
                   'Energy / Transport / Home / Business / Work / Government'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                icon={<DSIcon name="IcApartment" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="Channel (18 Types)"
@@ -472,7 +473,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Social Media / Digital Ads / IVR',
                   'And 9 more...'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>}
+                icon={<DSIcon name="IcChat" size="XS" attention="high" />}
               />
             </div>
             
@@ -490,7 +491,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Adbhuta - Wonder & Curiosity',
                   'Shanta - Peace & Calm'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                icon={<DSIcon name="IcSentimentSatisfied" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="User Profile & Timing"
@@ -502,7 +503,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Morning/Afternoon/Evening/Late Night tone shifts',
                   'Weekend and festival-aware timing'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                icon={<DSIcon name="IcClock" size="XS" attention="high" />}
               />
             </div>
           </Section>
@@ -524,7 +525,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   '11 Indian festivals',
                   'All stored in Convex with embeddings'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" /></svg>}
+                icon={<DSIcon name="IcDatabase" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="Code-Level Rules (Stay in Code)"
@@ -536,7 +537,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   '18 channel formatting rules',
                   '15 ecosystem definitions'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>}
+                icon={<DSIcon name="IcCode" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="RAG Pipeline (Vector Search)"
@@ -548,7 +549,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Minimum similarity score: 0.3',
                   'Results merged into prompt context'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
+                icon={<DSIcon name="IcSearch" size="XS" attention="high" />}
               />
             </div>
 
@@ -819,7 +820,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Request logging and rate limiting',
                   'Streaming support (SSE)'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" /></svg>}
+                icon={<DSIcon name="IcArrowForward" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="Convex (Shared Database)"
@@ -830,7 +831,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Serverless functions (actions, mutations, queries)',
                   'Multi-user data aggregation'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" /></svg>}
+                icon={<DSIcon name="IcDatabase" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="Client-Side Persistence"
@@ -841,7 +842,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Convex is the shared source of truth',
                   'Local storage acts as offline buffer'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
+                icon={<DSIcon name="IcCpu" size="XS" attention="high" />}
               />
             </div>
 
@@ -936,7 +937,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Elitism patterns (ping us -> message us)',
                   'Fear-based messaging detection'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                icon={<DSIcon name="IcCheckCircle" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="Readability Agent"
@@ -948,7 +949,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Sentence structure analysis',
                   'Per Training 1.pdf requirement'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>}
+                icon={<DSIcon name="IcLibrary" size="XS" attention="high" />}
               />
             </div>
 
@@ -973,7 +974,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Generation context preserved per message',
                   'Copy / regenerate options'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+                icon={<DSIcon name="IcBolt" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="5 Feedback Actions"
@@ -984,7 +985,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Comment - Free-text style/preference feedback',
                   'Save as Example - Bookmark approved content for reuse'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>}
+                icon={<DSIcon name="IcThumbUp" size="XS" attention="high" />}
               />
             </div>
 
@@ -1065,7 +1066,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Builds a composite "Learned from User Corrections" prompt section',
                   'Merged into the Knowledge Retriever output'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>}
+                icon={<DSIcon name="IcLightbulb" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="How Learning Improves the Prompt"
@@ -1077,7 +1078,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'All filtered by current ecosystem/channel context',
                   'Local corrections cache: max 100 entries in localStorage'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>}
+                icon={<DSIcon name="IcTrendingUp" size="XS" attention="high" />}
               />
             </div>
 
@@ -1102,7 +1103,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Corrections and feedback (all 5 types)',
                   'Saved examples (approved content)'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>}
+                icon={<DSIcon name="IcSort" size="XS" attention="high" />}
               />
               <InfoCard 
                 title="Sync Architecture"
@@ -1114,7 +1115,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   'Offline: queues events, replays on reconnect',
                   'Queue flush order: user_sync first, then heartbeat, analytics (batched), corrections'
                 ]}
-                icon={<svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>}
+                icon={<DSIcon name="IcRefresh" size="XS" attention="high" />}
               />
             </div>
 
@@ -1239,9 +1240,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 }}
               >
                 <h4 className="font-medium text-sm mb-3 flex items-center gap-2" style={{ color: theme.text.high }}>
-                  <svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
+                  <DSIcon name="IcWarning" size="XS" attention="high" />
                   Error Handling
                 </h4>
                 <ul className="space-y-2 text-sm" style={{ color: theme.text.medium }}>
@@ -1276,9 +1275,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 }}
               >
                 <h4 className="font-medium text-sm mb-3 flex items-center gap-2" style={{ color: theme.text.high }}>
-                  <svg className="w-4 h-4" fill="none" stroke={theme.accent} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <DSIcon name="IcClose" size="XS" attention="high" />
                   Abort Functionality
                 </h4>
                 <ul className="space-y-2 text-sm" style={{ color: theme.text.medium }}>

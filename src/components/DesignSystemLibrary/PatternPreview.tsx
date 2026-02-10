@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { Button } from '@marcelinodzn/ds-react';
 import { useThemeColors } from '../../theme';
 import { PATTERNS } from '../../data/designSystemData';
+import { DSIcon } from '../DSIcon';
 
 interface PatternPreviewProps {
   patternId: string;
@@ -483,7 +484,7 @@ const ActionCardPattern: React.FC = () => {
         className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl mb-4"
         style={{ backgroundColor: theme.background.ghost }}
       >
-        🚀
+        <DSIcon name="IcRocket" size="L" attention="high" />
       </div>
       <h3 className="text-lg font-semibold mb-2" style={{ color: theme.text.high }}>
         Get Started
@@ -538,10 +539,10 @@ const TabNavigationPattern: React.FC = () => {
 const SettingsListPattern: React.FC = () => {
   const theme = useThemeColors();
   const items = [
-    { icon: '👤', label: 'Account', subtitle: 'Manage your account' },
-    { icon: '🔔', label: 'Notifications', subtitle: 'Configure alerts' },
-    { icon: '🔒', label: 'Privacy', subtitle: 'Control your data' },
-    { icon: '🎨', label: 'Appearance', subtitle: 'Customize look' },
+    { iconName: 'IcUser', label: 'Account', subtitle: 'Manage your account' },
+    { iconName: 'IcNotification', label: 'Notifications', subtitle: 'Configure alerts' },
+    { iconName: 'IcLock', label: 'Privacy', subtitle: 'Control your data' },
+    { iconName: 'IcPalette', label: 'Appearance', subtitle: 'Customize look' },
   ];
 
   return (
@@ -555,7 +556,7 @@ const SettingsListPattern: React.FC = () => {
             border: `1px solid ${theme.stroke.low}`,
           }}
         >
-          <span className="text-2xl">{item.icon}</span>
+          <DSIcon name={item.iconName} size="L" attention="high" />
           <div className="flex-1">
             <p className="font-medium" style={{ color: theme.text.high }}>{item.label}</p>
             <p className="text-sm" style={{ color: theme.text.low }}>{item.subtitle}</p>

@@ -13,6 +13,7 @@
 import React, { useCallback, useRef, useEffect, memo } from 'react';
 import { useThemeColors } from '../theme/useColors';
 import type { ChatMode } from '../types';
+import { DSIcon } from './DSIcon';
 
 // =============================================================================
 // Types
@@ -40,47 +41,13 @@ const modes: ModeOption[] = [
   {
     value: 'copy',
     label: 'Generate Copy',
-    icon: (
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-        <line x1="10" y1="9" x2="8" y2="9" />
-      </svg>
-    ),
+    icon: <DSIcon name="IcDocument" size="XS" attention="high" />,
     shortcut: '1',
   },
   {
     value: 'voice',
     label: 'Voice Chat',
-    icon: (
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-        <line x1="12" y1="19" x2="12" y2="22" />
-      </svg>
-    ),
+    icon: <DSIcon name="IcMic" size="XS" attention="high" />,
     shortcut: '2',
   },
 ];
@@ -280,20 +247,9 @@ export const ModeToggleCompact = memo(function ModeToggleCompact({
         {currentMode.icon}
       </span>
       <span className="hidden sm:inline">{currentMode.label}</span>
-      <svg
-        width="12"
-        height="12"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="opacity-50"
-        aria-hidden="true"
-      >
-        <polyline points="6 9 12 15 18 9" />
-      </svg>
+      <span className="opacity-50" aria-hidden="true">
+        <DSIcon name="IcChevronDown" size="XS" attention="low" />
+      </span>
     </button>
   );
 });

@@ -10,6 +10,7 @@ import { useThemeColors } from '../../theme';
 import type { EcosystemType, ContentChannelType } from '../../types';
 import { getEcosystemOptions, getChannelOptions, getChannelDefaults } from '../../services/guidelines';
 import { SearchableDropdown } from '../SearchableDropdown';
+import { DSIcon } from '../DSIcon';
 
 interface ContentContextSelectorProps {
   ecosystem: EcosystemType;
@@ -76,8 +77,8 @@ export const ContentContextSelector: React.FC<ContentContextSelectorProps> = ({
       
       {showChannelDefaults && !compact && (
         <div className="flex items-center gap-2 px-2 py-1 rounded text-[10px]" style={{ color: theme.text.low }}>
-          <span title="Warmth level">🔥 {channelDefaults.warmth}</span>
-          <span title="Detail level">📝 {channelDefaults.detail}</span>
+          <span className="flex items-center gap-0.5" title="Warmth level"><DSIcon name="IcWarmth" size="XS" attention="low" /> {channelDefaults.warmth}</span>
+          <span className="flex items-center gap-0.5" title="Detail level"><DSIcon name="IcDocument" size="XS" attention="low" /> {channelDefaults.detail}</span>
           <span title="Goal">{channelDefaults.goal}</span>
         </div>
       )}

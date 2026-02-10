@@ -3,6 +3,7 @@ import type { DesignSystemNavItem, ColorMode } from '../types';
 import { useThemeColors } from '../theme';
 import { Sidebar } from './DesignSystemLibrary/Sidebar';
 import { Preview } from './DesignSystemLibrary/Preview';
+import { DSIcon } from './DSIcon';
 import { 
   COMPONENTS, 
   COMPONENT_CATEGORIES, 
@@ -237,7 +238,7 @@ export const DesignSystemLibrary: React.FC<DesignSystemLibraryProps> = ({
               border: `1px solid ${theme.stroke.low}`,
             }}
           >
-            <span>📚</span>
+            <DSIcon name="IcLibrary" size="XS" attention="medium" />
             Storybook
           </a>
           <a

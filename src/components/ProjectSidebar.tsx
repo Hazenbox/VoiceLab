@@ -4,6 +4,7 @@ import { useThemeColors } from '../theme';
 import type { ColorMode } from '../types';
 import type { DropdownOption } from './Dropdown';
 import { Button } from '@marcelinodzn/ds-react';
+import { DSIcon } from './DSIcon';
 
 // ── Helper Functions ─────────────────────────────────────────────
 
@@ -168,9 +169,7 @@ const ProjectMenu = memo(function ProjectMenu({
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-        </svg>
+        <DSIcon name="IcMoreVertical" size="XS" attention="low" />
       </button>
 
       {/* Dropdown Menu */}
@@ -359,39 +358,19 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     {
       value: 'edit-profile',
       label: 'Edit Profile',
-      icon: (
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-          />
-        </svg>
-      ),
+      icon: <DSIcon name="IcEdit" size="XS" attention="medium" />,
     },
     ...(onNavigateToDesignSystem ? [{
       value: 'design-system',
       label: 'Design System',
-      icon: (
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v9a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
-        </svg>
-      ),
+      icon: <DSIcon name="IcLayout" size="XS" attention="medium" />,
     }] : []),
     {
       value: 'toggle-theme',
       label: `${colorMode === 'Light' ? 'Dark' : 'Light'} Mode`,
-      icon:
-        colorMode === 'Light' ? (
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
-          </svg>
-        ) : (
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="4" strokeWidth="2" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-          </svg>
-        ),
+      icon: colorMode === 'Light' 
+        ? <DSIcon name="IcMoonFull" size="XS" attention="medium" />
+        : <DSIcon name="IcSunnyClear" size="XS" attention="medium" />,
     },
   ];
 
@@ -442,15 +421,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               aria-label="Create new project"
             >
               <div className="flex items-center gap-2">
-                <svg 
-                  className="w-4 h-4" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
+                <DSIcon name="IcAdd" size="XS" attention="high" />
                 <span>Create</span>
               </div>
             </Button>
@@ -530,17 +501,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         {/* How it Works Nav Item */}
         {onNavigateToHowItWorks && (
           <SidebarNavItem
-            icon={
-              <svg 
-                className="w-4 h-4" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-                style={{ color: theme.text.high }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            }
+            icon={<DSIcon name="IcLightbulb" size="XS" attention="high" />}
             label="How it Works"
             onClick={onNavigateToHowItWorks}
             isActive={isHowItWorksActive}
