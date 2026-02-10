@@ -17,7 +17,7 @@
 import { memo, useCallback } from 'react';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { useThemeColors } from '../theme';
-import { ActionButton } from './ActionButton';
+import { Button } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
 // ============================================================================
@@ -80,31 +80,31 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   // Icon components with grey color styling
   const CopyIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCopyDocument" size="S" attention="low" />
+      <DSIcon name="IcCopyDocument" size="XS" attention="low" />
     </span>
   );
   
   const CopyDoneIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCheck" size="S" attention="low" />
+      <DSIcon name="IcCheck" size="XS" attention="low" />
     </span>
   );
   
   const LikeIcon = () => (
     <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex', color: theme.text.low }}>
-      <DSIcon name="IcDislike" size="S" attention="low" />
+      <DSIcon name="IcDislike" size="XS" attention="low" />
     </span>
   );
   
   const DislikeIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcDislike" size="S" attention="low" />
+      <DSIcon name="IcDislike" size="XS" attention="low" />
     </span>
   );
   
   const RefreshIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcRefresh" size="S" attention="low" />
+      <DSIcon name="IcRefresh" size="XS" attention="low" />
     </span>
   );
   
@@ -125,34 +125,85 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   }, [messageId, onTryAgain]);
   
   return (
-    <div className="flex items-center gap-1">
-      <ActionButton
-        icon={isCopied ? <CopyDoneIcon /> : <CopyIcon />}
-        label={isCopied ? "copied" : "copy"}
-        onClick={handleCopy}
-        disabled={disabled}
-        isActive={isCopied}
-      />
-      <ActionButton
-        icon={<LikeIcon />}
-        label="good response"
-        onClick={handleLike}
-        disabled={disabled || !!feedbackGiven}
-        isActive={feedbackGiven === 'like'}
-      />
-      <ActionButton
-        icon={<DislikeIcon />}
-        label="bad response"
-        onClick={handleDislike}
-        disabled={disabled || !!feedbackGiven}
-        isActive={feedbackGiven === 'dislike'}
-      />
-      <ActionButton
-        icon={<RefreshIcon />}
-        label="try again"
-        onClick={handleTryAgain}
-        disabled={disabled}
-      />
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <Button
+        onPress={handleCopy}
+        isDisabled={disabled}
+        aria-label={isCopied ? "copied" : "copy"}
+        appearance="ghost"
+        size="XS"
+        style={{ 
+          width: '32px', 
+          height: '32px', 
+          minHeight: '32px',
+          padding: '0',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {isCopied ? <CopyDoneIcon /> : <CopyIcon />}
+      </Button>
+      <Button
+        onPress={handleLike}
+        isDisabled={disabled || !!feedbackGiven}
+        aria-label="good response"
+        appearance="ghost"
+        size="XS"
+        style={{ 
+          width: '32px', 
+          height: '32px', 
+          minHeight: '32px',
+          padding: '0',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: feedbackGiven === 'like' ? '1' : undefined,
+        }}
+      >
+        <LikeIcon />
+      </Button>
+      <Button
+        onPress={handleDislike}
+        isDisabled={disabled || !!feedbackGiven}
+        aria-label="bad response"
+        appearance="ghost"
+        size="XS"
+        style={{ 
+          width: '32px', 
+          height: '32px', 
+          minHeight: '32px',
+          padding: '0',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: feedbackGiven === 'dislike' ? '1' : undefined,
+        }}
+      >
+        <DislikeIcon />
+      </Button>
+      <Button
+        onPress={handleTryAgain}
+        isDisabled={disabled}
+        aria-label="try again"
+        appearance="ghost"
+        size="XS"
+        style={{ 
+          width: '32px', 
+          height: '32px', 
+          minHeight: '32px',
+          padding: '0',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <RefreshIcon />
+      </Button>
     </div>
   );
 });
@@ -174,19 +225,19 @@ export const UserMessageActions = memo(function UserMessageActions({
   // Icon components with grey color styling
   const CopyIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCopyDocument" size="S" attention="low" />
+      <DSIcon name="IcCopyDocument" size="XS" attention="low" />
     </span>
   );
   
   const CopyDoneIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCheck" size="S" attention="low" />
+      <DSIcon name="IcCheck" size="XS" attention="low" />
     </span>
   );
   
   const EditIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcEdit" size="S" attention="low" />
+      <DSIcon name="IcEdit" size="XS" attention="low" />
     </span>
   );
   
@@ -199,21 +250,46 @@ export const UserMessageActions = memo(function UserMessageActions({
   }, [messageId, content, onEdit]);
   
   return (
-    <div className="flex items-center gap-1">
-      <ActionButton
-        icon={isCopied ? <CopyDoneIcon /> : <CopyIcon />}
-        label={isCopied ? "copied" : "copy"}
-        onClick={handleCopy}
-        disabled={disabled}
-        isActive={isCopied}
-      />
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <Button
+        onPress={handleCopy}
+        isDisabled={disabled}
+        aria-label={isCopied ? "copied" : "copy"}
+        appearance="ghost"
+        size="XS"
+        style={{ 
+          width: '32px', 
+          height: '32px', 
+          minHeight: '32px',
+          padding: '0',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {isCopied ? <CopyDoneIcon /> : <CopyIcon />}
+      </Button>
       {!hideEdit && (
-        <ActionButton
-          icon={<EditIcon />}
-          label="edit"
-          onClick={handleEdit}
-          disabled={disabled}
-        />
+        <Button
+          onPress={handleEdit}
+          isDisabled={disabled}
+          aria-label="edit"
+          appearance="ghost"
+          size="XS"
+          style={{ 
+            width: '32px', 
+            height: '32px', 
+            minHeight: '32px',
+            padding: '0',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <EditIcon />
+        </Button>
       )}
     </div>
   );
