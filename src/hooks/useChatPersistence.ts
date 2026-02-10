@@ -14,6 +14,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { chatStorage, type StorageUsage } from '../services/chatStorage';
 import type { ChatMessage, ChatMode } from '../types';
+import { migrateMessageVersion } from '../types';
 
 // =============================================================================
 // Types
@@ -35,6 +36,10 @@ interface UseChatPersistenceReturn {
   addMessage: (message: ChatMessage) => void;
   /** Remove a message by ID */
   removeMessage: (messageId: string) => void;
+  /** Update a specific message by ID with an updater function */
+  updateMessage: (messageId: string, updater: (message: ChatMessage) => ChatMessage) => void;
+  /** Replace a message entirely (for regeneration) */
+  replaceMessage: (messageId: string, newMessage: ChatMessage) => void;
   /** Clear all messages for the project */
   clearHistory: () => void;
   /** Storage usage info */
@@ -90,7 +95,9 @@ export function useChatPersistence(
     
     // Load text messages immediately (synchronous)
     const loadedMessages = chatStorage.load(projectId);
-    setMessagesInternal(loadedMessages);
+    // Apply migration for backward compatibility with existing messages
+    const migratedMessages = loadedMessages.map(migrateMessageVersion);
+    setMessagesInternal(migratedMessages);
     setIsLoaded(true);
     
     // Update storage usage
@@ -100,7 +107,9 @@ export function useChatPersistence(
     chatStorage.loadWithAudio(projectId).then(messagesWithAudio => {
       // Only update if we're still on the same project
       if (projectIdRef.current === projectId) {
-        setMessagesInternal(messagesWithAudio);
+        // Also apply migration to audio messages
+        const migratedWithAudio = messagesWithAudio.map(migrateMessageVersion);
+        setMessagesInternal(migratedWithAudio);
       }
     }).catch(err => {
       console.error('[useChatPersistence] Failed to load audio data:', err);
@@ -143,6 +152,26 @@ export function useChatPersistence(
     setMessagesInternal(prev => prev.filter(m => m.id !== messageId));
   }, []);
   
+  // Update a specific message by ID with an updater function
+  const updateMessage = useCallback((
+    messageId: string, 
+    updater: (message: ChatMessage) => ChatMessage
+  ) => {
+    setMessagesInternal(prev => 
+      prev.map(m => m.id === messageId ? updater(m) : m)
+    );
+  }, []);
+  
+  // Replace a message entirely (for regeneration)
+  const replaceMessage = useCallback((
+    messageId: string,
+    newMessage: ChatMessage
+  ) => {
+    setMessagesInternal(prev =>
+      prev.map(m => m.id === messageId ? newMessage : m)
+    );
+  }, []);
+  
   // Clear history
   const clearHistory = useCallback(async () => {
     if (!projectIdRef.current) return;
@@ -168,6 +197,8 @@ export function useChatPersistence(
     setMessages,
     addMessage,
     removeMessage,
+    updateMessage,
+    replaceMessage,
     clearHistory,
     storageUsage,
     storageWarning: storageUsage.warning,
