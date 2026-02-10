@@ -2,7 +2,11 @@
  * Static Design System Data
  * 
  * Comprehensive data for all components, tokens, and icons from Jio Design System
- * This eliminates dependency on MCP runtime calls for previews
+ * Updated with latest data from MCP server (Feb 2026)
+ * 
+ * Package versions:
+ * - @marcelinodzn/ds-react: 1.1.0 (51 components)
+ * - @marcelinodzn/ds-tokens: 1.0.1 (4,182 tokens)
  */
 
 // =============================================================================
@@ -32,6 +36,7 @@ export type ComponentCategory =
   | 'navigation' 
   | 'layout' 
   | 'feedback' 
+  | 'charts'
   | 'other';
 
 export interface TokenData {
@@ -41,7 +46,7 @@ export interface TokenData {
 }
 
 // =============================================================================
-// All 30 Available Components
+// All 51 Available Components (Updated Feb 2026)
 // =============================================================================
 
 export const COMPONENTS = [
@@ -54,6 +59,7 @@ export const COMPONENTS = [
   'Display',
   'Divider',
   'HeaderNavigation',
+  'HeaderNavigationItem',
   'Headline',
   'Icon',
   'Image',
@@ -61,6 +67,7 @@ export const COMPONENTS = [
   'Label',
   'ListItem',
   'Logo',
+  'JioLogo',
   'Radio',
   'SearchField',
   'Stepper',
@@ -71,16 +78,35 @@ export const COMPONENTS = [
   'Title',
   'Toast',
   'BottomNavigation',
+  'BottomNavigationItem',
   'CarouselIndicator',
   'StructuredList',
   'SegmentedControl',
   'AccountsRail',
+  'WebHeaderNavigation',
+  'Select',
+  'Slider',
+  'Progress',
+  'Dialog',
+  'AlertDialog',
+  'Menu',
+  'Popover',
+  'Tooltip',
+  'Accordion',
+  'Collapsible',
+  'ScrollArea',
+  'VerticalBarChart',
+  'LineChart',
+  'ChartText',
+  'ChartTitle',
+  'ChartHeader',
+  'ChartFooter',
 ] as const;
 
 export type ComponentName = typeof COMPONENTS[number];
 
 // =============================================================================
-// Component Information
+// Component Information (All 51 Components)
 // =============================================================================
 
 export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
@@ -89,30 +115,27 @@ export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
     description: 'Displays user profile pictures or initials with various sizes',
     category: 'display',
     props: {
-      size: { type: '"S" | "M" | "L"', default: '"M"', description: 'Size of the avatar' },
-      name: { type: 'string', description: 'Name to generate initials from' },
       src: { type: 'string', description: 'Image URL for the avatar' },
+      name: { type: 'string', description: 'Name to generate initials from' },
+      size: { type: '"XS" | "S" | "M" | "L" | "XL"', default: '"M"', description: 'Size of the avatar' },
     },
     code: `import { Avatar } from '@marcelinodzn/ds-react';
 
-<Avatar size="M" name="John Doe" />
-<Avatar size="L" src="https://example.com/photo.jpg" />`,
+<Avatar src="/avatar.jpg" name="John Doe" size="M" />`,
     hasLivePreview: true,
   },
 
   Badge: {
     name: 'Badge',
-    description: 'Small status indicator or count display',
+    description: 'Notification badge with count or status indicator',
     category: 'display',
     props: {
-      variant: { type: '"default" | "success" | "warning" | "error"', default: '"default"' },
-      size: { type: '"S" | "M"', default: '"M"' },
-      children: { type: 'ReactNode', required: true },
+      content: { type: 'string | number', description: 'Badge content' },
+      appearance: { type: '"primary" | "secondary" | "success" | "warning" | "error"', default: '"primary"' },
     },
     code: `import { Badge } from '@marcelinodzn/ds-react';
 
-<Badge variant="success">Active</Badge>
-<Badge variant="error">3</Badge>`,
+<Badge content={5} appearance="primary"><IcNotification /></Badge>`,
     hasLivePreview: true,
   },
 
@@ -125,14 +148,11 @@ export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
       size: { type: '"S" | "M" | "L"', default: '"M"' },
       isDisabled: { type: 'boolean', default: 'false' },
       isLoading: { type: 'boolean', default: 'false' },
-      onPress: { type: '() => void', required: true },
-      children: { type: 'ReactNode', required: true },
+      onPress: { type: '() => void' },
     },
     code: `import { Button } from '@marcelinodzn/ds-react';
 
-<Button appearance="primary" size="M" onPress={() => console.log('clicked')}>
-  Click Me
-</Button>`,
+<Button appearance="primary" size="M" onPress={() => {}}>Click Me</Button>`,
     hasLivePreview: true,
   },
 
@@ -143,64 +163,57 @@ export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
     props: {
       variant: { type: '"elevated" | "outlined" | "filled"', default: '"elevated"' },
       padding: { type: '"none" | "S" | "M" | "L"', default: '"M"' },
-      children: { type: 'ReactNode', required: true },
     },
-    code: `import { Card, Text } from '@marcelinodzn/ds-react';
+    code: `import { Card } from '@marcelinodzn/ds-react';
 
-<Card variant="elevated" padding="M">
-  <Text>Card content goes here</Text>
-</Card>`,
+<Card variant="elevated" padding="M"><CardHeader>Title</CardHeader><CardBody>Content</CardBody></Card>`,
     hasLivePreview: true,
   },
 
   Checkbox: {
     name: 'Checkbox',
-    description: 'Toggle control for boolean values',
+    description: 'Checkbox input for boolean selection',
     category: 'form',
     props: {
-      isSelected: { type: 'boolean', default: 'false' },
-      onChange: { type: '(isSelected: boolean) => void', required: true },
+      isSelected: { type: 'boolean' },
+      onChange: { type: '(isSelected: boolean) => void' },
       isDisabled: { type: 'boolean', default: 'false' },
-      label: { type: 'string' },
     },
     code: `import { Checkbox } from '@marcelinodzn/ds-react';
 
-<Checkbox 
-  isSelected={checked} 
-  onChange={setChecked}
-  label="I agree to terms"
-/>`,
+<Checkbox isSelected={checked} onChange={setChecked}>Accept terms</Checkbox>`,
     hasLivePreview: true,
   },
 
   Chip: {
     name: 'Chip',
-    description: 'Compact element for tags, filters, or selections',
+    description: 'Compact element for filters and selections',
     category: 'display',
     props: {
-      variant: { type: '"filled" | "outlined"', default: '"filled"' },
-      size: { type: '"S" | "M"', default: '"M"' },
-      onClose: { type: '() => void', description: 'Makes chip dismissible' },
-      children: { type: 'ReactNode', required: true },
+      appearance: { type: '"outlined" | "filled"', default: '"filled"' },
+      isSelected: { type: 'boolean', default: 'false' },
+      onPress: { type: '() => void' },
+      isDisabled: { type: 'boolean', default: 'false' },
     },
     code: `import { Chip } from '@marcelinodzn/ds-react';
 
-<Chip variant="filled">Tag</Chip>
-<Chip variant="outlined" onClose={() => {}}>Removable</Chip>`,
+<Chip appearance="filled" isSelected={active} onPress={toggle}>Filter</Chip>`,
     hasLivePreview: true,
   },
 
   Display: {
     name: 'Display',
-    description: 'Large display text for hero sections and major headings',
+    description: 'Large display text for headlines and hero sections',
     category: 'typography',
     props: {
-      size: { type: '"S" | "M" | "L"', default: '"M"' },
-      children: { type: 'ReactNode', required: true },
+      size: { type: '"L" | "M" | "S"', default: '"M"' },
+      as: { type: '"h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span"', default: '"h1"' },
+      color: { type: '"high" | "medium" | "low" | "high-tinted" | "on-bold-high"', default: '"high"' },
+      align: { type: '"left" | "center" | "right"', default: '"left"' },
     },
     code: `import { Display } from '@marcelinodzn/ds-react';
 
-<Display size="L">Welcome</Display>`,
+<Display size="L" as="h1">Welcome</Display>`,
     hasLivePreview: true,
   },
 
@@ -210,7 +223,7 @@ export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
     category: 'layout',
     props: {
       orientation: { type: '"horizontal" | "vertical"', default: '"horizontal"' },
-      variant: { type: '"full" | "inset"', default: '"full"' },
+      variant: { type: '"default" | "subtle"', default: '"default"' },
     },
     code: `import { Divider } from '@marcelinodzn/ds-react';
 
@@ -220,265 +233,290 @@ export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
 
   HeaderNavigation: {
     name: 'HeaderNavigation',
-    description: 'Top navigation bar with logo, title, and actions',
+    description: 'Mobile app header navigation bar with back button and actions',
     category: 'navigation',
     props: {
-      title: { type: 'string' },
-      leftAction: { type: 'ReactNode' },
-      rightAction: { type: 'ReactNode' },
+      type: { type: '"homebar" | "contextbar"', default: '"homebar"' },
+      background: { type: '"ghost" | "default"', default: '"default"' },
+      surface: { type: '0 | 1 | 2', default: '0' },
+      title: { type: 'string | ReactNode' },
+      logo: { type: 'ReactNode' },
+      onBack: { type: '() => void' },
+      rightSlot1: { type: 'ReactNode' },
+      rightSlot2: { type: 'ReactNode' },
+      rightSlot3: { type: 'ReactNode' },
+      rightSlot4: { type: 'ReactNode' },
     },
-    code: `import { HeaderNavigation, Icon } from '@marcelinodzn/ds-react';
+    code: `import { HeaderNavigation, JioLogo, Avatar } from '@marcelinodzn/ds-react';
 
-<HeaderNavigation 
-  title="Page Title"
-  leftAction={<Icon name="IcArrowLeft" />}
-  rightAction={<Icon name="IcSettings" />}
+<HeaderNavigation
+  type="homebar"
+  logo={<JioLogo size="M" />}
+  rightSlot4={<Avatar size="S" name="User" />}
 />`,
+    hasLivePreview: true,
+  },
+
+  HeaderNavigationItem: {
+    name: 'HeaderNavigationItem',
+    description: 'Individual navigation item for header navigation lists',
+    category: 'navigation',
+    props: {
+      size: { type: '"XS" | "S" | "M" | "L" | "XL" | "2XL"', default: '"M"' },
+      emphasis: { type: '"low" | "medium" | "high"', default: '"medium"' },
+      isActive: { type: 'boolean', default: 'false' },
+      isDisabled: { type: 'boolean', default: 'false' },
+      start: { type: 'ReactNode' },
+      end: { type: 'ReactNode' },
+      href: { type: 'string' },
+      onPress: { type: '() => void' },
+    },
+    code: `import { HeaderNavigationItem } from '@marcelinodzn/ds-react';
+
+<HeaderNavigationList>
+  <HeaderNavigationItem isActive>Home</HeaderNavigationItem>
+  <HeaderNavigationItem>Products</HeaderNavigationItem>
+</HeaderNavigationList>`,
     hasLivePreview: false,
   },
 
   Headline: {
     name: 'Headline',
-    description: 'Section headline text with emphasis',
+    description: 'Section headline text component',
     category: 'typography',
     props: {
-      size: { type: '"S" | "M" | "L"', default: '"M"' },
-      children: { type: 'ReactNode', required: true },
+      size: { type: '"L" | "M" | "S"', default: '"M"' },
+      weight: { type: '"high" | "medium"', default: '"high"' },
+      as: { type: '"h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span"', default: '"h2"' },
+      color: { type: '"high" | "medium" | "low"', default: '"high"' },
     },
     code: `import { Headline } from '@marcelinodzn/ds-react';
 
-<Headline size="M">Section Headline</Headline>`,
+<Headline size="M" weight="high" as="h2">Section Title</Headline>`,
     hasLivePreview: true,
   },
 
   Icon: {
     name: 'Icon',
-    description: 'SVG icon component with extensive icon library. Icons are available from the Jio Design System icon library. Use the icon browser in the Design System Library to explore all available icons.',
-    category: 'other',
+    description: 'Icon wrapper component with 1,600+ icons available via lazy loading',
+    category: 'display',
     props: {
-      name: { type: 'string', required: true, description: 'Icon name from the icon library (e.g., "IcHome", "IcSearch", "IcUser"). Browse icons in the Design System Library to see all available options.' },
-      size: { type: '"S" | "M" | "L"', default: '"M"', description: 'Size of the icon' },
-      color: { type: 'string', description: 'Optional custom color for the icon. If not provided, uses the default theme color.' },
+      size: { type: '"XS" | "S" | "M" | "L" | "XL"', default: '"M"' },
+      attention: { type: '"low" | "medium" | "high"', default: '"medium"' },
+      appearance: { type: '"primary" | "secondary" | "tertiary"', default: '"primary"' },
     },
     code: `import { Icon } from '@marcelinodzn/ds-react';
+import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 
-// Basic usage
-<Icon name="IcHome" size="M" />
-
-// Different sizes
-<Icon name="IcSearch" size="S" />
-<Icon name="IcUser" size="L" />
-
-// With custom color
-<Icon name="IcSettings" size="M" color="#f97316" />
-
-// Common icons
-<Icon name="IcArrowLeft" size="M" />
-<Icon name="IcCheck" size="M" />
-<Icon name="IcClose" size="M" />`,
+<Icon size="M">
+  <LazyIcon name="IcHome" />
+</Icon>`,
     hasLivePreview: true,
   },
 
   Image: {
     name: 'Image',
-    description: 'Responsive image component with loading states',
+    description: 'Optimized image component with loading states',
     category: 'display',
     props: {
       src: { type: 'string', required: true },
       alt: { type: 'string', required: true },
-      aspectRatio: { type: '"1:1" | "4:3" | "16:9"' },
-      fit: { type: '"cover" | "contain"', default: '"cover"' },
+      width: { type: 'number' },
+      height: { type: 'number' },
+      objectFit: { type: '"cover" | "contain" | "fill"', default: '"cover"' },
     },
     code: `import { Image } from '@marcelinodzn/ds-react';
 
-<Image 
-  src="https://example.com/photo.jpg" 
-  alt="Description"
-  aspectRatio="16:9"
-/>`,
-    hasLivePreview: false,
+<Image src="/photo.jpg" alt="Description" width={300} height={200} objectFit="cover" />`,
+    hasLivePreview: true,
   },
 
   Input: {
     name: 'Input',
-    description: 'Single-line text input field',
+    description: 'Text input field with label and validation states',
     category: 'form',
     props: {
-      value: { type: 'string', required: true },
-      onChange: { type: '(value: string) => void', required: true },
+      label: { type: 'string' },
       placeholder: { type: 'string' },
-      size: { type: '"S" | "M" | "L"', default: '"M"' },
+      value: { type: 'string' },
+      onChange: { type: '(value: string) => void' },
       isDisabled: { type: 'boolean', default: 'false' },
-      type: { type: '"text" | "email" | "password" | "number"', default: '"text"' },
+      isInvalid: { type: 'boolean', default: 'false' },
     },
     code: `import { Input } from '@marcelinodzn/ds-react';
 
-<Input 
-  value={text}
-  onChange={setText}
-  placeholder="Enter text..."
-  size="M"
-/>`,
+<Input label="Email" placeholder="Enter email" value={email} onChange={setEmail} />`,
     hasLivePreview: true,
   },
 
   Label: {
     name: 'Label',
-    description: 'Form field label text',
+    description: 'Label component for form fields and UI elements',
     category: 'typography',
     props: {
-      size: { type: '"S" | "M"', default: '"M"' },
-      isRequired: { type: 'boolean', default: 'false' },
-      children: { type: 'ReactNode', required: true },
+      size: { type: '"2XL" | "XL" | "L" | "M" | "S" | "XS" | "2XS" | "3XS"', default: '"M"' },
+      weight: { type: '"low" | "medium" | "high"', default: '"medium"' },
+      attention: { type: '"high" | "medium" | "low"', default: '"high"' },
+      tinted: { type: 'boolean', default: 'false' },
+      as: { type: '"label" | "span" | "p"', default: '"label"' },
     },
     code: `import { Label } from '@marcelinodzn/ds-react';
 
-<Label size="M" isRequired>Email Address</Label>`,
+<Label size="M" weight="medium">Form field label</Label>`,
     hasLivePreview: true,
   },
 
   ListItem: {
     name: 'ListItem',
-    description: 'Single item in a list with optional icons and actions',
-    category: 'layout',
+    description: 'Interactive list item with leading and trailing content',
+    category: 'display',
     props: {
-      title: { type: 'string', required: true },
-      subtitle: { type: 'string' },
-      leftElement: { type: 'ReactNode' },
-      rightElement: { type: 'ReactNode' },
       onPress: { type: '() => void' },
+      isDisabled: { type: 'boolean', default: 'false' },
+      leading: { type: 'ReactNode' },
+      trailing: { type: 'ReactNode' },
     },
     code: `import { ListItem, Icon } from '@marcelinodzn/ds-react';
+import { IcSettings, IcChevronRight } from '@marcelinodzn/ds-react/icons';
 
-<ListItem 
-  title="List Item"
-  subtitle="Description text"
-  leftElement={<Icon name="IcUser" />}
-  onPress={() => {}}
-/>`,
+<ListItem leading={<Icon><IcSettings /></Icon>} trailing={<IcChevronRight />} onPress={handlePress}>
+  Settings
+</ListItem>`,
     hasLivePreview: true,
   },
 
   Logo: {
     name: 'Logo',
-    description: 'Brand logo component with different variants',
+    description: 'Custom logo component with various sizes',
     category: 'display',
     props: {
-      variant: { type: '"full" | "icon"', default: '"full"' },
-      size: { type: '"S" | "M" | "L"', default: '"M"' },
+      src: { type: 'string', required: true },
+      alt: { type: 'string', required: true },
+      size: { type: '"2XS" | "XS" | "S" | "M" | "L" | "XL" | "2XL" | "3XL" | "4XL"', default: '"M"' },
+      appearance: { type: '"primary" | "secondary"', default: '"primary"' },
+      interactive: { type: 'boolean', default: 'false' },
+      onClick: { type: '() => void' },
     },
     code: `import { Logo } from '@marcelinodzn/ds-react';
 
-<Logo variant="full" size="M" />`,
-    hasLivePreview: false,
+<Logo src="/brand-logo.svg" alt="Brand Name" size="M" />`,
+    hasLivePreview: true,
+  },
+
+  JioLogo: {
+    name: 'JioLogo',
+    description: 'Official Jio brand logo component',
+    category: 'display',
+    props: {
+      size: { type: '"2XS" | "XS" | "S" | "M" | "L" | "XL" | "2XL" | "3XL" | "4XL"', default: '"M"' },
+      brandColor: { type: 'string' },
+      interactive: { type: 'boolean', default: 'false' },
+      onClick: { type: '() => void' },
+    },
+    code: `import { JioLogo } from '@marcelinodzn/ds-react';
+
+<JioLogo size="M" />`,
+    hasLivePreview: true,
   },
 
   Radio: {
     name: 'Radio',
-    description: 'Radio button for single selection from options',
+    description: 'Radio button for single selection within a group',
     category: 'form',
     props: {
       value: { type: 'string', required: true },
-      label: { type: 'string' },
       isDisabled: { type: 'boolean', default: 'false' },
     },
     code: `import { RadioGroup, Radio } from '@marcelinodzn/ds-react';
 
 <RadioGroup value={selected} onChange={setSelected}>
-  <Radio value="option1" label="Option 1" />
-  <Radio value="option2" label="Option 2" />
+  <Radio value="option1">Option 1</Radio>
+  <Radio value="option2">Option 2</Radio>
+  <Radio value="option3">Option 3</Radio>
 </RadioGroup>`,
     hasLivePreview: true,
   },
 
   SearchField: {
     name: 'SearchField',
-    description: 'Search input with icon and clear button',
+    description: 'Search input field with clear button',
     category: 'form',
     props: {
-      value: { type: 'string', required: true },
-      onChange: { type: '(value: string) => void', required: true },
+      value: { type: 'string' },
+      onChange: { type: '(value: string) => void' },
       placeholder: { type: 'string', default: '"Search..."' },
       onClear: { type: '() => void' },
+      isDisabled: { type: 'boolean', default: 'false' },
     },
     code: `import { SearchField } from '@marcelinodzn/ds-react';
 
-<SearchField 
-  value={query}
-  onChange={setQuery}
-  placeholder="Search..."
-  onClear={() => setQuery('')}
-/>`,
+<SearchField value={query} onChange={setQuery} placeholder="Search..." onClear={() => setQuery("")} />`,
     hasLivePreview: true,
   },
 
   Stepper: {
     name: 'Stepper',
-    description: 'Step indicator for multi-step processes',
-    category: 'navigation',
+    description: 'Numeric stepper with increment and decrement buttons',
+    category: 'form',
     props: {
-      steps: { type: 'number', required: true },
-      currentStep: { type: 'number', required: true },
-      orientation: { type: '"horizontal" | "vertical"', default: '"horizontal"' },
+      value: { type: 'number' },
+      onChange: { type: '(value: number) => void' },
+      min: { type: 'number', default: '0' },
+      max: { type: 'number', default: '100' },
+      step: { type: 'number', default: '1' },
+      size: { type: '"S" | "M" | "L"', default: '"M"' },
     },
     code: `import { Stepper } from '@marcelinodzn/ds-react';
 
-<Stepper steps={4} currentStep={2} orientation="horizontal" />`,
+<Stepper value={count} onChange={setCount} min={0} max={10} step={1} />`,
     hasLivePreview: true,
   },
 
   Switch: {
     name: 'Switch',
-    description: 'Toggle switch for on/off states',
+    description: 'Toggle switch for boolean states',
     category: 'form',
     props: {
-      isSelected: { type: 'boolean', required: true },
-      onChange: { type: '(isSelected: boolean) => void', required: true },
+      isSelected: { type: 'boolean' },
+      onChange: { type: '(isSelected: boolean) => void' },
       isDisabled: { type: 'boolean', default: 'false' },
-      label: { type: 'string' },
     },
     code: `import { Switch } from '@marcelinodzn/ds-react';
 
-<Switch 
-  isSelected={enabled}
-  onChange={setEnabled}
-  label="Enable notifications"
-/>`,
+<Switch isSelected={enabled} onChange={setEnabled}>Enable notifications</Switch>`,
     hasLivePreview: true,
   },
 
   Tabs: {
     name: 'Tabs',
-    description: 'Tab navigation for switching between views',
+    description: 'Tabbed navigation component',
     category: 'navigation',
     props: {
-      selectedKey: { type: 'string', required: true },
-      onSelectionChange: { type: '(key: string) => void', required: true },
-      children: { type: 'ReactNode', required: true },
+      selectedKey: { type: 'string' },
+      onSelectionChange: { type: '(key: string) => void' },
     },
-    code: `import { Tabs, Tab } from '@marcelinodzn/ds-react';
+    code: `import { Tabs, TabList, Tab } from '@marcelinodzn/ds-react';
 
-<Tabs selectedKey={tab} onSelectionChange={setTab}>
-  <Tab key="tab1" title="Tab 1">Content 1</Tab>
-  <Tab key="tab2" title="Tab 2">Content 2</Tab>
+<Tabs selectedKey={activeTab} onSelectionChange={setActiveTab}>
+  <TabList>
+    <Tab id="1">Tab 1</Tab>
+    <Tab id="2">Tab 2</Tab>
+  </TabList>
 </Tabs>`,
     hasLivePreview: true,
   },
 
   Text: {
     name: 'Text',
-    description: 'Body text component with size variants',
+    description: 'Body text component with weight and variant options',
     category: 'typography',
     props: {
-      size: { type: '"S" | "M" | "L"', default: '"M"' },
-      weight: { type: '"regular" | "medium" | "semibold"', default: '"regular"' },
-      children: { type: 'ReactNode', required: true },
+      variant: { type: '"body" | "caption" | "label"', default: '"body"' },
+      weight: { type: '"regular" | "medium" | "semibold" | "bold"', default: '"regular"' },
     },
     code: `import { Text } from '@marcelinodzn/ds-react';
 
-<Text size="M" weight="regular">
-  Body text content goes here.
-</Text>`,
+<Text variant="body" weight="regular">Hello World</Text>`,
     hasLivePreview: true,
   },
 
@@ -487,36 +525,32 @@ export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
     description: 'Multi-line text input field',
     category: 'form',
     props: {
-      value: { type: 'string', required: true },
-      onChange: { type: '(value: string) => void', required: true },
+      label: { type: 'string' },
       placeholder: { type: 'string' },
+      value: { type: 'string' },
+      onChange: { type: '(value: string) => void' },
       rows: { type: 'number', default: '3' },
-      size: { type: '"S" | "M" | "L"', default: '"M"' },
-      isDisabled: { type: 'boolean', default: 'false' },
+      maxLength: { type: 'number' },
     },
     code: `import { TextArea } from '@marcelinodzn/ds-react';
 
-<TextArea 
-  value={text}
-  onChange={setText}
-  placeholder="Enter description..."
-  rows={4}
-  size="M"
-/>`,
+<TextArea label="Message" placeholder="Type here..." value={text} onChange={setText} rows={4} />`,
     hasLivePreview: true,
   },
 
   Title: {
     name: 'Title',
-    description: 'Title text for cards and sections',
+    description: 'Title text component for cards and sections',
     category: 'typography',
     props: {
-      size: { type: '"S" | "M" | "L"', default: '"M"' },
-      children: { type: 'ReactNode', required: true },
+      size: { type: '"L" | "M" | "S"', default: '"M"' },
+      weight: { type: '"high" | "medium"', default: '"high"' },
+      as: { type: '"h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" | "span"', default: '"h3"' },
+      color: { type: '"high" | "medium" | "low"', default: '"high"' },
     },
     code: `import { Title } from '@marcelinodzn/ds-react';
 
-<Title size="M">Card Title</Title>`,
+<Title size="M" weight="high" as="h3">Card Title</Title>`,
     hasLivePreview: true,
   },
 
@@ -525,106 +559,547 @@ export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
     description: 'Temporary notification message',
     category: 'feedback',
     props: {
-      variant: { type: '"info" | "success" | "warning" | "error"', default: '"info"' },
-      message: { type: 'string', required: true },
-      isVisible: { type: 'boolean', required: true },
-      onDismiss: { type: '() => void' },
+      content: { type: 'ToastContent', required: true },
+      size: { type: '"S" | "M" | "L"', default: '"M"' },
+      appearance: { type: '"neutral" | "informative" | "positive" | "warning" | "negative" | "primary" | "secondary" | "sparkle"', default: '"neutral"' },
+      emphasis: { type: '"high" | "medium" | "default"', default: '"default"' },
+      onClose: { type: '() => void' },
     },
-    code: `import { Toast } from '@marcelinodzn/ds-react';
+    code: `import { globalToastQueue, ToastRegion } from '@marcelinodzn/ds-react';
 
-<Toast 
-  variant="success"
-  message="Action completed successfully"
-  isVisible={showToast}
-  onDismiss={() => setShowToast(false)}
-/>`,
+// Add toast region to your app root
+<ToastRegion queue={globalToastQueue} />
+
+// Trigger a toast from anywhere
+globalToastQueue.add({
+  title: 'Success!',
+  description: 'Your changes have been saved.',
+  appearance: 'positive',
+  closable: true,
+});`,
     hasLivePreview: false,
   },
 
   BottomNavigation: {
     name: 'BottomNavigation',
-    description: 'Bottom tab bar for mobile navigation',
+    description: 'Bottom navigation bar for mobile apps',
     category: 'navigation',
     props: {
-      selectedKey: { type: 'string', required: true },
-      onSelectionChange: { type: '(key: string) => void', required: true },
-      children: { type: 'ReactNode', required: true },
+      background: { type: '"ghost" | "default"', default: '"default"' },
+      showDivider: { type: 'boolean', default: 'true' },
+      surfaceLevel: { type: '0 | 1 | 2', default: '0' },
     },
-    code: `import { BottomNavigation, BottomNavigationItem } from '@marcelinodzn/ds-react';
+    code: `import { BottomNavigation, BottomNavigationItem, Icon } from '@marcelinodzn/ds-react';
+import { IcHome, IcSearch, IcPerson } from '@marcelinodzn/ds-react/icons';
 
-<BottomNavigation selectedKey={tab} onSelectionChange={setTab}>
-  <BottomNavigationItem key="home" icon="IcHome" label="Home" />
-  <BottomNavigationItem key="search" icon="IcSearch" label="Search" />
+<BottomNavigation>
+  <BottomNavigationItem icon={<Icon size="S"><IcHome /></Icon>} label="Home" active />
+  <BottomNavigationItem icon={<Icon size="S"><IcSearch /></Icon>} label="Search" />
+  <BottomNavigationItem icon={<Icon size="S"><IcPerson /></Icon>} label="Profile" />
 </BottomNavigation>`,
+    hasLivePreview: true,
+  },
+
+  BottomNavigationItem: {
+    name: 'BottomNavigationItem',
+    description: 'Individual item for bottom navigation bar',
+    category: 'navigation',
+    props: {
+      icon: { type: 'ReactNode', required: true },
+      label: { type: 'string', required: true },
+      active: { type: 'boolean', default: 'false' },
+      badge: { type: 'ReactNode' },
+      showLabel: { type: 'boolean', default: 'true' },
+      disabled: { type: 'boolean', default: 'false' },
+      onPress: { type: '() => void' },
+    },
+    code: `import { BottomNavigationItem, Icon } from '@marcelinodzn/ds-react';
+import { IcHome } from '@marcelinodzn/ds-react/icons';
+
+<BottomNavigationItem
+  icon={<Icon size="S"><IcHome /></Icon>}
+  label="Home"
+  active
+  onPress={() => navigate('home')}
+/>`,
     hasLivePreview: false,
   },
 
   CarouselIndicator: {
     name: 'CarouselIndicator',
-    description: 'Dot indicators for carousel/slider position',
-    category: 'feedback',
+    description: 'Dot indicator for carousels and image galleries',
+    category: 'display',
     props: {
-      total: { type: 'number', required: true },
-      current: { type: 'number', required: true },
-      size: { type: '"S" | "M"', default: '"M"' },
+      items: { type: 'number', required: true },
+      activeIndex: { type: 'number', required: true },
+      type: { type: '"media" | "below-media"', default: '"below-media"' },
+      onDotClick: { type: '(index: number) => void' },
     },
     code: `import { CarouselIndicator } from '@marcelinodzn/ds-react';
 
-<CarouselIndicator total={5} current={2} size="M" />`,
+<CarouselIndicator items={5} activeIndex={currentSlide} onDotClick={goToSlide} />`,
     hasLivePreview: true,
   },
 
   StructuredList: {
     name: 'StructuredList',
-    description: 'Organized list with consistent structure',
+    description: 'Structured list container with header and footer',
     category: 'layout',
     props: {
-      children: { type: 'ReactNode', required: true },
-      dividers: { type: 'boolean', default: 'true' },
+      items: { type: 'readonly unknown[]' },
+      renderItem: { type: '(item: unknown, index: number) => ReactNode' },
+      header: { type: 'ReactNode' },
+      footer: { type: 'ReactNode' },
+      gap: { type: '"S" | "M" | "L"', default: '"M"' },
     },
     code: `import { StructuredList, ListItem } from '@marcelinodzn/ds-react';
 
 <StructuredList>
-  <ListItem title="Item 1" />
-  <ListItem title="Item 2" />
+  <StructuredList.Header variant="headline" text="Recent Transactions" />
+  <StructuredList.Items layout="list" gap="M">
+    <ListItem>Transaction 1</ListItem>
+    <ListItem>Transaction 2</ListItem>
+  </StructuredList.Items>
+  <StructuredList.Footer variant="button" text="View All" onPress={handleViewAll} />
 </StructuredList>`,
     hasLivePreview: true,
   },
 
   SegmentedControl: {
     name: 'SegmentedControl',
-    description: 'Segmented button group for view switching',
-    category: 'layout',
+    description: 'Segmented control for mutually exclusive options',
+    category: 'form',
     props: {
-      selectedKey: { type: 'string', required: true },
-      onSelectionChange: { type: '(key: string) => void', required: true },
-      children: { type: 'ReactNode', required: true },
+      selectedKey: { type: 'string' },
+      onSelectionChange: { type: '(key: string) => void' },
     },
-    code: `import { SegmentedControl, Segment } from '@marcelinodzn/ds-react';
+    code: `import { SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
 
 <SegmentedControl selectedKey={view} onSelectionChange={setView}>
-  <Segment key="list">List</Segment>
-  <Segment key="grid">Grid</Segment>
+  <SegmentedControlItem id="list">List</SegmentedControlItem>
+  <SegmentedControlItem id="grid">Grid</SegmentedControlItem>
 </SegmentedControl>`,
     hasLivePreview: true,
   },
 
   AccountsRail: {
     name: 'AccountsRail',
-    description: 'Account switcher rail for multi-account apps',
-    category: 'other',
+    description: 'Swipeable accounts carousel for finance apps',
+    category: 'display',
     props: {
-      accounts: { type: 'Account[]', required: true },
-      selectedAccountId: { type: 'string', required: true },
-      onSelectAccount: { type: '(id: string) => void', required: true },
+      accounts: { type: 'AccountData[]', required: true },
+      activeIndex: { type: 'number' },
+      onAccountChange: { type: '(index: number) => void' },
+      primaryAction: { type: 'ReactNode' },
+      secondaryAction: { type: 'ReactNode' },
+      showIndicator: { type: 'boolean', default: 'true' },
+      enableSwipe: { type: 'boolean', default: 'true' },
     },
-    code: `import { AccountsRail } from '@marcelinodzn/ds-react';
+    code: `import { AccountsRail, Button } from '@marcelinodzn/ds-react';
 
-<AccountsRail 
-  accounts={accounts}
-  selectedAccountId={currentId}
-  onSelectAccount={handleSelect}
+<AccountsRail
+  accounts={[
+    { id: '1', type: 'financial', balance: '₹12,500', balanceLabel: 'Savings' },
+    { id: '2', type: 'data', balance: '15.2 GB', balanceLabel: 'Data Balance' },
+  ]}
+  primaryAction={<Button size="S">Pay</Button>}
+  showIndicator
 />`,
+    hasLivePreview: true,
+  },
+
+  WebHeaderNavigation: {
+    name: 'WebHeaderNavigation',
+    description: 'Desktop web header navigation with primary and secondary nav items',
+    category: 'navigation',
+    props: {
+      logo: { type: 'ReactNode', required: true },
+      rightSlot4: { type: 'ReactNode', required: true },
+      primaryNavItems: { type: 'NavigationItem[]' },
+      secondaryNavItems: { type: 'NavigationItem[]' },
+      background: { type: '"ghost" | "default"', default: '"default"' },
+      searchState: { type: '"hidden" | "exit" | "open" | "full"', default: '"hidden"' },
+      searchValue: { type: 'string' },
+      onSearchChange: { type: '(value: string) => void' },
+    },
+    code: `import { WebHeaderNavigation, JioLogo, Avatar } from '@marcelinodzn/ds-react';
+
+<WebHeaderNavigation
+  logo={<JioLogo size="M" />}
+  rightSlot4={<Avatar size="S" name="User" />}
+  primaryNavItems={[
+    { label: 'Home', href: '/', isActive: true },
+    { label: 'Products', href: '/products' },
+  ]}
+/>`,
+    hasLivePreview: false,
+  },
+
+  Select: {
+    name: 'Select',
+    description: 'Dropdown select component built on Base UI',
+    category: 'form',
+    props: {
+      value: { type: 'string' },
+      defaultValue: { type: 'string' },
+      onValueChange: { type: '(value: string) => void' },
+      placeholder: { type: 'string' },
+      isDisabled: { type: 'boolean', default: 'false' },
+      size: { type: '"S" | "M" | "L"', default: '"M"' },
+    },
+    code: `import { Select } from '@marcelinodzn/ds-react';
+
+<Select placeholder="Choose an option" value={selected} onValueChange={setSelected}>
+  <Select.Trigger>
+    <Select.Value />
+  </Select.Trigger>
+  <Select.Content>
+    <Select.Option value="option1">Option 1</Select.Option>
+    <Select.Option value="option2">Option 2</Select.Option>
+  </Select.Content>
+</Select>`,
+    hasLivePreview: true,
+  },
+
+  Slider: {
+    name: 'Slider',
+    description: 'Slider component for numeric range selection',
+    category: 'form',
+    props: {
+      value: { type: 'number | number[]' },
+      defaultValue: { type: 'number | number[]' },
+      onValueChange: { type: '(value: number[]) => void' },
+      min: { type: 'number', default: '0' },
+      max: { type: 'number', default: '100' },
+      step: { type: 'number', default: '1' },
+      size: { type: '"S" | "M" | "L"', default: '"M"' },
+    },
+    code: `import { Slider } from '@marcelinodzn/ds-react';
+
+// Single value slider
+<Slider defaultValue={[50]} min={0} max={100} step={1} />
+
+// Range slider (dual thumb)
+<Slider defaultValue={[25, 75]} min={0} max={100} step={5} />`,
+    hasLivePreview: true,
+  },
+
+  Progress: {
+    name: 'Progress',
+    description: 'Progress indicator in linear or circular format',
+    category: 'feedback',
+    props: {
+      value: { type: 'number' },
+      max: { type: 'number', default: '100' },
+      variant: { type: '"linear" | "circular"', default: '"linear"' },
+      size: { type: '"S" | "M" | "L"', default: '"M"' },
+      appearance: { type: '"primary" | "success" | "warning"', default: '"primary"' },
+    },
+    code: `import { Progress } from '@marcelinodzn/ds-react';
+
+// Linear progress
+<Progress value={65} max={100} variant="linear" size="M" />
+
+// Circular progress
+<Progress value={75} max={100} variant="circular" size="L" />
+
+// Indeterminate loading
+<Progress variant="linear" size="M" />`,
+    hasLivePreview: true,
+  },
+
+  Dialog: {
+    name: 'Dialog',
+    description: 'Modal dialog component built on Base UI',
+    category: 'feedback',
+    props: {
+      open: { type: 'boolean' },
+      onOpenChange: { type: '(open: boolean) => void' },
+      size: { type: '"S" | "M" | "L" | "fullscreen"', default: '"M"' },
+      appearance: { type: '"default" | "sheet"', default: '"default"' },
+    },
+    code: `import { Dialog, Button, Text } from '@marcelinodzn/ds-react';
+
+<Dialog>
+  <Dialog.Trigger>
+    <Button>Open Dialog</Button>
+  </Dialog.Trigger>
+  <Dialog.Portal>
+    <Dialog.Backdrop />
+    <Dialog.Content size="M">
+      <Dialog.Header>
+        <Dialog.Title>Dialog Title</Dialog.Title>
+        <Dialog.Description>Optional description text.</Dialog.Description>
+      </Dialog.Header>
+      <Dialog.Body>
+        <Text>Dialog body content goes here.</Text>
+      </Dialog.Body>
+      <Dialog.Footer>
+        <Dialog.Close><Button appearance="secondary">Cancel</Button></Dialog.Close>
+        <Button appearance="primary">Confirm</Button>
+      </Dialog.Footer>
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog>`,
+    hasLivePreview: false,
+  },
+
+  AlertDialog: {
+    name: 'AlertDialog',
+    description: 'Alert dialog for confirmations and warnings',
+    category: 'feedback',
+    props: {
+      open: { type: 'boolean' },
+      onOpenChange: { type: '(open: boolean) => void' },
+      intent: { type: '"informative" | "warning" | "negative"', default: '"informative"' },
+      size: { type: '"S" | "M" | "L"', default: '"M"' },
+    },
+    code: `import { AlertDialog, Button } from '@marcelinodzn/ds-react';
+
+<AlertDialog intent="warning">
+  <AlertDialog.Trigger>
+    <Button appearance="secondary">Delete Item</Button>
+  </AlertDialog.Trigger>
+  <AlertDialog.Content>
+    <AlertDialog.Title>Confirm Deletion</AlertDialog.Title>
+    <AlertDialog.Description>This action cannot be undone.</AlertDialog.Description>
+    <AlertDialog.Actions>
+      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+      <AlertDialog.Confirm>Delete</AlertDialog.Confirm>
+    </AlertDialog.Actions>
+  </AlertDialog.Content>
+</AlertDialog>`,
+    hasLivePreview: false,
+  },
+
+  Menu: {
+    name: 'Menu',
+    description: 'Dropdown menu component built on Base UI',
+    category: 'navigation',
+    props: {
+      open: { type: 'boolean' },
+      onOpenChange: { type: '(open: boolean) => void' },
+    },
+    code: `import { Menu, Button } from '@marcelinodzn/ds-react';
+
+<Menu>
+  <Menu.Trigger>
+    <Button appearance="secondary">Actions</Button>
+  </Menu.Trigger>
+  <Menu.Content>
+    <Menu.Item onSelect={() => console.log('edit')}>Edit</Menu.Item>
+    <Menu.Item onSelect={() => console.log('duplicate')}>Duplicate</Menu.Item>
+    <Menu.Separator />
+    <Menu.Item onSelect={() => console.log('delete')}>Delete</Menu.Item>
+  </Menu.Content>
+</Menu>`,
+    hasLivePreview: false,
+  },
+
+  Popover: {
+    name: 'Popover',
+    description: 'Floating popover component built on Base UI',
+    category: 'feedback',
+    props: {
+      open: { type: 'boolean' },
+      onOpenChange: { type: '(open: boolean) => void' },
+      placement: { type: '"top" | "bottom" | "left" | "right"', default: '"bottom"' },
+    },
+    code: `import { Popover, Button, Text } from '@marcelinodzn/ds-react';
+
+<Popover placement="bottom">
+  <Popover.Trigger>
+    <Button appearance="ghost">More Info</Button>
+  </Popover.Trigger>
+  <Popover.Content>
+    <Text>Additional information displayed in a floating panel.</Text>
+    <Popover.Close>Close</Popover.Close>
+  </Popover.Content>
+</Popover>`,
+    hasLivePreview: false,
+  },
+
+  Tooltip: {
+    name: 'Tooltip',
+    description: 'Tooltip component for hover-triggered help text',
+    category: 'feedback',
+    props: {
+      content: { type: 'string', required: true },
+      placement: { type: '"top" | "bottom" | "left" | "right"', default: '"top"' },
+      delay: { type: 'number', default: '700' },
+    },
+    code: `import { Tooltip, Button } from '@marcelinodzn/ds-react';
+
+<Tooltip content="Helpful tooltip text" placement="top">
+  <Button appearance="ghost">Hover me</Button>
+</Tooltip>`,
+    hasLivePreview: true,
+  },
+
+  Accordion: {
+    name: 'Accordion',
+    description: 'Expandable accordion component built on Base UI',
+    category: 'layout',
+    props: {
+      type: { type: '"single" | "multiple"', default: '"single"' },
+      defaultValue: { type: 'string[]' },
+      value: { type: 'string[]' },
+      onValueChange: { type: '(value: string[]) => void' },
+      size: { type: '"S" | "M" | "L"', default: '"M"' },
+    },
+    code: `import { Accordion } from '@marcelinodzn/ds-react';
+
+<Accordion type="single" defaultValue={["item-1"]}>
+  <Accordion.Item value="item-1">
+    <Accordion.Trigger>Section 1</Accordion.Trigger>
+    <Accordion.Panel>Content for section 1</Accordion.Panel>
+  </Accordion.Item>
+  <Accordion.Item value="item-2">
+    <Accordion.Trigger>Section 2</Accordion.Trigger>
+    <Accordion.Panel>Content for section 2</Accordion.Panel>
+  </Accordion.Item>
+</Accordion>`,
+    hasLivePreview: true,
+  },
+
+  Collapsible: {
+    name: 'Collapsible',
+    description: 'Collapsible content panel built on Base UI',
+    category: 'layout',
+    props: {
+      open: { type: 'boolean' },
+      defaultOpen: { type: 'boolean', default: 'false' },
+      onOpenChange: { type: '(open: boolean) => void' },
+    },
+    code: `import { Collapsible, Text } from '@marcelinodzn/ds-react';
+
+<Collapsible defaultOpen={false}>
+  <Collapsible.Trigger>Toggle Details</Collapsible.Trigger>
+  <Collapsible.Panel>
+    <Text>Hidden content that can be expanded or collapsed.</Text>
+  </Collapsible.Panel>
+</Collapsible>`,
+    hasLivePreview: true,
+  },
+
+  ScrollArea: {
+    name: 'ScrollArea',
+    description: 'Custom scrollable area with styled scrollbars',
+    category: 'layout',
+    props: {
+      scrollbarVisibility: { type: '"auto" | "always" | "hover" | "scroll"', default: '"auto"' },
+      orientation: { type: '"vertical" | "horizontal" | "both"', default: '"vertical"' },
+      maxHeight: { type: 'string' },
+    },
+    code: `import { ScrollArea, Text } from '@marcelinodzn/ds-react';
+
+<ScrollArea maxHeight="300px" scrollbarVisibility="auto">
+  <div style={{ padding: '16px' }}>
+    <Text>Scrollable content goes here...</Text>
+  </div>
+</ScrollArea>`,
+    hasLivePreview: true,
+  },
+
+  VerticalBarChart: {
+    name: 'VerticalBarChart',
+    description: 'Vertical bar chart for data visualization',
+    category: 'charts',
+    props: {
+      data: { type: 'BarDataItem[]' },
+      title: { type: 'string' },
+      subtitle: { type: 'string' },
+      footerText: { type: 'string' },
+      barWidth: { type: '"XS" | "S" | "M" | "L" | "XL" | "2XL"', default: '"M"' },
+      chartHeight: { type: 'number', default: '300' },
+      chartWidth: { type: 'number' },
+      yAxisSteps: { type: 'number', default: '5' },
+    },
+    code: `import { VerticalBarChart } from '@marcelinodzn/ds-react';
+
+<VerticalBarChart
+  title="Monthly Revenue"
+  data={[
+    { label: 'Jan', value: 4000 },
+    { label: 'Feb', value: 3000 },
+    { label: 'Mar', value: 5000 },
+  ]}
+  barWidth="M"
+  chartHeight={300}
+/>`,
+    hasLivePreview: false,
+  },
+
+  LineChart: {
+    name: 'LineChart',
+    description: 'Line chart for trend visualization',
+    category: 'charts',
+    props: {
+      data: { type: 'LineDataItem[]' },
+      title: { type: 'string' },
+      subtitle: { type: 'string' },
+      footerText: { type: 'string' },
+      strokeWidth: { type: '"XS" | "S" | "M" | "L" | "XL"', default: '"M"' },
+      chartHeight: { type: 'number', default: '300' },
+      chartWidth: { type: 'number' },
+      yAxisSteps: { type: 'number', default: '5' },
+    },
+    code: `import { LineChart } from '@marcelinodzn/ds-react';
+
+<LineChart
+  title="User Growth"
+  data={[
+    { label: 'Week 1', value: 100 },
+    { label: 'Week 2', value: 250 },
+    { label: 'Week 3', value: 400 },
+  ]}
+  strokeWidth="M"
+  chartHeight={300}
+/>`,
+    hasLivePreview: false,
+  },
+
+  ChartText: {
+    name: 'ChartText',
+    description: 'Text component optimized for chart labels',
+    category: 'charts',
+    props: {},
+    code: `import { ChartText } from '@marcelinodzn/ds-react';
+
+<ChartText>Content</ChartText>`,
+    hasLivePreview: false,
+  },
+
+  ChartTitle: {
+    name: 'ChartTitle',
+    description: 'Title component for charts',
+    category: 'charts',
+    props: {},
+    code: `import { ChartTitle } from '@marcelinodzn/ds-react';
+
+<ChartTitle>Content</ChartTitle>`,
+    hasLivePreview: false,
+  },
+
+  ChartHeader: {
+    name: 'ChartHeader',
+    description: 'Header container for charts',
+    category: 'charts',
+    props: {},
+    code: `import { ChartHeader } from '@marcelinodzn/ds-react';
+
+<ChartHeader>Content</ChartHeader>`,
+    hasLivePreview: false,
+  },
+
+  ChartFooter: {
+    name: 'ChartFooter',
+    description: 'Footer container for charts',
+    category: 'charts',
+    props: {},
+    code: `import { ChartFooter } from '@marcelinodzn/ds-react';
+
+<ChartFooter>Content</ChartFooter>`,
     hasLivePreview: false,
   },
 };
@@ -633,34 +1108,34 @@ export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
 // Component Categories
 // =============================================================================
 
-export const COMPONENT_CATEGORIES: Record<ComponentCategory, { label: string; components: ComponentName[] }> = {
+export const COMPONENT_CATEGORIES = {
   form: {
-    label: 'Form',
-    components: ['Button', 'Input', 'TextArea', 'Checkbox', 'Radio', 'Switch', 'SearchField'],
-  },
-  display: {
-    label: 'Display',
-    components: ['Avatar', 'Badge', 'Card', 'Chip', 'Image', 'Logo'],
+    label: 'Form Controls',
+    components: ['Button', 'Input', 'TextArea', 'SearchField', 'Checkbox', 'Radio', 'Switch', 'Select', 'Slider', 'Stepper'] as ComponentName[],
   },
   typography: {
     label: 'Typography',
-    components: ['Display', 'Headline', 'Title', 'Text', 'Label'],
+    components: ['Display', 'Headline', 'Title', 'Text', 'Label'] as ComponentName[],
+  },
+  display: {
+    label: 'Display',
+    components: ['Avatar', 'Badge', 'Card', 'Chip', 'Divider', 'Icon', 'Image', 'Logo', 'JioLogo', 'ListItem', 'CarouselIndicator', 'AccountsRail'] as ComponentName[],
   },
   navigation: {
     label: 'Navigation',
-    components: ['HeaderNavigation', 'Tabs', 'BottomNavigation', 'Stepper'],
+    components: ['HeaderNavigation', 'HeaderNavigationItem', 'WebHeaderNavigation', 'BottomNavigation', 'BottomNavigationItem', 'Tabs', 'SegmentedControl', 'Menu'] as ComponentName[],
   },
   layout: {
     label: 'Layout',
-    components: ['Divider', 'ListItem', 'StructuredList', 'SegmentedControl'],
+    components: ['StructuredList', 'Accordion', 'Collapsible', 'ScrollArea'] as ComponentName[],
   },
   feedback: {
     label: 'Feedback',
-    components: ['Toast', 'CarouselIndicator'],
+    components: ['Toast', 'Progress', 'Dialog', 'AlertDialog', 'Popover', 'Tooltip'] as ComponentName[],
   },
-  other: {
-    label: 'Other',
-    components: ['Icon', 'AccountsRail'],
+  charts: {
+    label: 'Charts',
+    components: ['VerticalBarChart', 'LineChart', 'ChartText', 'ChartTitle', 'ChartHeader', 'ChartFooter'] as ComponentName[],
   },
 };
 
@@ -671,174 +1146,320 @@ export const COMPONENT_CATEGORIES: Record<ComponentCategory, { label: string; co
 export const TOKEN_CATEGORIES = {
   colors: {
     label: 'Colors',
-    description: 'Color tokens for backgrounds, text, and borders',
+    description: 'Color tokens for surfaces, text, and accents',
     tokens: [
-      { id: 'background-ghost', name: 'Background Ghost', description: 'Lightest background, page level' },
-      { id: 'background-subtle', name: 'Background Subtle', description: 'Medium background, cards' },
-      { id: 'background-bold', name: 'Background Bold', description: 'Strongest background, emphasis' },
-      { id: 'text-high', name: 'Text High', description: 'Primary text, headings' },
-      { id: 'text-medium', name: 'Text Medium', description: 'Secondary text, body' },
-      { id: 'text-low', name: 'Text Low', description: 'Tertiary text, hints' },
+      { id: 'surface-bold', name: 'Surface Bold', description: 'Bold surface backgrounds' },
+      { id: 'surface-subtle', name: 'Surface Subtle', description: 'Subtle surface backgrounds' },
+      { id: 'surface-ghost', name: 'Surface Ghost', description: 'Minimal surface backgrounds' },
+      { id: 'text-high', name: 'Text High', description: 'High emphasis text' },
+      { id: 'text-medium', name: 'Text Medium', description: 'Medium emphasis text' },
+      { id: 'text-low', name: 'Text Low', description: 'Low emphasis text' },
+      { id: 'accent-brand', name: 'Accent Brand', description: 'Primary brand color' },
       { id: 'stroke-high', name: 'Stroke High', description: 'High emphasis borders' },
-      { id: 'stroke-medium', name: 'Stroke Medium', description: 'Medium borders' },
-      { id: 'stroke-low', name: 'Stroke Low', description: 'Subtle borders' },
-      { id: 'accent', name: 'Accent', description: 'Brand/accent color' },
+      { id: 'stroke-medium', name: 'Stroke Medium', description: 'Medium emphasis borders' },
+      { id: 'stroke-low', name: 'Stroke Low', description: 'Low emphasis borders' },
     ],
   },
   spacing: {
     label: 'Spacing',
-    description: 'Spacing tokens for margins and padding',
+    description: 'Spacing tokens for layout and components',
     tokens: [
-      { id: 'spacing-xs', name: 'XS', value: '4px', description: 'Extra small spacing' },
-      { id: 'spacing-s', name: 'S', value: '8px', description: 'Small spacing' },
-      { id: 'spacing-m', name: 'M', value: '16px', description: 'Medium spacing' },
-      { id: 'spacing-l', name: 'L', value: '24px', description: 'Large spacing' },
-      { id: 'spacing-xl', name: 'XL', value: '32px', description: 'Extra large spacing' },
+      { id: 'spacing-xs', name: 'Spacing XS', description: 'Extra small spacing' },
+      { id: 'spacing-s', name: 'Spacing S', description: 'Small spacing' },
+      { id: 'spacing-m', name: 'Spacing M', description: 'Medium spacing (default)' },
+      { id: 'spacing-l', name: 'Spacing L', description: 'Large spacing' },
+      { id: 'spacing-xl', name: 'Spacing XL', description: 'Extra large spacing' },
+      { id: 'spacing-2xl', name: 'Spacing 2XL', description: '2X large spacing' },
     ],
   },
   borderRadius: {
     label: 'Border Radius',
-    description: 'Corner radius tokens',
+    description: 'Border radius tokens for rounded corners',
     tokens: [
-      { id: 'radius-xs', name: 'XS', value: '4px', description: 'Extra small radius' },
-      { id: 'radius-s', name: 'S', value: '8px', description: 'Small radius' },
-      { id: 'radius-m', name: 'M', value: '12px', description: 'Medium radius' },
-      { id: 'radius-l', name: 'L', value: '16px', description: 'Large radius' },
-      { id: 'radius-full', name: 'Full', value: '9999px', description: 'Fully rounded' },
+      { id: 'radius-xs', name: 'Radius XS', description: 'Extra small radius' },
+      { id: 'radius-s', name: 'Radius S', description: 'Small radius' },
+      { id: 'radius-m', name: 'Radius M', description: 'Medium radius' },
+      { id: 'radius-l', name: 'Radius L', description: 'Large radius' },
+      { id: 'radius-full', name: 'Radius Full', description: 'Fully rounded (pill shape)' },
     ],
   },
   typography: {
     label: 'Typography',
-    description: 'Typography size and weight tokens',
+    description: 'Typography scale and font weights',
     tokens: [
-      { id: 'font-size-xs', name: 'Font Size XS', value: '12px', description: 'Extra small text' },
-      { id: 'font-size-s', name: 'Font Size S', value: '14px', description: 'Small text' },
-      { id: 'font-size-m', name: 'Font Size M', value: '16px', description: 'Medium/body text' },
-      { id: 'font-size-l', name: 'Font Size L', value: '20px', description: 'Large text' },
-      { id: 'font-size-xl', name: 'Font Size XL', value: '24px', description: 'Extra large text' },
-      { id: 'font-weight-regular', name: 'Weight Regular', value: '400', description: 'Regular weight' },
-      { id: 'font-weight-medium', name: 'Weight Medium', value: '500', description: 'Medium weight' },
-      { id: 'font-weight-semibold', name: 'Weight Semibold', value: '600', description: 'Semibold weight' },
+      { id: 'font-display-l', name: 'Display Large', description: 'Display text large' },
+      { id: 'font-display-m', name: 'Display Medium', description: 'Display text medium' },
+      { id: 'font-headline-l', name: 'Headline Large', description: 'Headline large' },
+      { id: 'font-headline-m', name: 'Headline Medium', description: 'Headline medium' },
+      { id: 'font-title-l', name: 'Title Large', description: 'Title large' },
+      { id: 'font-title-m', name: 'Title Medium', description: 'Title medium' },
+      { id: 'font-body', name: 'Body', description: 'Body text' },
+      { id: 'font-caption', name: 'Caption', description: 'Caption text' },
+      { id: 'font-label', name: 'Label', description: 'Label text' },
     ],
   },
 };
 
 // =============================================================================
-// Icon Library
+// Common Icons (1,600+ icons available - showing sample here)
+// Note: Use LazyIcon for dynamic loading of any icon by name
 // =============================================================================
-// Comprehensive list of available icons from Jio Design System
-// Browse icons in the Design System Library to see all available options
 
 export const COMMON_ICONS = [
-  // Navigation
-  'IcHome', 'IcSearch', 'IcMenu', 'IcArrowLeft', 'IcArrowRight', 'IcArrowUp', 'IcArrowDown',
-  'IcChevronLeft', 'IcChevronRight', 'IcChevronUp', 'IcChevronDown',
-  'IcBack', 'IcForward', 'IcNext', 'IcPrevious',
-  
-  // Actions
-  'IcPlus', 'IcMinus', 'IcClose', 'IcCheck', 'IcEdit', 'IcDelete', 'IcRefresh',
-  'IcDownload', 'IcUpload', 'IcShare', 'IcCopy', 'IcSave', 'IcFilter',
-  'IcMore', 'IcMoreVertical', 'IcMoreHorizontal', 'IcAdd', 'IcRemove',
-  
-  // User & Account
-  'IcUser', 'IcUsers', 'IcSettings', 'IcProfile', 'IcLogout', 'IcLogin',
-  'IcAccount', 'IcAvatar',
-  
-  // Communication
-  'IcMail', 'IcPhone', 'IcChat', 'IcNotification', 'IcBell', 'IcMessage',
-  'IcSend', 'IcReply', 'IcForward',
-  
-  // Media
-  'IcPlay', 'IcPause', 'IcStop', 'IcMicrophone', 'IcSpeaker', 'IcVolume',
-  'IcCamera', 'IcImage', 'IcVideo', 'IcMusic', 'IcHeadphones',
-  
-  // Status
-  'IcInfo', 'IcWarning', 'IcError', 'IcSuccess', 'IcQuestion', 'IcAlert',
-  'IcCheckCircle', 'IcXCircle', 'IcInfoCircle',
-  
-  // Objects
-  'IcCalendar', 'IcClock', 'IcLocation', 'IcStar', 'IcHeart', 'IcBookmark',
-  'IcDocument', 'IcFolder', 'IcLink', 'IcLock', 'IcUnlock', 'IcKey',
-  'IcTag', 'IcLabel', 'IcFlag', 'IcPin',
-  
-  // Finance
-  'IcWallet', 'IcCard', 'IcMoney', 'IcCurrency', 'IcBank', 'IcCurrencyRupee',
-  'IcPayment', 'IcTransaction', 'IcReceipt',
-  
-  // Shopping & Commerce
-  'IcCart', 'IcShoppingBag', 'IcShoppingCart', 'IcStore', 'IcGift',
-  
-  // Technology
-  'IcWifi', 'IcBluetooth', 'IcBattery', 'IcSignal', 'IcCloud', 'IcCloudUpload',
-  'IcCloudDownload', 'IcDatabase', 'IcServer',
-  
-  // Files & Documents
-  'IcFile', 'IcFiles', 'IcArchive', 'IcZip', 'IcPdf', 'IcExcel', 'IcWord',
-  
-  // Social & Sharing
-  'IcFacebook', 'IcTwitter', 'IcInstagram', 'IcLinkedIn', 'IcWhatsApp',
-  'IcTelegram', 'IcYoutube',
-  
-  // UI Elements
-  'IcGrid', 'IcList', 'IcLayout', 'IcColumns', 'IcRows', 'IcDrag',
-  'IcResize', 'IcFullscreen', 'IcMinimize', 'IcMaximize',
-  
-  // Time & Date
-  'IcTime', 'IcDate', 'IcSchedule', 'IcHistory', 'IcRecent',
-  
-  // Security
-  'IcShield', 'IcSecurity', 'IcVerified', 'IcFingerprint', 'IcEye',
-  'IcEyeOff', 'IcHide', 'IcShow',
-  
-  // Miscellaneous
-  'IcHelp', 'IcSupport', 'IcFeedback', 'IcBug', 'IcCode', 'IcTerminal',
-  'IcGlobe', 'IcLanguage', 'IcTranslate', 'IcAward', 'IcTrophy',
-  'IcFire', 'IcTrending', 'IcChart', 'IcGraph', 'IcAnalytics',
+  'IcHome',
+  'IcSearch',
+  'IcSettings',
+  'IcUser',
+  'IcNotification',
+  'IcMenu',
+  'IcClose',
+  'IcArrowLeft',
+  'IcArrowRight',
+  'IcArrowUp',
+  'IcArrowDown',
+  'IcChevronLeft',
+  'IcChevronRight',
+  'IcChevronUp',
+  'IcChevronDown',
+  'IcCheck',
+  'IcPlus',
+  'IcMinus',
+  'IcEdit',
+  'IcDelete',
+  'IcTrash',
+  'IcSave',
+  'IcDownload',
+  'IcUpload',
+  'IcShare',
+  'IcCopy',
+  'IcPaste',
+  'IcCut',
+  'IcUndo',
+  'IcRedo',
+  'IcRefresh',
+  'IcSync',
+  'IcStar',
+  'IcHeart',
+  'IcLike',
+  'IcComment',
+  'IcMail',
+  'IcPhone',
+  'IcChat',
+  'IcVideo',
+  'IcCamera',
+  'IcImage',
+  'IcFile',
+  'IcFolder',
+  'IcDocument',
+  'IcPdf',
+  'IcAttachment',
+  'IcLink',
+  'IcLock',
+  'IcUnlock',
+  'IcEye',
+  'IcEyeOff',
+  'IcVisible',
+  'IcHidden',
+  'IcFilter',
+  'IcSort',
+  'IcCalendar',
+  'IcClock',
+  'IcTime',
+  'IcLocation',
+  'IcMap',
+  'IcPin',
+  'IcNavigation',
+  'IcCompass',
+  'IcGlobe',
+  'IcLanguage',
+  'IcTranslate',
+  'IcFlag',
+  'IcTag',
+  'IcBookmark',
+  'IcInfo',
+  'IcHelp',
+  'IcQuestion',
+  'IcWarning',
+  'IcError',
+  'IcSuccess',
+  'IcAlert',
+  'IcBell',
+  'IcVolume',
+  'IcVolumeOff',
+  'IcMic',
+  'IcMicOff',
+  'IcPlay',
+  'IcPause',
+  'IcStop',
+  'IcForward',
+  'IcBackward',
+  'IcSkipNext',
+  'IcSkipPrevious',
+  'IcShuffle',
+  'IcRepeat',
+  'IcFullscreen',
+  'IcExitFullscreen',
+  'IcZoomIn',
+  'IcZoomOut',
+  'IcExpand',
+  'IcCollapse',
+  'IcMaximize',
+  'IcMinimize',
+  'IcGrid',
+  'IcList',
+  'IcTable',
+  'IcColumns',
+  'IcRows',
+  'IcLayout',
+  'IcDashboard',
+  'IcChart',
+  'IcBarChart',
+  'IcLineChart',
+  'IcPieChart',
+  'IcAreaChart',
+  'IcTrendingUp',
+  'IcTrendingDown',
+  'IcActivity',
+  'IcWallet',
+  'IcCard',
+  'IcCreditCard',
+  'IcMoney',
+  'IcBank',
+  'IcPayment',
+  'IcReceipt',
+  'IcInvoice',
+  'IcCart',
+  'IcShoppingBag',
+  'IcPackage',
+  'IcBox',
+  'IcTruck',
+  'IcDelivery',
+  'IcGift',
+  'IcCoupon',
+  'IcDiscount',
+  'IcPercent',
+  'IcStore',
+  'IcShop',
+  'IcBuilding',
+  'IcOffice',
+  'IcHospital',
+  'IcSchool',
+  'IcUniversity',
+  'IcAirplane',
+  'IcTrain',
+  'IcBus',
+  'IcCar',
+  'IcBike',
+  'IcWalk',
+  'IcRun',
+  'IcFitness',
+  'IcHealth',
+  'IcMedical',
+  'IcPill',
+  'IcSyringe',
+  'IcStethoscope',
+  'IcHospitalBed',
+  'IcAmbulance',
+  'IcFirstAid',
+  'IcFood',
+  'IcRestaurant',
+  'IcCoffee',
+  'IcDrink',
+  'IcBeer',
+  'IcWine',
+  'IcCocktail',
+  'IcPizza',
+  'IcBurger',
+  'IcCake',
+  'IcIceCream',
 ];
 
+// NOTE: Full icon list of 1,600+ icons available via LazyIcon component
+// Use: <Icon><LazyIcon name="IcAnyIconName" /></Icon>
+
 // =============================================================================
-// Patterns
+// UI Patterns
 // =============================================================================
 
 export const PATTERNS = {
   forms: {
-    label: 'Form Layouts',
-    description: 'Common form patterns and layouts',
+    label: 'Form Patterns',
     examples: [
-      { id: 'login-form', name: 'Login Form', description: 'Email/password login' },
-      { id: 'signup-form', name: 'Signup Form', description: 'Registration form' },
-      { id: 'search-filter', name: 'Search with Filters', description: 'Search bar with filter options' },
-      { id: 'settings-form', name: 'Settings Form', description: 'App settings layout' },
+      {
+        id: 'login-form',
+        name: 'Login Form',
+        description: 'Standard login form with email and password',
+      },
+      {
+        id: 'registration-form',
+        name: 'Registration Form',
+        description: 'Multi-step registration form',
+      },
+      {
+        id: 'search-filter',
+        name: 'Search & Filter',
+        description: 'Search with advanced filters',
+      },
     ],
   },
   cards: {
     label: 'Card Patterns',
-    description: 'Common card layouts',
     examples: [
-      { id: 'profile-card', name: 'Profile Card', description: 'User profile display' },
-      { id: 'product-card', name: 'Product Card', description: 'E-commerce product' },
-      { id: 'stats-card', name: 'Stats Card', description: 'Metrics display' },
-      { id: 'action-card', name: 'Action Card', description: 'Card with CTA' },
+      {
+        id: 'product-card',
+        name: 'Product Card',
+        description: 'E-commerce product card',
+      },
+      {
+        id: 'user-card',
+        name: 'User Profile Card',
+        description: 'User profile summary card',
+      },
+      {
+        id: 'stats-card',
+        name: 'Statistics Card',
+        description: 'Card with key metrics',
+      },
     ],
   },
   navigation: {
     label: 'Navigation Patterns',
-    description: 'Navigation and routing patterns',
     examples: [
-      { id: 'tab-navigation', name: 'Tab Navigation', description: 'Horizontal tabs' },
-      { id: 'sidebar', name: 'Sidebar Navigation', description: 'Vertical nav menu' },
-      { id: 'breadcrumb', name: 'Breadcrumb', description: 'Path navigation' },
-      { id: 'pagination', name: 'Pagination', description: 'Page navigation' },
+      {
+        id: 'mobile-nav',
+        name: 'Mobile Navigation',
+        description: 'Bottom tab navigation',
+      },
+      {
+        id: 'web-nav',
+        name: 'Web Navigation',
+        description: 'Top header navigation',
+      },
+      {
+        id: 'sidebar-nav',
+        name: 'Sidebar Navigation',
+        description: 'Collapsible sidebar menu',
+      },
     ],
   },
   lists: {
     label: 'List Patterns',
-    description: 'Common list layouts',
     examples: [
-      { id: 'settings-list', name: 'Settings List', description: 'Settings menu items' },
-      { id: 'chat-list', name: 'Chat List', description: 'Conversation list' },
-      { id: 'transaction-list', name: 'Transaction List', description: 'Financial history' },
-      { id: 'notification-list', name: 'Notification List', description: 'Notification items' },
+      {
+        id: 'transaction-list',
+        name: 'Transaction List',
+        description: 'Financial transaction history',
+      },
+      {
+        id: 'contact-list',
+        name: 'Contact List',
+        description: 'Alphabetical contact list',
+      },
+      {
+        id: 'notification-list',
+        name: 'Notification List',
+        description: 'Grouped notifications',
+      },
     ],
   },
 };
@@ -848,21 +1469,21 @@ export const PATTERNS = {
 // =============================================================================
 
 export const DENSITY_OPTIONS = [
-  { id: 'compact', name: 'Compact', description: 'Reduced spacing for dense UIs', multiplier: 0.75 },
-  { id: 'default', name: 'Default', description: 'Standard spacing', multiplier: 1 },
-  { id: 'open', name: 'Open', description: 'Increased spacing for readability', multiplier: 1.25 },
-];
-
-// =============================================================================
-// Platform Options
-// =============================================================================
-
-export const PLATFORM_OPTIONS = [
-  { id: 'desktop-1440', name: 'Desktop (1440)', width: 1440 },
-  { id: 'desktop-1280', name: 'Desktop (1280)', width: 1280 },
-  { id: 'tablet-768', name: 'Tablet (768)', width: 768 },
-  { id: 'mobile-360', name: 'Mobile (360)', width: 360 },
-  { id: 'mobile-320', name: 'Mobile (320)', width: 320 },
+  {
+    id: 'compact',
+    name: 'Compact',
+    description: 'Dense spacing for information-heavy interfaces',
+  },
+  {
+    id: 'default',
+    name: 'Default',
+    description: 'Standard spacing (recommended for most uses)',
+  },
+  {
+    id: 'open',
+    name: 'Open',
+    description: 'Relaxed spacing for comfortable reading',
+  },
 ];
 
 // =============================================================================
@@ -870,7 +1491,8 @@ export const PLATFORM_OPTIONS = [
 // =============================================================================
 
 export const EXTERNAL_LINKS = {
-  storybook: 'https://jio-design-system.chromatic.com/',
+  storybook: 'https://jio-storybook-mcp.onrender.com',
   npm: 'https://www.npmjs.com/package/@marcelinodzn/ds-react',
   npmTokens: 'https://www.npmjs.com/package/@marcelinodzn/ds-tokens',
+  documentation: 'https://jio-design-system.chromatic.com/',
 };
