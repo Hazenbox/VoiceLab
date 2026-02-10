@@ -1,5 +1,6 @@
 import React from 'react';
 import { useThemeColors } from '../theme';
+import { DSIcon } from './DSIcon';
 
 interface ToggleProps {
   label: string;
@@ -50,20 +51,11 @@ export const Toggle: React.FC<ToggleProps> = ({
         {tooltip && (
           <>
             <div
-              className="cursor-help"
+              className="cursor-help opacity-50"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
             >
-              <svg 
-                width="12" 
-                height="12" 
-                viewBox="0 0 16 16" 
-                fill="none"
-                style={{ opacity: 0.5 }}
-              >
-                <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                <path d="M8 12V8M8 5.5V5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+              <DSIcon name="IcInfo" size="XS" attention="low" />
             </div>
             {showTooltip && (
               <div
