@@ -1,0 +1,62 @@
+diff --git a/node_modules/@marcelinodzn/ds-react/dist/icons/index.js b/node_modules/@marcelinodzn/ds-react/dist/icons/index.js
+index 8ca504f..8839673 100644
+--- a/node_modules/@marcelinodzn/ds-react/dist/icons/index.js
++++ b/node_modules/@marcelinodzn/ds-react/dist/icons/index.js
+@@ -54032,7 +54032,7 @@ var DynamicIcon = (0, import_react.memo)(({
+   const [error, setError] = (0, import_react.useState)(null);
+   (0, import_react.useEffect)(() => {
+     if (iconCache.has(name)) {
+-      setIconComponent(iconCache.get(name));
++      setIconComponent(() => iconCache.get(name));
+       setLoading(false);
+       setError(null);
+       return;
+@@ -54041,7 +54041,7 @@ var DynamicIcon = (0, import_react.memo)(({
+     setError(null);
+     loadIcon(name).then((Component) => {
+       if (Component) {
+-        setIconComponent(Component);
++        setIconComponent(() => Component);
+         onIconLoad?.();
+       } else {
+         const err = new Error(`Icon "${name}" not found`);
+@@ -54077,7 +54077,7 @@ function useDynamicIcon(name) {
+     setError(null);
+     loadIcon(name).then((Component) => {
+       if (Component) {
+-        setIcon(Component);
++        setIcon(() => Component);
+       } else {
+         setError(new Error(`Icon "${name}" not found`));
+       }
+diff --git a/node_modules/@marcelinodzn/ds-react/dist/icons/index.mjs b/node_modules/@marcelinodzn/ds-react/dist/icons/index.mjs
+index 5b7049f..b2256ec 100644
+--- a/node_modules/@marcelinodzn/ds-react/dist/icons/index.mjs
++++ b/node_modules/@marcelinodzn/ds-react/dist/icons/index.mjs
+@@ -52383,7 +52383,7 @@ var DynamicIcon = memo(({
+   const [error, setError] = useState(null);
+   useEffect(() => {
+     if (iconCache.has(name)) {
+-      setIconComponent(iconCache.get(name));
++      setIconComponent(() => iconCache.get(name));
+       setLoading(false);
+       setError(null);
+       return;
+@@ -52392,7 +52392,7 @@ var DynamicIcon = memo(({
+     setError(null);
+     loadIcon(name).then((Component) => {
+       if (Component) {
+-        setIconComponent(Component);
++        setIconComponent(() => Component);
+         onIconLoad?.();
+       } else {
+         const err = new Error(`Icon "${name}" not found`);
+@@ -52428,7 +52428,7 @@ function useDynamicIcon(name) {
+     setError(null);
+     loadIcon(name).then((Component) => {
+       if (Component) {
+-        setIcon(Component);
++        setIcon(() => Component);
+       } else {
+         setError(new Error(`Icon "${name}" not found`));
+       }

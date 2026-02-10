@@ -175,30 +175,6 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
 
   return (
     <div className="space-y-6">
-      {/* Debug: Test Icon Rendering */}
-      <div className="p-4 rounded-lg" style={{ 
-        backgroundColor: theme.background.subtle, 
-        border: `2px solid ${theme.stroke.medium}` 
-      }}>
-        <p className="text-sm font-semibold mb-2" style={{ color: theme.text.high }}>
-          Debug: Icon Rendering Test
-        </p>
-        <div className="flex items-center gap-4">
-          <div className="text-center">
-            <Icon size="XL" attention="high" asset={<LazyIcon name="IcHome" />} />
-            <p className="text-xs mt-1" style={{ color: theme.text.medium }}>IcHome</p>
-          </div>
-          <div className="text-center">
-            <Icon size="L" attention="medium" asset={<LazyIcon name="IcSearch" />} />
-            <p className="text-xs mt-1" style={{ color: theme.text.medium }}>IcSearch</p>
-          </div>
-          <div className="text-center">
-            <Icon size="M" attention="high" asset={<LazyIcon name="IcSettings" />} />
-            <p className="text-xs mt-1" style={{ color: theme.text.medium }}>IcSettings</p>
-          </div>
-        </div>
-      </div>
-
       {/* Search */}
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2">

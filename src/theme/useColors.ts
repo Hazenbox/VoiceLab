@@ -8,14 +8,8 @@
 import { useMemo } from 'react';
 import { 
   useDsContext, 
-  useSurfaceBackground,
   type SurfaceEmphasis 
 } from '@marcelinodzn/ds-react';
-import { 
-  getVariableByName, 
-  createTokenContext,
-  COLLECTION_NAMES 
-} from '@marcelinodzn/ds-tokens';
 
 export type TextEmphasis = 'high' | 'medium' | 'low';
 export type BackgroundEmphasis = SurfaceEmphasis;
@@ -54,12 +48,18 @@ const LOCAL_COLORS = {
  * - bold: Strongest surface, darkest backgrounds, emphasized containers
  */
 export function useBackgroundColor(emphasis: BackgroundEmphasis = 'subtle'): string {
-  const result = useSurfaceBackground({
-    appearance: 'neutral',
-    emphasis,
-    state: 'idle',
-  });
-  return result.hex;
+  const dsContext = useDsContext();
+  const isLight = dsContext.colorMode === 'Light';
+  
+  // Using hardcoded fallbacks instead of useSurfaceBackground to avoid token warnings
+  // The DS token package doesn't expose neutral/700, neutral/500 etc. tokens
+  if (emphasis === 'ghost') {
+    return isLight ? '#ffffff' : '#09090b';
+  } else if (emphasis === 'bold') {
+    return isLight ? '#f4f4f5' : '#27272a';
+  } else { // subtle
+    return isLight ? '#fafafa' : '#18181b';
+  }
 }
 
 /**
@@ -77,30 +77,13 @@ export function useTextColor(emphasis: TextEmphasis = 'high'): string {
   const dsContext = useDsContext();
   
   return useMemo(() => {
-    const tokenContext = createTokenContext({
-      [COLLECTION_NAMES.PLATFORM]: dsContext.platform,
-      [COLLECTION_NAMES.DENSITY]: dsContext.density,
-      [COLLECTION_NAMES.COLOR_MODE]: dsContext.colorMode,
-    });
-    
-    const tokenName = emphasis === 'high' 
-      ? 'Text/High'
-      : emphasis === 'medium'
-      ? 'Text/Medium'
-      : 'Text/Low';
-    
-    const color = getVariableByName(tokenName, tokenContext);
-    
-    // Fallback colors if token resolution fails
-    if (!color || typeof color !== 'string') {
-      const isLight = dsContext.colorMode === 'Light';
-      if (emphasis === 'high') return isLight ? '#18181b' : '#fafafa';
-      if (emphasis === 'medium') return isLight ? '#52525b' : '#a1a1aa';
-      return isLight ? '#a1a1aa' : '#71717a';
-    }
-    
-    return color;
-  }, [dsContext.platform, dsContext.density, dsContext.colorMode, emphasis]);
+    // Skip token lookup - Text/High, Text/Medium, Text/Low tokens don't exist in the DS package
+    // Use hardcoded fallbacks directly to avoid console warnings
+    const isLight = dsContext.colorMode === 'Light';
+    if (emphasis === 'high') return isLight ? '#18181b' : '#fafafa';
+    if (emphasis === 'medium') return isLight ? '#52525b' : '#a1a1aa';
+    return isLight ? '#a1a1aa' : '#71717a';
+  }, [dsContext.colorMode, emphasis]);
 }
 
 /**
@@ -113,30 +96,13 @@ export function useStrokeColor(emphasis: TextEmphasis = 'medium'): string {
   const dsContext = useDsContext();
   
   return useMemo(() => {
-    const tokenContext = createTokenContext({
-      [COLLECTION_NAMES.PLATFORM]: dsContext.platform,
-      [COLLECTION_NAMES.DENSITY]: dsContext.density,
-      [COLLECTION_NAMES.COLOR_MODE]: dsContext.colorMode,
-    });
-    
-    const tokenName = emphasis === 'high'
-      ? 'Stroke/High'
-      : emphasis === 'medium'
-      ? 'Stroke/Medium'
-      : 'Stroke/Low';
-    
-    const color = getVariableByName(tokenName, tokenContext);
-    
-    // Fallback colors if token resolution fails
-    if (!color || typeof color !== 'string') {
-      const isLight = dsContext.colorMode === 'Light';
-      if (emphasis === 'high') return isLight ? '#3f3f46' : '#d4d4d8';
-      if (emphasis === 'medium') return isLight ? '#e4e4e7' : '#3f3f46';
-      return isLight ? '#f4f4f5' : '#27272a';
-    }
-    
-    return color;
-  }, [dsContext.platform, dsContext.density, dsContext.colorMode, emphasis]);
+    // Skip token lookup - Stroke/High, Stroke/Medium, Stroke/Low tokens don't exist in the DS package
+    // Use hardcoded fallbacks directly to avoid console warnings
+    const isLight = dsContext.colorMode === 'Light';
+    if (emphasis === 'high') return isLight ? '#3f3f46' : '#d4d4d8';
+    if (emphasis === 'medium') return isLight ? '#e4e4e7' : '#3f3f46';
+    return isLight ? '#f4f4f5' : '#27272a';
+  }, [dsContext.colorMode, emphasis]);
 }
 
 /**
@@ -169,17 +135,8 @@ export function useThemeColors() {
   const bgSubtle = useBackgroundColor('subtle');
   const bgBold = useBackgroundColor('bold');
   
-  // Try to get minimal background - fallback to ghost if not available
-  let bgMinimal: string;
-  try {
-    bgMinimal = useSurfaceBackground({
-      appearance: 'neutral',
-      emphasis: 'minimal' as any,
-      state: 'idle',
-    }).hex;
-  } catch {
-    bgMinimal = bgGhost;
-  }
+  // Minimal background - using hardcoded values to avoid token warnings
+  const bgMinimal = isLight ? '#f9fafb' : '#0a0a0b';
   
   // Get text colors
   const textHigh = useTextColor('high');
