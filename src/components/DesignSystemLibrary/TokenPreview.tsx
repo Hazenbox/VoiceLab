@@ -29,10 +29,13 @@ export const TokenPreview: React.FC<TokenPreviewProps> = ({ categoryId }) => {
     case 'typography':
       return <TypographyPreview />;
     default:
-      // Check if it's a specific color token
-      if (categoryId.startsWith('background-') || 
-          categoryId.startsWith('text-') || 
+      // Check if it's a specific color token from the new structure
+      if (categoryId.startsWith('surface-') || 
+          categoryId.startsWith('content-') || 
           categoryId.startsWith('stroke-') ||
+          categoryId.startsWith('semantic-') ||
+          categoryId.startsWith('background-') || 
+          categoryId.startsWith('text-') || 
           categoryId === 'accent') {
         return <SingleColorPreview tokenId={categoryId} />;
       }
@@ -282,30 +285,74 @@ const ColorTokensPreview: React.FC = () => {
 const SingleColorPreview: React.FC<{ tokenId: string }> = ({ tokenId }) => {
   const theme = useThemeColors();
 
-  const getTokenValue = (): { name: string; value: string; description: string } => {
+  const getTokenValue = (): { name: string; value: string; description: string; mcpToken: string } => {
     switch (tokenId) {
-      case 'background-ghost':
-        return { name: 'Background Ghost', value: theme.background.ghost, description: 'Lightest background for page-level surfaces' };
-      case 'background-subtle':
-        return { name: 'Background Subtle', value: theme.background.subtle, description: 'Medium background for cards and containers' };
-      case 'background-bold':
-        return { name: 'Background Bold', value: theme.background.bold, description: 'Strongest background for emphasis' };
-      case 'text-high':
-        return { name: 'Text High', value: theme.text.high, description: 'Primary text for headings and important content' };
-      case 'text-medium':
-        return { name: 'Text Medium', value: theme.text.medium, description: 'Body text and secondary labels' };
-      case 'text-low':
-        return { name: 'Text Low', value: theme.text.low, description: 'Hints, placeholders, and tertiary content' };
+      // Surface tokens
+      case 'surface-bold-idle':
+      case 'surface-bold-hover':
+      case 'surface-bold-pressed':
+      case 'surface-bold-disabled':
+        return { name: 'Surface Bold', value: theme.background.bold, description: 'Bold surface - primary action surfaces, CTAs', mcpToken: 'Surface/Bold/idle' };
+      case 'surface-subtle-idle':
+      case 'surface-subtle-hover':
+      case 'surface-subtle-pressed':
+        return { name: 'Surface Subtle', value: theme.background.subtle, description: 'Subtle surface - cards, containers', mcpToken: 'Surface/Subtle/idle' };
+      case 'surface-ghost-idle':
+      case 'surface-ghost-hover':
+        return { name: 'Surface Ghost', value: theme.background.ghost, description: 'Ghost surface - page backgrounds', mcpToken: 'Surface/Ghost/idle' };
+      case 'surface-minimal':
+      case 'surface-moderate':
+      case 'surface-elevated':
+      case 'surface-overlay':
+        return { name: 'Surface Level', value: theme.background.subtle, description: 'Surface elevation level', mcpToken: 'Surface/Elevated' };
+      
+      // Content tokens
+      case 'content-high':
+        return { name: 'Content High', value: theme.text.high, description: 'High emphasis - headings, primary text', mcpToken: 'Content/High' };
+      case 'content-medium':
+        return { name: 'Content Medium', value: theme.text.medium, description: 'Medium emphasis - body text, labels', mcpToken: 'Content/Medium' };
+      case 'content-low':
+        return { name: 'Content Low', value: theme.text.low, description: 'Low emphasis - hints, placeholders', mcpToken: 'Content/Low' };
+      case 'content-on-bold-high':
+      case 'content-on-bold-medium':
+      case 'content-tinted':
+        return { name: 'Content Variant', value: theme.text.high, description: 'Content color variant', mcpToken: 'Content/OnBold/High' };
+      
+      // Stroke tokens
       case 'stroke-high':
-        return { name: 'Stroke High', value: theme.stroke.high, description: 'High emphasis borders' };
+        return { name: 'Stroke High', value: theme.stroke.high, description: 'High emphasis borders', mcpToken: 'Stroke/High' };
       case 'stroke-medium':
-        return { name: 'Stroke Medium', value: theme.stroke.medium, description: 'Standard borders' };
+        return { name: 'Stroke Medium', value: theme.stroke.medium, description: 'Standard borders', mcpToken: 'Stroke/Medium' };
       case 'stroke-low':
-        return { name: 'Stroke Low', value: theme.stroke.low, description: 'Subtle dividers' };
+        return { name: 'Stroke Low', value: theme.stroke.low, description: 'Subtle dividers', mcpToken: 'Stroke/Low' };
+      case 'stroke-focus':
+        return { name: 'Stroke Focus', value: theme.accent, description: 'Focus ring color', mcpToken: 'Stroke/Focus' };
+      
+      // Semantic tokens
+      case 'semantic-positive':
+      case 'semantic-negative':
+      case 'semantic-warning':
+      case 'semantic-informative':
+        return { name: 'Semantic Color', value: theme.accent, description: 'Semantic feedback color', mcpToken: 'Semantic/Positive' };
+      
+      // Legacy support
+      case 'background-ghost':
+        return { name: 'Surface Ghost', value: theme.background.ghost, description: 'Lightest background for page-level surfaces', mcpToken: 'Surface/Ghost/idle' };
+      case 'background-subtle':
+        return { name: 'Surface Subtle', value: theme.background.subtle, description: 'Medium background for cards and containers', mcpToken: 'Surface/Subtle/idle' };
+      case 'background-bold':
+        return { name: 'Surface Bold', value: theme.background.bold, description: 'Strongest background for emphasis', mcpToken: 'Surface/Bold/idle' };
+      case 'text-high':
+        return { name: 'Content High', value: theme.text.high, description: 'Primary text for headings and important content', mcpToken: 'Content/High' };
+      case 'text-medium':
+        return { name: 'Content Medium', value: theme.text.medium, description: 'Body text and secondary labels', mcpToken: 'Content/Medium' };
+      case 'text-low':
+        return { name: 'Content Low', value: theme.text.low, description: 'Hints, placeholders, and tertiary content', mcpToken: 'Content/Low' };
       case 'accent':
-        return { name: 'Accent', value: theme.accent, description: 'Brand/primary accent color' };
+        return { name: 'Accent', value: theme.accent, description: 'Brand/primary accent color', mcpToken: 'Accent/Primary' };
+      
       default:
-        return { name: tokenId, value: '#000000', description: 'Unknown token' };
+        return { name: tokenId, value: '#000000', description: 'Unknown token', mcpToken: tokenId };
     }
   };
 
@@ -337,6 +384,21 @@ const SingleColorPreview: React.FC<{ tokenId: string }> = ({ tokenId }) => {
           <p className="text-lg font-semibold" style={{ color: theme.text.high }}>
             {token.name}
           </p>
+        </div>
+
+        <div>
+          <p className="text-sm font-medium" style={{ color: theme.text.medium }}>
+            MCP Token Path
+          </p>
+          <code
+            className="block px-3 py-2 rounded mt-1 text-sm"
+            style={{
+              backgroundColor: theme.background.ghost,
+              color: theme.accent,
+            }}
+          >
+            {token.mcpToken}
+          </code>
         </div>
 
         <div>
