@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import type { DesignSystemNavItem, DesignSystemCategory } from '../../types';
 import { useThemeColors } from '../../theme';
+import { DSIcon } from '../DSIcon';
 
 interface SidebarProps {
   items: DesignSystemNavItem[];
@@ -102,22 +103,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }}
           >
             {hasChildren && level === 0 && (
-              <svg
-                className="w-4 h-4 transition-transform"
+              <span
+                className="transition-transform"
                 style={{
                   transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
                 }}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+                <DSIcon name="IcChevronRight" size="XS" attention="medium" />
+              </span>
             )}
             {!hasChildren && level > 0 && (
               <span className="w-1 h-1 rounded-full" style={{ backgroundColor: theme.text.low }} />
@@ -147,20 +140,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {onSearchChange && (
         <div className="p-3 border-b" style={{ borderColor: theme.stroke.low }}>
           <div className="relative">
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              style={{ color: theme.text.low }}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: theme.text.low }}>
+              <DSIcon name="IcSearch" size="XS" attention="low" />
+            </span>
             <input
               type="text"
               value={searchQuery}

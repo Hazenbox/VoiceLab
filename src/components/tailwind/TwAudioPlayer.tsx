@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { formatTime, getWaveformData } from '../../services/audioUtils';
+import { DSIcon } from '../DSIcon';
 
 interface TwAudioPlayerProps {
   audioBuffer: AudioBuffer | null;
@@ -245,14 +246,9 @@ export const TwAudioPlayer: React.FC<TwAudioPlayerProps> = ({
             className="p-1.5 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-colors"
           >
             {isPlaying ? (
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <rect x="6" y="4" width="4" height="16" rx="1" />
-                <rect x="14" y="4" width="4" height="16" rx="1" />
-              </svg>
+              <DSIcon name="IcPause" size="XS" attention="high" />
             ) : (
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+              <DSIcon name="IcPlayArrow" size="XS" attention="high" />
             )}
           </button>
 
@@ -261,9 +257,7 @@ export const TwAudioPlayer: React.FC<TwAudioPlayerProps> = ({
             onClick={restart}
             className="p-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 text-zinc-900 dark:text-zinc-50 hover:opacity-80 transition-opacity"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            <DSIcon name="IcRefresh" size="XS" attention="high" />
           </button>
         </div>
 

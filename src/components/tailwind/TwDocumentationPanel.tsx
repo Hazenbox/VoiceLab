@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { DOCUMENTATION_SECTIONS } from '../../constants';
+import { DSIcon } from '../DSIcon';
 
 interface TwDocumentationPanelProps {
   onBack: () => void;
@@ -33,19 +34,7 @@ export const TwDocumentationPanel: React.FC<TwDocumentationPanelProps> = ({ onBa
           onClick={onBack}
           className="p-2 rounded-lg transition-colors text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
+          <DSIcon name="IcArrowBack" size="S" attention="medium" />
         </button>
         <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
           Documentation
@@ -55,19 +44,9 @@ export const TwDocumentationPanel: React.FC<TwDocumentationPanelProps> = ({ onBa
       {/* Search */}
       <div className="p-4">
         <div className="relative">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 dark:text-zinc-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500">
+            <DSIcon name="IcSearch" size="S" attention="low" />
+          </span>
           <input
             type="text"
             value={searchQuery}

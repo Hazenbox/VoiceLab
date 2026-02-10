@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { DSIcon } from '../DSIcon';
 
 interface Option {
   value: string;
@@ -77,14 +78,9 @@ export const TwCustomSelect: React.FC<TwCustomSelectProps> = ({
           <span>
             {selectedOption?.label || 'Select...'}
           </span>
-          <svg
-            className={`w-4 h-4 transition-transform duration-200 text-zinc-400 dark:text-zinc-500 ${isOpen ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+          <span className={`transition-transform duration-200 text-zinc-400 dark:text-zinc-500 ${isOpen ? 'rotate-180' : ''}`}>
+            <DSIcon name="IcChevronDown" size="XS" attention="low" />
+          </span>
         </button>
 
         {isOpen && (
