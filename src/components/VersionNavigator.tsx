@@ -69,7 +69,9 @@ export const VersionNavigator = memo(function VersionNavigator({
           disabled:opacity-30 disabled:cursor-not-allowed
           focus:outline-none focus:ring-1 focus:ring-orange-500"
       >
-        <DSIcon name="IcChevronLeft" size="S" attention="medium" />
+        <span style={{ color: theme.text.low }}>
+          <DSIcon name="IcChevronLeft" size="S" attention="low" />
+        </span>
       </button>
       <span 
         className="text-xs font-medium px-0.5 min-w-[28px] text-center select-none" 
@@ -86,7 +88,9 @@ export const VersionNavigator = memo(function VersionNavigator({
           disabled:opacity-30 disabled:cursor-not-allowed
           focus:outline-none focus:ring-1 focus:ring-orange-500"
       >
-        <DSIcon name="IcChevronRight" size="S" attention="medium" />
+        <span style={{ color: theme.text.low }}>
+          <DSIcon name="IcChevronRight" size="S" attention="low" />
+        </span>
       </button>
     </div>
   );

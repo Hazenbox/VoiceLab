@@ -4,7 +4,7 @@
  * Simple inline icon showing trust certification status.
  */
 
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { useThemeColors } from '../../theme';
 import type { TrustScore, TrustCertification } from '../../types';
 import { getCertificationBadge } from '../../services/trust';
@@ -57,7 +57,7 @@ export const TrustBadge = memo(function TrustBadge({
   size = 'md',
   showScore: _showScore = false,
   showTooltip = true,
-  messageContent,
+  messageContent: _messageContent,
 }: TrustBadgeProps) {
   const theme = useThemeColors();
   
@@ -67,18 +67,18 @@ export const TrustBadge = memo(function TrustBadge({
   if (!trustScore) return null;
   
   const { certification, overall } = trustScore;
-  const colors = BADGE_COLORS[certification];
   const badge = getCertificationBadge(certification);
   
   // Determine button size based on size prop - match action buttons (32px for sm)
   const buttonSize = size === 'sm' ? '32px' : size === 'lg' ? '32px' : '28px';
-  const iconSize = size === 'sm' ? '14' : size === 'lg' ? '18' : '16';
   
   // Shield icon with grey color to match other action icons
   const ShieldIcon = () => {
     const iconName = certification === 'certified' ? 'IcProtection' : 'IcProtectionThreats';
     return (
-      <DSIcon name={iconName} size={size === 'sm' ? 'S' : size === 'lg' ? 'M' : 'S'} attention="medium" />
+      <span style={{ color: theme.text.low }}>
+        <DSIcon name={iconName} size={size === 'sm' ? 'S' : size === 'lg' ? 'M' : 'S'} attention="low" />
+      </span>
     );
   };
 

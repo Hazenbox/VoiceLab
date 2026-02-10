@@ -16,6 +16,7 @@
 
 import { memo, useCallback } from 'react';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { useThemeColors } from '../theme';
 import { ActionButton } from './ActionButton';
 import { DSIcon } from './DSIcon';
 
@@ -54,24 +55,11 @@ export interface UserActionsProps {
 }
 
 // ============================================================================
-// Icons
+// Icons (with theme context for grey colors)
 // ============================================================================
 
-const CopyIcon = () => <DSIcon name="IcCopyDocument" size="S" attention="medium" />;
-const CopyDoneIcon = () => <DSIcon name="IcCheck" size="S" attention="medium" />;
-
-const LikeIcon = () => (
-  <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex' }}>
-    <DSIcon name="IcDislike" size="S" attention="medium" />
-  </span>
-);
-
-const DislikeIcon = () => (
-  <DSIcon name="IcDislike" size="S" attention="medium" />
-);
-
-const RefreshIcon = () => <DSIcon name="IcRefresh" size="S" attention="medium" />;
-const EditIcon = () => <DSIcon name="IcEdit" size="S" attention="medium" />;
+// Icon components need access to theme, so they're created inside the component scope
+// This ensures grey color via theme.text.low instead of purple/indigo from design system
 
 // ============================================================================
 // Assistant Message Actions: copy, like, dislike, try again
@@ -86,7 +74,39 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   disabled = false,
   feedbackGiven,
 }: AssistantActionsProps) {
+  const theme = useThemeColors();
   const { isCopied, copyToClipboard } = useCopyToClipboard(2000);
+  
+  // Icon components with grey color styling
+  const CopyIcon = () => (
+    <span style={{ color: theme.text.low }}>
+      <DSIcon name="IcCopyDocument" size="S" attention="low" />
+    </span>
+  );
+  
+  const CopyDoneIcon = () => (
+    <span style={{ color: theme.text.low }}>
+      <DSIcon name="IcCheck" size="S" attention="low" />
+    </span>
+  );
+  
+  const LikeIcon = () => (
+    <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex', color: theme.text.low }}>
+      <DSIcon name="IcDislike" size="S" attention="low" />
+    </span>
+  );
+  
+  const DislikeIcon = () => (
+    <span style={{ color: theme.text.low }}>
+      <DSIcon name="IcDislike" size="S" attention="low" />
+    </span>
+  );
+  
+  const RefreshIcon = () => (
+    <span style={{ color: theme.text.low }}>
+      <DSIcon name="IcRefresh" size="S" attention="low" />
+    </span>
+  );
   
   const handleCopy = useCallback(() => {
     copyToClipboard(content);
@@ -148,7 +168,27 @@ export const UserMessageActions = memo(function UserMessageActions({
   disabled = false,
   hideEdit = false,
 }: UserActionsProps) {
+  const theme = useThemeColors();
   const { isCopied, copyToClipboard } = useCopyToClipboard(2000);
+  
+  // Icon components with grey color styling
+  const CopyIcon = () => (
+    <span style={{ color: theme.text.low }}>
+      <DSIcon name="IcCopyDocument" size="S" attention="low" />
+    </span>
+  );
+  
+  const CopyDoneIcon = () => (
+    <span style={{ color: theme.text.low }}>
+      <DSIcon name="IcCheck" size="S" attention="low" />
+    </span>
+  );
+  
+  const EditIcon = () => (
+    <span style={{ color: theme.text.low }}>
+      <DSIcon name="IcEdit" size="S" attention="low" />
+    </span>
+  );
   
   const handleCopy = useCallback(() => {
     copyToClipboard(content);

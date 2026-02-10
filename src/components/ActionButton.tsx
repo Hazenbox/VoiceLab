@@ -14,7 +14,6 @@
  */
 
 import { memo, type ReactNode } from 'react';
-import { useThemeColors } from '../theme';
 import { DelayedTooltip } from './DelayedTooltip';
 
 interface ActionButtonProps {
@@ -26,7 +25,7 @@ interface ActionButtonProps {
   onClick: () => void;
   /** Whether button is disabled */
   disabled?: boolean;
-  /** Active/selected state (for background highlight) */
+  /** Active/selected state (for background highlight) - currently unused but kept for API compatibility */
   isActive?: boolean;
   /** Tooltip delay in ms (default: 500) */
   tooltipDelay?: number;
@@ -41,7 +40,7 @@ export const ActionButton = memo(function ActionButton({
   label,
   onClick,
   disabled = false,
-  isActive = false,
+  isActive: _isActive = false,
   tooltipDelay = 500,
   size = 32,
   className = '',
