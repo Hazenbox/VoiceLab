@@ -13,6 +13,7 @@ import React, { useState, useRef, useCallback, useEffect, memo } from 'react';
 import { useThemeColors } from '../theme/useColors';
 import { audioBufferManager } from '../services/audioBufferManager';
 import { formatTime } from '../services/audioUtils';
+import { DSIcon } from './DSIcon';
 
 // =============================================================================
 // Types
@@ -292,24 +293,17 @@ export const AudioBubble = memo(function AudioBubble({
           }
         >
           {playbackState === 'loading' ? (
-            <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeDasharray="32" strokeLinecap="round" />
-            </svg>
+            <span className="animate-spin">
+              <DSIcon name="IcRefresh" size="XS" attention="medium" />
+            </span>
           ) : playbackState === 'error' ? (
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
+            <DSIcon name="IcWarning" size="XS" attention="medium" />
           ) : playbackState === 'playing' ? (
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16" rx="1" />
-              <rect x="14" y="4" width="4" height="16" rx="1" />
-            </svg>
+            <DSIcon name="IcPause" size="XS" attention="medium" />
           ) : (
-            <svg className="w-3.5 h-3.5 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+            <span className="ml-0.5">
+              <DSIcon name="IcPlayArrow" size="XS" attention="medium" />
+            </span>
           )}
         </button>
         
@@ -380,20 +374,7 @@ export const AudioBubble = memo(function AudioBubble({
             aria-label="Save to library"
             title="Save to library"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-              <polyline points="17 21 17 13 7 13 7 21" />
-              <polyline points="7 3 7 8 15 8" />
-            </svg>
+            <DSIcon name="IcSave" size="XS" attention="medium" />
           </button>
         )}
       </div>
