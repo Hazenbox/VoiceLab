@@ -549,6 +549,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const handleMessageFeedback = useCallback((payload: FeedbackPayload) => {
     // Look up the original message to get its generation-time context
     const originalMessage = chatMessages.find(m => m.id === payload.messageId);
+    
+    // Conversational Mode: Skip learning for non-content-generation messages
+    // General chat and Jio inquiry feedback should not pollute the content learning engine
+    if (featureFlags.conversationalMode && originalMessage?.messageIntent && originalMessage.messageIntent !== 'content_generation') {
+      console.log(`[Feedback] Skipping learning for ${originalMessage.messageIntent} message (not content generation)`);
+      return;
+    }
+    
     // Use generation-time context if available, fall back to current UI state
     const feedbackEcosystem = originalMessage?.generationContext?.ecosystem || ecosystem;
     const feedbackChannel = originalMessage?.generationContext?.channel || contentChannel;
