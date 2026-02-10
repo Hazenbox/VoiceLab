@@ -69,6 +69,7 @@ function Root() {
         platform="Desktop (1440)"
         colorMode={colorMode}
         density="Default"
+        theme="MyJio"
       >
         <ProjectProvider>
           <BrowserRouter>
