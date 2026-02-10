@@ -30,6 +30,7 @@ export type { SearchableDropdownOption, SearchableDropdownProps } from './Search
 export { DropdownSectionHeader } from './DropdownSectionHeader';
 export { AIOrb } from './AIOrb';
 export type { AIOrbProps } from './AIOrb';
+export { DSIcon } from './DSIcon';
 
 // UI Components
 export { Accordion } from './ui/Accordion';
