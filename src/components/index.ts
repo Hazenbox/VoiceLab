@@ -40,5 +40,15 @@ export { ContentContextSelector } from './ContentTrust';
 export { TrustBadge, InlineTrustBadge, TrustBadgeLoading } from './ContentTrust';
 export { TrustContextPanel } from './ContentTrust';
 export { AdvancedSettingsPanel } from './AdvancedSettingsPanel';
+
+// Message Feedback & Actions
+// NOTE: MessageFeedback is deprecated, use MessageActions components instead
 export { MessageFeedback } from './MessageFeedback';
 export type { FeedbackPayload, FeedbackType } from './MessageFeedback';
+
+// ChatGPT-style Message Actions (new - replaces MessageFeedback)
+export { AssistantMessageActions, UserMessageActions } from './MessageActions';
+export type { AssistantActionsProps, UserActionsProps } from './MessageActions';
+export { VersionNavigator } from './VersionNavigator';
+export { ActionButton } from './ActionButton';
+export { DelayedTooltip } from './DelayedTooltip';
