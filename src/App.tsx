@@ -37,7 +37,7 @@ import type { TTSProviderType } from './components';
 import { buildPrompt } from './services/prompt';
 import { buildGenerationContext } from './services/context';
 import { runValidationPipeline } from './services/validation';
-import { calculateTrustScore } from './services/trust';
+import { calculateTrustScore, generateAutoFixes, applyAutoFixes } from './services/trust';
 import { storageTrustSettings, storageProjectDefaults, DEFAULT_PROJECT_DEFAULTS } from './services/trustStorage';
 import { useChatPersistence } from './hooks';
 import { audioBufferManager } from './services/audioBufferManager';
@@ -182,6 +182,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Trust panel state
   const [showTrustPanel, setShowTrustPanel] = useState(false);
   const [selectedMessageForTrust, setSelectedMessageForTrust] = useState<string | null>(null);
+  const [isAutoFixing, setIsAutoFixing] = useState(false);
   
   // Chat generation settings
   const [temperature, setTemperature] = useState(0.7);
@@ -235,6 +236,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const {
     messages: chatMessages,
     addMessage,
+    setMessages,
   } = useChatPersistence(activeProject?.id || null);
 
   // Chat/Generation State
@@ -561,6 +563,74 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     setSelectedMessageForTrust(messageId);
     setShowTrustPanel(true);
   }, []);
+
+  // Handle auto-fix for a message
+  const handleAutoFix = useCallback(async () => {
+    // Find the currently selected message
+    const message = selectedMessageForTrust 
+      ? chatMessages.find(m => m.id === selectedMessageForTrust)
+      : null;
+    
+    if (!message?.trustScore || isAutoFixing) return;
+    
+    setIsAutoFixing(true);
+    try {
+      // Gather all violations across all agent results
+      const violations = message.trustScore.validationResults
+        .flatMap(r => r.violations)
+        .filter(v => v.autoFixable);
+      
+      if (violations.length === 0) {
+        console.log('[AutoFix] No auto-fixable violations found');
+        return;
+      }
+      
+      // Generate fixes using the auto-fix engine
+      const fixes = generateAutoFixes(violations);
+      
+      // Apply fixes to the content
+      const result = applyAutoFixes(message.content, fixes);
+      
+      if (result.appliedFixes.length === 0) {
+        console.log('[AutoFix] No fixes were applied');
+        return;
+      }
+      
+      // Re-validate the fixed content
+      const newValidation = await runValidationPipeline(
+        result.fixedContent, 
+        message.generationContext
+      );
+      const newTrustScore = calculateTrustScore(newValidation, trustSettings);
+      
+      // Update the message using setMessages functional updater
+      setMessages(prev => prev.map(m =>
+        m.id === message.id
+          ? {
+              ...m,
+              content: result.fixedContent,
+              trustScore: newTrustScore,
+              validationSummary: {
+                passedCount: newValidation.agentResults.filter(r => r.passed).length,
+                warningCount: newValidation.agentResults
+                  .flatMap(r => r.violations)
+                  .filter(v => v.severity === 'warning').length,
+                errorCount: newValidation.agentResults
+                  .flatMap(r => r.violations)
+                  .filter(v => v.severity === 'error').length,
+                autoFixesApplied: result.appliedFixes.length,
+              },
+            }
+          : m
+      ));
+      
+      console.log(`[AutoFix] Applied ${result.appliedFixes.length} fixes, score improved by ${result.scoreImprovement}`);
+    } catch (err) {
+      console.error('[AutoFix] Error applying fixes:', err);
+    } finally {
+      setIsAutoFixing(false);
+    }
+  }, [selectedMessageForTrust, chatMessages, isAutoFixing, trustSettings, setMessages]);
 
   // Get selected message for trust panel
   const selectedMessageForTrustPanel = useMemo(() => 
@@ -1164,6 +1234,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         trustScore={selectedMessageForTrustPanel?.trustScore}
         generationContext={selectedMessageForTrustPanel?.generationContext}
         analyzedContent={selectedMessageForTrustPanel?.content}
+        onAutoFix={handleAutoFix}
+        autoFixAvailable={
+          !isAutoFixing && 
+          (selectedMessageForTrustPanel?.trustScore?.autoFixableCount ?? 0) > 0
+        }
       />
 
 

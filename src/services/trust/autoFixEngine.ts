@@ -20,9 +20,15 @@ export interface AutoFixResult {
 }
 
 /**
- * Common replacements
+ * Common replacements - High-confidence word substitutions
+ * 
+ * Rules:
+ * - Only include replacements with confidence >= 0.80
+ * - Confidence reflects how safe it is to auto-apply without human review
+ * - All keys should be lowercase (matching is case-insensitive)
  */
 const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> = {
+  // === Gender Neutrality ===
   'chairman': { replacement: 'chairperson', confidence: 0.95 },
   'chairwoman': { replacement: 'chairperson', confidence: 0.95 },
   'businessman': { replacement: 'businessperson', confidence: 0.95 },
@@ -32,14 +38,59 @@ const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> 
   'mailman': { replacement: 'mail carrier', confidence: 0.98 },
   'mankind': { replacement: 'humankind', confidence: 0.90 },
   'manpower': { replacement: 'workforce', confidence: 0.90 },
+  'dear sir': { replacement: 'Hello', confidence: 0.95 },
+  'dear madam': { replacement: 'Hello', confidence: 0.95 },
+  'dear sir/madam': { replacement: 'Hello', confidence: 0.95 },
+  
+  // === Disability-Inclusive Language ===
   'wheelchair-bound': { replacement: 'wheelchair user', confidence: 0.95 },
+  'wheelchair bound': { replacement: 'wheelchair user', confidence: 0.95 },
   'the disabled': { replacement: 'people with disabilities', confidence: 0.90 },
+  'handicapped': { replacement: 'person with a disability', confidence: 0.90 },
+  
+  // === Jargon / Complex Words (Avoid Words) ===
   'utilize': { replacement: 'use', confidence: 0.95 },
+  'utilise': { replacement: 'use', confidence: 0.95 },
   'facilitate': { replacement: 'help', confidence: 0.90 },
   'leverage': { replacement: 'use', confidence: 0.85 },
+  'synergy': { replacement: 'working together', confidence: 0.85 },
+  'paradigm': { replacement: 'approach', confidence: 0.85 },
+  'avail': { replacement: 'get', confidence: 0.90 },
+  'availing': { replacement: 'getting', confidence: 0.90 },
+  'availed': { replacement: 'got', confidence: 0.90 },
+  'in order to': { replacement: 'to', confidence: 0.98 },
+  'at this point in time': { replacement: 'now', confidence: 0.98 },
+  'due to the fact that': { replacement: 'because', confidence: 0.98 },
+  'for the purpose of': { replacement: 'to', confidence: 0.95 },
+  'in the event that': { replacement: 'if', confidence: 0.95 },
+  'with regard to': { replacement: 'about', confidence: 0.90 },
+  'pursuant to': { replacement: 'following', confidence: 0.90 },
+  'in accordance with': { replacement: 'following', confidence: 0.90 },
+  
+  // === Accessibility (Link Text) ===
+  'click here': { replacement: 'view details', confidence: 0.85 },
+  'tap here': { replacement: 'view details', confidence: 0.85 },
+  
+  // === Brand Capitalization ===
   'jio': { replacement: 'Jio', confidence: 0.99 },
   'JIO': { replacement: 'Jio', confidence: 0.99 },
-  'in order to': { replacement: 'to', confidence: 0.98 },
+  
+  // === Currency (Indian Format) ===
+  'Rs.': { replacement: '₹', confidence: 0.98 },
+  'Rs ': { replacement: '₹', confidence: 0.98 },
+  'INR ': { replacement: '₹', confidence: 0.95 },
+  
+  // === British Spellings ===
+  'color': { replacement: 'colour', confidence: 0.90 },
+  'favorite': { replacement: 'favourite', confidence: 0.90 },
+  'organize': { replacement: 'organise', confidence: 0.90 },
+  'realize': { replacement: 'realise', confidence: 0.90 },
+  'recognize': { replacement: 'recognise', confidence: 0.90 },
+  'customize': { replacement: 'customise', confidence: 0.90 },
+  'center': { replacement: 'centre', confidence: 0.90 },
+  'behavior': { replacement: 'behaviour', confidence: 0.90 },
+  'analyze': { replacement: 'analyse', confidence: 0.90 },
+  'canceled': { replacement: 'cancelled', confidence: 0.90 },
 };
 
 /**
@@ -90,7 +141,17 @@ function matchCase(original: string, replacement: string): string {
 }
 
 /**
+ * Escape special regex characters in a string
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Apply auto-fixes to content
+ * 
+ * IMPORTANT: Uses global regex replacement to fix ALL occurrences of a word,
+ * not just the first one. This is critical for content with repeated violations.
  */
 export function applyAutoFixes(
   content: string,
@@ -103,10 +164,17 @@ export function applyAutoFixes(
   
   const sortedFixes = [...fixes]
     .filter(f => f.confidence >= minConfidence)
-    .slice(0, 10);
+    .slice(0, 20); // Increased from 10 to 20 to handle more violations
   
   for (const fix of sortedFixes) {
-    const newContent = fixedContent.replace(fix.original, fix.replacement);
+    // Use global, case-insensitive regex to replace ALL occurrences
+    // Critical fix: String.replace() only replaces the first occurrence!
+    const escapedOriginal = escapeRegex(fix.original);
+    const regex = new RegExp(escapedOriginal, 'gi');
+    const newContent = fixedContent.replace(regex, (match) => {
+      // Preserve the case of the original match
+      return matchCase(match, fix.replacement);
+    });
     
     if (newContent !== fixedContent) {
       fixedContent = newContent;
