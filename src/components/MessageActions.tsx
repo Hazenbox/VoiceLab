@@ -57,21 +57,21 @@ export interface UserActionsProps {
 // Icons
 // ============================================================================
 
-const CopyIcon = () => <DSIcon name="IcCopyDocument" size="S" attention="medium" />;
+const CopyIcon = () => <DSIcon name="IcCopyDocument" size="S" attention="low" />;
 const CopyDoneIcon = () => <DSIcon name="IcCheck" size="S" attention="high" />;
 
 const LikeIcon = ({ filled }: { filled?: boolean }) => (
   <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex' }}>
-    <DSIcon name="IcDislike" size="S" attention={filled ? "high" : "medium"} />
+    <DSIcon name="IcDislike" size="S" attention={filled ? "high" : "low"} />
   </span>
 );
 
 const DislikeIcon = ({ filled }: { filled?: boolean }) => (
-  <DSIcon name="IcDislike" size="S" attention={filled ? "high" : "medium"} />
+  <DSIcon name="IcDislike" size="S" attention={filled ? "high" : "low"} />
 );
 
-const RefreshIcon = () => <DSIcon name="IcRefresh" size="S" attention="medium" />;
-const EditIcon = () => <DSIcon name="IcEdit" size="S" attention="medium" />;
+const RefreshIcon = () => <DSIcon name="IcRefresh" size="S" attention="low" />;
+const EditIcon = () => <DSIcon name="IcEdit" size="S" attention="low" />;
 
 // ============================================================================
 // Assistant Message Actions: copy, like, dislike, try again
