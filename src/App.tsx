@@ -537,6 +537,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Ref to track which button triggered edit for focus restoration
   const editTriggerRef = useRef<string | null>(null);
   
+  // Search button handler
+  const handleSearchClick = useCallback(() => {
+    // TODO: Implement search functionality
+    console.log('Search button clicked');
+  }, []);
+  
   // Start editing a user message
   const handleStartEdit = useCallback((messageId: string, content: string) => {
     setEditingMessageId(messageId);
@@ -1295,6 +1301,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   id={`${chatMode}-panel`}
                   onVoiceClick={() => handleModeChange(chatMode === 'voice' ? 'copy' : 'voice')}
                   voiceSupported={voiceSupported ?? true}
+                  onSearchClick={handleSearchClick}
                   // Voice streaming transcription props
                   streamingUserTranscript={chatMode === 'voice' && appState === AppState.LISTENING ? transcript : undefined}
                   streamingAIResponse={chatMode === 'voice' && appState === AppState.SPEAKING ? streamingAIResponse : undefined}
