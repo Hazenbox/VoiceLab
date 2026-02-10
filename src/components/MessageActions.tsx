@@ -61,7 +61,7 @@ const CopyIcon = () => <DSIcon name="IcCopyDocument" size="S" attention="medium"
 const CopyDoneIcon = () => <DSIcon name="IcCheck" size="S" attention="high" />;
 
 const LikeIcon = ({ filled }: { filled?: boolean }) => (
-  <span style={{ transform: 'scaleY(-1)', display: 'inline-flex' }}>
+  <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex' }}>
     <DSIcon name="IcDislike" size="S" attention={filled ? "high" : "medium"} />
   </span>
 );
