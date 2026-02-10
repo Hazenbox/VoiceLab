@@ -4,7 +4,7 @@
  * Orchestrates validation agents to validate content.
  */
 
-import type { GenerationContext, TrustCertification } from '../../types';
+import type { GenerationContext, TrustCertification, ContentChannelType } from '../../types';
 import type {
   ValidationConfig,
   PipelineValidationResult,
@@ -14,6 +14,7 @@ import type {
 } from './types';
 import { DEFAULT_VALIDATION_CONFIG, AGENT_WEIGHTS } from './types';
 import { getEnabledAgents, VALIDATION_AGENTS } from './agents';
+import { getChannel } from '../guidelines/channels';
 
 // =============================================================================
 // Position-Based Deduplication
@@ -69,6 +70,104 @@ function deduplicateViolations(violations: ValidationViolation[]): ValidationVio
   return result;
 }
 
+// =============================================================================
+// Channel Constraint Validation
+// =============================================================================
+
+/**
+ * Email structure detection patterns (flexible, case-insensitive)
+ * These are soft checks - we don't want to fail just because the LLM
+ * used slightly different formatting
+ */
+const EMAIL_STRUCTURE_PATTERNS = {
+  subject: /subject\s*(?:line)?\s*:/i,
+  cta: /(?:\[.+\]|\bclick\b|\btap\b|\bget\b|\bstart\b|\brecharge\b|\bview\b|\bsee\b|\bcheck\b)/i,
+  greeting: /(?:^|\n)\s*(?:hi|hello|dear|namaste|hey|good\s+(?:morning|afternoon|evening))/i,
+  signoff: /(?:thanks|thank\s+you|regards|best|warm|cheers|sincerely|love)/i,
+};
+
+/**
+ * Validate channel-specific constraints on generated content
+ * Returns violations for length and structure issues
+ */
+function validateChannelConstraints(
+  content: string,
+  channelId?: ContentChannelType
+): ValidationViolation[] {
+  if (!channelId) return [];
+  
+  const violations: ValidationViolation[] = [];
+  
+  try {
+    const channel = getChannel(channelId);
+    
+    // Check minimum length constraint (email channels)
+    if (channel.minLength && content.length < channel.minLength) {
+      violations.push({
+        severity: 'warning',
+        rule: `Content too short for ${channel.name}`,
+        text: `${content.length} characters (minimum: ${channel.minLength})`,
+        suggestion: `${channel.name} requires at least ${channel.minLength} characters for proper structure. Include all required sections.`,
+        category: 'channel_constraints',
+        position: { start: 0, end: content.length },
+        autoFixable: false,
+        agentId: 'compliance' as ValidationAgentId,
+      });
+    }
+    
+    // Check maximum length constraint
+    if (channel.maxLength && content.length > channel.maxLength) {
+      violations.push({
+        severity: 'error',
+        rule: `Content too long for ${channel.name}`,
+        text: `${content.length} characters (maximum: ${channel.maxLength})`,
+        suggestion: `Reduce content to under ${channel.maxLength} characters. Focus on the most important information.`,
+        category: 'channel_constraints',
+        position: { start: channel.maxLength, end: content.length },
+        autoFixable: false,
+        agentId: 'compliance' as ValidationAgentId,
+      });
+    }
+    
+    // Email-specific structure checks (soft warnings)
+    if (channelId === 'marketing_email' || channelId === 'transactional_email') {
+      const missingStructure: string[] = [];
+      
+      // Check for subject line (flexible pattern)
+      if (!EMAIL_STRUCTURE_PATTERNS.subject.test(content)) {
+        // Also check for a clear first line that could be a subject
+        const firstLine = content.split('\n')[0]?.trim() || '';
+        if (firstLine.length < 10 || firstLine.length > 100) {
+          missingStructure.push('Subject line');
+        }
+      }
+      
+      // Check for call-to-action
+      if (!EMAIL_STRUCTURE_PATTERNS.cta.test(content)) {
+        missingStructure.push('Call-to-action');
+      }
+      
+      if (missingStructure.length > 0) {
+        violations.push({
+          severity: 'info',
+          rule: 'Email structure recommendation',
+          text: `May be missing: ${missingStructure.join(', ')}`,
+          suggestion: `For better email effectiveness, consider adding: ${missingStructure.join(', ')}`,
+          category: 'email_structure',
+          position: { start: 0, end: content.length },
+          autoFixable: false,
+          agentId: 'style_consistency' as ValidationAgentId,
+        });
+      }
+    }
+  } catch (error) {
+    // If channel not found, silently skip constraint validation
+    console.warn('[Validation] Channel constraint check skipped:', error);
+  }
+  
+  return violations;
+}
+
 /**
  * Run validation pipeline on content
  */
@@ -104,9 +203,14 @@ export async function runValidationPipeline(
     };
   });
   
+  // Run channel constraint validation if context is provided
+  const channelViolations = _context 
+    ? validateChannelConstraints(content, _context.channel)
+    : [];
+
   // Calculate overall results with position-based deduplication
   const rawViolations = agentResults.flatMap(r => r.violations);
-  const allViolations = deduplicateViolations(rawViolations);
+  const allViolations = deduplicateViolations([...rawViolations, ...channelViolations]);
   const errorCount = allViolations.filter(v => v.severity === 'error').length;
   const autoFixableCount = allViolations.filter(v => v.autoFixable).length;
   

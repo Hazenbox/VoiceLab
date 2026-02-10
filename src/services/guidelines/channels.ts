@@ -32,6 +32,7 @@ export interface ContentChannel {
   goal: ContentGoalType;
   group: ChannelGroup;
   maxLength?: number;   // Character limit if applicable
+  minLength?: number;   // Minimum length for structured content like emails
   description: string;
   guidelines: string;
 }
@@ -152,11 +153,12 @@ export const CONTENT_CHANNELS: readonly ContentChannel[] = [
     id: 'marketing_email',
     name: 'Marketing Email',
     warmth: 7,
-    detail: 5,
+    detail: 6,  // Bumped from 5 to 6 (stays in "Moderate detail" bracket)
     goal: 'Engagement',
     group: 'Email',
+    minLength: 150,  // Minimum characters to ensure proper email structure
     description: 'Promotional emails - engaging, benefit-focused',
-    guidelines: 'Compelling subject line. Scannable with headers. Clear CTA. Personalize when possible.',
+    guidelines: 'MUST include: Subject line, Body with benefit/offer, clear CTA. Scannable with headers. Personalize when possible.',
   },
   {
     id: 'transactional_email',
@@ -165,8 +167,9 @@ export const CONTENT_CHANNELS: readonly ContentChannel[] = [
     detail: 6,
     goal: 'Confirmation',
     group: 'Email',
+    minLength: 100,  // Minimum characters for complete transactional info
     description: 'Order confirmations, receipts - factual, complete',
-    guidelines: 'Include all relevant details. Professional tone. Clear next steps if any.',
+    guidelines: 'MUST include: Subject line, transaction details, next steps. Professional tone. Clear action items if any.',
   },
 
   // ==========================================================================

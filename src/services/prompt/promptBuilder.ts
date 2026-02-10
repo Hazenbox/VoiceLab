@@ -407,7 +407,85 @@ ${formatting.formatting.map(r => `- ${r}`).join('\n')}`;
     prompt += `\n\n**Maximum Length**: ${formatting.maxLength} characters`;
   }
 
+  // CRITICAL: Add minLength enforcement for emails and structured content
+  if (channel.minLength) {
+    prompt += `\n
+### CRITICAL: Minimum Length Requirement
+
+This channel requires a **minimum of ${channel.minLength} characters**. This is enforced to ensure proper structure and completeness.
+
+**DO NOT** generate abbreviated or shortened content. Even if the user's request is brief, you MUST generate a complete ${channel.name} with all required sections:`;
+
+    if (channelId === 'marketing_email') {
+      prompt += `
+- Subject line (clear, benefit-focused)
+- Body paragraph(s) with offer/benefit details
+- Clear call-to-action
+- Professional sign-off`;
+    } else if (channelId === 'transactional_email') {
+      prompt += `
+- Subject line with transaction reference
+- Transaction details (amount, date, reference number)
+- What happens next / next steps
+- Support contact information`;
+    }
+  }
+
   return prompt;
+}
+
+// =============================================================================
+// EMAIL CHANNEL OVERRIDE
+// =============================================================================
+
+/**
+ * Build email-specific override section
+ * This ensures the LLM doesn't abbreviate email content despite brevity instructions
+ */
+function buildEmailOverrideSection(channelId: ContentChannelType): string {
+  if (channelId !== 'marketing_email' && channelId !== 'transactional_email') {
+    return '';
+  }
+
+  const isMarketing = channelId === 'marketing_email';
+
+  return `
+## IMPORTANT: Email Channel Override
+
+**CRITICAL**: When the channel is set to "${isMarketing ? 'Marketing Email' : 'Transactional Email'}", you MUST generate a **complete email** regardless of how brief the user's request is.
+
+### Required Email Structure (DO NOT SKIP ANY SECTION)
+
+${isMarketing ? `1. **Subject Line**: Compelling, benefit-focused (40-60 characters)
+2. **Preview Text**: Complements the subject (optional but recommended)
+3. **Body**:
+   - Opening with value proposition
+   - Details of offer/benefit (2-4 sentences minimum)
+   - Urgency or timeline (if applicable)
+4. **Call-to-Action**: Clear, action-oriented button text
+5. **Sign-off**: Professional closing` : `1. **Subject Line**: Clear transaction reference
+2. **Transaction Details**: Amount, date, reference number
+3. **Status/Confirmation**: What was completed
+4. **Next Steps**: What the customer should do or expect
+5. **Support Info**: How to get help if needed`}
+
+### Example of WRONG Response (DO NOT DO THIS)
+> "Get 50% off on your next recharge. Click here."
+
+### Example of CORRECT Response
+> **Subject**: Get 50% off on your next Jio recharge - limited time
+>
+> Hi there,
+>
+> We've got something special for you. As a valued Jio customer, you can enjoy **50% off** on your next recharge of ₹299 or more.
+>
+> This offer is valid until 28 February 2026. Simply use code JIOLOVE50 at checkout or tap the button below to apply it automatically.
+>
+> [Recharge now and save]
+>
+> Thanks for being part of the Jio family.
+
+`;
 }
 
 // =============================================================================
@@ -507,7 +585,7 @@ ${productContext}
 
 ${guardrails}
 
-${personaSection ? `${personaSection}\n\n` : ''}${channelFormatting}
+${buildEmailOverrideSection(context.channel)}${personaSection ? `${personaSection}\n\n` : ''}${channelFormatting}
 
 ${knowledgeSection ? `${knowledgeSection}\n\n` : ''}${semanticSection ? `${semanticSection}\n\n` : ''}## User Profile Adaptations
 
