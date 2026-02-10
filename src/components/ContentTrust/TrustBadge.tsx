@@ -78,7 +78,7 @@ export const TrustBadge = memo(function TrustBadge({
   const ShieldIcon = () => {
     const iconName = certification === 'certified' ? 'IcProtection' : 'IcProtectionThreats';
     return (
-      <DSIcon name={iconName} size={size === 'sm' ? 'S' : size === 'lg' ? 'M' : 'S'} attention="medium" />
+      <DSIcon name={iconName} size={size === 'sm' ? 'S' : size === 'lg' ? 'M' : 'S'} attention="low" />
     );
   };
 
