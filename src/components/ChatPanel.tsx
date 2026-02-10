@@ -311,7 +311,7 @@ export const ChatPanel = memo(function ChatPanel({
             </div>
           ) : (
             // Normal view mode
-            <div className="flex flex-col items-end gap-1">
+            <div className="flex flex-col items-end gap-1 group">
               <div
                 className={`max-w-[80%] px-4 pt-2 ${
                   displayContent.split('\n').length > 1 || displayContent.length > 50 ? 'rounded-2xl' : 'rounded-full'
@@ -323,7 +323,7 @@ export const ChatPanel = memo(function ChatPanel({
               >
                 <MessageContent content={displayContent} role="user" />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <UserMessageActions
                   messageId={message.id}
                   content={displayContent}
