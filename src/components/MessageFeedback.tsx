@@ -1,6 +1,13 @@
 /**
  * MessageFeedback Component
  * 
+ * @deprecated This component is deprecated. Use AssistantMessageActions and 
+ * UserMessageActions from './MessageActions' instead, which provide ChatGPT-style
+ * inline actions (copy, like, dislike, try again for assistant messages;
+ * copy, edit for user messages).
+ * 
+ * This component is kept for backward compatibility but will be removed in a future version.
+ * 
  * Feedback actions for AI-generated messages:
  * - Thumbs up (positive signal, optional save as example)
  * - Thumbs down (negative signal + optional reason)
@@ -14,10 +21,16 @@ import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { useThemeColors } from '../theme';
 import { DSIcon } from './DSIcon';
 
-// ── Types ────────────────────────────────────────────────────────
+// ── Types (DEPRECATED - use types from '../types' instead) ───────
 
+/**
+ * @deprecated Import FeedbackType from '../types' instead
+ */
 export type FeedbackType = 'thumbs_up' | 'thumbs_down' | 'edit' | 'comment';
 
+/**
+ * @deprecated Import FeedbackPayload from '../types' instead
+ */
 export interface FeedbackPayload {
   messageId: string;
   feedbackType: FeedbackType;
@@ -59,8 +72,11 @@ const CheckIcon = () => <DSIcon name="IcCheck" size="XS" attention="medium" />;
 
 const CloseIcon = () => <DSIcon name="IcClose" size="XS" attention="medium" />;
 
-// ── Component ────────────────────────────────────────────────────
+// ── Component (DEPRECATED) ───────────────────────────────────────
 
+/**
+ * @deprecated Use AssistantMessageActions/UserMessageActions from MessageActions.tsx instead
+ */
 export const MessageFeedback = memo(function MessageFeedback({
   messageId,
   messageContent,
