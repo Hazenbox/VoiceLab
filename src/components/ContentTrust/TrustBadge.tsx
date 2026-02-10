@@ -73,17 +73,15 @@ export const TrustBadge = memo(function TrustBadge({
   const colors = BADGE_COLORS[certification];
   const badge = getCertificationBadge(certification);
   
-  // Determine button size based on size prop
-  const buttonSize = size === 'sm' ? '24px' : size === 'lg' ? '32px' : '28px';
+  // Determine button size based on size prop - match action buttons (32px for sm)
+  const buttonSize = size === 'sm' ? '32px' : size === 'lg' ? '32px' : '28px';
   const iconSize = size === 'sm' ? '14' : size === 'lg' ? '18' : '16';
   
-  // Shield icon with functional color based on score
+  // Shield icon with grey color to match other action icons
   const ShieldIcon = () => {
     const iconName = certification === 'certified' ? 'IcProtection' : 'IcProtectionThreats';
     return (
-      <span style={{ color: colors.text }}>
-        <DSIcon name={iconName} size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="high" />
-      </span>
+      <DSIcon name={iconName} size={size === 'sm' ? 'S' : size === 'lg' ? 'M' : 'S'} attention="medium" />
     );
   };
 
@@ -115,18 +113,15 @@ export const TrustBadge = memo(function TrustBadge({
       {/* Trust Badge Button */}
       <button
         onClick={onClick}
-        className="rounded-full flex items-center justify-center transition-colors hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+        className="rounded-full flex items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
         style={{
           width: buttonSize,
           height: buttonSize,
-          backgroundColor: isHoveredTrust ? theme.stroke.low : 'transparent',
-          color: colors.text,
+          color: theme.text.low,
         }}
         title={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : undefined}
         type="button"
         aria-label={`Trust badge: ${badge.label}`}
-        onMouseEnter={() => setIsHoveredTrust(true)}
-        onMouseLeave={() => setIsHoveredTrust(false)}
       >
         <ShieldIcon />
       </button>
