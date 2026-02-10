@@ -154,7 +154,7 @@ const ColorTokensPreview: React.FC = () => {
       category: 'Accent',
       description: 'Brand color',
       colors: [
-        { name: 'Primary', mcpToken: 'Accent/Primary', light: '#f97316', dark: '#f97316', current: theme.accent },
+        { name: 'Primary', mcpToken: 'Accent/Primary', light: '#6366f1', dark: '#6366f1', current: theme.accent },
       ],
     },
     {

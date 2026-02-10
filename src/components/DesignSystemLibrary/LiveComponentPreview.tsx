@@ -60,41 +60,105 @@ export const LiveComponentPreview: React.FC<LiveComponentPreviewProps> = ({ comp
 const ButtonPreview: React.FC = () => {
   const theme = useThemeColors();
   
+  const appearances = ['primary', 'secondary', 'ghost', 'link'] as const;
+  const sizes = ['S', 'M', 'L'] as const;
+  
   return (
-    <div className="space-y-6">
-      {/* Sizes */}
+    <div className="space-y-8">
+      {/* All Appearances × All Sizes Matrix */}
       <div>
-        <p className="text-sm font-medium mb-3" style={{ color: theme.text.medium }}>
-          Sizes
+        <p className="text-sm font-semibold mb-4" style={{ color: theme.text.high }}>
+          all appearance × size combinations
         </p>
-        <div className="flex flex-wrap gap-3 items-center">
-          <Button size="S" onPress={() => {}}>Small</Button>
-          <Button size="M" onPress={() => {}}>Medium</Button>
-          <Button size="L" onPress={() => {}}>Large</Button>
+        <div className="space-y-4">
+          {appearances.map(appearance => (
+            <div key={appearance}>
+              <p className="text-xs mb-2 font-medium" style={{ color: theme.text.medium }}>
+                {appearance}
+              </p>
+              <div className="flex flex-wrap gap-3 items-center">
+                {sizes.map(size => (
+                  <Button
+                    key={`${appearance}-${size}`}
+                    appearance={appearance}
+                    size={size}
+                    onPress={() => {}}
+                  >
+                    {appearance} {size}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Appearances */}
+      {/* States: Normal, Disabled, Loading */}
       <div>
-        <p className="text-sm font-medium mb-3" style={{ color: theme.text.medium }}>
-          Appearances
+        <p className="text-sm font-semibold mb-4" style={{ color: theme.text.high }}>
+          states (primary appearance, size M)
         </p>
         <div className="flex flex-wrap gap-3 items-center">
-          <Button appearance="primary" size="M" onPress={() => {}}>Primary</Button>
-          <Button appearance="secondary" size="M" onPress={() => {}}>Secondary</Button>
-          <Button appearance="secondary" size="M" onPress={() => {}}>Ghost</Button>
+          <Button appearance="primary" size="M" onPress={() => {}}>
+            normal
+          </Button>
+          <Button appearance="primary" size="M" isDisabled onPress={() => {}}>
+            disabled
+          </Button>
+          <Button appearance="primary" size="M" isLoading onPress={() => {}}>
+            loading
+          </Button>
         </div>
       </div>
 
-      {/* States */}
+      {/* All States for Each Appearance */}
       <div>
-        <p className="text-sm font-medium mb-3" style={{ color: theme.text.medium }}>
-          States
+        <p className="text-sm font-semibold mb-4" style={{ color: theme.text.high }}>
+          all appearances with disabled state
+        </p>
+        <div className="space-y-3">
+          {appearances.map(appearance => (
+            <div key={`${appearance}-states`} className="flex flex-wrap gap-3 items-center">
+              <Button appearance={appearance} size="M" onPress={() => {}}>
+                {appearance}
+              </Button>
+              <Button appearance={appearance} size="M" isDisabled onPress={() => {}}>
+                {appearance} disabled
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* With Icons */}
+      <div>
+        <p className="text-sm font-semibold mb-4" style={{ color: theme.text.high }}>
+          with icons
         </p>
         <div className="flex flex-wrap gap-3 items-center">
-          <Button size="M" onPress={() => {}}>Normal</Button>
-          <Button size="M" isDisabled onPress={() => {}}>Disabled</Button>
+          <Button appearance="primary" size="M" onPress={() => {}}>
+            <Icon name="IcAdd" size={16} /> add item
+          </Button>
+          <Button appearance="secondary" size="M" onPress={() => {}}>
+            download <Icon name="IcDownload" size={16} />
+          </Button>
+          <Button appearance="ghost" size="M" onPress={() => {}}>
+            <Icon name="IcSettings" size={16} />
+          </Button>
+          <Button appearance="link" size="M" onPress={() => {}}>
+            <Icon name="IcArrowNext" size={16} /> learn more
+          </Button>
         </div>
+      </div>
+
+      {/* Full Width */}
+      <div>
+        <p className="text-sm font-semibold mb-4" style={{ color: theme.text.high }}>
+          full width variant
+        </p>
+        <Button appearance="primary" size="M" onPress={() => {}} style={{ width: '100%' }}>
+          full width button
+        </Button>
       </div>
     </div>
   );

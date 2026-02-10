@@ -28,12 +28,12 @@ const LOCAL_COLORS = {
   white: '#ffffff',
   
   /**
-   * Brand accent orange - matches Radio appearance="secondary"
-   * @token Equivalent to design system's secondary appearance color
-   * @value #f97316 (Tailwind orange-500)
-   * @usage Active states, highlights, brand elements, slider fill
+   * Brand accent indigo - primary button color in design system
+   * @token Primary accent color used for buttons, CTAs, and interactive elements
+   * @value #6366f1 (Tailwind indigo-500)
+   * @usage Primary buttons, active states, highlights, brand elements
    */
-  accent: '#f97316',
+  accent: '#6366f1',
   
   /**
    * Semantic colors for status and feedback
