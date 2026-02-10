@@ -26,10 +26,8 @@ interface ActionButtonProps {
   onClick: () => void;
   /** Whether button is disabled */
   disabled?: boolean;
-  /** Active/selected state (changes color) */
+  /** Active/selected state (for background highlight) */
   isActive?: boolean;
-  /** Custom active color (default: theme.accent) */
-  activeColor?: string;
   /** Tooltip delay in ms (default: 500) */
   tooltipDelay?: number;
   /** Size in px (default: 32) */
@@ -44,17 +42,10 @@ export const ActionButton = memo(function ActionButton({
   onClick,
   disabled = false,
   isActive = false,
-  activeColor,
   tooltipDelay = 500,
   size = 32,
   className = '',
 }: ActionButtonProps) {
-  const theme = useThemeColors();
-  
-  const buttonColor = isActive 
-    ? (activeColor || theme.accent) 
-    : theme.text.low;
-  
   return (
     <DelayedTooltip content={label} delay={tooltipDelay} disabled={disabled}>
       <button
@@ -71,7 +62,6 @@ export const ActionButton = memo(function ActionButton({
           height: `${size}px`,
           minWidth: `${size}px`,
           minHeight: `${size}px`,
-          color: buttonColor,
         }}
       >
         {icon}
