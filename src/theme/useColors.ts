@@ -34,6 +34,15 @@ const LOCAL_COLORS = {
    * @usage Active states, highlights, brand elements, slider fill
    */
   accent: '#f97316',
+  
+  /**
+   * Semantic colors for status and feedback
+   * @token Not yet exposed by DS - based on component implementations
+   */
+  positive: '#00A859',   // Success green - used in trust badges, status indicators
+  negative: '#ef4444',   // Error red - used for errors, failures, warnings
+  warning: '#eab308',    // Warning yellow - used for caution states
+  informative: '#3b82f6', // Info blue - used for informational messages
 } as const;
 
 /**
@@ -171,6 +180,12 @@ export function useThemeColors() {
       low: strokeLow,
     },
     accent,
+    semantic: {
+      positive: LOCAL_COLORS.positive,
+      negative: LOCAL_COLORS.negative,
+      warning: LOCAL_COLORS.warning,
+      informative: LOCAL_COLORS.informative,
+    },
     local: {
       white: LOCAL_COLORS.white,
     },

@@ -119,123 +119,59 @@ const ColorSwatch: React.FC<{
  */
 const ColorTokensPreview: React.FC = () => {
   const theme = useThemeColors();
-
-  const colorGroups = [
+  
+  // Comprehensive color table data with explicit light/dark values
+  const colorsByCategory = [
     {
-      title: 'Surface Colors',
-      subtitle: 'Background colors with state variations',
-      tokens: [
-        { 
-          name: 'Bold', 
-          mcpToken: 'Surface/Bold/*',
-          value: theme.background.bold, 
-          description: 'Primary action surfaces, CTAs, high emphasis elements' 
-        },
-        { 
-          name: 'Subtle', 
-          mcpToken: 'Surface/Subtle/*',
-          value: theme.background.subtle, 
-          description: 'Cards, containers, secondary surfaces' 
-        },
-        { 
-          name: 'Ghost', 
-          mcpToken: 'Surface/Ghost/*',
-          value: theme.background.ghost, 
-          description: 'Page backgrounds, minimal surfaces' 
-        },
+      category: 'Surface',
+      description: 'Background and surface colors',
+      colors: [
+        { name: 'Ghost', mcpToken: 'Surface/Ghost', light: '#ffffff', dark: '#09090b', current: theme.background.ghost },
+        { name: 'Subtle', mcpToken: 'Surface/Subtle', light: '#fafafa', dark: '#18181b', current: theme.background.subtle },
+        { name: 'Bold', mcpToken: 'Surface/Bold', light: '#f4f4f5', dark: '#27272a', current: theme.background.bold },
+        { name: 'Minimal', mcpToken: 'Surface/Minimal', light: '#f9fafb', dark: '#0a0a0b', current: theme.background.minimal },
       ],
     },
     {
-      title: 'Content Colors',
-      subtitle: 'Text and icon colors',
-      tokens: [
-        { 
-          name: 'High', 
-          mcpToken: 'Content/High', 
-          value: theme.text.high, 
-          description: 'Headings, primary text, high emphasis icons' 
-        },
-        { 
-          name: 'Medium', 
-          mcpToken: 'Content/Medium', 
-          value: theme.text.medium, 
-          description: 'Body text, labels, medium emphasis icons' 
-        },
-        { 
-          name: 'Low', 
-          mcpToken: 'Content/Low', 
-          value: theme.text.low, 
-          description: 'Hints, placeholders, disabled text' 
-        },
+      category: 'Content',
+      description: 'Text and icon colors',
+      colors: [
+        { name: 'High', mcpToken: 'Content/High', light: '#18181b', dark: '#fafafa', current: theme.text.high },
+        { name: 'Medium', mcpToken: 'Content/Medium', light: '#52525b', dark: '#a1a1aa', current: theme.text.medium },
+        { name: 'Low', mcpToken: 'Content/Low', light: '#a1a1aa', dark: '#71717a', current: theme.text.low },
       ],
     },
     {
-      title: 'Stroke Colors',
-      subtitle: 'Border and divider colors',
-      tokens: [
-        { 
-          name: 'High', 
-          mcpToken: 'Stroke/High', 
-          value: theme.stroke.high, 
-          description: 'High emphasis borders, focused states' 
-        },
-        { 
-          name: 'Medium', 
-          mcpToken: 'Stroke/Medium', 
-          value: theme.stroke.medium, 
-          description: 'Standard borders, default outlines' 
-        },
-        { 
-          name: 'Low', 
-          mcpToken: 'Stroke/Low', 
-          value: theme.stroke.low, 
-          description: 'Subtle dividers, low emphasis separators' 
-        },
+      category: 'Stroke',
+      description: 'Border and divider colors',
+      colors: [
+        { name: 'High', mcpToken: 'Stroke/High', light: '#3f3f46', dark: '#d4d4d8', current: theme.stroke.high },
+        { name: 'Medium', mcpToken: 'Stroke/Medium', light: '#e4e4e7', dark: '#3f3f46', current: theme.stroke.medium },
+        { name: 'Low', mcpToken: 'Stroke/Low', light: '#f4f4f5', dark: '#27272a', current: theme.stroke.low },
       ],
     },
     {
-      title: 'Accent / Brand',
-      subtitle: 'Primary brand color',
-      tokens: [
-        { 
-          name: 'Accent', 
-          mcpToken: 'Accent/Primary', 
-          value: theme.accent, 
-          description: 'Brand color, links, CTAs, primary actions' 
-        },
+      category: 'Accent',
+      description: 'Brand color',
+      colors: [
+        { name: 'Primary', mcpToken: 'Accent/Primary', light: '#f97316', dark: '#f97316', current: theme.accent },
+      ],
+    },
+    {
+      category: 'Semantic',
+      description: 'Status and feedback colors',
+      colors: [
+        { name: 'Positive', mcpToken: 'Semantic/Positive', light: '#00A859', dark: '#00A859', current: theme.semantic.positive },
+        { name: 'Negative', mcpToken: 'Semantic/Negative', light: '#ef4444', dark: '#ef4444', current: theme.semantic.negative },
+        { name: 'Warning', mcpToken: 'Semantic/Warning', light: '#eab308', dark: '#eab308', current: theme.semantic.warning },
+        { name: 'Informative', mcpToken: 'Semantic/Informative', light: '#3b82f6', dark: '#3b82f6', current: theme.semantic.informative },
       ],
     },
   ];
-
+  
   return (
-    <div className="space-y-8">
-      {colorGroups.map((group) => (
-        <div key={group.title}>
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold" style={{ color: theme.text.high }}>
-              {group.title}
-            </h3>
-            {group.subtitle && (
-              <p className="text-sm mt-1" style={{ color: theme.text.medium }}>
-                {group.subtitle}
-              </p>
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {group.tokens.map((token) => (
-              <ColorSwatch
-                key={token.name}
-                name={token.name}
-                mcpToken={token.mcpToken}
-                value={token.value}
-                description={token.description}
-              />
-            ))}
-          </div>
-        </div>
-      ))}
-
-      {/* MCP Token Info Box */}
+    <div className="space-y-6">
+      {/* Header Info */}
       <div
         className="p-4 rounded-lg"
         style={{
@@ -243,38 +179,83 @@ const ColorTokensPreview: React.FC = () => {
           border: `1px solid ${theme.stroke.low}`,
         }}
       >
-        <h4 className="text-sm font-semibold mb-2" style={{ color: theme.text.high }}>
-          MCP Token Context
-        </h4>
-        <p className="text-sm mb-2" style={{ color: theme.text.medium }}>
+        <h3 className="text-base font-semibold mb-2" style={{ color: theme.text.high }}>
+          All Color Tokens
+        </h3>
+        <p className="text-sm mb-1" style={{ color: theme.text.medium }}>
           Current Color Mode: <strong style={{ color: theme.text.high }}>{theme.colorMode}</strong>
         </p>
         <p className="text-xs" style={{ color: theme.text.low }}>
-          Tokens are context-aware and resolve based on: Platform (Desktop/Tablet/Mobile), 
-          Color Mode (Light/Dark), Density (Compact/Default/Open), Surface level, and Theme (Pack1/Pack2).
-          Toggle between Light/Dark mode to see how colors adapt.
+          15 unique color tokens that adapt to light/dark mode. MCP tokens are context-aware and resolve based on Platform, Color Mode, Density, Surface level, and Theme.
         </p>
       </div>
 
-      {/* Additional Token Info */}
-      <div
-        className="p-4 rounded-lg"
-        style={{
-          backgroundColor: theme.background.ghost,
-          border: `1px solid ${theme.stroke.low}`,
-        }}
-      >
-        <h4 className="text-sm font-semibold mb-2" style={{ color: theme.text.high }}>
-          Complete Token Structure
-        </h4>
-        <div className="space-y-2 text-xs" style={{ color: theme.text.medium }}>
-          <p><strong>Surface States:</strong> Bold, Subtle, Ghost (each with idle/hover/pressed/disabled)</p>
-          <p><strong>Surface Levels:</strong> Minimal, Moderate, Elevated, Overlay</p>
-          <p><strong>Content Variants:</strong> High, Medium, Low, OnBold/High, OnBold/Medium, Tinted</p>
-          <p><strong>Stroke Variants:</strong> High, Medium, Low, Focus</p>
-          <p><strong>Semantic Colors:</strong> Positive, Negative, Warning, Informative</p>
+      {/* Comprehensive Color Tables */}
+      {colorsByCategory.map(({ category, description, colors }) => (
+        <div key={category}>
+          <div className="mb-3">
+            <h4 className="text-base font-semibold" style={{ color: theme.text.high }}>
+              {category}
+            </h4>
+            <p className="text-xs" style={{ color: theme.text.medium }}>
+              {description}
+            </p>
+          </div>
+          
+          <div style={{ border: `1px solid ${theme.stroke.low}`, borderRadius: '8px', overflow: 'hidden' }}>
+            <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ backgroundColor: theme.background.subtle, borderBottom: `1px solid ${theme.stroke.low}` }}>
+                  <th className="text-left py-2 px-3 text-xs font-medium" style={{ color: theme.text.medium }}>name</th>
+                  <th className="text-left py-2 px-3 text-xs font-medium" style={{ color: theme.text.medium }}>mcp token</th>
+                  <th className="text-center py-2 px-3 text-xs font-medium" style={{ color: theme.text.medium }}>preview</th>
+                  <th className="text-left py-2 px-3 text-xs font-medium" style={{ color: theme.text.medium }}>light mode</th>
+                  <th className="text-left py-2 px-3 text-xs font-medium" style={{ color: theme.text.medium }}>dark mode</th>
+                </tr>
+              </thead>
+              <tbody>
+                {colors.map((color, idx) => (
+                  <tr 
+                    key={color.name} 
+                    style={{ 
+                      borderBottom: idx < colors.length - 1 ? `1px solid ${theme.stroke.low}` : 'none',
+                      backgroundColor: theme.background.ghost,
+                    }}
+                  >
+                    <td className="py-2 px-3 text-sm font-medium" style={{ color: theme.text.high }}>
+                      {color.name}
+                    </td>
+                    <td className="py-2 px-3">
+                      <code className="text-xs" style={{ color: theme.text.medium }}>
+                        {color.mcpToken}
+                      </code>
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      <div 
+                        className="w-16 h-8 rounded mx-auto" 
+                        style={{ 
+                          backgroundColor: color.current,
+                          border: `1px solid ${theme.stroke.low}`,
+                        }} 
+                      />
+                    </td>
+                    <td className="py-2 px-3">
+                      <code className="text-xs" style={{ color: theme.text.medium }}>
+                        {color.light}
+                      </code>
+                    </td>
+                    <td className="py-2 px-3">
+                      <code className="text-xs" style={{ color: theme.text.medium }}>
+                        {color.dark}
+                      </code>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 };
