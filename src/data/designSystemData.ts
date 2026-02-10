@@ -5,8 +5,14 @@
  * Updated with latest data from MCP server (Feb 2026)
  * 
  * Package versions:
- * - @marcelinodzn/ds-react: 1.1.0 (51 components)
- * - @marcelinodzn/ds-tokens: 1.0.1 (4,182 tokens)
+ * - @marcelinodzn/ds-react: 1.1.0 (51 production-ready components)
+ * - @marcelinodzn/ds-tokens: 1.0.1 (4,182 context-aware tokens across 13 collections)
+ * 
+ * All packages are PUBLIC on npm - no authentication required!
+ * Installation: npm install @marcelinodzn/ds-react @marcelinodzn/ds-tokens
+ * 
+ * Storybook: https://jio-storybook-mcp.onrender.com
+ * NPM: https://www.npmjs.com/package/@marcelinodzn/ds-react
  */
 
 // =============================================================================
@@ -754,6 +760,10 @@ import { IcHome } from '@marcelinodzn/ds-react/icons';
   <Select.Content>
     <Select.Option value="option1">Option 1</Select.Option>
     <Select.Option value="option2">Option 2</Select.Option>
+    <Select.Group>
+      <Select.GroupLabel>Group</Select.GroupLabel>
+      <Select.Option value="option3">Option 3</Select.Option>
+    </Select.Group>
   </Select.Content>
 </Select>`,
     hasLivePreview: true,
@@ -1140,60 +1150,67 @@ export const COMPONENT_CATEGORIES = {
 // =============================================================================
 // Design Tokens
 // =============================================================================
+// 
+// @marcelinodzn/ds-tokens v1.0.1 contains 4,182 tokens across 13 collections
+// Tokens are context-aware and resolve based on:
+// - Platform (Desktop 1440/1280, Tablet 768, Mobile 360/320)
+// - Color Mode (Light/Dark)
+// - Density (Compact/Default/Open)
+// - Surface (Ghost/Subtle/Minimal/Moderate/Elevated/Overlay)
+// - Theme (Pack1/Pack2)
 
 export const TOKEN_CATEGORIES = {
   colors: {
     label: 'Colors',
-    description: 'Color tokens for surfaces, text, and accents',
+    description: 'Color tokens for surfaces, text, and accents (context-aware)',
     tokens: [
-      { id: 'surface-bold', name: 'Surface Bold', description: 'Bold surface backgrounds' },
-      { id: 'surface-subtle', name: 'Surface Subtle', description: 'Subtle surface backgrounds' },
-      { id: 'surface-ghost', name: 'Surface Ghost', description: 'Minimal surface backgrounds' },
-      { id: 'text-high', name: 'Text High', description: 'High emphasis text' },
-      { id: 'text-medium', name: 'Text Medium', description: 'Medium emphasis text' },
-      { id: 'text-low', name: 'Text Low', description: 'Low emphasis text' },
-      { id: 'accent-brand', name: 'Accent Brand', description: 'Primary brand color' },
-      { id: 'stroke-high', name: 'Stroke High', description: 'High emphasis borders' },
-      { id: 'stroke-medium', name: 'Stroke Medium', description: 'Medium emphasis borders' },
-      { id: 'stroke-low', name: 'Stroke Low', description: 'Low emphasis borders' },
+      { id: 'surface-bold', name: 'Surface/Bold/*', description: 'Bold surface backgrounds for high emphasis' },
+      { id: 'surface-subtle', name: 'Surface/Subtle/*', description: 'Subtle surface backgrounds for cards and containers' },
+      { id: 'surface-ghost', name: 'Surface/Ghost/*', description: 'Minimal surface backgrounds with transparency' },
+      { id: 'content-high', name: 'Content/High', description: 'High emphasis text and icons' },
+      { id: 'content-medium', name: 'Content/Medium', description: 'Medium emphasis text and icons' },
+      { id: 'content-low', name: 'Content/Low', description: 'Low emphasis text and icons' },
+      { id: 'stroke-high', name: 'Stroke/High', description: 'High emphasis borders and dividers' },
+      { id: 'stroke-medium', name: 'Stroke/Medium', description: 'Medium emphasis borders' },
+      { id: 'stroke-low', name: 'Stroke/Low', description: 'Subtle borders and dividers' },
     ],
   },
   spacing: {
     label: 'Spacing',
-    description: 'Spacing tokens for layout and components',
+    description: 'Spacing tokens for layout and components (density-aware)',
     tokens: [
-      { id: 'spacing-xs', name: 'Spacing XS', description: 'Extra small spacing' },
-      { id: 'spacing-s', name: 'Spacing S', description: 'Small spacing' },
-      { id: 'spacing-m', name: 'Spacing M', description: 'Medium spacing (default)' },
-      { id: 'spacing-l', name: 'Spacing L', description: 'Large spacing' },
-      { id: 'spacing-xl', name: 'Spacing XL', description: 'Extra large spacing' },
-      { id: 'spacing-2xl', name: 'Spacing 2XL', description: '2X large spacing' },
+      { id: 'spacing-xs', name: 'Spacing/XS', description: 'Extra small spacing (2-4px)' },
+      { id: 'spacing-s', name: 'Spacing/S', description: 'Small spacing (4-8px)' },
+      { id: 'spacing-m', name: 'Spacing/M', description: 'Medium spacing (8-16px, default)' },
+      { id: 'spacing-l', name: 'Spacing/L', description: 'Large spacing (16-24px)' },
+      { id: 'spacing-xl', name: 'Spacing/XL', description: 'Extra large spacing (24-32px)' },
+      { id: 'spacing-2xl', name: 'Spacing/2XL', description: '2X large spacing (32-48px)' },
     ],
   },
   borderRadius: {
     label: 'Border Radius',
     description: 'Border radius tokens for rounded corners',
     tokens: [
-      { id: 'radius-xs', name: 'Radius XS', description: 'Extra small radius' },
-      { id: 'radius-s', name: 'Radius S', description: 'Small radius' },
-      { id: 'radius-m', name: 'Radius M', description: 'Medium radius' },
-      { id: 'radius-l', name: 'Radius L', description: 'Large radius' },
-      { id: 'radius-full', name: 'Radius Full', description: 'Fully rounded (pill shape)' },
+      { id: 'radius-xs', name: 'BorderRadius/XS', description: 'Extra small radius (2px)' },
+      { id: 'radius-s', name: 'BorderRadius/S', description: 'Small radius (4px)' },
+      { id: 'radius-m', name: 'BorderRadius/M', description: 'Medium radius (8px)' },
+      { id: 'radius-l', name: 'BorderRadius/L', description: 'Large radius (12px)' },
+      { id: 'radius-full', name: 'BorderRadius/Full', description: 'Fully rounded (pill/circle shape)' },
     ],
   },
   typography: {
     label: 'Typography',
-    description: 'Typography scale and font weights',
+    description: 'Typography scale and font weights (platform-aware)',
     tokens: [
-      { id: 'font-display-l', name: 'Display Large', description: 'Display text large' },
-      { id: 'font-display-m', name: 'Display Medium', description: 'Display text medium' },
-      { id: 'font-headline-l', name: 'Headline Large', description: 'Headline large' },
-      { id: 'font-headline-m', name: 'Headline Medium', description: 'Headline medium' },
-      { id: 'font-title-l', name: 'Title Large', description: 'Title large' },
-      { id: 'font-title-m', name: 'Title Medium', description: 'Title medium' },
-      { id: 'font-body', name: 'Body', description: 'Body text' },
-      { id: 'font-caption', name: 'Caption', description: 'Caption text' },
-      { id: 'font-label', name: 'Label', description: 'Label text' },
+      { id: 'font-display-l', name: 'Typography/Size/Display/L', description: 'Display text large (48-56px)' },
+      { id: 'font-display-m', name: 'Typography/Size/Display/M', description: 'Display text medium (36-40px)' },
+      { id: 'font-headline-l', name: 'Typography/Size/Headline/L', description: 'Headline large (28-32px)' },
+      { id: 'font-headline-m', name: 'Typography/Size/Headline/M', description: 'Headline medium (24-28px)' },
+      { id: 'font-title-l', name: 'Typography/Size/Title/L', description: 'Title large (20-24px)' },
+      { id: 'font-title-m', name: 'Typography/Size/Title/M', description: 'Title medium (16-20px)' },
+      { id: 'font-body', name: 'Typography/Size/Body', description: 'Body text (14-16px)' },
+      { id: 'font-caption', name: 'Typography/Size/Caption', description: 'Caption text (12-14px)' },
+      { id: 'font-label', name: 'Typography/Size/Label', description: 'Label text (10-12px)' },
     ],
   },
 };
@@ -2935,6 +2952,7 @@ export const DENSITY_OPTIONS = [
 
 export const EXTERNAL_LINKS = {
   storybook: 'https://jio-storybook-mcp.onrender.com',
+  storybookMcp: 'https://jio-storybook-mcp.onrender.com/mcp',
   npm: 'https://www.npmjs.com/package/@marcelinodzn/ds-react',
   npmTokens: 'https://www.npmjs.com/package/@marcelinodzn/ds-tokens',
   documentation: 'https://jio-design-system.chromatic.com/',
