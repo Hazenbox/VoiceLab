@@ -50,8 +50,9 @@ export const TokenPreview: React.FC<TokenPreviewProps> = ({ categoryId }) => {
 const ColorSwatch: React.FC<{ 
   name: string; 
   value: string; 
+  mcpToken?: string;
   description?: string;
-}> = ({ name, value, description }) => {
+}> = ({ name, value, mcpToken, description }) => {
   const theme = useThemeColors();
   const [copied, setCopied] = React.useState(false);
 
@@ -89,6 +90,17 @@ const ColorSwatch: React.FC<{
             {copied ? 'Copied!' : value}
           </button>
         </div>
+        {mcpToken && (
+          <code 
+            className="text-xs px-1 py-0.5 rounded block mb-1"
+            style={{
+              backgroundColor: theme.background.subtle,
+              color: theme.text.medium,
+            }}
+          >
+            {mcpToken}
+          </code>
+        )}
         {description && (
           <p className="text-xs" style={{ color: theme.text.low }}>
             {description}
@@ -107,33 +119,87 @@ const ColorTokensPreview: React.FC = () => {
 
   const colorGroups = [
     {
-      title: 'Background',
+      title: 'Surface Colors',
+      subtitle: 'Background colors with state variations',
       tokens: [
-        { name: 'Ghost', value: theme.background.ghost, description: 'Lightest, page-level background' },
-        { name: 'Subtle', value: theme.background.subtle, description: 'Cards, containers' },
-        { name: 'Bold', value: theme.background.bold, description: 'Emphasized elements' },
+        { 
+          name: 'Bold', 
+          mcpToken: 'Surface/Bold/*',
+          value: theme.background.bold, 
+          description: 'Primary action surfaces, CTAs, high emphasis elements' 
+        },
+        { 
+          name: 'Subtle', 
+          mcpToken: 'Surface/Subtle/*',
+          value: theme.background.subtle, 
+          description: 'Cards, containers, secondary surfaces' 
+        },
+        { 
+          name: 'Ghost', 
+          mcpToken: 'Surface/Ghost/*',
+          value: theme.background.ghost, 
+          description: 'Page backgrounds, minimal surfaces' 
+        },
       ],
     },
     {
-      title: 'Text',
+      title: 'Content Colors',
+      subtitle: 'Text and icon colors',
       tokens: [
-        { name: 'High', value: theme.text.high, description: 'Primary text, headings' },
-        { name: 'Medium', value: theme.text.medium, description: 'Body text, labels' },
-        { name: 'Low', value: theme.text.low, description: 'Hints, placeholders' },
+        { 
+          name: 'High', 
+          mcpToken: 'Content/High', 
+          value: theme.text.high, 
+          description: 'Headings, primary text, high emphasis icons' 
+        },
+        { 
+          name: 'Medium', 
+          mcpToken: 'Content/Medium', 
+          value: theme.text.medium, 
+          description: 'Body text, labels, medium emphasis icons' 
+        },
+        { 
+          name: 'Low', 
+          mcpToken: 'Content/Low', 
+          value: theme.text.low, 
+          description: 'Hints, placeholders, disabled text' 
+        },
       ],
     },
     {
-      title: 'Stroke',
+      title: 'Stroke Colors',
+      subtitle: 'Border and divider colors',
       tokens: [
-        { name: 'High', value: theme.stroke.high, description: 'High emphasis borders' },
-        { name: 'Medium', value: theme.stroke.medium, description: 'Standard borders' },
-        { name: 'Low', value: theme.stroke.low, description: 'Subtle dividers' },
+        { 
+          name: 'High', 
+          mcpToken: 'Stroke/High', 
+          value: theme.stroke.high, 
+          description: 'High emphasis borders, focused states' 
+        },
+        { 
+          name: 'Medium', 
+          mcpToken: 'Stroke/Medium', 
+          value: theme.stroke.medium, 
+          description: 'Standard borders, default outlines' 
+        },
+        { 
+          name: 'Low', 
+          mcpToken: 'Stroke/Low', 
+          value: theme.stroke.low, 
+          description: 'Subtle dividers, low emphasis separators' 
+        },
       ],
     },
     {
-      title: 'Accent',
+      title: 'Accent / Brand',
+      subtitle: 'Primary brand color',
       tokens: [
-        { name: 'Accent', value: theme.accent, description: 'Brand/primary color' },
+        { 
+          name: 'Accent', 
+          mcpToken: 'Accent/Primary', 
+          value: theme.accent, 
+          description: 'Brand color, links, CTAs, primary actions' 
+        },
       ],
     },
   ];
@@ -142,14 +208,22 @@ const ColorTokensPreview: React.FC = () => {
     <div className="space-y-8">
       {colorGroups.map((group) => (
         <div key={group.title}>
-          <h3 className="text-lg font-semibold mb-4" style={{ color: theme.text.high }}>
-            {group.title}
-          </h3>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold" style={{ color: theme.text.high }}>
+              {group.title}
+            </h3>
+            {group.subtitle && (
+              <p className="text-sm mt-1" style={{ color: theme.text.medium }}>
+                {group.subtitle}
+              </p>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {group.tokens.map((token) => (
               <ColorSwatch
                 key={token.name}
-                name={`${group.title} ${token.name}`}
+                name={token.name}
+                mcpToken={token.mcpToken}
                 value={token.value}
                 description={token.description}
               />
@@ -158,7 +232,7 @@ const ColorTokensPreview: React.FC = () => {
         </div>
       ))}
 
-      {/* Color mode indicator */}
+      {/* MCP Token Info Box */}
       <div
         className="p-4 rounded-lg"
         style={{
@@ -166,12 +240,37 @@ const ColorTokensPreview: React.FC = () => {
           border: `1px solid ${theme.stroke.low}`,
         }}
       >
-        <p className="text-sm" style={{ color: theme.text.medium }}>
+        <h4 className="text-sm font-semibold mb-2" style={{ color: theme.text.high }}>
+          MCP Token Context
+        </h4>
+        <p className="text-sm mb-2" style={{ color: theme.text.medium }}>
           Current Color Mode: <strong style={{ color: theme.text.high }}>{theme.colorMode}</strong>
         </p>
-        <p className="text-xs mt-1" style={{ color: theme.text.low }}>
-          Toggle between Light/Dark mode to see how colors adapt
+        <p className="text-xs" style={{ color: theme.text.low }}>
+          Tokens are context-aware and resolve based on: Platform (Desktop/Tablet/Mobile), 
+          Color Mode (Light/Dark), Density (Compact/Default/Open), Surface level, and Theme (Pack1/Pack2).
+          Toggle between Light/Dark mode to see how colors adapt.
         </p>
+      </div>
+
+      {/* Additional Token Info */}
+      <div
+        className="p-4 rounded-lg"
+        style={{
+          backgroundColor: theme.background.ghost,
+          border: `1px solid ${theme.stroke.low}`,
+        }}
+      >
+        <h4 className="text-sm font-semibold mb-2" style={{ color: theme.text.high }}>
+          Complete Token Structure
+        </h4>
+        <div className="space-y-2 text-xs" style={{ color: theme.text.medium }}>
+          <p><strong>Surface States:</strong> Bold, Subtle, Ghost (each with idle/hover/pressed/disabled)</p>
+          <p><strong>Surface Levels:</strong> Minimal, Moderate, Elevated, Overlay</p>
+          <p><strong>Content Variants:</strong> High, Medium, Low, OnBold/High, OnBold/Medium, Tinted</p>
+          <p><strong>Stroke Variants:</strong> High, Medium, Low, Focus</p>
+          <p><strong>Semantic Colors:</strong> Positive, Negative, Warning, Informative</p>
+        </div>
       </div>
     </div>
   );

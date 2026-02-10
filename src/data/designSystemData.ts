@@ -1162,17 +1162,67 @@ export const COMPONENT_CATEGORIES = {
 export const TOKEN_CATEGORIES = {
   colors: {
     label: 'Colors',
-    description: 'Color tokens for surfaces, text, and accents (context-aware)',
-    tokens: [
-      { id: 'surface-bold', name: 'Surface/Bold/*', description: 'Bold surface backgrounds for high emphasis' },
-      { id: 'surface-subtle', name: 'Surface/Subtle/*', description: 'Subtle surface backgrounds for cards and containers' },
-      { id: 'surface-ghost', name: 'Surface/Ghost/*', description: 'Minimal surface backgrounds with transparency' },
-      { id: 'content-high', name: 'Content/High', description: 'High emphasis text and icons' },
-      { id: 'content-medium', name: 'Content/Medium', description: 'Medium emphasis text and icons' },
-      { id: 'content-low', name: 'Content/Low', description: 'Low emphasis text and icons' },
-      { id: 'stroke-high', name: 'Stroke/High', description: 'High emphasis borders and dividers' },
-      { id: 'stroke-medium', name: 'Stroke/Medium', description: 'Medium emphasis borders' },
-      { id: 'stroke-low', name: 'Stroke/Low', description: 'Subtle borders and dividers' },
+    description: 'Color tokens for surfaces, content, and strokes (4,182 tokens across 13 collections)',
+    subcategories: [
+      {
+        id: 'surface',
+        label: 'Surface Colors',
+        description: 'Background colors with state variations',
+        tokens: [
+          // Bold surfaces
+          { id: 'surface-bold-idle', name: 'Surface/Bold/idle', description: 'Bold surface - default state' },
+          { id: 'surface-bold-hover', name: 'Surface/Bold/hover', description: 'Bold surface - hover state' },
+          { id: 'surface-bold-pressed', name: 'Surface/Bold/pressed', description: 'Bold surface - pressed state' },
+          { id: 'surface-bold-disabled', name: 'Surface/Bold/disabled', description: 'Bold surface - disabled state' },
+          // Subtle surfaces
+          { id: 'surface-subtle-idle', name: 'Surface/Subtle/idle', description: 'Subtle surface - default state' },
+          { id: 'surface-subtle-hover', name: 'Surface/Subtle/hover', description: 'Subtle surface - hover state' },
+          { id: 'surface-subtle-pressed', name: 'Surface/Subtle/pressed', description: 'Subtle surface - pressed state' },
+          // Ghost surfaces
+          { id: 'surface-ghost-idle', name: 'Surface/Ghost/idle', description: 'Ghost surface - default state' },
+          { id: 'surface-ghost-hover', name: 'Surface/Ghost/hover', description: 'Ghost surface - hover state' },
+          // Surface levels
+          { id: 'surface-minimal', name: 'Surface/Minimal', description: 'Minimal surface level' },
+          { id: 'surface-moderate', name: 'Surface/Moderate', description: 'Moderate surface level' },
+          { id: 'surface-elevated', name: 'Surface/Elevated', description: 'Elevated surface (cards, modals)' },
+          { id: 'surface-overlay', name: 'Surface/Overlay', description: 'Overlay surface (backdrops)' },
+        ],
+      },
+      {
+        id: 'content',
+        label: 'Content Colors',
+        description: 'Text and icon colors',
+        tokens: [
+          { id: 'content-high', name: 'Content/High', description: 'High emphasis - headings, primary text' },
+          { id: 'content-medium', name: 'Content/Medium', description: 'Medium emphasis - body text, labels' },
+          { id: 'content-low', name: 'Content/Low', description: 'Low emphasis - hints, placeholders' },
+          { id: 'content-on-bold-high', name: 'Content/OnBold/High', description: 'High contrast on bold surfaces' },
+          { id: 'content-on-bold-medium', name: 'Content/OnBold/Medium', description: 'Medium contrast on bold surfaces' },
+          { id: 'content-tinted', name: 'Content/Tinted', description: 'Tinted/brand colored content' },
+        ],
+      },
+      {
+        id: 'stroke',
+        label: 'Stroke Colors',
+        description: 'Border and divider colors',
+        tokens: [
+          { id: 'stroke-high', name: 'Stroke/High', description: 'High emphasis borders' },
+          { id: 'stroke-medium', name: 'Stroke/Medium', description: 'Standard borders' },
+          { id: 'stroke-low', name: 'Stroke/Low', description: 'Subtle dividers' },
+          { id: 'stroke-focus', name: 'Stroke/Focus', description: 'Focus ring color' },
+        ],
+      },
+      {
+        id: 'semantic',
+        label: 'Semantic Colors',
+        description: 'Status and feedback colors',
+        tokens: [
+          { id: 'semantic-positive', name: 'Semantic/Positive', description: 'Success, confirmation' },
+          { id: 'semantic-negative', name: 'Semantic/Negative', description: 'Error, danger' },
+          { id: 'semantic-warning', name: 'Semantic/Warning', description: 'Warning, caution' },
+          { id: 'semantic-informative', name: 'Semantic/Informative', description: 'Information, neutral' },
+        ],
+      },
     ],
   },
   spacing: {
