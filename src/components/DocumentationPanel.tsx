@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { DOCUMENTATION_SECTIONS } from '../constants';
 import { useThemeColors } from '../theme';
+import { DSIcon } from './DSIcon';
 
 interface DocumentationPanelProps {
   onBack: () => void;
@@ -36,19 +37,7 @@ export const DocumentationPanel: React.FC<DocumentationPanelProps> = ({ onBack }
           className="p-2 rounded-lg transition-colors"
           style={{ color: theme.text.medium }}
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
+          <DSIcon name="IcArrowBack" size="S" attention="medium" />
         </button>
         <h1 
           className="text-xl font-semibold"
@@ -61,20 +50,9 @@ export const DocumentationPanel: React.FC<DocumentationPanelProps> = ({ onBack }
       {/* Search */}
       <div className="p-4">
         <div className="relative">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            style={{ color: theme.text.low }}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: theme.text.low }}>
+            <DSIcon name="IcSearch" size="S" attention="low" />
+          </span>
           <input
             type="text"
             value={searchQuery}

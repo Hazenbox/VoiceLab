@@ -4,6 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { DSIcon } from './DSIcon';
 
 export type TTSProviderType = 'dashscope' | 'gemini' | 'elevenlabs';
 
@@ -96,29 +97,14 @@ export function TTSProviderSelector({
         </span>
         
         {/* Voice icon */}
-        <svg
-          className="w-3.5 h-3.5 text-zinc-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-          />
-        </svg>
+        <span className="text-zinc-400">
+          <DSIcon name="IcVolumeUp" size="XS" attention="low" />
+        </span>
         
         {/* Dropdown arrow */}
-        <svg
-          className={`w-4 h-4 text-zinc-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <span className={`text-zinc-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+          <DSIcon name="IcChevronDown" size="XS" attention="low" />
+        </span>
       </button>
 
       {/* Dropdown Menu */}

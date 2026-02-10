@@ -7,6 +7,7 @@ import { VIBE_OPTIONS } from '../constants';
 import { useThemeColors } from '../theme';
 // Design system context removed - now using single Jio DS
 import { TextArea } from '@marcelinodzn/ds-react';
+import { DSIcon } from './DSIcon';
 
 interface ConfigPanelProps {
   voiceGender: VoiceGender;
@@ -75,21 +76,11 @@ export const ConfigPanel = memo(function ConfigPanel({
           aria-label={isCollapsed ? 'Expand config panel' : 'Collapse config panel'}
         >
           {/* Sidebar toggle icon */}
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-            {isCollapsed ? (
-              // Panel left icon (expand)
-              <>
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round" />
-                <line x1="9" y1="3" x2="9" y2="21" strokeLinecap="round" strokeLinejoin="round" />
-              </>
-            ) : (
-              // Panel right icon (collapse)
-              <>
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" strokeLinecap="round" strokeLinejoin="round" />
-                <line x1="15" y1="3" x2="15" y2="21" strokeLinecap="round" strokeLinejoin="round" />
-              </>
-            )}
-          </svg>
+          {isCollapsed ? (
+            <DSIcon name="IcChevronRight" size="XS" attention="high" />
+          ) : (
+            <DSIcon name="IcChevronLeft" size="XS" attention="high" />
+          )}
         </button>
       )}
 
