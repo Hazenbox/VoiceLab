@@ -200,6 +200,49 @@ export class CostTracker {
     return JSON.stringify(this.records, null, 2);
   }
 
+  /**
+   * Get usage stats broken down by intent mode (conversational-first tracking)
+   * Tags follow the format 'intent:<mode>' (e.g., 'intent:general_chat')
+   */
+  getStatsByIntent(timeRangeMs?: number): Record<string, {
+    tokens: number;
+    requests: number;
+    cost: number;
+    avgLatency: number;
+  }> {
+    const cutoff = timeRangeMs ? Date.now() - timeRangeMs : 0;
+    const filtered = this.records.filter(r => r.timestamp >= cutoff);
+    
+    const byIntent: Record<string, { tokens: number; requests: number; cost: number; totalLatency: number }> = {};
+    
+    for (const record of filtered) {
+      const intentTag = record.tags?.find(t => t.startsWith('intent:'));
+      const intent = intentTag ? intentTag.replace('intent:', '') : 'unknown';
+      
+      if (!byIntent[intent]) {
+        byIntent[intent] = { tokens: 0, requests: 0, cost: 0, totalLatency: 0 };
+      }
+      
+      byIntent[intent].tokens += record.totalTokens;
+      byIntent[intent].requests += 1;
+      byIntent[intent].cost += record.estimatedCost;
+      byIntent[intent].totalLatency += record.latencyMs;
+    }
+    
+    // Convert totalLatency to avgLatency
+    const result: Record<string, { tokens: number; requests: number; cost: number; avgLatency: number }> = {};
+    for (const [intent, stats] of Object.entries(byIntent)) {
+      result[intent] = {
+        tokens: stats.tokens,
+        requests: stats.requests,
+        cost: stats.cost,
+        avgLatency: stats.requests > 0 ? stats.totalLatency / stats.requests : 0,
+      };
+    }
+    
+    return result;
+  }
+
   clear(): void {
     this.records = [];
     this.saveToStorage();

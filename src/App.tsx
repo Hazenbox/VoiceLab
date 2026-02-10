@@ -422,7 +422,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             stream: streamResponse,
             signal: getChatAbortSignal(),
           },
-          createLLMProvider
+          createLLMProvider,
+          ['intent:content_generation']
         );
 
         // Content Trust System: Validate and Score Content
@@ -501,7 +502,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             stream: streamResponse,
             signal: getChatAbortSignal(),
           },
-          createLLMProvider
+          createLLMProvider,
+          [`intent:${intentClassification.intent}`]
         );
 
         // Create AI response -- NO trustScore, NO validation, NO generationContext

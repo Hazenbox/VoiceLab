@@ -66,11 +66,13 @@ export class LLMOrchestrator {
 
   /**
    * Generate text with full orchestration (retry, fallback, caching, monitoring)
+   * @param tags - Optional tags for cost tracking (e.g., ['intent:general_chat'])
    */
   async generate(
     providerType: LLMProviderType,
     options: LLMGenerateOptions,
-    createProvider: (type: LLMProviderType) => LLMProvider
+    createProvider: (type: LLMProviderType) => LLMProvider,
+    tags?: string[]
   ): Promise<LLMGenerateResult & { cached: boolean }> {
     const requestId = this.generateRequestId();
     const startTime = Date.now();
@@ -132,6 +134,7 @@ export class LLMOrchestrator {
         this.costTracker.track(result.usage, {
           requestId,
           success: true,
+          tags,
         });
       }
 
