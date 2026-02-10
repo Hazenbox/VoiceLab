@@ -73,7 +73,12 @@ import {
   getLocalCorrections,
   type CorrectionEntry,
 } from './services/knowledge';
-import type { FeedbackPayload } from './components/MessageFeedback';
+import type { 
+  FeedbackPayload, 
+  SendMessageOptions, 
+  SendMessageResult,
+  PromptVersion,
+} from './types';
 
 // Storage key for chat mode persistence
 const CHAT_MODE_STORAGE_KEY = 'voiceDesigner_chatMode';
@@ -237,6 +242,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     messages: chatMessages,
     addMessage,
     setMessages,
+    updateMessage,
+    replaceMessage,
   } = useChatPersistence(activeProject?.id || null);
 
   // Chat/Generation State
@@ -310,13 +317,26 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   }, []);
 
   // Handle sending chat message via LLM Orchestrator
-  const handleSendChatMessage = useCallback(async (message: string) => {
+  // Extended with options for edit/regeneration flows
+  const handleSendChatMessage = useCallback(async (
+    message: string,
+    options: SendMessageOptions = {} // Backward compatible default
+  ): Promise<SendMessageResult | null> => {
+    const { parentMessageId, replaceResponseId, skipUserMessage } = options;
+    
     // Reset abort controller for new request
     resetChatAbort();
 
-    // Create user message with new format
-    const userMessage = createTextMessage('user', message, chatMode);
-    addMessage(userMessage);
+    // Create user message ONLY if not skipping (backward compatible)
+    let userMessageId: string;
+    if (skipUserMessage && parentMessageId) {
+      userMessageId = parentMessageId;
+    } else {
+      const userMessage = createTextMessage('user', message, chatMode);
+      addMessage(userMessage);
+      userMessageId = userMessage.id;
+    }
+    
     setIsChatLoading(true);
     setError(null);
 
@@ -415,19 +435,32 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         console.warn('Content validation failed:', validationError);
       }
 
-      // Create AI response with trust data attached
+      // Create AI response with trust data attached and parent link
       const aiMessage = {
-        ...createTextMessage('assistant', result.content, chatMode, userMessage.id),
+        ...createTextMessage('assistant', result.content, chatMode, userMessageId),
         trustScore,
         generationContext: finalContext,
         validationSummary,
       };
-      addMessage(aiMessage);
+      
+      // Add or replace AI message based on options
+      if (replaceResponseId) {
+        replaceMessage(replaceResponseId, aiMessage);
+      } else {
+        addMessage(aiMessage);
+      }
+      
+      // Return result for atomic state updates in edit flow
+      return {
+        userMessageId,
+        aiMessageId: aiMessage.id,
+        success: true,
+      } as SendMessageResult;
     } catch (err) {
       // Don't show error if request was cancelled
       if ((err as Error).name === 'AbortError' || (err as Error).message?.includes('cancelled')) {
         console.log('Chat request cancelled');
-        return;
+        return null;
       }
       
       console.error('Chat error:', err);
@@ -435,10 +468,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         code: 'CHAT_ERROR',
         message: err instanceof Error ? err.message : 'Failed to send message',
       });
+      return { userMessageId, aiMessageId: '', success: false } as SendMessageResult;
     } finally {
       setIsChatLoading(false);
     }
-  }, [resetChatAbort, chatMode, addMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings, temperature, maxTokens, streamResponse, userProfile]);
+  }, [resetChatAbort, chatMode, addMessage, replaceMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings, temperature, maxTokens, streamResponse, userProfile]);
 
   // ========================================================================
   // Phase 3: Feedback & Learning Handlers
@@ -492,6 +526,145 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       persona: userProfile?.role,
     });
   }, [ecosystem, contentChannel, userProfile]);
+
+  // ========================================================================
+  // ChatGPT-Style Edit Flow State & Handlers
+  // ========================================================================
+  
+  // Edit flow state - controlled at App level for ChatPanel
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
+  // Ref to track which button triggered edit for focus restoration
+  const editTriggerRef = useRef<string | null>(null);
+  
+  // Start editing a user message
+  const handleStartEdit = useCallback((messageId: string, content: string) => {
+    setEditingMessageId(messageId);
+    setEditValue(content);
+    editTriggerRef.current = messageId; // Track for focus restoration
+  }, []);
+  
+  // Cancel editing
+  const handleCancelEdit = useCallback(() => {
+    setEditingMessageId(null);
+    setEditValue('');
+    // Focus restoration handled by ChatPanel
+  }, []);
+  
+  // Submit edit - creates new version and regenerates AI response
+  const handleSubmitEdit = useCallback(async (messageId: string, newContent: string) => {
+    // Find original message
+    const originalMessage = chatMessages.find(m => m.id === messageId);
+    if (!originalMessage) return;
+    
+    // Find the current AI response (the one we'll replace)
+    const aiResponseIndex = chatMessages.findIndex(
+      m => m.parentMessageId === messageId && m.role === 'assistant'
+    );
+    const currentAiResponse = aiResponseIndex >= 0 ? chatMessages[aiResponseIndex] : null;
+    
+    // Clear edit state first
+    setEditingMessageId(null);
+    setEditValue('');
+    
+    // Generate new response with edited content
+    const result = await handleSendChatMessage(newContent, {
+      parentMessageId: messageId,
+      replaceResponseId: currentAiResponse?.id,
+      skipUserMessage: true,
+    });
+    
+    if (result?.success) {
+      // Update user message with new version history (atomic update)
+      updateMessage(messageId, (msg) => {
+        const existingVersions = msg.promptVersions || [{
+          content: msg.content,
+          timestamp: msg.timestamp,
+          responseId: currentAiResponse?.id || '',
+        }];
+        
+        const newVersion: PromptVersion = {
+          content: newContent,
+          timestamp: Date.now(),
+          responseId: result.aiMessageId,
+        };
+        
+        return {
+          ...msg,
+          content: newContent, // Update base content to latest
+          promptVersions: [...existingVersions, newVersion],
+          displayVersion: existingVersions.length + 1, // Show new version
+        };
+      });
+    }
+  }, [chatMessages, handleSendChatMessage, updateMessage]);
+  
+  // Handle version navigation
+  const handleVersionChange = useCallback((messageId: string, newVersion: number) => {
+    updateMessage(messageId, (msg) => ({
+      ...msg,
+      displayVersion: newVersion,
+    }));
+  }, [updateMessage]);
+  
+  // ========================================================================
+  // Like/Dislike/Try Again Handlers
+  // ========================================================================
+  
+  // Handle "like" feedback
+  const handleLike = useCallback((messageId: string) => {
+    const message = chatMessages.find(m => m.id === messageId);
+    if (!message || message.userFeedback) return; // Already gave feedback
+    
+    // Persist feedback in message
+    updateMessage(messageId, (msg) => ({
+      ...msg,
+      userFeedback: 'like' as const,
+    }));
+    
+    // Log to learning system (reuse existing feedback handler)
+    handleMessageFeedback({
+      messageId,
+      feedbackType: 'thumbs_up',
+      originalContent: message.content,
+    });
+  }, [chatMessages, updateMessage, handleMessageFeedback]);
+  
+  // Handle "dislike" feedback
+  const handleDislike = useCallback((messageId: string) => {
+    const message = chatMessages.find(m => m.id === messageId);
+    if (!message || message.userFeedback) return; // Already gave feedback
+    
+    // Persist feedback in message
+    updateMessage(messageId, (msg) => ({
+      ...msg,
+      userFeedback: 'dislike' as const,
+    }));
+    
+    // Log to learning system
+    handleMessageFeedback({
+      messageId,
+      feedbackType: 'thumbs_down',
+      originalContent: message.content,
+    });
+  }, [chatMessages, updateMessage, handleMessageFeedback]);
+  
+  // Handle "try again" - regenerate AI response
+  const handleTryAgain = useCallback(async (messageId: string) => {
+    // Find the AI message and its parent user message
+    const aiMessage = chatMessages.find(m => m.id === messageId);
+    if (!aiMessage || aiMessage.role !== 'assistant') return;
+    
+    const userMessage = chatMessages.find(m => m.id === aiMessage.parentMessageId);
+    if (!userMessage) return;
+    
+    // Regenerate with same user message, replacing AI response
+    await handleSendChatMessage(userMessage.content, {
+      parentMessageId: userMessage.id,
+      replaceResponseId: messageId,
+      skipUserMessage: true,
+    });
+  }, [chatMessages, handleSendChatMessage]);
 
   // Auto-dismiss error
   useEffect(() => {
@@ -1177,9 +1350,21 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   }
                   // Content Trust System: Trust badge click handler
                   onTrustBadgeClick={handleTrustBadgeClick}
-                  // Phase 3: Feedback & Learning
+                  // Phase 3: Feedback & Learning (deprecated - kept for backward compat)
                   onMessageFeedback={handleMessageFeedback}
                   onSaveAsExample={handleSaveAsExample}
+                  // ChatGPT-style message actions
+                  onLike={handleLike}
+                  onDislike={handleDislike}
+                  onTryAgain={handleTryAgain}
+                  // Edit flow
+                  editingMessageId={editingMessageId}
+                  editValue={editValue}
+                  onStartEdit={handleStartEdit}
+                  onEditChange={setEditValue}
+                  onSubmitEdit={handleSubmitEdit}
+                  onCancelEdit={handleCancelEdit}
+                  onVersionChange={handleVersionChange}
                 />
               </div>
             </div>
