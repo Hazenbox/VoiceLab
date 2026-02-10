@@ -94,7 +94,7 @@ const VoiceIcon = () => <DSIcon name="IcMic" size="XS" attention="high" />;
 
 const ProjectIcon = () => <DSIcon name="IcFolder" size="XS" attention="high" />;
 
-const TrustIcon = () => <DSIcon name="IcShield" size="XS" attention="high" />;
+const TrustIcon = () => <DSIcon name="IcProtection" size="XS" attention="high" />;
 
 const ChatIcon = () => <DSIcon name="IcChat" size="XS" attention="high" />;
 

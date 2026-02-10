@@ -169,7 +169,7 @@ const ProjectMenu = memo(function ProjectMenu({
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        <DSIcon name="IcMoreVertical" size="XS" attention="low" />
+        <DSIcon name="IcMoreHorizontal" size="XS" attention="low" />
       </button>
 
       {/* Dropdown Menu */}
@@ -358,7 +358,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     {
       value: 'edit-profile',
       label: 'Edit Profile',
-      icon: <DSIcon name="IcEdit" size="XS" attention="medium" />,
+      icon: <DSIcon name="IcUser" size="XS" attention="medium" />,
     },
     ...(onNavigateToDesignSystem ? [{
       value: 'design-system',
@@ -369,7 +369,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       value: 'toggle-theme',
       label: `${colorMode === 'Light' ? 'Dark' : 'Light'} Mode`,
       icon: colorMode === 'Light' 
-        ? <DSIcon name="IcMoonFull" size="XS" attention="medium" />
+        ? <DSIcon name="IcNightClear" size="XS" attention="medium" />
         : <DSIcon name="IcSunnyClear" size="XS" attention="medium" />,
     },
   ];

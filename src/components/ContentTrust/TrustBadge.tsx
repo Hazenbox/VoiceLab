@@ -71,18 +71,21 @@ export const TrustBadge = memo(function TrustBadge({
   const iconSize = size === 'sm' ? '14' : size === 'lg' ? '18' : '16';
   
   // Shield icon with functional color based on score
-  const ShieldIcon = () => (
-    <span style={{ color: colors.text }}>
-      <DSIcon name="IcShield" size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="high" />
-    </span>
-  );
+  const ShieldIcon = () => {
+    const iconName = certification === 'certified' ? 'IcProtection' : 'IcProtectionThreats';
+    return (
+      <span style={{ color: colors.text }}>
+        <DSIcon name={iconName} size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="high" />
+      </span>
+    );
+  };
 
   // Copy icon
   const CopyIcon = () => (
     copySuccess ? (
       <DSIcon name="IcCheck" size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="high" />
     ) : (
-      <DSIcon name="IcCopy" size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="medium" />
+      <DSIcon name="IcCopyDocument" size={size === 'sm' ? 'XS' : size === 'lg' ? 'M' : 'S'} attention="medium" />
     )
   );
 
@@ -153,6 +156,7 @@ export const InlineTrustBadge = memo(function InlineTrustBadge({
   
   const colors = BADGE_COLORS[trustScore.certification];
   const badge = getCertificationBadge(trustScore.certification);
+  const iconName = trustScore.certification === 'certified' ? 'IcProtection' : 'IcProtectionThreats';
   
   return (
     <button
@@ -165,7 +169,7 @@ export const InlineTrustBadge = memo(function InlineTrustBadge({
       title={`${badge.label} - Click for details`}
       type="button"
     >
-      <DSIcon name="IcShield" size="XS" attention="high" />
+      <DSIcon name={iconName} size="XS" attention="high" />
       <span>{trustScore.overall}</span>
     </button>
   );

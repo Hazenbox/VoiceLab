@@ -36,23 +36,22 @@ interface MessageFeedbackProps {
 
 // ── Icons - Using DSIcon wrapper ──────────────────────────────────
 
-// Note: For filled state icons, we still keep custom SVGs as DSIcon may not support fill toggle
-// These use DSIcon for standard icons where fill state isn't needed
+// Note: Thumbs up uses IcDislike with vertical flip, thumbs down uses IcDislike as-is
 const ThumbsUpIcon = ({ filled }: { filled: boolean }) => (
-  <span style={{ opacity: filled ? 1 : 0.7 }}>
-    <DSIcon name="IcThumbUp" size="XS" attention={filled ? "high" : "medium"} />
+  <span style={{ opacity: filled ? 1 : 0.7, transform: 'scaleY(-1)', display: 'inline-block' }}>
+    <DSIcon name="IcDislike" size="XS" attention={filled ? "high" : "medium"} />
   </span>
 );
 
 const ThumbsDownIcon = ({ filled }: { filled: boolean }) => (
   <span style={{ opacity: filled ? 1 : 0.7 }}>
-    <DSIcon name="IcThumbDown" size="XS" attention={filled ? "high" : "medium"} />
+    <DSIcon name="IcDislike" size="XS" attention={filled ? "high" : "medium"} />
   </span>
 );
 
 const EditIcon = () => <DSIcon name="IcEdit" size="XS" attention="medium" />;
 
-const CommentIcon = () => <DSIcon name="IcComment" size="XS" attention="medium" />;
+const CommentIcon = () => <DSIcon name="IcChat" size="XS" attention="medium" />;
 
 const BookmarkIcon = () => <DSIcon name="IcBookmark" size="XS" attention="medium" />;
 

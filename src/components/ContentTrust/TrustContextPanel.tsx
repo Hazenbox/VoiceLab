@@ -228,7 +228,7 @@ const ContextSummarySection: React.FC<{ context: GenerationContext }> = ({ conte
  */
 const ShieldCheckIcon: React.FC<{ className?: string }> = ({ className }) => (
   <span className={className}>
-    <DSIcon name="IcShield" size="S" attention="high" />
+    <DSIcon name="IcProtection" size="S" attention="high" />
   </span>
 );
 
@@ -267,20 +267,12 @@ const GuardrailItem: React.FC<{ guardrail: GuardrailStatus }> = ({ guardrail }) 
       className="flex items-start gap-2 py-2 border-b last:border-b-0"
       style={{ borderColor: theme.stroke.low }}
     >
-      <div 
-        className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-        style={{ 
-          backgroundColor: isFollowed ? '#00A859' : '#eab308',
-        }}
-      >
+      {/* Icon without background circle - colored icons are self-contained */}
+      <div className="flex-shrink-0 mt-0.5">
         {isFollowed ? (
-          <span className="text-white scale-75">
-            <DSIcon name="IcCheck" size="XS" attention="high" />
-          </span>
+          <DSIcon name="IcSuccessColored" size="XS" attention="high" />
         ) : (
-          <span className="text-white scale-75">
-            <DSIcon name="IcCircle" size="XS" attention="high" />
-          </span>
+          <DSIcon name="IcWarningColored" size="XS" attention="high" />
         )}
       </div>
       <div className="flex-1 min-w-0">
@@ -347,6 +339,7 @@ const ComplianceJustificationSection: React.FC<{
   
   const followedCount = guardrailsFollowed.filter(g => g.status === 'followed').length;
   const totalAgentRulesPassed = validationsPassed.reduce((sum, v) => sum + v.rulesPassed, 0);
+  const hasViolations = followedCount < guardrailsFollowed.length;
   
   return (
     <div className="space-y-3">
@@ -372,6 +365,13 @@ const ComplianceJustificationSection: React.FC<{
         defaultOpen={false}
         badge={`${followedCount}/10`}
         variant="card"
+        icon={
+          hasViolations ? (
+            <DSIcon name="IcProtectionThreats" size="XS" attention="high" />
+          ) : (
+            <DSIcon name="IcProtection" size="XS" attention="high" />
+          )
+        }
       >
         <div>
           {guardrailsFollowed.map(g => (

@@ -69,7 +69,7 @@ export function CodeBlock({ children, className, inline }: CodeBlockProps) {
             </>
           ) : (
             <>
-              <DSIcon name="IcCopy" size="XS" attention="medium" />
+              <DSIcon name="IcCopyDocument" size="XS" attention="medium" />
               <span>Copy</span>
             </>
           )}

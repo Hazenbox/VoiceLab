@@ -172,7 +172,7 @@ export const TwConfigPanel: React.FC<TwConfigPanelProps> = ({
             aria-label={`Switch to ${colorMode === 'Light' ? 'dark' : 'light'} mode`}
           >
             {colorMode === 'Light' ? (
-              <DSIcon name="IcMoonFull" size="XS" attention="high" />
+              <DSIcon name="IcNightClear" size="XS" attention="high" />
             ) : (
               <DSIcon name="IcSunnyClear" size="XS" attention="high" />
             )}
