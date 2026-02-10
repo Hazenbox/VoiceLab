@@ -16,6 +16,10 @@ interface TrustBadgeProps {
   size?: 'sm' | 'md' | 'lg';
   showScore?: boolean;
   showTooltip?: boolean;
+  /**
+   * @deprecated Copy functionality moved to MessageActions component.
+   * Will be removed in a future version. Leave undefined to hide copy button.
+   */
   messageContent?: string;
 }
 
@@ -59,6 +63,14 @@ export const TrustBadge = memo(function TrustBadge({
   const [isHoveredTrust, setIsHoveredTrust] = useState(false);
   const [isHoveredCopy, setIsHoveredCopy] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  
+  // Development warning for deprecated prop
+  if (process.env.NODE_ENV === 'development' && messageContent !== undefined) {
+    console.warn(
+      '[TrustBadge] messageContent prop is deprecated. ' +
+      'Copy functionality has moved to MessageActions component.'
+    );
+  }
   
   if (!trustScore) return null;
   
