@@ -13,13 +13,14 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
-import type { ChatMessage, ChatMode } from '../types';
+import type { ChatMessage, ChatMode, FeedbackPayload } from '../types';
+import { getDisplayContent } from '../types';
 import { useThemeColors } from '../theme';
 import { MessageContent } from './MessageContent';
 import { AudioBubble } from './AudioBubble';
 import { TrustBadge } from './ContentTrust';
-import { MessageFeedback } from './MessageFeedback';
-import type { FeedbackPayload } from './MessageFeedback';
+import { AssistantMessageActions, UserMessageActions } from './MessageActions';
+import { VersionNavigator } from './VersionNavigator';
 import { Button } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
@@ -70,11 +71,35 @@ interface ChatPanelProps {
   /** Streaming AI response text (while AI is responding) */
   streamingAIResponse?: string;
   
-  // Feedback props (Phase 3)
-  /** Callback when user gives feedback on a message */
+  // Feedback props (Phase 3) - moved from MessageFeedback to types.ts
+  /** @deprecated Use onLike/onDislike instead for new ChatGPT-style actions */
   onMessageFeedback?: (payload: FeedbackPayload) => void;
-  /** Callback when user saves content as an approved example */
+  /** @deprecated No longer needed - use MessageActions instead */
   onSaveAsExample?: (content: string) => void;
+  
+  // New ChatGPT-style action callbacks
+  /** Callback when user clicks "like" on assistant message */
+  onLike?: (messageId: string) => void;
+  /** Callback when user clicks "dislike" on assistant message */
+  onDislike?: (messageId: string) => void;
+  /** Callback when user clicks "try again" to regenerate response */
+  onTryAgain?: (messageId: string) => void;
+  
+  // Edit flow callbacks
+  /** Currently editing message ID (controlled by parent) */
+  editingMessageId?: string | null;
+  /** Current edit value (controlled by parent) */
+  editValue?: string;
+  /** Callback when user initiates edit */
+  onStartEdit?: (messageId: string, content: string) => void;
+  /** Callback when edit value changes */
+  onEditChange?: (value: string) => void;
+  /** Callback when edit is submitted */
+  onSubmitEdit?: (messageId: string, newContent: string) => void;
+  /** Callback when edit is cancelled */
+  onCancelEdit?: () => void;
+  /** Callback when user navigates to a different version */
+  onVersionChange?: (messageId: string, newVersion: number) => void;
 }
 
 // =============================================================================
@@ -103,9 +128,21 @@ export const ChatPanel = memo(function ChatPanel({
   // Voice streaming props
   streamingUserTranscript,
   streamingAIResponse,
-  // Feedback props (Phase 3)
-  onMessageFeedback,
-  onSaveAsExample: onSaveAsExampleProp,
+  // Feedback props (Phase 3) - deprecated
+  onMessageFeedback: _onMessageFeedback,
+  onSaveAsExample: _onSaveAsExampleProp,
+  // New ChatGPT-style action callbacks
+  onLike,
+  onDislike,
+  onTryAgain,
+  // Edit flow
+  editingMessageId,
+  editValue,
+  onStartEdit,
+  onEditChange,
+  onSubmitEdit,
+  onCancelEdit,
+  onVersionChange,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -172,78 +209,198 @@ export const ChatPanel = memo(function ChatPanel({
   // Render individual message
   const renderMessage = useCallback((message: ChatMessage) => {
     const isUser = message.role === 'user';
+    const displayContent = getDisplayContent(message);
+    const isEditing = editingMessageId === message.id;
     
     // Audio message
     if (message.type === 'audio' && message.audioData) {
       return (
-        <AudioBubble
-          key={message.id}
-          messageId={message.id}
-          audioData={message.audioData}
-          sampleRate={message.audioSampleRate || 24000}
-          duration={message.audioDuration || 0}
-          transcript={message.content}
-          role={message.role}
-          showTranscript={true}
-        />
-      );
-    }
-    
-    // Text message
-    return (
-      <div
-        key={message.id}
-        className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
-        role="listitem"
-      >
-        {isUser ? (
-          <div
-            className={`max-w-[80%] px-4 pt-2 ${
-              message.content.split('\n').length > 1 || message.content.length > 50 ? 'rounded-2xl' : 'rounded-full'
-            }`}
-            style={{
-              backgroundColor: theme.stroke.low,
-              color: theme.text.high,
-            }}
-          >
-            <MessageContent content={message.content} role={message.role} />
-          </div>
-        ) : (
-          <div
-            className="max-w-[80%] px-3 py-2"
-            style={{
-              color: theme.text.high,
-            }}
-          >
-            <MessageContent content={message.content} role={message.role} />
-            
-            {/* Trust Badge for assistant messages */}
-            {message.trustScore && (
-              <div className="flex items-center gap-2 mt-1.5">
-                <TrustBadge
-                  trustScore={message.trustScore}
-                  onClick={() => onTrustBadgeClick?.(message.id)}
-                  size="sm"
-                  showScore={true}
-                  messageContent={message.content}
+        <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`} role="listitem">
+          <div className="flex flex-col items-end gap-1">
+            <AudioBubble
+              messageId={message.id}
+              audioData={message.audioData}
+              sampleRate={message.audioSampleRate || 24000}
+              duration={message.audioDuration || 0}
+              transcript={message.content}
+              role={message.role}
+              showTranscript={true}
+            />
+            {/* User audio message actions (copy only, no edit for audio) */}
+            {isUser && (
+              <div className="flex items-center gap-2">
+                <UserMessageActions
+                  messageId={message.id}
+                  content={message.content}
+                  onEdit={() => {}} // no-op for audio
+                  disabled={isLoading}
+                  hideEdit={true}
                 />
               </div>
             )}
-            
-            {/* Feedback Actions (Phase 3) */}
-            {onMessageFeedback && (
-              <MessageFeedback
+            {/* Assistant audio message actions */}
+            {!isUser && onLike && onDislike && onTryAgain && (
+              <div className="flex items-center gap-2">
+                <AssistantMessageActions
+                  messageId={message.id}
+                  content={message.content}
+                  onLike={onLike}
+                  onDislike={onDislike}
+                  onTryAgain={onTryAgain}
+                  disabled={isLoading}
+                  feedbackGiven={message.userFeedback}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    // Text message - User
+    if (isUser) {
+      return (
+        <div
+          key={message.id}
+          className="flex justify-end"
+          role="listitem"
+        >
+          {isEditing ? (
+            // Edit mode: inline textarea
+            <div className="max-w-[80%] flex flex-col gap-2">
+              <textarea
+                value={editValue}
+                onChange={(e) => onEditChange?.(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    onSubmitEdit?.(message.id, editValue || '');
+                  }
+                  if (e.key === 'Escape') {
+                    onCancelEdit?.();
+                  }
+                }}
+                className="w-full px-4 py-2 rounded-2xl text-sm resize-none outline-none"
+                style={{
+                  backgroundColor: theme.stroke.low,
+                  color: theme.text.high,
+                  minHeight: '60px',
+                }}
+                autoFocus
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={onCancelEdit}
+                  className="text-xs px-3 py-1 rounded-full hover:opacity-80"
+                  style={{ color: theme.text.low }}
+                >
+                  cancel
+                </button>
+                <button
+                  onClick={() => onSubmitEdit?.(message.id, editValue || '')}
+                  disabled={!editValue?.trim() || editValue === displayContent}
+                  className="text-xs px-3 py-1 rounded-full disabled:opacity-40"
+                  style={{
+                    backgroundColor: theme.accent,
+                    color: '#fff',
+                  }}
+                >
+                  submit
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Normal view mode
+            <div className="flex flex-col items-end gap-1">
+              <div
+                className={`max-w-[80%] px-4 pt-2 ${
+                  displayContent.split('\n').length > 1 || displayContent.length > 50 ? 'rounded-2xl' : 'rounded-full'
+                }`}
+                style={{
+                  backgroundColor: theme.stroke.low,
+                  color: theme.text.high,
+                }}
+              >
+                <MessageContent content={displayContent} role="user" />
+              </div>
+              <div className="flex items-center gap-2">
+                <UserMessageActions
+                  messageId={message.id}
+                  content={displayContent}
+                  onEdit={onStartEdit || (() => {})}
+                  disabled={isLoading}
+                />
+                {(message.promptVersions?.length ?? 0) > 1 && (
+                  <VersionNavigator
+                    currentVersion={message.displayVersion ?? message.promptVersions!.length}
+                    totalVersions={message.promptVersions!.length}
+                    onVersionChange={(newVersion) => onVersionChange?.(message.id, newVersion)}
+                    disabled={isLoading}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    // Text message - Assistant
+    return (
+      <div
+        key={message.id}
+        className="flex justify-start"
+        role="listitem"
+      >
+        <div
+          className="max-w-[80%] px-3 py-2"
+          style={{
+            color: theme.text.high,
+          }}
+        >
+          <MessageContent content={message.content} role="assistant" />
+          
+          {/* Actions row: Trust Badge + Message Actions */}
+          <div className="flex items-center gap-2 mt-1.5">
+            {message.trustScore && (
+              <TrustBadge
+                trustScore={message.trustScore}
+                onClick={() => onTrustBadgeClick?.(message.id)}
+                size="sm"
+                showScore={true}
+                // messageContent removed - copy now in MessageActions
+              />
+            )}
+            {onLike && onDislike && onTryAgain && (
+              <AssistantMessageActions
                 messageId={message.id}
-                messageContent={message.content}
-                onFeedback={onMessageFeedback}
-                onSaveAsExample={onSaveAsExampleProp}
+                content={message.content}
+                onLike={onLike}
+                onDislike={onDislike}
+                onTryAgain={onTryAgain}
+                disabled={isLoading}
+                feedbackGiven={message.userFeedback}
               />
             )}
           </div>
-        )}
+        </div>
       </div>
     );
-  }, [theme, onTrustBadgeClick, onMessageFeedback, onSaveAsExampleProp]);
+  }, [
+    theme, 
+    onTrustBadgeClick, 
+    isLoading,
+    onLike, 
+    onDislike, 
+    onTryAgain,
+    editingMessageId,
+    editValue,
+    onStartEdit,
+    onEditChange,
+    onSubmitEdit,
+    onCancelEdit,
+    onVersionChange,
+  ]);
 
   // Render input area (reusable for both layouts)
   const renderInputArea = useCallback(() => (
