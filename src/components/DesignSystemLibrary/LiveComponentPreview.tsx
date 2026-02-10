@@ -5,7 +5,8 @@
  */
 
 import React, { useState } from 'react';
-import { Button, TextArea, RadioGroup, Radio } from '@marcelinodzn/ds-react';
+import { Button, TextArea, RadioGroup, Radio, Icon } from '@marcelinodzn/ds-react';
+import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 import { useThemeColors } from '../../theme';
 import type { ComponentName } from '../../data/designSystemData';
 
@@ -320,23 +321,105 @@ const HeadlinePreview: React.FC = () => {
 
 const IconPreview: React.FC = () => {
   const theme = useThemeColors();
-  const icons = ['🏠', '🔍', '⚙️', '👤', '📧', '📱', '🔔', '❤️', '⭐', '📁'];
+  const icons = [
+    'IcHome',
+    'IcSearch', 
+    'IcSettings',
+    'IcUser',
+    'IcMail',
+    'IcPhone',
+    'IcNotification',
+    'IcHeart',
+    'IcStar',
+    'IcFolder'
+  ];
   
   return (
-    <div>
-      <p className="text-sm font-medium mb-3" style={{ color: theme.text.medium }}>
-        Icon Examples (placeholder icons)
-      </p>
-      <div className="flex flex-wrap gap-4">
-        {icons.map((icon, i) => (
-          <div
-            key={i}
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
-            style={{ backgroundColor: theme.background.ghost }}
-          >
-            {icon}
+    <div className="space-y-6">
+      {/* Sizes */}
+      <div>
+        <p className="text-sm font-medium mb-3" style={{ color: theme.text.medium }}>
+          Sizes
+        </p>
+        <div className="flex items-center gap-4">
+          <div className="text-center">
+            <Icon size="XS">
+              <LazyIcon name="IcHome" />
+            </Icon>
+            <p className="text-xs mt-1" style={{ color: theme.text.low }}>XS</p>
           </div>
-        ))}
+          <div className="text-center">
+            <Icon size="S">
+              <LazyIcon name="IcHome" />
+            </Icon>
+            <p className="text-xs mt-1" style={{ color: theme.text.low }}>S</p>
+          </div>
+          <div className="text-center">
+            <Icon size="M">
+              <LazyIcon name="IcHome" />
+            </Icon>
+            <p className="text-xs mt-1" style={{ color: theme.text.low }}>M</p>
+          </div>
+          <div className="text-center">
+            <Icon size="L">
+              <LazyIcon name="IcHome" />
+            </Icon>
+            <p className="text-xs mt-1" style={{ color: theme.text.low }}>L</p>
+          </div>
+          <div className="text-center">
+            <Icon size="XL">
+              <LazyIcon name="IcHome" />
+            </Icon>
+            <p className="text-xs mt-1" style={{ color: theme.text.low }}>XL</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Icon Gallery */}
+      <div>
+        <p className="text-sm font-medium mb-3" style={{ color: theme.text.medium }}>
+          Icon Examples
+        </p>
+        <div className="flex flex-wrap gap-4">
+          {icons.map((iconName) => (
+            <div
+              key={iconName}
+              className="w-12 h-12 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: theme.background.ghost }}
+            >
+              <Icon size="L">
+                <LazyIcon name={iconName} />
+              </Icon>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Attention Levels */}
+      <div>
+        <p className="text-sm font-medium mb-3" style={{ color: theme.text.medium }}>
+          Attention Levels
+        </p>
+        <div className="flex items-center gap-6">
+          <div className="text-center">
+            <Icon size="L" attention="low">
+              <LazyIcon name="IcSettings" />
+            </Icon>
+            <p className="text-xs mt-1" style={{ color: theme.text.low }}>Low</p>
+          </div>
+          <div className="text-center">
+            <Icon size="L" attention="medium">
+              <LazyIcon name="IcSettings" />
+            </Icon>
+            <p className="text-xs mt-1" style={{ color: theme.text.low }}>Medium</p>
+          </div>
+          <div className="text-center">
+            <Icon size="L" attention="high">
+              <LazyIcon name="IcSettings" />
+            </Icon>
+            <p className="text-xs mt-1" style={{ color: theme.text.low }}>High</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -428,11 +511,10 @@ const SearchFieldPreview: React.FC = () => {
   return (
     <div className="max-w-md">
       <div className="relative">
-        <span
-          className="absolute left-3 top-1/2 -translate-y-1/2"
-          style={{ color: theme.text.low }}
-        >
-          🔍
+        <span className="absolute left-3 top-1/2 -translate-y-1/2">
+          <Icon size="S">
+            <LazyIcon name="IcSearch" />
+          </Icon>
         </span>
         <input
           type="text"
@@ -450,9 +532,10 @@ const SearchFieldPreview: React.FC = () => {
           <button
             onClick={() => setValue('')}
             className="absolute right-3 top-1/2 -translate-y-1/2"
-            style={{ color: theme.text.low }}
           >
-            ✕
+            <Icon size="S">
+              <LazyIcon name="IcClose" />
+            </Icon>
           </button>
         )}
       </div>
