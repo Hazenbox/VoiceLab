@@ -5,6 +5,8 @@
  */
 
 import React, { useState, useMemo } from 'react';
+import { Icon } from '@marcelinodzn/ds-react';
+import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 import { useThemeColors } from '../../theme';
 import { COMMON_ICONS } from '../../data/designSystemData';
 
@@ -164,237 +166,21 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
   }, [filteredIcons]);
 
   const handleCopyIcon = (iconName: string) => {
-    const importCode = `import { Icon } from '@marcelinodzn/ds-react';\n\n<Icon name="${iconName}" size="M" />`;
+    const importCode = `import { Icon } from '@marcelinodzn/ds-react';\nimport { LazyIcon } from '@marcelinodzn/ds-react/icons';\n\n<Icon size="M">\n  <LazyIcon name="${iconName}" />\n</Icon>`;
     navigator.clipboard.writeText(importCode);
     setCopiedIcon(iconName);
     setTimeout(() => setCopiedIcon(null), 2000);
     onSelectIcon?.(iconName);
   };
 
-  // Emoji mapping for visual representation (since actual icons need the Icon component)
-  const getIconEmoji = (name: string): string => {
-    const emojiMap: Record<string, string> = {
-      // Navigation
-      'IcHome': '🏠',
-      'IcSearch': '🔍',
-      'IcMenu': '☰',
-      'IcArrowLeft': '←',
-      'IcArrowRight': '→',
-      'IcArrowUp': '↑',
-      'IcArrowDown': '↓',
-      'IcChevronLeft': '‹',
-      'IcChevronRight': '›',
-      'IcChevronUp': '⌃',
-      'IcChevronDown': '⌄',
-      'IcBack': '←',
-      'IcForward': '→',
-      'IcNext': '→',
-      'IcPrevious': '←',
-      
-      // Actions
-      'IcPlus': '+',
-      'IcMinus': '−',
-      'IcClose': '✕',
-      'IcCheck': '✓',
-      'IcEdit': '✏️',
-      'IcDelete': '🗑️',
-      'IcRefresh': '↻',
-      'IcDownload': '⬇️',
-      'IcUpload': '⬆️',
-      'IcShare': '↗️',
-      'IcCopy': '📋',
-      'IcSave': '💾',
-      'IcFilter': '🔽',
-      'IcMore': '⋯',
-      'IcMoreVertical': '⋮',
-      'IcMoreHorizontal': '⋯',
-      'IcAdd': '+',
-      'IcRemove': '−',
-      
-      // User & Account
-      'IcUser': '👤',
-      'IcUsers': '👥',
-      'IcSettings': '⚙️',
-      'IcProfile': '👤',
-      'IcLogout': '🚪',
-      'IcLogin': '🔐',
-      'IcAccount': '👤',
-      'IcAvatar': '👤',
-      
-      // Communication
-      'IcMail': '✉️',
-      'IcPhone': '📱',
-      'IcChat': '💬',
-      'IcNotification': '🔔',
-      'IcBell': '🔔',
-      'IcMessage': '💬',
-      'IcSend': '📤',
-      'IcReply': '↩️',
-      
-      // Media
-      'IcPlay': '▶️',
-      'IcPause': '⏸️',
-      'IcStop': '⏹️',
-      'IcMicrophone': '🎤',
-      'IcSpeaker': '🔊',
-      'IcVolume': '🔉',
-      'IcCamera': '📷',
-      'IcImage': '🖼️',
-      'IcVideo': '🎥',
-      'IcMusic': '🎵',
-      'IcHeadphones': '🎧',
-      
-      // Status
-      'IcInfo': 'ℹ️',
-      'IcWarning': '⚠️',
-      'IcError': '❌',
-      'IcSuccess': '✅',
-      'IcQuestion': '❓',
-      'IcAlert': '⚠️',
-      'IcCheckCircle': '✅',
-      'IcXCircle': '❌',
-      'IcInfoCircle': 'ℹ️',
-      
-      // Objects
-      'IcCalendar': '📅',
-      'IcClock': '🕐',
-      'IcLocation': '📍',
-      'IcStar': '⭐',
-      'IcHeart': '❤️',
-      'IcBookmark': '🔖',
-      'IcDocument': '📄',
-      'IcFolder': '📁',
-      'IcLink': '🔗',
-      'IcLock': '🔒',
-      'IcUnlock': '🔓',
-      'IcTag': '🏷️',
-      'IcLabel': '🏷️',
-      'IcFlag': '🚩',
-      'IcPin': '📌',
-      
-      // Finance
-      'IcWallet': '👛',
-      'IcCard': '💳',
-      'IcMoney': '💰',
-      'IcCurrency': '💲',
-      'IcBank': '🏦',
-      'IcCurrencyRupee': '₹',
-      'IcPayment': '💳',
-      'IcTransaction': '💸',
-      'IcReceipt': '🧾',
-      
-      // Shopping & Commerce
-      'IcCart': '🛒',
-      'IcShoppingBag': '🛍️',
-      'IcShoppingCart': '🛒',
-      'IcStore': '🏪',
-      'IcGift': '🎁',
-      
-      // Technology
-      'IcWifi': '📶',
-      'IcBluetooth': '📶',
-      'IcBattery': '🔋',
-      'IcSignal': '📶',
-      'IcCloud': '☁️',
-      'IcCloudUpload': '☁️⬆️',
-      'IcCloudDownload': '☁️⬇️',
-      'IcDatabase': '🗄️',
-      'IcServer': '🖥️',
-      
-      // Files & Documents
-      'IcFile': '📄',
-      'IcFiles': '📄',
-      'IcArchive': '📦',
-      'IcZip': '📦',
-      'IcPdf': '📄',
-      'IcExcel': '📊',
-      'IcWord': '📝',
-      
-      // Social & Sharing
-      'IcFacebook': '📘',
-      'IcTwitter': '🐦',
-      'IcInstagram': '📷',
-      'IcLinkedIn': '💼',
-      'IcWhatsApp': '💬',
-      'IcTelegram': '✈️',
-      'IcYoutube': '📺',
-      
-      // UI Elements
-      'IcGrid': '⊞',
-      'IcList': '☰',
-      'IcLayout': '⊞',
-      'IcColumns': '▦',
-      'IcRows': '☰',
-      'IcDrag': '⋮⋮',
-      'IcResize': '↔️',
-      'IcFullscreen': '⛶',
-      'IcMinimize': '➖',
-      'IcMaximize': '➕',
-      
-      // Time & Date
-      'IcTime': '🕐',
-      'IcDate': '📅',
-      'IcSchedule': '📅',
-      'IcHistory': '🕐',
-      'IcRecent': '🕐',
-      
-      // Security
-      'IcShield': '🛡️',
-      'IcSecurity': '🔒',
-      'IcVerified': '✓',
-      'IcFingerprint': '👆',
-      'IcEye': '👁️',
-      'IcEyeOff': '👁️‍🗨️',
-      'IcHide': '🙈',
-      'IcShow': '👁️',
-      'IcKey': '🔑',
-      
-      // Miscellaneous
-      'IcHelp': '❓',
-      'IcSupport': '💬',
-      'IcFeedback': '💬',
-      'IcBug': '🐛',
-      'IcCode': '</>',
-      'IcTerminal': '💻',
-      'IcGlobe': '🌐',
-      'IcLanguage': '🌐',
-      'IcTranslate': '🌐',
-      'IcAward': '🏆',
-      'IcTrophy': '🏆',
-      'IcFire': '🔥',
-      'IcTrending': '📈',
-      'IcChart': '📊',
-      'IcGraph': '📈',
-      'IcAnalytics': '📊',
-    };
-    
-    // Fallback: try to infer emoji from icon name
-    if (!emojiMap[name]) {
-      const lowerName = name.toLowerCase();
-      if (lowerName.includes('arrow')) return '→';
-      if (lowerName.includes('check')) return '✓';
-      if (lowerName.includes('close')) return '✕';
-      if (lowerName.includes('plus') || lowerName.includes('add')) return '+';
-      if (lowerName.includes('minus') || lowerName.includes('remove')) return '−';
-      if (lowerName.includes('star')) return '⭐';
-      if (lowerName.includes('heart')) return '❤️';
-      if (lowerName.includes('lock')) return '🔒';
-      if (lowerName.includes('unlock')) return '🔓';
-      return '📦';
-    }
-    
-    return emojiMap[name];
-  };
-
   return (
     <div className="space-y-6">
       {/* Search */}
       <div className="relative">
-        <span
-          className="absolute left-3 top-1/2 -translate-y-1/2"
-          style={{ color: theme.text.low }}
-        >
-          🔍
+        <span className="absolute left-3 top-1/2 -translate-y-1/2">
+          <Icon size="S">
+            <LazyIcon name="IcSearch" />
+          </Icon>
         </span>
         <input
           type="text"
@@ -427,14 +213,18 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
                 <button
                   key={icon}
                   onClick={() => handleCopyIcon(icon)}
-                  className="flex flex-col items-center p-3 rounded-lg transition-colors group"
+                  className="flex flex-col items-center p-3 rounded-lg transition-colors group hover:scale-105"
                   style={{
                     backgroundColor: copiedIcon === icon ? theme.accent : theme.background.ghost,
                     border: `1px solid ${theme.stroke.low}`,
                   }}
                   title={`Click to copy: ${icon}`}
                 >
-                  <span className="text-2xl mb-1">{getIconEmoji(icon)}</span>
+                  <div className="mb-1" style={{ color: copiedIcon === icon ? '#fff' : theme.text.high }}>
+                    <Icon size="L">
+                      <LazyIcon name={icon} />
+                    </Icon>
+                  </div>
                   <span 
                     className="text-xs truncate w-full text-center"
                     style={{ 
@@ -473,19 +263,29 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
           }}
         >
           {`import { Icon } from '@marcelinodzn/ds-react';
+import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 
-// Basic usage
-<Icon name="IcHome" size="M" />
+// Basic usage (recommended - lazy loads icons)
+<Icon size="M">
+  <LazyIcon name="IcHome" />
+</Icon>
 
 // Different sizes
-<Icon name="IcSearch" size="S" />
-<Icon name="IcUser" size="L" />
+<Icon size="S">
+  <LazyIcon name="IcSearch" />
+</Icon>
 
-// With custom color
-<Icon name="IcSettings" size="M" color="#f97316" />`}
+<Icon size="L">
+  <LazyIcon name="IcUser" />
+</Icon>
+
+// With attention level (color)
+<Icon size="M" attention="high">
+  <LazyIcon name="IcSettings" />
+</Icon>`}
         </code>
         <p className="text-xs mt-2" style={{ color: theme.text.low }}>
-          Click any icon above to copy its usage code. Icons are from the Jio Design System icon library.
+          Click any icon above to copy its usage code. 1,600+ icons available via LazyIcon for optimal bundle size. Icons are from the Jio Design System icon library.
         </p>
       </div>
     </div>
