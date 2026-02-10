@@ -23,6 +23,8 @@ interface DSIconProps {
   attention?: 'low' | 'medium' | 'high';
   /** Additional CSS classes */
   className?: string;
+  /** Inline styles (e.g., for color overrides) */
+  style?: React.CSSProperties;
   /** ARIA label for accessibility */
   'aria-label'?: string;
   /** Click handler */
@@ -34,6 +36,7 @@ export function DSIcon({
   size = 'M', 
   attention = 'high', 
   className,
+  style,
   'aria-label': ariaLabel,
   onClick 
 }: DSIconProps) {
@@ -42,6 +45,7 @@ export function DSIcon({
       size={size} 
       attention={attention} 
       className={className}
+      style={style}
       aria-label={ariaLabel}
       onClick={onClick}
       asset={<LazyIcon name={name} />} 

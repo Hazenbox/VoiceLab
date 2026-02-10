@@ -330,7 +330,7 @@ export const ChatPanel = memo(function ChatPanel({
               color: '#ffffff',
             }}
           >
-            <DSIcon name="IcArrowUp" size="S" attention="high" />
+            <DSIcon name="IcArrowUp" size="S" attention="high" style={{ color: '#ffffff' }} />
           </Button>
         </div>
       </div>

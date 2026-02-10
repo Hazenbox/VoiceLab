@@ -205,7 +205,7 @@ export function TwChatPanel({
                 color: theme.text.medium,
               }}
             >
-              <DSIcon name="IcArrowUp" size="S" attention="medium" />
+              <DSIcon name="IcArrowUp" size="S" attention="high" style={{ color: '#ffffff' }} />
             </button>
           </div>
 
