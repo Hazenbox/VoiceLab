@@ -343,33 +343,23 @@ const IconPreview: React.FC = () => {
         </p>
         <div className="flex items-center gap-4">
           <div className="text-center">
-            <Icon size="XS">
-              <LazyIcon name="IcHome" />
-            </Icon>
+            <Icon size="XS" asset={<LazyIcon name="IcHome" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.low }}>XS</p>
           </div>
           <div className="text-center">
-            <Icon size="S">
-              <LazyIcon name="IcHome" />
-            </Icon>
+            <Icon size="S" asset={<LazyIcon name="IcHome" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.low }}>S</p>
           </div>
           <div className="text-center">
-            <Icon size="M">
-              <LazyIcon name="IcHome" />
-            </Icon>
+            <Icon size="M" asset={<LazyIcon name="IcHome" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.low }}>M</p>
           </div>
           <div className="text-center">
-            <Icon size="L">
-              <LazyIcon name="IcHome" />
-            </Icon>
+            <Icon size="L" asset={<LazyIcon name="IcHome" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.low }}>L</p>
           </div>
           <div className="text-center">
-            <Icon size="XL">
-              <LazyIcon name="IcHome" />
-            </Icon>
+            <Icon size="XL" asset={<LazyIcon name="IcHome" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.low }}>XL</p>
           </div>
         </div>
@@ -387,9 +377,7 @@ const IconPreview: React.FC = () => {
               className="w-12 h-12 rounded-lg flex items-center justify-center"
               style={{ backgroundColor: theme.background.ghost }}
             >
-              <Icon size="L">
-                <LazyIcon name={iconName} />
-              </Icon>
+              <Icon size="L" asset={<LazyIcon name={iconName} />} />
             </div>
           ))}
         </div>
@@ -402,21 +390,15 @@ const IconPreview: React.FC = () => {
         </p>
         <div className="flex items-center gap-6">
           <div className="text-center">
-            <Icon size="L" attention="low">
-              <LazyIcon name="IcSettings" />
-            </Icon>
+            <Icon size="L" attention="low" asset={<LazyIcon name="IcSettings" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.low }}>Low</p>
           </div>
           <div className="text-center">
-            <Icon size="L" attention="medium">
-              <LazyIcon name="IcSettings" />
-            </Icon>
+            <Icon size="L" attention="medium" asset={<LazyIcon name="IcSettings" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.low }}>Medium</p>
           </div>
           <div className="text-center">
-            <Icon size="L" attention="high">
-              <LazyIcon name="IcSettings" />
-            </Icon>
+            <Icon size="L" attention="high" asset={<LazyIcon name="IcSettings" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.low }}>High</p>
           </div>
         </div>
@@ -512,9 +494,7 @@ const SearchFieldPreview: React.FC = () => {
     <div className="max-w-md">
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2">
-          <Icon size="S">
-            <LazyIcon name="IcSearch" />
-          </Icon>
+          <Icon size="S" asset={<LazyIcon name="IcSearch" />} />
         </span>
         <input
           type="text"
@@ -533,9 +513,7 @@ const SearchFieldPreview: React.FC = () => {
             onClick={() => setValue('')}
             className="absolute right-3 top-1/2 -translate-y-1/2"
           >
-            <Icon size="S">
-              <LazyIcon name="IcClose" />
-            </Icon>
+            <Icon size="S" asset={<LazyIcon name="IcClose" />} />
           </button>
         )}
       </div>

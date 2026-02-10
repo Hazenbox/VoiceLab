@@ -308,9 +308,7 @@ export const COMPONENT_INFO: Record<ComponentName, ComponentData> = {
     code: `import { Icon } from '@marcelinodzn/ds-react';
 import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 
-<Icon size="M">
-  <LazyIcon name="IcHome" />
-</Icon>`,
+<Icon size="M" asset={<LazyIcon name="IcHome" />} />`,
     hasLivePreview: true,
   },
 

@@ -166,7 +166,7 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
   }, [filteredIcons]);
 
   const handleCopyIcon = (iconName: string) => {
-    const importCode = `import { Icon } from '@marcelinodzn/ds-react';\nimport { LazyIcon } from '@marcelinodzn/ds-react/icons';\n\n<Icon size="M">\n  <LazyIcon name="${iconName}" />\n</Icon>`;
+    const importCode = `import { Icon } from '@marcelinodzn/ds-react';\nimport { LazyIcon } from '@marcelinodzn/ds-react/icons';\n\n<Icon size="M" asset={<LazyIcon name="${iconName}" />} />`;
     navigator.clipboard.writeText(importCode);
     setCopiedIcon(iconName);
     setTimeout(() => setCopiedIcon(null), 2000);
@@ -185,21 +185,15 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
         </p>
         <div className="flex items-center gap-4">
           <div className="text-center">
-            <Icon size="XL" attention="high">
-              <LazyIcon name="IcHome" />
-            </Icon>
+            <Icon size="XL" attention="high" asset={<LazyIcon name="IcHome" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.medium }}>IcHome</p>
           </div>
           <div className="text-center">
-            <Icon size="L" attention="medium">
-              <LazyIcon name="IcSearch" />
-            </Icon>
+            <Icon size="L" attention="medium" asset={<LazyIcon name="IcSearch" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.medium }}>IcSearch</p>
           </div>
           <div className="text-center">
-            <Icon size="M" attention="high">
-              <LazyIcon name="IcSettings" />
-            </Icon>
+            <Icon size="M" attention="high" asset={<LazyIcon name="IcSettings" />} />
             <p className="text-xs mt-1" style={{ color: theme.text.medium }}>IcSettings</p>
           </div>
         </div>
@@ -208,9 +202,7 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
       {/* Search */}
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2">
-          <Icon size="S" attention="medium">
-            <LazyIcon name="IcSearch" />
-          </Icon>
+          <Icon size="S" attention="medium" asset={<LazyIcon name="IcSearch" />} />
         </span>
         <input
           type="text"
@@ -261,9 +253,7 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
                       justifyContent: 'center',
                     }}
                   >
-                    <Icon size="L" attention="high">
-                      <LazyIcon name={icon} />
-                    </Icon>
+                    <Icon size="L" attention="high" asset={<LazyIcon name={icon} />} />
                   </div>
                   <span 
                     className="text-xs truncate w-full text-center"
@@ -306,23 +296,15 @@ export const IconBrowser: React.FC<IconBrowserProps> = ({ onSelectIcon }) => {
 import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 
 // Basic usage (recommended - lazy loads icons)
-<Icon size="M">
-  <LazyIcon name="IcHome" />
-</Icon>
+<Icon size="M" asset={<LazyIcon name="IcHome" />} />
 
 // Different sizes
-<Icon size="S">
-  <LazyIcon name="IcSearch" />
-</Icon>
+<Icon size="S" asset={<LazyIcon name="IcSearch" />} />
 
-<Icon size="L">
-  <LazyIcon name="IcUser" />
-</Icon>
+<Icon size="L" asset={<LazyIcon name="IcUser" />} />
 
 // With attention level (color)
-<Icon size="M" attention="high">
-  <LazyIcon name="IcSettings" />
-</Icon>`}
+<Icon size="M" attention="high" asset={<LazyIcon name="IcSettings" />} />`}
         </code>
         <p className="text-xs mt-2" style={{ color: theme.text.low }}>
           Click any icon above to copy its usage code. 1,600+ icons available via LazyIcon for optimal bundle size. Icons are from the Jio Design System icon library.
