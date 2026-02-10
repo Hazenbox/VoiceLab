@@ -80,31 +80,31 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   // Icon components with grey color styling
   const CopyIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCopyDocument" size="XS" attention="low" />
+      <DSIcon name="IcCopyDocument" size="S" attention="low" />
     </span>
   );
   
   const CopyDoneIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCheck" size="XS" attention="low" />
+      <DSIcon name="IcCheck" size="S" attention="low" />
     </span>
   );
   
   const LikeIcon = () => (
     <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex', color: theme.text.low }}>
-      <DSIcon name="IcDislike" size="XS" attention="low" />
+      <DSIcon name="IcDislike" size="S" attention="low" />
     </span>
   );
   
   const DislikeIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcDislike" size="XS" attention="low" />
+      <DSIcon name="IcDislike" size="S" attention="low" />
     </span>
   );
   
   const RefreshIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcRefresh" size="XS" attention="low" />
+      <DSIcon name="IcRefresh" size="S" attention="low" />
     </span>
   );
   
@@ -125,24 +125,13 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   }, [messageId, onTryAgain]);
   
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
       <Button
         onPress={handleCopy}
         isDisabled={disabled}
         aria-label={isCopied ? "copied" : "copy"}
         appearance="ghost"
-        style={{ 
-          width: '32px', 
-          height: '32px', 
-          minHeight: '32px',
-          minWidth: '32px',
-          padding: '0',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'transparent',
-        }}
+        size="S"
       >
         {isCopied ? <CopyDoneIcon /> : <CopyIcon />}
       </Button>
@@ -151,19 +140,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         isDisabled={disabled || !!feedbackGiven}
         aria-label="good response"
         appearance="ghost"
-        style={{ 
-          width: '32px', 
-          height: '32px', 
-          minHeight: '32px',
-          minWidth: '32px',
-          padding: '0',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'transparent',
-          opacity: feedbackGiven === 'like' ? '1' : undefined,
-        }}
+        size="S"
       >
         <LikeIcon />
       </Button>
@@ -172,19 +149,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         isDisabled={disabled || !!feedbackGiven}
         aria-label="bad response"
         appearance="ghost"
-        style={{ 
-          width: '32px', 
-          height: '32px', 
-          minHeight: '32px',
-          minWidth: '32px',
-          padding: '0',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'transparent',
-          opacity: feedbackGiven === 'dislike' ? '1' : undefined,
-        }}
+        size="S"
       >
         <DislikeIcon />
       </Button>
@@ -193,18 +158,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         isDisabled={disabled}
         aria-label="try again"
         appearance="ghost"
-        style={{ 
-          width: '32px', 
-          height: '32px', 
-          minHeight: '32px',
-          minWidth: '32px',
-          padding: '0',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'transparent',
-        }}
+        size="S"
       >
         <RefreshIcon />
       </Button>
@@ -229,19 +183,19 @@ export const UserMessageActions = memo(function UserMessageActions({
   // Icon components with grey color styling
   const CopyIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCopyDocument" size="XS" attention="low" />
+      <DSIcon name="IcCopyDocument" size="S" attention="low" />
     </span>
   );
   
   const CopyDoneIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCheck" size="XS" attention="low" />
+      <DSIcon name="IcCheck" size="S" attention="low" />
     </span>
   );
   
   const EditIcon = () => (
     <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcEdit" size="XS" attention="low" />
+      <DSIcon name="IcEdit" size="S" attention="low" />
     </span>
   );
   
@@ -254,24 +208,13 @@ export const UserMessageActions = memo(function UserMessageActions({
   }, [messageId, content, onEdit]);
   
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
       <Button
         onPress={handleCopy}
         isDisabled={disabled}
         aria-label={isCopied ? "copied" : "copy"}
         appearance="ghost"
-        style={{ 
-          width: '32px', 
-          height: '32px', 
-          minHeight: '32px',
-          minWidth: '32px',
-          padding: '0',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'transparent',
-        }}
+        size="S"
       >
         {isCopied ? <CopyDoneIcon /> : <CopyIcon />}
       </Button>
@@ -281,18 +224,7 @@ export const UserMessageActions = memo(function UserMessageActions({
           isDisabled={disabled}
           aria-label="edit"
           appearance="ghost"
-          style={{ 
-            width: '32px', 
-            height: '32px', 
-            minHeight: '32px',
-            minWidth: '32px',
-            padding: '0',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'transparent',
-          }}
+          size="S"
         >
           <EditIcon />
         </Button>

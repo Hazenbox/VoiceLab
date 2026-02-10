@@ -46,12 +46,6 @@ const BADGE_COLORS: Record<TrustCertification, {
   },
 };
 
-const SIZES = {
-  sm: { container: 'h-4 px-1.5', text: 'text-[10px]', score: 'text-[9px] ml-1' },
-  md: { container: 'h-5 px-2', text: 'text-xs', score: 'text-[10px] ml-1' },
-  lg: { container: 'h-6 px-2.5', text: 'text-sm', score: 'text-xs ml-1.5' },
-};
-
 export const TrustBadge = memo(function TrustBadge({
   trustScore,
   onClick,
@@ -75,7 +69,7 @@ export const TrustBadge = memo(function TrustBadge({
     const iconName = certification === 'certified' ? 'IcProtection' : 'IcProtectionThreats';
     return (
       <span style={{ color: theme.text.low }}>
-        <DSIcon name={iconName} size="XS" attention="low" />
+        <DSIcon name={iconName} size="S" attention="low" />
       </span>
     );
   };
@@ -85,18 +79,7 @@ export const TrustBadge = memo(function TrustBadge({
       onPress={onClick}
       aria-label={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : `Trust badge: ${badge.label}`}
       appearance="ghost"
-      style={{
-        width: '32px',
-        height: '32px',
-        minHeight: '32px',
-        minWidth: '32px',
-        padding: '0',
-        borderRadius: '50%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'transparent',
-      }}
+      size="S"
     >
       <ShieldIcon />
     </Button>
