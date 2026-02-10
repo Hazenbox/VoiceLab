@@ -57,21 +57,21 @@ export interface UserActionsProps {
 // Icons
 // ============================================================================
 
-const CopyIcon = () => <DSIcon name="IcCopyDocument" size="S" attention="low" />;
-const CopyDoneIcon = () => <DSIcon name="IcCheck" size="S" attention="high" />;
+const CopyIcon = () => <DSIcon name="IcCopyDocument" size="S" attention="medium" />;
+const CopyDoneIcon = () => <DSIcon name="IcCheck" size="S" attention="medium" />;
 
-const LikeIcon = ({ filled }: { filled?: boolean }) => (
+const LikeIcon = () => (
   <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex' }}>
-    <DSIcon name="IcDislike" size="S" attention={filled ? "high" : "low"} />
+    <DSIcon name="IcDislike" size="S" attention="medium" />
   </span>
 );
 
-const DislikeIcon = ({ filled }: { filled?: boolean }) => (
-  <DSIcon name="IcDislike" size="S" attention={filled ? "high" : "low"} />
+const DislikeIcon = () => (
+  <DSIcon name="IcDislike" size="S" attention="medium" />
 );
 
-const RefreshIcon = () => <DSIcon name="IcRefresh" size="S" attention="low" />;
-const EditIcon = () => <DSIcon name="IcEdit" size="S" attention="low" />;
+const RefreshIcon = () => <DSIcon name="IcRefresh" size="S" attention="medium" />;
+const EditIcon = () => <DSIcon name="IcEdit" size="S" attention="medium" />;
 
 // ============================================================================
 // Assistant Message Actions: copy, like, dislike, try again
@@ -114,20 +114,18 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         isActive={isCopied}
       />
       <ActionButton
-        icon={<LikeIcon filled={feedbackGiven === 'like'} />}
+        icon={<LikeIcon />}
         label="good response"
         onClick={handleLike}
         disabled={disabled || !!feedbackGiven}
         isActive={feedbackGiven === 'like'}
-        activeColor="#22c55e"
       />
       <ActionButton
-        icon={<DislikeIcon filled={feedbackGiven === 'dislike'} />}
+        icon={<DislikeIcon />}
         label="bad response"
         onClick={handleDislike}
         disabled={disabled || !!feedbackGiven}
         isActive={feedbackGiven === 'dislike'}
-        activeColor="#ef4444"
       />
       <ActionButton
         icon={<RefreshIcon />}
