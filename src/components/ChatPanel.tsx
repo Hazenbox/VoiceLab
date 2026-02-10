@@ -48,6 +48,8 @@ interface ChatPanelProps {
   onVoiceClick?: () => void;
   /** Whether voice is supported in this browser */
   voiceSupported?: boolean;
+  /** Callback when user clicks search button */
+  onSearchClick?: () => void;
   /** Model selector component to render below input */
   modelSelector?: React.ReactNode;
   /** @deprecated Use contextSelector instead */
@@ -118,6 +120,7 @@ export const ChatPanel = memo(function ChatPanel({
   id,
   onVoiceClick,
   voiceSupported = true,
+  onSearchClick,
   modelSelector,
   channelSelector,
   platformSelector,
@@ -441,6 +444,30 @@ export const ChatPanel = memo(function ChatPanel({
               <DSIcon name="IcMic" size="S" attention="medium" />
             )}
           </button>
+        )}
+
+        {/* Search button - using Jio DS Button */}
+        {onSearchClick && (
+          <div style={{ width: '36px', height: '36px' }}>
+            <Button
+              onPress={onSearchClick}
+              aria-label="Search"
+              appearance="ghost"
+              size="S"
+              style={{ 
+                width: '36px', 
+                height: '36px', 
+                minHeight: '36px',
+                padding: '0',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <DSIcon name="IcSearch" size="S" attention="medium" />
+            </Button>
+          </div>
         )}
 
         {/* Multi-line textarea */}
