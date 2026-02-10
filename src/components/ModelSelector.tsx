@@ -8,6 +8,7 @@ import { getAvailableLLMProviders, type LLMProviderType } from '../services/prov
 import { getOrchestratorInstance } from '../services/llm/orchestrator';
 import { useThemeColors } from '../theme';
 import { DropdownSectionHeader } from './DropdownSectionHeader';
+import { DSIcon } from './DSIcon';
 
 export type TTSProviderType = 'dashscope' | 'gemini' | 'elevenlabs';
 
@@ -263,14 +264,9 @@ export function ModelSelector({
         </span>
         
         {/* Dropdown arrow */}
-        <svg
-          className={`w-3 h-3 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <span className={`flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+          <DSIcon name="IcChevronDown" size="XS" attention="low" />
+        </span>
       </button>
 
       {/* Dropdown Menu - Opens Upward with Horizontal Layout */}
@@ -333,14 +329,7 @@ export function ModelSelector({
                         
                         {/* Selected checkmark */}
                         {isSelected && (
-                          <svg
-                            className="w-3.5 h-3.5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <DSIcon name="IcCheck" size="XS" attention="high" />
                         )}
                         
                         {/* Streaming badge */}
@@ -411,14 +400,7 @@ export function ModelSelector({
                         
                         {/* Selected checkmark */}
                         {isSelected && (
-                          <svg
-                            className="w-3.5 h-3.5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <DSIcon name="IcCheck" size="XS" attention="high" />
                         )}
                         
                         {!provider.isConfigured && (
@@ -464,14 +446,7 @@ export function ModelSelector({
                     <span className="flex-1 truncate">{provider.displayName}</span>
                     
                     {isSelected && (
-                      <svg
-                        className="w-3.5 h-3.5 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                      <DSIcon name="IcCheck" size="XS" attention="high" />
                     )}
                     
                     {provider.supportsStreaming && provider.isConfigured && (
