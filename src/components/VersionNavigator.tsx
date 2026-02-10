@@ -65,11 +65,11 @@ export const VersionNavigator = memo(function VersionNavigator({
         onClick={handlePrevious}
         disabled={disabled || !canGoPrevious}
         aria-label={`go to version ${currentVersion - 1} of ${totalVersions}`}
-        className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 
+        className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 
           disabled:opacity-30 disabled:cursor-not-allowed
           focus:outline-none focus:ring-1 focus:ring-orange-500"
       >
-        <DSIcon name="IcChevronLeft" size="XS" attention="low" />
+        <DSIcon name="IcChevronLeft" size="S" attention="low" />
       </button>
       <span 
         className="text-xs font-medium px-0.5 min-w-[28px] text-center select-none" 
@@ -82,11 +82,11 @@ export const VersionNavigator = memo(function VersionNavigator({
         onClick={handleNext}
         disabled={disabled || !canGoNext}
         aria-label={`go to version ${currentVersion + 1} of ${totalVersions}`}
-        className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 
+        className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 
           disabled:opacity-30 disabled:cursor-not-allowed
           focus:outline-none focus:ring-1 focus:ring-orange-500"
       >
-        <DSIcon name="IcChevronRight" size="XS" attention="low" />
+        <DSIcon name="IcChevronRight" size="S" attention="low" />
       </button>
     </div>
   );
