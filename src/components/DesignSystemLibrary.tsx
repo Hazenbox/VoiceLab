@@ -45,12 +45,14 @@ export const DesignSystemLibrary: React.FC<DesignSystemLibraryProps> = ({
             label: 'Colors',
             type: 'token',
             category: 'variables',
-            children: TOKEN_CATEGORIES.colors.tokens.map(token => ({
-              id: token.id,
-              label: token.name,
-              type: 'token' as const,
-              category: 'variables' as const,
-            })),
+            children: TOKEN_CATEGORIES.colors.subcategories.flatMap(subcategory => 
+              subcategory.tokens.map(token => ({
+                id: token.id,
+                label: token.name,
+                type: 'token' as const,
+                category: 'variables' as const,
+              }))
+            ),
           },
           {
             id: 'spacing',
