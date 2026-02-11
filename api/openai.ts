@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from './_cors';
+import { handleRateLimit } from './_rateLimit';
 import { validateLLMRequest, sendValidationError } from './_validation';
 
 const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
@@ -7,6 +8,9 @@ const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS preflight and validation
   if (!handleCors(req, res)) return;
+  
+  // Apply rate limiting (20 requests/minute for LLM)
+  if (!handleRateLimit(req, res, 'llm')) return;
   
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

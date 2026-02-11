@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from './_cors';
+import { handleRateLimit } from './_rateLimit';
 import { validateTTSRequest, sendValidationError } from './_validation';
 
 const DASHSCOPE_TTS_ENDPOINT = 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2audio/generation';
@@ -8,6 +9,9 @@ const ELEVENLABS_TTS_ENDPOINT = 'https://api.elevenlabs.io/v1/text-to-speech';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS preflight and validation
   if (!handleCors(req, res)) return;
+  
+  // Apply rate limiting (30 requests/minute for TTS)
+  if (!handleRateLimit(req, res, 'tts')) return;
   
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

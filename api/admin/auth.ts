@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from '../_cors';
+import { handleRateLimit } from '../_rateLimit';
 import * as crypto from 'crypto';
 
 /**
@@ -30,6 +31,9 @@ function cleanExpiredSessions(): void {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS preflight and validation
   if (!handleCors(req, res)) return;
+  
+  // Apply strict rate limiting for auth (5 attempts/minute to prevent brute force)
+  if (!handleRateLimit(req, res, 'auth')) return;
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });

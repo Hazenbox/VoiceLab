@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from '../_cors';
+import { handleRateLimit } from '../_rateLimit';
 import { validateInworldRequest, sendValidationError } from '../_validation';
 
 const INWORLD_API_BASE = 'https://api.inworld.ai';
@@ -7,6 +8,9 @@ const INWORLD_API_BASE = 'https://api.inworld.ai';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS preflight and validation
   if (!handleCors(req, res)) return;
+  
+  // Apply rate limiting (20 requests/minute for LLM-like endpoints)
+  if (!handleRateLimit(req, res, 'llm')) return;
   
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
