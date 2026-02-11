@@ -20,8 +20,8 @@
  */
 
 import { v } from "convex/values";
-import { action, internalMutation, internalQuery } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { action, query, internalMutation, internalQuery } from "./_generated/server";
+import { api, internal } from "./_generated/api";
 import type { Id, Doc } from "./_generated/dataModel";
 
 // ── Configuration ────────────────────────────────────────────────
@@ -188,7 +188,7 @@ export const backfillEmbeddings = action({
 
     // Fetch items without embeddings
     const items: Doc<"knowledgeItems">[] = await ctx.runQuery(
-      internal.embeddings.getItemsWithoutEmbeddings,
+      api.embeddings.getItemsWithoutEmbeddings,
       { limit: batchSize }
     );
 
@@ -399,8 +399,8 @@ export const getItem = internalQuery({
   },
 });
 
-// Get items that don't have embeddings yet
-export const getItemsWithoutEmbeddings = internalQuery({
+// Get items that don't have embeddings yet (public for testing)
+export const getItemsWithoutEmbeddings = query({
   args: { limit: v.number() },
   handler: async (ctx, args) => {
     const items = await ctx.db
