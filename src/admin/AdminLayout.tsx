@@ -1,18 +1,17 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors } from '../theme/useColors';
 import { AdminSidebar, type AdminSection } from './components/AdminSidebar';
 import { AdminStatCard } from './components/AdminStatCard';
 import { AdminTable, AdminTableRow, AdminTableCell } from './components/AdminTable';
 import { getApiBaseUrl } from '../config/providers';
-import type { Id } from '../../convex/_generated/dataModel';
 
 // ── Admin Auth Gate ──────────────────────────────────────────────
 const SESSION_TOKEN_KEY = 'voicelab_admin_token';
 
 /**
- * Server-side admin authentication
+ * Server-side admin authentication with dev mode fallback
  */
 async function authenticateAdmin(passphrase: string): Promise<{ success: boolean; token?: string; error?: string }> {
   try {
@@ -31,12 +30,30 @@ async function authenticateAdmin(passphrase: string): Promise<{ success: boolean
     
     return { success: true, token: data.token };
   } catch (error) {
-    console.error('[Admin Auth] Error:', error);
+    console.error('[Admin Auth] Server auth failed:', error);
+    
+    // Dev mode fallback: if API is unreachable and we're in dev mode, use client-side check
+    if (import.meta.env.DEV) {
+      const devPassphrase = import.meta.env.VITE_ADMIN_PASSPHRASE || 'voicelab-admin';
+      if (passphrase === devPassphrase) {
+        console.warn('[Admin Auth] Using dev mode fallback (client-side auth)');
+        // Generate a pseudo-token for dev mode
+        const devToken = `dev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        return { success: true, token: devToken };
+      }
+      return { success: false, error: 'Invalid passphrase (dev mode)' };
+    }
+    
     return { success: false, error: 'Network error. Please try again.' };
   }
 }
 
 async function verifyAdminToken(token: string): Promise<boolean> {
+  // Dev mode tokens are always valid (they start with 'dev_')
+  if (import.meta.env.DEV && token.startsWith('dev_')) {
+    return true;
+  }
+  
   try {
     const apiBase = getApiBaseUrl();
     const response = await fetch(`${apiBase}/api/admin/auth`, {
@@ -451,30 +468,6 @@ function AdminAnalytics() {
   );
 }
 
-// ── Status Badge for Admin Status ────────────────────────────────
-function AdminStatusBadge({ status }: { status: string | undefined }) {
-  const statusColors: Record<string, { bg: string; fg: string }> = {
-    pending: { bg: 'rgba(245,158,11,0.12)', fg: '#f59e0b' },
-    approved: { bg: 'rgba(34,197,94,0.12)', fg: '#22c55e' },
-    rejected: { bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
-  };
-  const s = status || 'pending';
-  const c = statusColors[s] || statusColors.pending;
-  return (
-    <span
-      className="inline-block rounded-full font-medium whitespace-nowrap"
-      style={{
-        fontSize: '10px',
-        padding: '1px 6px',
-        backgroundColor: c.bg,
-        color: c.fg,
-      }}
-    >
-      {s}
-    </span>
-  );
-}
-
 // ── Memory & Learnings ───────────────────────────────────────────
 function AdminMemory() {
   const theme = useThemeColors();
@@ -482,7 +475,6 @@ function AdminMemory() {
   // Use Convex for corrections with localStorage fallback
   const convexCorrections = useQuery(api.corrections.listAll, { limit: 200 });
   const localCorrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
-  const updateAdminStatus = useMutation(api.corrections.updateAdminStatus);
   
   // Prefer Convex data, fall back to localStorage
   const corrections = useMemo(() => {
@@ -493,15 +485,10 @@ function AdminMemory() {
   }, [convexCorrections, localCorrections]);
   
   const [filter, setFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(() => {
     let result = filter === 'all' ? corrections : corrections.filter(c => c.feedbackType === filter);
-    if (statusFilter !== 'all') {
-      result = result.filter(c => (c.adminStatus as string || 'pending') === statusFilter);
-    }
     if (searchQuery) {
       result = result.filter(c =>
         (c.originalContent as string || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -510,36 +497,11 @@ function AdminMemory() {
       );
     }
     return result;
-  }, [corrections, filter, statusFilter, searchQuery]);
+  }, [corrections, filter, searchQuery]);
 
   const filterOptions = ['all', 'thumbs_up', 'thumbs_down', 'edit', 'comment'];
-  const statusOptions = ['all', 'pending', 'approved', 'rejected'];
   
   const isUsingConvex = convexCorrections !== undefined;
-  
-  // Handle approve/reject actions
-  const handleUpdateStatus = useCallback(async (correctionId: string, newStatus: 'approved' | 'rejected') => {
-    if (!isUsingConvex) {
-      console.warn('[Admin] Cannot update status - Convex not connected');
-      return;
-    }
-    
-    setLoadingIds(prev => new Set(prev).add(correctionId));
-    try {
-      await updateAdminStatus({
-        correctionId: correctionId as Id<'corrections'>,
-        adminStatus: newStatus,
-      });
-    } catch (error) {
-      console.error('[Admin] Failed to update status:', error);
-    } finally {
-      setLoadingIds(prev => {
-        const next = new Set(prev);
-        next.delete(correctionId);
-        return next;
-      });
-    }
-  }, [isUsingConvex, updateAdminStatus]);
 
   return (
     <>
@@ -570,32 +532,6 @@ function AdminMemory() {
             );
           })}
         </div>
-        
-        {/* Status filter (only show when using Convex) */}
-        {isUsingConvex && (
-          <div className="flex flex-wrap gap-1.5">
-            {statusOptions.map((s) => {
-              const isActive = statusFilter === s;
-              return (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className="rounded-md px-2.5 cursor-pointer transition-colors"
-                  style={{
-                    height: '28px',
-                    fontSize: '12px',
-                    fontWeight: isActive ? 600 : 400,
-                    backgroundColor: isActive ? '#6366f1' : 'transparent',
-                    color: isActive ? '#fff' : theme.text.medium,
-                    border: isActive ? 'none' : `1px solid ${theme.stroke.low}`,
-                  }}
-                >
-                  {s === 'all' ? 'All Status' : s}
-                </button>
-              );
-            })}
-          </div>
-        )}
 
         <div className="sm:ml-auto">
           <input
@@ -626,61 +562,26 @@ function AdminMemory() {
             { key: 'edited', label: 'Edited / Comment' },
             { key: 'eco', label: 'Ecosystem' },
             { key: 'ch', label: 'Channel' },
-            { key: 'status', label: 'Status' },
             { key: 'time', label: 'Time' },
-            ...(isUsingConvex ? [{ key: 'actions', label: 'Actions' }] : []),
           ]}
           isEmpty={filtered.length === 0}
           emptyMessage={searchQuery ? 'No feedback matches your search.' : 'No feedback matches this filter.'}
         >
           {filtered.slice(0, 50).map((c, i) => {
             const correctionId = (c._id as string) || String(i);
-            const isLoading = loadingIds.has(correctionId);
-            const adminStatus = c.adminStatus as string | undefined;
             
             return (
               <AdminTableRow key={correctionId}>
                 <AdminTableCell><FeedbackBadge type={c.feedbackType as string} /></AdminTableCell>
-                <AdminTableCell className="max-w-[180px] truncate">{(c.originalContent as string || '').slice(0, 80)}</AdminTableCell>
-                <AdminTableCell className="max-w-[180px] truncate">{(c.editedContent as string) || (c.comment as string) || '—'}</AdminTableCell>
+                <AdminTableCell className="max-w-[200px] truncate">{(c.originalContent as string || '').slice(0, 100)}</AdminTableCell>
+                <AdminTableCell className="max-w-[200px] truncate">{(c.editedContent as string) || (c.comment as string) || '—'}</AdminTableCell>
                 <AdminTableCell>{c.ecosystem as string || '—'}</AdminTableCell>
                 <AdminTableCell>{c.channel as string || '—'}</AdminTableCell>
-                <AdminTableCell><AdminStatusBadge status={adminStatus} /></AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap">
                   <span style={{ color: theme.text.low, fontSize: '12px' }}>
                     {new Date(c.timestamp as number).toLocaleString()}
                   </span>
                 </AdminTableCell>
-                {isUsingConvex && (
-                  <AdminTableCell>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleUpdateStatus(correctionId, 'approved')}
-                        disabled={isLoading || adminStatus === 'approved'}
-                        className="rounded px-2 py-0.5 text-xs cursor-pointer transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{
-                          backgroundColor: adminStatus === 'approved' ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)',
-                          color: '#22c55e',
-                          border: 'none',
-                        }}
-                      >
-                        {isLoading ? '...' : 'Approve'}
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(correctionId, 'rejected')}
-                        disabled={isLoading || adminStatus === 'rejected'}
-                        className="rounded px-2 py-0.5 text-xs cursor-pointer transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-                        style={{
-                          backgroundColor: adminStatus === 'rejected' ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)',
-                          color: '#ef4444',
-                          border: 'none',
-                        }}
-                      >
-                        {isLoading ? '...' : 'Reject'}
-                      </button>
-                    </div>
-                  </AdminTableCell>
-                )}
               </AdminTableRow>
             );
           })}
