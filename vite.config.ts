@@ -41,39 +41,7 @@ export default defineConfig(({ mode }) => {
             // React core - changes rarely
             'vendor-react': ['react', 'react-dom', 'react-router-dom'],
             // Convex - changes rarely
-            'vendor-convex': ['convex', 'convex/react'],
-            // UI libraries
-            'vendor-ui': ['lucide-react'],
-            // LLM and AI services
-            'services-llm': [
-              './src/services/providers/llm/qwen.ts',
-              './src/services/providers/llm/huggingface.ts',
-              './src/services/providers/llm/gemini.ts',
-              './src/services/providers/llm/openai.ts',
-              './src/services/providers/llm/claude.ts',
-              './src/services/providers/llm/inworldLLM.ts',
-            ],
-            // TTS services
-            'services-tts': [
-              './src/services/providers/alibaba/cosyvoice.ts',
-              './src/services/providers/elevenlabs.ts',
-            ],
-            // Validation and content trust
-            'services-validation': [
-              './src/services/validation/validationPipeline.ts',
-              './src/services/validation/agents',
-              './src/services/contentTrust.ts',
-            ],
-            // Knowledge and learning
-            'services-knowledge': [
-              './src/services/knowledge/learningEngine.ts',
-              './src/services/knowledge/saveExample.ts',
-              './src/services/knowledge/ragEnrichment.ts',
-            ],
-            // Admin panel - lazy loaded, separate chunk
-            'admin': [
-              './src/admin/AdminLayout.tsx',
-            ],
+            'vendor-convex': ['convex'],
           },
         },
       },
