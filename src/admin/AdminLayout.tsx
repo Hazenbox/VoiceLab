@@ -281,25 +281,32 @@ function AdminDashboard() {
   const localCorrections = useLocalData<Array<{ feedbackType: string; timestamp: number; originalContent?: string }>>('voicelab_corrections_cache', []);
   const localExamples = useLocalData<Array<{ timestamp: number }>>('voicelab_saved_examples', []);
   
-  // Prefer Convex data, fall back to localStorage if Convex is unavailable
-  const corrections = useMemo(() => {
+  // Stable state to prevent blinking - once Convex loads, stick with it
+  const [stableCorrections, setStableCorrections] = useState<Array<{ feedbackType: string; timestamp: number; originalContent?: string }>>(localCorrections);
+  const [stableExamplesCount, setStableExamplesCount] = useState(localExamples.length);
+  const [dataSource, setDataSource] = useState<'local' | 'convex'>('local');
+  
+  // Update stable state when Convex data loads
+  useEffect(() => {
     if (convexCorrections !== undefined) {
-      return convexCorrections.map(c => ({
+      setDataSource('convex');
+      setStableCorrections(convexCorrections.map(c => ({
         feedbackType: c.feedbackType,
         timestamp: c.timestamp,
         originalContent: c.originalContent,
-      }));
+      })));
     }
-    return localCorrections;
-  }, [convexCorrections, localCorrections]);
+  }, [convexCorrections]);
   
-  // Count approved examples from Convex knowledge items
-  const savedExamplesCount = useMemo(() => {
+  useEffect(() => {
     if (convexKnowledgeCounts?.approved_example) {
-      return convexKnowledgeCounts.approved_example.active;
+      setStableExamplesCount(convexKnowledgeCounts.approved_example.active);
     }
-    return localExamples.length;
-  }, [convexKnowledgeCounts, localExamples]);
+  }, [convexKnowledgeCounts]);
+  
+  // Use stable state for rendering (never switches back)
+  const corrections = stableCorrections;
+  const savedExamplesCount = stableExamplesCount;
 
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); }, []);
   const week = useMemo(() => Date.now() - 7 * 24 * 60 * 60 * 1000, []);
@@ -311,11 +318,9 @@ function AdminDashboard() {
   const edits = corrections.filter(c => c.feedbackType === 'edit').length;
   const comments = corrections.filter(c => c.feedbackType === 'comment').length;
 
-  const isUsingConvex = convexCorrections !== undefined;
-
   return (
     <>
-      <SectionHeader title="Dashboard" subtitle={`System overview and recent activity${isUsingConvex ? ' (Convex)' : ' (Local)'}`} />
+      <SectionHeader title="Dashboard" subtitle={`System overview and recent activity${dataSource === 'convex' ? ' (Convex)' : ' (Local)'}`} />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
@@ -381,13 +386,25 @@ function AdminAnalytics() {
   const convexFeedbackCounts = useQuery(api.corrections.countByFeedbackType);
   const localCorrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
   
-  // Prefer Convex data, fall back to localStorage
-  const corrections = useMemo(() => {
+  // Stable state to prevent blinking
+  const [stableCorrections, setStableCorrections] = useState<Array<Record<string, unknown>>>(localCorrections);
+  const [stableFeedbackCounts, setStableFeedbackCounts] = useState<Record<string, number> | undefined>(undefined);
+  const [dataSource, setDataSource] = useState<'local' | 'convex'>('local');
+  
+  useEffect(() => {
     if (convexCorrections !== undefined) {
-      return convexCorrections as Array<Record<string, unknown>>;
+      setDataSource('convex');
+      setStableCorrections(convexCorrections as Array<Record<string, unknown>>);
     }
-    return localCorrections;
-  }, [convexCorrections, localCorrections]);
+  }, [convexCorrections]);
+  
+  useEffect(() => {
+    if (convexFeedbackCounts !== undefined) {
+      setStableFeedbackCounts(convexFeedbackCounts);
+    }
+  }, [convexFeedbackCounts]);
+  
+  const corrections = stableCorrections;
 
   const byEcosystem = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -403,13 +420,13 @@ function AdminAnalytics() {
 
   // Use Convex aggregation if available, otherwise compute locally
   const byType = useMemo(() => {
-    if (convexFeedbackCounts) {
-      return Object.entries(convexFeedbackCounts).sort(([, a], [, b]) => b - a);
+    if (stableFeedbackCounts) {
+      return Object.entries(stableFeedbackCounts).sort(([, a], [, b]) => b - a);
     }
     const counts: Record<string, number> = {};
     for (const c of corrections) { const t = c.feedbackType as string || 'Unknown'; counts[t] = (counts[t] || 0) + 1; }
     return Object.entries(counts).sort(([, a], [, b]) => b - a);
-  }, [convexFeedbackCounts, corrections]);
+  }, [stableFeedbackCounts, corrections]);
 
   const BarRow = ({ label, count, color }: { label: string; count: number; color: string }) => {
     const max = Math.max(...(byEcosystem.length ? byEcosystem.map(([, c]) => c) : [1]));
@@ -425,11 +442,9 @@ function AdminAnalytics() {
     );
   };
 
-  const isUsingConvex = convexCorrections !== undefined;
-
   return (
     <>
-      <SectionHeader title="Analytics" subtitle={`Content quality metrics and usage patterns${isUsingConvex ? ' (Convex)' : ' (Local)'}`} />
+      <SectionHeader title="Analytics" subtitle={`Content quality metrics and usage patterns${dataSource === 'convex' ? ' (Convex)' : ' (Local)'}`} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
         <AdminCard className="p-4">
@@ -476,13 +491,18 @@ function AdminMemory() {
   const convexCorrections = useQuery(api.corrections.listAll, { limit: 200 });
   const localCorrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
   
-  // Prefer Convex data, fall back to localStorage
-  const corrections = useMemo(() => {
+  // Stable state to prevent blinking
+  const [stableCorrections, setStableCorrections] = useState<Array<Record<string, unknown>>>(localCorrections);
+  const [dataSource, setDataSource] = useState<'local' | 'convex'>('local');
+  
+  useEffect(() => {
     if (convexCorrections !== undefined) {
-      return convexCorrections as Array<Record<string, unknown>>;
+      setDataSource('convex');
+      setStableCorrections(convexCorrections as Array<Record<string, unknown>>);
     }
-    return localCorrections;
-  }, [convexCorrections, localCorrections]);
+  }, [convexCorrections]);
+  
+  const corrections = stableCorrections;
   
   const [filter, setFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -500,12 +520,10 @@ function AdminMemory() {
   }, [corrections, filter, searchQuery]);
 
   const filterOptions = ['all', 'thumbs_up', 'thumbs_down', 'edit', 'comment'];
-  
-  const isUsingConvex = convexCorrections !== undefined;
 
   return (
     <>
-      <SectionHeader title="Memory & Learnings" subtitle={`All user feedback and corrections${isUsingConvex ? ' (Convex)' : ' (Local)'}`} />
+      <SectionHeader title="Memory & Learnings" subtitle={`All user feedback and corrections${dataSource === 'convex' ? ' (Convex)' : ' (Local)'}`} />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -606,12 +624,28 @@ function AdminKnowledge() {
   const convexKnowledgeItems = useQuery(api.knowledge.listAll, selectedType ? { type: selectedType, limit: 50 } : { limit: 50 });
   const localExamples = useLocalData<Array<Record<string, unknown>>>('voicelab_saved_examples', []);
   
-  const isUsingConvex = convexKnowledgeCounts !== undefined;
+  // Stable state to prevent blinking
+  const [stableKnowledgeCounts, setStableKnowledgeCounts] = useState<Record<string, { total: number; active: number }> | undefined>(undefined);
+  const [stableKnowledgeItems, setStableKnowledgeItems] = useState<Array<any>>([]);
+  const [dataSource, setDataSource] = useState<'local' | 'convex'>('local');
+  
+  useEffect(() => {
+    if (convexKnowledgeCounts !== undefined) {
+      setDataSource('convex');
+      setStableKnowledgeCounts(convexKnowledgeCounts);
+    }
+  }, [convexKnowledgeCounts]);
+  
+  useEffect(() => {
+    if (convexKnowledgeItems !== undefined) {
+      setStableKnowledgeItems(convexKnowledgeItems);
+    }
+  }, [convexKnowledgeItems]);
 
   const knowledgeTypes = useMemo(() => {
     const getCount = (type: string): string => {
-      if (convexKnowledgeCounts?.[type]) {
-        return `${convexKnowledgeCounts[type].active}/${convexKnowledgeCounts[type].total}`;
+      if (stableKnowledgeCounts?.[type]) {
+        return `${stableKnowledgeCounts[type].active}/${stableKnowledgeCounts[type].total}`;
       }
       // Fallback to estimated counts
       const estimates: Record<string, string> = {
@@ -633,7 +667,7 @@ function AdminKnowledge() {
       { type: 'festival', label: 'Festivals', count: getCount('festival'), colorClass: 'text-yellow-500' },
       { type: 'approved_example', label: 'Examples', count: getCount('approved_example'), colorClass: 'text-cyan-500' },
     ];
-  }, [convexKnowledgeCounts, localExamples.length]);
+  }, [stableKnowledgeCounts, localExamples.length]);
 
   const handleCardClick = (type: string) => {
     setSelectedType(prev => prev === type ? null : type);
@@ -657,10 +691,10 @@ function AdminKnowledge() {
   ];
   const sampleFestivals = ['Diwali', 'Holi', 'Eid', 'Christmas', 'New Year', 'Independence Day', 'Republic Day', 'Raksha Bandhan'];
 
-  // Get items for selected type from Convex or fall back to sample data
+  // Get items for selected type from stable state or fall back to sample data
   const getItemsForType = (type: string): Array<{ content: string; metadata?: Record<string, unknown> }> => {
-    if (isUsingConvex && convexKnowledgeItems) {
-      const filtered = convexKnowledgeItems.filter(item => item.type === type && item.isActive);
+    if (dataSource === 'convex' && stableKnowledgeItems.length > 0) {
+      const filtered = stableKnowledgeItems.filter(item => item.type === type && item.isActive);
       return filtered.map(item => ({
         content: item.content,
         metadata: item.metadata as Record<string, unknown>,
@@ -687,7 +721,7 @@ function AdminKnowledge() {
     if (!selectedType) return null;
 
     const items = getItemsForType(selectedType);
-    const sourceLabel = isUsingConvex ? ' (Convex)' : ' (Sample)';
+    const sourceLabel = dataSource === 'convex' ? ' (Convex)' : ' (Sample)';
 
     switch (selectedType) {
       case 'avoid_word':
@@ -843,9 +877,9 @@ function AdminKnowledge() {
         );
 
       case 'approved_example': {
-        // For approved examples, prefer Convex data but also show local examples
-        const convexExamples = isUsingConvex && convexKnowledgeItems 
-          ? convexKnowledgeItems.filter(item => item.type === 'approved_example' && item.isActive)
+        // For approved examples, prefer stable Convex data but also show local examples
+        const convexExamples = dataSource === 'convex' && stableKnowledgeItems.length > 0
+          ? stableKnowledgeItems.filter(item => item.type === 'approved_example' && item.isActive)
           : [];
         const allExamples = convexExamples.length > 0 ? convexExamples : localExamples;
         
@@ -960,8 +994,12 @@ function formatRelativeTime(timestamp: number): string {
 function AdminUsers() {
   const theme = useThemeColors();
   const [searchQuery, setSearchQuery] = useState('');
-  const users = useQuery(api.users.listAll);
+  const convexUsers = useQuery(api.users.listAll);
   const [localProfile, setLocalProfile] = useState<Record<string, unknown> | null>(null);
+  
+  // Stable state to prevent blinking
+  const [stableUsers, setStableUsers] = useState<Array<any>>([]);
+  const [hasLoadedConvex, setHasLoadedConvex] = useState(false);
 
   useEffect(() => {
     try {
@@ -969,26 +1007,33 @@ function AdminUsers() {
       if (stored) setLocalProfile(JSON.parse(stored));
     } catch { /* ignore */ }
   }, []);
+  
+  useEffect(() => {
+    if (convexUsers !== undefined) {
+      setHasLoadedConvex(true);
+      setStableUsers(convexUsers);
+    }
+  }, [convexUsers]);
 
   const filteredUsers = useMemo(() => {
-    if (!users) return [];
-    if (!searchQuery) return users;
+    if (!hasLoadedConvex) return [];
+    if (!searchQuery) return stableUsers;
     
     const query = searchQuery.toLowerCase();
-    return users.filter(user => 
+    return stableUsers.filter(user => 
       user.name.toLowerCase().includes(query) ||
       user.role.toLowerCase().includes(query) ||
       user.product.toLowerCase().includes(query) ||
       user.deviceId.toLowerCase().includes(query)
     );
-  }, [users, searchQuery]);
+  }, [stableUsers, searchQuery, hasLoadedConvex]);
 
   return (
     <>
       <SectionHeader title="Users" subtitle="Registered user profiles (device-based)" />
 
       {/* If Convex not connected */}
-      {users === undefined ? (
+      {!hasLoadedConvex ? (
         <AdminCard className="p-4 mb-5">
           <span className="block font-medium mb-2" style={{ color: theme.text.high, fontSize: '13px' }}>
             Convex Not Connected
