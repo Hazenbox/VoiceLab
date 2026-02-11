@@ -17,9 +17,24 @@ import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../convex/_generated/api';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env.local if it exists
+const envPath = path.join(process.cwd(), '.env.local');
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
 
 // Configuration
-const CONVEX_URL = process.env.VITE_CONVEX_URL || 'https://your-deployment.convex.cloud';
+const CONVEX_URL = process.env.VITE_CONVEX_URL;
+
+if (!CONVEX_URL) {
+  console.error('❌ Error: VITE_CONVEX_URL environment variable not set');
+  console.error('   Set it in .env.local or pass as environment variable');
+  console.error('   Example: VITE_CONVEX_URL=https://your-project.convex.cloud npm run test:rag');
+  process.exit(1);
+}
+
 const client = new ConvexHttpClient(CONVEX_URL);
 
 // Test results accumulator
