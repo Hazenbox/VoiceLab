@@ -121,10 +121,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
   const [showOnboarding, setShowOnboarding] = useState(() => !getDeviceId());
   
-  // Initialize sync service on mount or when profile changes (gated by feature flag)
+  // Initialize sync service on mount or when profile changes (always enabled)
   useEffect(() => {
-    if (!featureFlags.convexSync) return;
-
     const syncService = initSyncService();
     
     if (userProfile?.deviceId) {
@@ -558,23 +556,21 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           addMessage(aiMessage);
         }
         
-        // Log analytics event for content generation
-        if (featureFlags.convexSync) {
-          const syncService = getSyncService();
-          const allViolations = trustScore?.validationResults.flatMap(r => r.violations) ?? [];
-          syncService?.logAnalyticsEvent({
-            eventType: 'generation',
-            ecosystem: finalContext.ecosystem,
-            channel: finalContext.channel,
-            persona: finalContext.persona || 'unknown',
-            trustScore: trustScore?.overall,
-            violationCount: trustScore?.totalViolations ?? 0,
-            topViolations: allViolations.slice(0, 5).map(v => v.rule) ?? [],
-            tokenCount: result.usage?.totalTokens,
-            llmProvider: selectedLLMProvider,
-            timestamp: Date.now(),
-          });
-        }
+        // Log analytics event for content generation (always enabled)
+        const syncService = getSyncService();
+        const allViolations = trustScore?.validationResults.flatMap(r => r.violations) ?? [];
+        syncService?.logAnalyticsEvent({
+          eventType: 'generation',
+          ecosystem: finalContext.ecosystem,
+          channel: finalContext.channel,
+          persona: finalContext.persona || 'unknown',
+          trustScore: trustScore?.overall,
+          violationCount: trustScore?.totalViolations ?? 0,
+          topViolations: allViolations.slice(0, 5).map(v => v.rule) ?? [],
+          tokenCount: result.usage?.totalTokens,
+          llmProvider: selectedLLMProvider,
+          timestamp: Date.now(),
+        });
         
         return {
           userMessageId,
@@ -691,22 +687,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       storeLocalCorrection(correction);
     }
 
-    // Sync to Convex via the sync service (gated by convex sync flag)
-    if (featureFlags.convexSync) {
-      const syncService = getSyncService();
-      if (syncService) {
-        syncService.logCorrection({
-          messageContent: payload.originalContent,
-          originalContent: payload.originalContent,
-          editedContent: payload.editedContent,
-          feedbackType: payload.feedbackType,
-          comment: payload.comment,
-          reasons: payload.reasons,
-          ecosystem: feedbackEcosystem,
-          channel: feedbackChannel,
-          persona: userProfile?.role || '',
-        });
-      }
+    // Sync to Convex via the sync service (always enabled)
+    const syncService = getSyncService();
+    if (syncService) {
+      syncService.logCorrection({
+        messageContent: payload.originalContent,
+        originalContent: payload.originalContent,
+        editedContent: payload.editedContent,
+        feedbackType: payload.feedbackType,
+        comment: payload.comment,
+        reasons: payload.reasons,
+        ecosystem: feedbackEcosystem,
+        channel: feedbackChannel,
+        persona: userProfile?.role || '',
+      });
     }
   }, [chatMessages, ecosystem, contentChannel, userProfile]);
 

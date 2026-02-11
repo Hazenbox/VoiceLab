@@ -9,9 +9,9 @@
  */
 
 export const featureFlags = {
-  /** Background sync of profiles, analytics, corrections to Convex */
+  /** Background sync of profiles, analytics, corrections to Convex (always enabled) */
   get convexSync(): boolean {
-    return import.meta.env.VITE_ENABLE_CONVEX_SYNC === 'true';
+    return true;  // Always enabled for production
   },
 
   /** Role-based persona auto-configuration (channel, warmth, prompt personality) */
