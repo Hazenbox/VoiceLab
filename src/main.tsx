@@ -1,4 +1,4 @@
-import { StrictMode, useState, useEffect } from 'react'
+import { StrictMode, useState, useEffect, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ConvexProvider, ConvexReactClient } from 'convex/react'
@@ -10,8 +10,39 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { initSentry } from './config/sentry'
 import './index.css'
 import App from './App.tsx'
-import AdminLayout from './admin/AdminLayout'
 import type { ColorMode } from './types'
+
+// Lazy load admin panel - only loaded when visiting /admin routes
+const AdminLayout = lazy(() => import('./admin/AdminLayout'))
+
+// Loading fallback for lazy-loaded admin panel
+function AdminLoadingFallback() {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100vh',
+      background: '#1a1a2e',
+      color: '#e0e0e0',
+      fontFamily: 'system-ui, sans-serif',
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          width: 40,
+          height: 40,
+          border: '3px solid rgba(255,255,255,0.1)',
+          borderTopColor: '#0066ff',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          margin: '0 auto 16px',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <p style={{ margin: 0, fontSize: 14 }}>loading admin panel...</p>
+      </div>
+    </div>
+  );
+}
 
 // Initialize Sentry for error tracking (production only)
 initSentry();
@@ -81,7 +112,9 @@ function Root() {
             <Routes>
               <Route path="/admin/*" element={
                 <ErrorBoundary>
-                  <AdminLayout />
+                  <Suspense fallback={<AdminLoadingFallback />}>
+                    <AdminLayout />
+                  </Suspense>
                 </ErrorBoundary>
               } />
               <Route path="/*" element={
