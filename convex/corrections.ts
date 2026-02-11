@@ -11,6 +11,7 @@ export const create = mutation({
     editedContent: v.optional(v.string()),
     feedbackType: v.string(),
     comment: v.optional(v.string()),
+    reasons: v.optional(v.array(v.string())),
     ecosystem: v.string(),
     channel: v.string(),
     persona: v.string(),

@@ -588,6 +588,8 @@ export interface FeedbackPayload {
   originalContent: string;
   editedContent?: string;
   comment?: string;
+  /** Structured dislike reasons (e.g., ["not accurate", "wrong tone"]) */
+  reasons?: string[];
 }
 
 // =============================================================================

@@ -23,6 +23,8 @@ export interface CorrectionEntry {
   editedContent?: string;
   feedbackType: 'thumbs_up' | 'thumbs_down' | 'edit' | 'comment' | 'save_example';
   comment?: string;
+  /** Structured dislike reasons (e.g., ["not accurate", "wrong tone"]) */
+  reasons?: string[];
   ecosystem: string;
   channel: string;
   persona: string;
@@ -89,8 +91,17 @@ export function extractLearningInsights(
   // Process thumbs down — what to avoid
   const thumbsDown = relevant.filter((c) => c.feedbackType === 'thumbs_down');
   for (const td of thumbsDown.slice(0, 5)) {
+    // Build avoid pattern from structured reasons and/or free-text comment
+    const parts: string[] = [];
+    if (td.reasons && td.reasons.length > 0) {
+      parts.push(`Reasons: ${td.reasons.join(', ')}`);
+    }
     if (td.comment) {
-      insights.avoidPatterns.push(td.comment);
+      parts.push(td.comment);
+    }
+    // Only add if we have at least one signal (reasons or comment)
+    if (parts.length > 0) {
+      insights.avoidPatterns.push(parts.join(' | '));
     }
   }
 

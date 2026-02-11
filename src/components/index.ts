@@ -52,3 +52,5 @@ export type { AssistantActionsProps, UserActionsProps } from './MessageActions';
 export { VersionNavigator } from './VersionNavigator';
 export { ActionButton } from './ActionButton';
 export { DelayedTooltip } from './DelayedTooltip';
+export { DislikeFeedbackModal } from './DislikeFeedbackModal';
+export type { DislikeFeedbackModalProps } from './DislikeFeedbackModal';

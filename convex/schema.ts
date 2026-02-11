@@ -26,6 +26,7 @@ export default defineSchema({
     editedContent: v.optional(v.string()), // Content after edit (only for feedbackType "edit")
     feedbackType: v.string(), // thumbs_up | thumbs_down | edit | comment
     comment: v.optional(v.string()), // User's comment (for "comment" or "thumbs_down" with reason)
+    reasons: v.optional(v.array(v.string())), // Structured dislike reasons (e.g., ["not accurate", "wrong tone"])
     ecosystem: v.string(),
     channel: v.string(),
     persona: v.string(),

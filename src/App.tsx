@@ -31,6 +31,7 @@ import {
   ContentContextSelector,
   TrustContextPanel,
   AdvancedSettingsPanel,
+  DislikeFeedbackModal,
 } from './components';
 import type { TTSProviderType } from './components';
 // Content Trust System services
@@ -568,6 +569,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         editedContent: payload.editedContent,
         feedbackType: payload.feedbackType as CorrectionEntry['feedbackType'],
         comment: payload.comment,
+        reasons: payload.reasons,
         ecosystem: feedbackEcosystem,
         channel: feedbackChannel,
         persona: userProfile?.role || '',
@@ -586,6 +588,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           editedContent: payload.editedContent,
           feedbackType: payload.feedbackType,
           comment: payload.comment,
+          reasons: payload.reasons,
           ecosystem: feedbackEcosystem,
           channel: feedbackChannel,
           persona: userProfile?.role || '',
@@ -612,6 +615,13 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [editValue, setEditValue] = useState<string>('');
   // Ref to track which button triggered edit for focus restoration
   const editTriggerRef = useRef<string | null>(null);
+  
+  // ========================================================================
+  // Dislike Feedback Modal State
+  // ========================================================================
+  
+  // Message ID for which dislike modal is open (null = modal closed)
+  const [dislikeModalMessageId, setDislikeModalMessageId] = useState<string | null>(null);
   
   // Search button handler
   const handleSearchClick = useCallback(() => {
@@ -712,24 +722,59 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     });
   }, [chatMessages, updateMessage, handleMessageFeedback]);
   
-  // Handle "dislike" feedback
+  // Handle "dislike" feedback - opens modal for detailed feedback
   const handleDislike = useCallback((messageId: string) => {
     const message = chatMessages.find(m => m.id === messageId);
     if (!message || message.userFeedback) return; // Already gave feedback
     
-    // Persist feedback in message
+    // Persist visual feedback immediately (for instant UI update)
     updateMessage(messageId, (msg) => ({
       ...msg,
       userFeedback: 'dislike' as const,
     }));
     
-    // Log to learning system
+    // Open modal to collect detailed feedback
+    // (actual feedback storage deferred to modal submit/close)
+    setDislikeModalMessageId(messageId);
+  }, [chatMessages, updateMessage]);
+  
+  // Handle dislike modal submit (with reasons + optional comment)
+  const handleDislikeModalSubmit = useCallback((reasons: string[], comment: string) => {
+    if (!dislikeModalMessageId) return;
+    
+    const message = chatMessages.find(m => m.id === dislikeModalMessageId);
+    if (!message) return;
+    
+    // Store feedback with structured reasons
     handleMessageFeedback({
-      messageId,
+      messageId: dislikeModalMessageId,
+      feedbackType: 'thumbs_down',
+      originalContent: message.content,
+      reasons,
+      comment,
+    });
+    
+    // Close modal
+    setDislikeModalMessageId(null);
+  }, [dislikeModalMessageId, chatMessages, handleMessageFeedback]);
+  
+  // Handle dislike modal close (without detailed feedback)
+  const handleDislikeModalClose = useCallback(() => {
+    if (!dislikeModalMessageId) return;
+    
+    const message = chatMessages.find(m => m.id === dislikeModalMessageId);
+    if (!message) return;
+    
+    // Store bare thumbs_down without reasons
+    handleMessageFeedback({
+      messageId: dislikeModalMessageId,
       feedbackType: 'thumbs_down',
       originalContent: message.content,
     });
-  }, [chatMessages, updateMessage, handleMessageFeedback]);
+    
+    // Close modal
+    setDislikeModalMessageId(null);
+  }, [dislikeModalMessageId, chatMessages, handleMessageFeedback]);
   
   // Handle "try again" - regenerate AI response
   const handleTryAgain = useCallback(async (messageId: string) => {
@@ -1454,6 +1499,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   onSubmitEdit={handleSubmitEdit}
                   onCancelEdit={handleCancelEdit}
                   onVersionChange={handleVersionChange}
+                  // Dislike feedback modal
+                  dislikeModalMessageId={dislikeModalMessageId}
+                  onDislikeModalSubmit={handleDislikeModalSubmit}
+                  onDislikeModalClose={handleDislikeModalClose}
                 />
               </div>
             </div>

@@ -31,6 +31,7 @@ export interface CorrectionEvent {
   editedContent?: string;
   feedbackType: string;
   comment?: string;
+  reasons?: string[];
   ecosystem: string;
   channel: string;
   persona: string;

@@ -21,6 +21,7 @@ import { AudioBubble } from './AudioBubble';
 import { TrustBadge } from './ContentTrust';
 import { AssistantMessageActions, UserMessageActions } from './MessageActions';
 import { VersionNavigator } from './VersionNavigator';
+import { DislikeFeedbackModal } from './DislikeFeedbackModal';
 import { Button } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
@@ -48,6 +49,8 @@ interface ChatPanelProps {
   onVoiceClick?: () => void;
   /** Whether voice is supported in this browser */
   voiceSupported?: boolean;
+  /** Callback when user clicks search button */
+  onSearchClick?: () => void;
   /** Model selector component to render below input */
   modelSelector?: React.ReactNode;
   /** @deprecated Use contextSelector instead */
@@ -100,6 +103,14 @@ interface ChatPanelProps {
   onCancelEdit?: () => void;
   /** Callback when user navigates to a different version */
   onVersionChange?: (messageId: string, newVersion: number) => void;
+  
+  // Dislike feedback modal props
+  /** Message ID for which dislike modal is open (null = closed) */
+  dislikeModalMessageId?: string | null;
+  /** Callback when user submits dislike modal with reasons + comment */
+  onDislikeModalSubmit?: (reasons: string[], comment: string) => void;
+  /** Callback when user closes dislike modal without detailed feedback */
+  onDislikeModalClose?: () => void;
 }
 
 // =============================================================================
@@ -118,6 +129,7 @@ export const ChatPanel = memo(function ChatPanel({
   id,
   onVoiceClick,
   voiceSupported = true,
+  onSearchClick,
   modelSelector,
   channelSelector,
   platformSelector,
@@ -143,6 +155,10 @@ export const ChatPanel = memo(function ChatPanel({
   onSubmitEdit,
   onCancelEdit,
   onVersionChange,
+  // Dislike feedback modal
+  dislikeModalMessageId,
+  onDislikeModalSubmit,
+  onDislikeModalClose,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -240,7 +256,7 @@ export const ChatPanel = memo(function ChatPanel({
             )}
             {/* Assistant audio message actions */}
             {!isUser && onLike && onDislike && onTryAgain && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+              <div className="flex items-center gap-2">
                 <AssistantMessageActions
                   messageId={message.id}
                   content={message.content}
@@ -361,7 +377,7 @@ export const ChatPanel = memo(function ChatPanel({
           <MessageContent content={message.content} role="assistant" />
           
           {/* Actions row: Trust Badge + Message Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0', marginTop: '6px' }}>
+          <div className="flex items-center gap-2 mt-1.5">
             {message.trustScore && (
               <TrustBadge
                 trustScore={message.trustScore}
@@ -441,6 +457,30 @@ export const ChatPanel = memo(function ChatPanel({
               <DSIcon name="IcMic" size="S" attention="medium" />
             )}
           </button>
+        )}
+
+        {/* Search button - using Jio DS Button */}
+        {onSearchClick && (
+          <div style={{ width: '36px', height: '36px' }}>
+            <Button
+              onPress={onSearchClick}
+              aria-label="Search"
+              appearance="ghost"
+              size="S"
+              style={{ 
+                width: '36px', 
+                height: '36px', 
+                minHeight: '36px',
+                padding: '0',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <DSIcon name="IcSearch" size="S" attention="medium" />
+            </Button>
+          </div>
         )}
 
         {/* Multi-line textarea */}
@@ -643,6 +683,15 @@ export const ChatPanel = memo(function ChatPanel({
           </div>
         )}
       </div>
+      
+      {/* Dislike Feedback Modal */}
+      {onDislikeModalSubmit && onDislikeModalClose && (
+        <DislikeFeedbackModal
+          isOpen={!!dislikeModalMessageId}
+          onSubmit={onDislikeModalSubmit}
+          onClose={onDislikeModalClose}
+        />
+      )}
     </div>
   );
 });
