@@ -18,13 +18,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Load environment variables from parent directory
+// First load .env, then .env.local (which takes precedence)
 dotenv.config({ path: join(__dirname, '..', '.env') });
+dotenv.config({ path: join(__dirname, '..', '.env.local'), override: true });
 
-const DASHSCOPE_API_KEY = process.env.VITE_DASHSCOPE_API_KEY;
-const INWORLD_API_KEY = process.env.VITE_INWORLD_API_KEY;
-const OPENAI_API_KEY = process.env.VITE_OPENAI_API_KEY;
-const CLAUDE_API_KEY = process.env.VITE_CLAUDE_API_KEY;
-const HUGGINGFACE_API_KEY = process.env.VITE_HUGGINGFACE_API_KEY;
+// Server-side API keys (no VITE_ prefix for security)
+const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY;
+const INWORLD_API_KEY = process.env.INWORLD_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
+const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const PROXY_PORT = process.env.WS_PROXY_PORT || 3001;
 
 // DashScope endpoints
@@ -46,9 +51,15 @@ const CLAUDE_API_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 // HuggingFace endpoint (using router.huggingface.co as per HF API update)
 const HUGGINGFACE_API_BASE = 'https://router.huggingface.co';
 
+// Warn about missing API keys but don't exit - some providers may still work
 if (!DASHSCOPE_API_KEY) {
-  console.error('Error: VITE_DASHSCOPE_API_KEY is not set in .env file');
-  process.exit(1);
+  console.warn('Warning: DASHSCOPE_API_KEY is not set - DashScope endpoints will not work');
+}
+if (!OPENAI_API_KEY) {
+  console.warn('Warning: OPENAI_API_KEY is not set - OpenAI endpoints will not work');
+}
+if (!HUGGINGFACE_API_KEY) {
+  console.warn('Warning: HUGGINGFACE_API_KEY is not set - HuggingFace endpoints will not work');
 }
 
 /**
@@ -81,6 +92,12 @@ async function handleLLMProxy(req, res) {
   
   req.on('end', () => {
     console.log('[Proxy] LLM request received');
+    
+    if (!DASHSCOPE_API_KEY) {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'DashScope API key not configured' }));
+      return;
+    }
     
     // Parse request body
     let requestData;
@@ -525,6 +542,13 @@ async function handleTTSProxy(req, res) {
   
   req.on('end', () => {
     console.log('[Proxy] TTS request received');
+    
+    if (!DASHSCOPE_API_KEY) {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'DashScope API key not configured' }));
+      return;
+    }
+    
     console.log('[Proxy] API Key loaded:', DASHSCOPE_API_KEY ? `${DASHSCOPE_API_KEY.substring(0, 10)}...` : 'MISSING');
     console.log('[Proxy] TTS Endpoint:', DASHSCOPE_TTS_HTTP_ENDPOINT);
     
@@ -742,7 +766,7 @@ server.listen(PROXY_PORT, () => {
 ║  ─────────────────────────────────────────────────────────────────║
 ║  Health Check:  http://localhost:${PROXY_PORT}/health                     ║
 ╠═══════════════════════════════════════════════════════════════════╣
-║  API Keys: DashScope=${DASHSCOPE_API_KEY ? '✓' : '✗'} OpenAI=${OPENAI_API_KEY ? '✓' : '✗'} Claude=${CLAUDE_API_KEY ? '✓' : '✗'} HF=${HUGGINGFACE_API_KEY ? '✓' : '✗'} Inworld=${INWORLD_API_KEY ? '✓' : '✗'}  ║
+║  API Keys: DashScope=${DASHSCOPE_API_KEY ? '✓' : '✗'} OpenAI=${OPENAI_API_KEY ? '✓' : '✗'} Claude=${CLAUDE_API_KEY ? '✓' : '✗'} HF=${HUGGINGFACE_API_KEY ? '✓' : '✗'} Gemini=${GEMINI_API_KEY ? '✓' : '✗'}  ║
 ╚═══════════════════════════════════════════════════════════════════╝
   `);
 });
