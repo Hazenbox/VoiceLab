@@ -6,6 +6,7 @@ import { DsProvider } from '@marcelinodzn/ds-react'
 import { DesignSystemProvider } from './context/DesignSystemContext'
 import { ProjectProvider } from './context/ProjectContext'
 import { getSyncService } from './services/sync/convexSync'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import './index.css'
 import App from './App.tsx'
 import AdminLayout from './admin/AdminLayout'
@@ -74,7 +75,11 @@ function Root() {
         <ProjectProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/admin/*" element={<AdminLayout />} />
+              <Route path="/admin/*" element={
+                <ErrorBoundary>
+                  <AdminLayout />
+                </ErrorBoundary>
+              } />
               <Route path="/*" element={
                 <App colorMode={colorMode} onColorModeChange={setColorMode} />
               } />
