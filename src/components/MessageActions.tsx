@@ -77,12 +77,13 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   const theme = useThemeColors();
   const { isCopied, copyToClipboard } = useCopyToClipboard(2000);
   
-  // Orange brand color for active feedback buttons
-  const activeColor = '#f97316'; // orange-500
+  // Determine what buttons to show based on feedback
+  const showLike = !feedbackGiven || feedbackGiven === 'like';
+  const showDislike = !feedbackGiven || feedbackGiven === 'dislike';
   
-  // Determine icon color based on active state
-  const likeIconColor = feedbackGiven === 'like' ? '#ffffff' : theme.text.low;
-  const dislikeIconColor = feedbackGiven === 'dislike' ? '#ffffff' : theme.text.low;
+  // Icon colors: orange when active, gray otherwise
+  const likeIconColor = feedbackGiven === 'like' ? '#f97316' : theme.text.low;
+  const dislikeIconColor = feedbackGiven === 'dislike' ? '#f97316' : theme.text.low;
   
   // Icon components with dynamic color styling
   const CopyIcon = () => (
@@ -140,22 +141,24 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         disabled={disabled}
         isActive={isCopied}
       />
-      <ActionButton
-        icon={<LikeIcon />}
-        label="good response"
-        onClick={handleLike}
-        disabled={disabled}
-        isActive={feedbackGiven === 'like'}
-        activeColor={activeColor}
-      />
-      <ActionButton
-        icon={<DislikeIcon />}
-        label="bad response"
-        onClick={handleDislike}
-        disabled={disabled}
-        isActive={feedbackGiven === 'dislike'}
-        activeColor={activeColor}
-      />
+      {showLike && (
+        <ActionButton
+          icon={<LikeIcon />}
+          label="good response"
+          onClick={handleLike}
+          disabled={disabled}
+          isActive={feedbackGiven === 'like'}
+        />
+      )}
+      {showDislike && (
+        <ActionButton
+          icon={<DislikeIcon />}
+          label="bad response"
+          onClick={handleDislike}
+          disabled={disabled}
+          isActive={feedbackGiven === 'dislike'}
+        />
+      )}
       <ActionButton
         icon={<RefreshIcon />}
         label="try again"
