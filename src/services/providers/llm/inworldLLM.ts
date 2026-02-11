@@ -14,7 +14,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
-import { getApiBaseUrl } from '../../../config/providers';
+import { getApiBaseUrl, isProduction } from '../../../config/providers';
 
 export interface InworldLLMConfig {
   apiKey: string;
@@ -143,7 +143,24 @@ export class InworldLLMProvider implements LLMProvider {
   }
 
   isReady(): boolean {
-    return this.config.apiKey.length > 0 && this.config.character.length > 0;
+    // Character is required regardless of environment
+    if (!this.config.character || this.config.character.length === 0) {
+      return false;
+    }
+    
+    // In production, server-side keys are configured via Vercel env vars
+    if (isProduction()) {
+      return true;
+    }
+    
+    // In development with proxy, check if proxy is available
+    const proxyBase = getApiBaseUrl();
+    if (proxyBase) {
+      return true;
+    }
+    
+    // Fallback: check for client-side key (legacy direct API mode)
+    return this.config.apiKey.length > 0;
   }
 
   disconnect(): void {

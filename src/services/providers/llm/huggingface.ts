@@ -15,7 +15,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
-import { getApiBaseUrl } from '../../../config/providers';
+import { getApiBaseUrl, isProduction } from '../../../config/providers';
 
 // Available HuggingFace models configuration
 export const HF_MODELS = {
@@ -303,6 +303,18 @@ export class HuggingFaceProvider implements LLMProvider {
   }
 
   isReady(): boolean {
+    // In production, server-side keys are configured via Vercel env vars
+    if (isProduction()) {
+      return true;
+    }
+    
+    // In development with proxy, check if proxy is available
+    const proxyBase = getApiBaseUrl();
+    if (proxyBase) {
+      return true;
+    }
+    
+    // Fallback: check for client-side key (legacy direct API mode)
     return this.config.apiKey.length > 0;
   }
 

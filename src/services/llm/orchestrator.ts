@@ -8,6 +8,7 @@ import { FallbackManager } from '../reliability/fallbackManager';
 import { CostTracker } from '../monitoring/costTracker';
 import { PromptRegistry, type PromptVersion } from '../monitoring/promptRegistry';
 import { ResponseCache } from '../caching/responseCache';
+import { isProduction } from '../../config/providers';
 import type { 
   LLMProvider, 
   LLMProviderType, 
@@ -93,7 +94,10 @@ export class LLMOrchestrator {
       const providerInstance = createProvider(provider);
       
       if (!providerInstance.isReady()) {
-        throw new Error(`Provider ${provider} is not configured`);
+        const reason = isProduction()
+          ? "Server configuration missing. Check Vercel environment variables."
+          : "Proxy server not running (run 'npm run dev') and no direct API key configured.";
+        throw new Error(`Provider ${provider} is not ready: ${reason}`);
       }
       
       return await providerInstance.generate(options);
@@ -193,7 +197,10 @@ export class LLMOrchestrator {
     const provider = createProvider(providerType);
 
     if (!provider.isReady()) {
-      throw new Error(`Provider ${providerType} is not configured`);
+      const reason = isProduction()
+        ? "Server configuration missing. Check Vercel environment variables."
+        : "Proxy server not running (run 'npm run dev') and no direct API key configured.";
+      throw new Error(`Provider ${providerType} is not ready: ${reason}`);
     }
 
     if (!provider.supportsStreaming || !provider.generateStream) {
