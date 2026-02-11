@@ -5,6 +5,7 @@
  * Only active in production when VITE_SENTRY_DSN is configured.
  */
 
+import React from 'react';
 import * as Sentry from '@sentry/react';
 
 // Environment detection
@@ -198,41 +199,43 @@ export const SentryErrorBoundary = Sentry.ErrorBoundary;
  */
 export function withSentryErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  fallback?: React.ReactNode
+  fallback?: React.ReactElement
 ): React.ComponentType<P> {
   return Sentry.withErrorBoundary(Component, {
-    fallback: fallback || <DefaultErrorFallback />,
+    fallback: fallback ?? React.createElement(DefaultErrorFallback),
   });
 }
 
 /**
  * Default error fallback component
  */
-function DefaultErrorFallback(): JSX.Element {
-  return (
-    <div style={{
+function DefaultErrorFallback(): React.ReactElement {
+  return React.createElement('div', {
+    style: {
       padding: '20px',
       textAlign: 'center',
       color: '#666',
-    }}>
-      <h2 style={{ marginBottom: '10px', color: '#333' }}>Something went wrong</h2>
-      <p>We've been notified and are working on a fix.</p>
-      <button
-        onClick={() => window.location.reload()}
-        style={{
-          marginTop: '15px',
-          padding: '8px 16px',
-          background: '#0066cc',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-        }}
-      >
-        Reload Page
-      </button>
-    </div>
-  );
+    },
+  }, [
+    React.createElement('h2', {
+      key: 'title',
+      style: { marginBottom: '10px', color: '#333' },
+    }, 'Something went wrong'),
+    React.createElement('p', { key: 'message' }, "We've been notified and are working on a fix."),
+    React.createElement('button', {
+      key: 'reload',
+      onClick: () => window.location.reload(),
+      style: {
+        marginTop: '15px',
+        padding: '8px 16px',
+        background: '#0066cc',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+      },
+    }, 'Reload Page'),
+  ]);
 }
 
 // Export Sentry instance for advanced usage

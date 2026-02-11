@@ -9,7 +9,7 @@
  * - Automatic timestamp and context
  */
 
-import { captureError, captureMessage, addBreadcrumb } from '../config/sentry';
+import { captureError, captureMessage, addBreadcrumb, Sentry } from '../config/sentry';
 
 // Log levels in order of severity
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
@@ -23,7 +23,6 @@ const LOG_LEVELS: Record<LogLevel, number> = {
 
 // Environment detection
 const isProduction = typeof import.meta !== 'undefined' && import.meta.env?.PROD;
-const isDevelopment = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
 
 // Default log level based on environment
 const DEFAULT_LOG_LEVEL: LogLevel = isProduction ? 'info' : 'debug';
@@ -112,8 +111,11 @@ function output(entry: LogEntry): void {
 
   // Sentry integration
   if (config.enableSentry) {
+    // Map our log level to Sentry severity
+    const sentryLevel: Sentry.SeverityLevel = entry.level === 'warn' ? 'warning' : entry.level;
+    
     // Add breadcrumb for all logs
-    addBreadcrumb(entry.message, entry.module || 'app', entry.context, entry.level);
+    addBreadcrumb(entry.message, entry.module || 'app', entry.context, sentryLevel);
     
     // Capture errors and warnings in Sentry
     if (entry.level === 'error' && entry.error) {
