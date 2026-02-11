@@ -37,8 +37,18 @@ function isAllowedOrigin(origin: string | undefined): boolean {
   
   if (isDevEnvironment && DEV_ORIGINS.includes(origin)) return true;
   
-  // Allow Vercel preview deployments
-  if (origin.includes('.vercel.app')) return true;
+  // Allow Vercel preview deployments - only from this project
+  // Pattern: voice-designer-*.vercel.app or voice-lab-*.vercel.app or jio-voice-lab-*.vercel.app
+  if (isDevEnvironment && origin.endsWith('.vercel.app')) {
+    const allowedPrefixes = ['voice-designer-', 'voice-lab-', 'jio-voice-lab-'];
+    const hostname = new URL(origin).hostname;
+    
+    for (const prefix of allowedPrefixes) {
+      if (hostname.startsWith(prefix)) {
+        return true;
+      }
+    }
+  }
   
   return false;
 }

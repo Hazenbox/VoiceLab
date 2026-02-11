@@ -51,67 +51,8 @@ const COLOR_MODE_KEY = 'voiceDesigner_colorMode';
 
 // ── Convex Client ────────────────────────────────────────────────
 // Initialize only if VITE_CONVEX_URL is configured.
-// In production, Convex is REQUIRED for team collaboration and admin features.
-// In development, the app can work in local-only mode for testing.
+// When not configured, the app works in local-only mode.
 const convexUrl = import.meta.env.VITE_CONVEX_URL;
-
-// Validate Convex configuration in production
-if (import.meta.env.PROD && !convexUrl) {
-  console.error('FATAL: VITE_CONVEX_URL is required in production for team deployment');
-  // Show error screen instead of broken app
-  const root = document.getElementById('root');
-  if (root) {
-    root.innerHTML = `
-      <div style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        color: #e0e0e0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-        text-align: center;
-        padding: 20px;
-      ">
-        <div style="max-width: 500px;">
-          <div style="
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 24px;
-            border: 4px solid rgba(255,255,255,0.1);
-            border-top-color: #0066ff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          "></div>
-          <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
-          <h1 style="font-size: 24px; margin: 0 0 16px; color: #ff6b6b;">configuration error</h1>
-          <p style="margin: 0 0 8px; color: #a0a0a0; line-height: 1.6;">
-            Convex backend is not configured for this deployment.
-          </p>
-          <p style="margin: 0; font-size: 14px; color: #707070;">
-            The admin panel and team collaboration features require a Convex database connection.
-            Please contact your system administrator.
-          </p>
-          <div style="
-            margin-top: 24px;
-            padding: 16px;
-            background: rgba(255,107,107,0.1);
-            border: 1px solid rgba(255,107,107,0.3);
-            border-radius: 8px;
-            font-size: 12px;
-            color: #ff8787;
-            text-align: left;
-          ">
-            <strong>Technical Details:</strong><br/>
-            Missing environment variable: <code>VITE_CONVEX_URL</code>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-  throw new Error('Production deployment requires VITE_CONVEX_URL to be configured');
-}
-
 const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
 
 /**

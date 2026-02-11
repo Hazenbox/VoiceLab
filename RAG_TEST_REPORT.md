@@ -1,7 +1,7 @@
 # RAG Stress Test Report
 
-**Generated:** 2026-02-11T13:06:37.465Z
-**Total Duration:** 13601ms (13.6s)
+**Generated:** 2026-02-11T13:15:43.853Z
+**Total Duration:** 14731ms (14.7s)
 **Convex URL:** https://tidy-guanaco-955.eu-west-1.convex.cloud
 
 ## Executive Summary
@@ -21,7 +21,7 @@
 ### ✅ Embeddings Completeness Check
 
 - **Status:** PASSED
-- **Duration:** 1241ms
+- **Duration:** 1463ms
 - **Details:** All 486 items have embeddings generated
 
 **Metrics:**
@@ -48,7 +48,7 @@
 ### ✅ Semantic Similarity Detection
 
 - **Status:** PASSED
-- **Duration:** 2110ms
+- **Duration:** 2738ms
 - **Details:** Tested 5 semantic queries. 5/5 passed
 
 **Metrics:**
@@ -98,7 +98,7 @@
 ### ✅ Cross-Category Search
 
 - **Status:** PASSED
-- **Duration:** 496ms
+- **Duration:** 417ms
 - **Details:** Found 10 results across 3 types and 4 categories
 
 **Metrics:**
@@ -115,7 +115,7 @@
 ### ✅ Negative Match Prevention
 
 - **Status:** PASSED
-- **Duration:** 1673ms
+- **Duration:** 1677ms
 - **Details:** Tested 3 irrelevant vs 1 relevant query. 2/3 had lower scores
 
 **Metrics:**
@@ -160,23 +160,23 @@
 ### ✅ Latency Measurement
 
 - **Status:** PASSED
-- **Duration:** 2029ms
-- **Details:** Avg: 406ms, Max: 420ms, Min: 395ms
+- **Duration:** 2110ms
+- **Details:** Avg: 422ms, Max: 439ms, Min: 401ms
 
 **Metrics:**
 
 ```json
 {
-  "avgLatency": 406,
-  "maxLatency": 420,
-  "minLatency": 395,
+  "avgLatency": 422,
+  "maxLatency": 439,
+  "minLatency": 401,
   "target": "< 700ms avg",
   "allLatencies": [
-    420,
-    399,
-    397,
-    395,
-    417
+    431,
+    439,
+    422,
+    416,
+    401
   ]
 }
 ```
@@ -184,15 +184,15 @@
 ### ✅ Concurrent Load Test
 
 - **Status:** PASSED
-- **Duration:** 1052ms
-- **Details:** 10/10 requests succeeded in 1048ms (105ms/request)
+- **Duration:** 1148ms
+- **Details:** 10/10 requests succeeded in 1143ms (114ms/request)
 
 **Metrics:**
 
 ```json
 {
-  "totalDuration": 1048,
-  "avgPerRequest": 105,
+  "totalDuration": 1143,
+  "avgPerRequest": 114,
   "successRate": "10/10",
   "target": "< 5000ms total"
 }
@@ -205,7 +205,7 @@
 ### ✅ Edge Case Handling
 
 - **Status:** PASSED
-- **Duration:** 2106ms
+- **Duration:** 2225ms
 - **Details:** Tested 5 edge cases. 5/5 handled correctly
 
 **Metrics:**
@@ -254,7 +254,7 @@
 ### ✅ All Knowledge Types Coverage
 
 - **Status:** PASSED
-- **Duration:** 2068ms
+- **Duration:** 2119ms
 - **Details:** Tested all 5 knowledge types. 5/5 types returned sufficient results
 
 **Metrics:**
@@ -304,7 +304,7 @@
 ### ✅ Severity Level Filtering
 
 - **Status:** PASSED
-- **Duration:** 420ms
+- **Duration:** 413ms
 - **Details:** Found 19 error, 1 warning, 0 info severity items
 
 **Metrics:**
@@ -328,7 +328,7 @@
 ### ✅ Content Quality Enhancement
 
 - **Status:** PASSED
-- **Duration:** 406ms
+- **Duration:** 421ms
 - **Details:** Found 10 results across 1 types. Avg score: 0.66. Quality indicators: 2/4
 
 **Metrics:**
