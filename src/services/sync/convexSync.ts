@@ -2,12 +2,14 @@
  * Convex Background Sync Service
  * 
  * Non-blocking, fire-and-forget sync of local actions to Convex.
- * If Convex is unreachable, events are queued in localStorage and
- * flushed on next successful connection.
+ * If Convex is unreachable, events are queued in IndexedDB (with localStorage fallback)
+ * and flushed on next successful connection.
  * 
  * This module has ZERO compile-time dependencies on Convex generated types.
  * All Convex calls go through the injected mutationFn callback.
  */
+
+import * as queueStorage from './queueStorage';
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -52,48 +54,10 @@ export type MutationFn = (name: string, args: Record<string, any>) => Promise<an
 
 // ── Storage Keys ─────────────────────────────────────────────────
 
-const SYNC_QUEUE_KEY = 'voicelab_sync_queue';
 const USER_CONVEX_ID_KEY = 'voicelab_convex_user_id';
-const MAX_QUEUE_SIZE = 100;
 
 // ── Queue Management ─────────────────────────────────────────────
-
-interface QueuedEvent {
-  type: 'analytics' | 'correction' | 'heartbeat' | 'user_sync';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: Record<string, any>;
-  timestamp: number;
-}
-
-function loadQueue(): QueuedEvent[] {
-  try {
-    const stored = localStorage.getItem(SYNC_QUEUE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveQueue(queue: QueuedEvent[]): void {
-  try {
-    const trimmed = queue.slice(-MAX_QUEUE_SIZE);
-    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(trimmed));
-  } catch (e) {
-    console.warn('[ConvexSync] Failed to save queue (quota?):', e);
-  }
-}
-
-function addToQueue(event: QueuedEvent): void {
-  const queue = loadQueue();
-  queue.push(event);
-  saveQueue(queue);
-}
-
-function clearQueue(): void {
-  try {
-    localStorage.removeItem(SYNC_QUEUE_KEY);
-  } catch { /* ignore */ }
-}
+// Note: Queue functions are now imported from queueStorage.ts (IndexedDB-backed)
 
 // ── Convex User ID Cache ─────────────────────────────────────────
 
@@ -181,7 +145,7 @@ export class ConvexSyncService {
 
   async syncUserProfile(profile: UserProfileSync): Promise<string | null> {
     if (!this.isAvailable) {
-      addToQueue({
+      queueStorage.addToQueue({
         type: 'user_sync',
         data: { ...profile },
         timestamp: Date.now(),
@@ -215,7 +179,7 @@ export class ConvexSyncService {
     });
 
     if (!result.ok && this.deviceId) {
-      addToQueue({
+      queueStorage.addToQueue({
         type: 'heartbeat',
         data: { deviceId: this.deviceId },
         timestamp: Date.now(),
@@ -227,7 +191,7 @@ export class ConvexSyncService {
 
   logAnalyticsEvent(event: AnalyticsEvent): void {
     if (!this.convexUserId || !this.deviceId) {
-      addToQueue({
+      queueStorage.addToQueue({
         type: 'analytics',
         data: { ...event },
         timestamp: event.timestamp,
@@ -251,7 +215,7 @@ export class ConvexSyncService {
     if (this.eventBuffer.length === 0) return;
     if (!this.isAvailable || !this.convexUserId || !this.deviceId) {
       for (const event of this.eventBuffer) {
-        addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
+        queueStorage.addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
       }
       this.eventBuffer = [];
       return;
@@ -270,7 +234,7 @@ export class ConvexSyncService {
 
     if (!result.ok) {
       for (const event of events) {
-        addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
+        queueStorage.addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
       }
     }
   }
@@ -279,7 +243,7 @@ export class ConvexSyncService {
 
   async logCorrection(correction: CorrectionEvent): Promise<void> {
     if (!this.isAvailable || !this.convexUserId || !this.deviceId) {
-      addToQueue({
+      queueStorage.addToQueue({
         type: 'correction',
         data: { ...correction },
         timestamp: Date.now(),
@@ -294,7 +258,7 @@ export class ConvexSyncService {
     });
 
     if (!result.ok) {
-      addToQueue({
+      queueStorage.addToQueue({
         type: 'correction',
         data: { ...correction },
         timestamp: Date.now(),
@@ -307,12 +271,10 @@ export class ConvexSyncService {
   async flushQueue(): Promise<void> {
     if (!this.isAvailable || !this.convexUserId || !this.deviceId) return;
 
-    const queue = loadQueue();
+    const queue = await queueStorage.getQueue();
     if (queue.length === 0) return;
 
     console.log(`[ConvexSync] Flushing ${queue.length} queued events`);
-
-    const failed: QueuedEvent[] = [];
 
     // Group events by type for batch flush
     const analyticsEvents = queue.filter((e) => e.type === 'analytics');
@@ -325,10 +287,13 @@ export class ConvexSyncService {
       const result = await this.safeMutation('users:createOrUpdate', {
         ...event.data,
       });
-      if (!result.ok) {
-        failed.push(event);
-      } else if (result.value) {
-        this.setConvexUserId(result.value);
+      if (result.ok) {
+        // Success - remove from queue
+        if (event.id) await queueStorage.removeFromQueue(event.id);
+        if (result.value) this.setConvexUserId(result.value);
+      } else {
+        // Failure - increment attempts
+        if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
       }
     }
 
@@ -337,11 +302,16 @@ export class ConvexSyncService {
       const result = await this.safeMutation('users:heartbeat', {
         ...event.data,
       });
-      if (!result.ok) {
-        failed.push(event);
+      if (result.ok) {
+        // Success - remove from queue
+        if (event.id) await queueStorage.removeFromQueue(event.id);
+      } else {
+        // Failure - increment attempts
+        if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
       }
     }
 
+    // Batch analytics events
     if (analyticsEvents.length > 0) {
       const result = await this.safeMutation('analytics:batchLogEvents', {
         events: analyticsEvents.map((e) => ({
@@ -352,11 +322,20 @@ export class ConvexSyncService {
         })),
       });
 
-      if (!result.ok) {
-        failed.push(...analyticsEvents);
+      if (result.ok) {
+        // Success - remove all from queue
+        for (const event of analyticsEvents) {
+          if (event.id) await queueStorage.removeFromQueue(event.id);
+        }
+      } else {
+        // Failure - increment attempts for all
+        for (const event of analyticsEvents) {
+          if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+        }
       }
     }
 
+    // Replay correction events (individual)
     for (const event of correctionEvents) {
       const result = await this.safeMutation('corrections:create', {
         ...event.data,
@@ -364,16 +343,17 @@ export class ConvexSyncService {
         deviceId: this.deviceId!,
       });
 
-      if (!result.ok) {
-        failed.push(event);
+      if (result.ok) {
+        // Success - remove from queue
+        if (event.id) await queueStorage.removeFromQueue(event.id);
+      } else {
+        // Failure - increment attempts
+        if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
       }
     }
 
-    if (failed.length > 0) {
-      saveQueue(failed);
-    } else {
-      clearQueue();
-    }
+    const remainingSize = await queueStorage.getQueueSize();
+    console.log(`[ConvexSync] Flush complete. ${remainingSize} events remain in queue`);
   }
 
   // ── Cleanup ──────────────────────────────────────────────────
@@ -389,7 +369,7 @@ export class ConvexSyncService {
     }
     // Flush remaining buffered events to queue
     for (const event of this.eventBuffer) {
-      addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
+      queueStorage.addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
     }
     this.eventBuffer = [];
   }

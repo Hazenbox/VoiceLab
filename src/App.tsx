@@ -138,6 +138,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       });
       // Heartbeat on mount (non-blocking)
       syncService.heartbeat();
+      
+      // Log session start event (ecosystem/channel captured at mount time)
+      syncService.logAnalyticsEvent({
+        eventType: 'session_start',
+        ecosystem: userProfile.product as string || 'connectivity',  // Use product as ecosystem proxy at mount
+        channel: 'app_session',  // Generic channel for session events
+        persona: featureFlags.persona ? userProfile.role : 'unknown',
+        timestamp: Date.now(),
+      });
     }
 
     return () => syncService.destroy();
@@ -548,6 +557,24 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           replaceMessage(replaceResponseId, aiMessage);
         } else {
           addMessage(aiMessage);
+        }
+        
+        // Log analytics event for content generation
+        if (featureFlags.convexSync) {
+          const syncService = getSyncService();
+          const allViolations = trustScore?.validationResults.flatMap(r => r.violations) ?? [];
+          syncService?.logAnalyticsEvent({
+            eventType: 'generation',
+            ecosystem: finalContext.ecosystem,
+            channel: finalContext.channel,
+            persona: finalContext.persona || 'unknown',
+            trustScore: trustScore?.overall,
+            violationCount: trustScore?.totalViolations ?? 0,
+            topViolations: allViolations.slice(0, 5).map(v => v.id) ?? [],
+            tokenCount: result.usage?.totalTokens,
+            llmProvider: selectedLLMProvider,
+            timestamp: Date.now(),
+          });
         }
         
         return {
