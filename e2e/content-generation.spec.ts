@@ -21,7 +21,7 @@ test.describe('Content Generation Flow', () => {
 
   test('should load the main page', async ({ page }) => {
     // Check that the page title contains expected text
-    await expect(page).toHaveTitle(/voice designer/i);
+    await expect(page).toHaveTitle(/tone studio/i);
     
     // Check that main content area is visible
     await expect(page.locator('body')).toBeVisible();
