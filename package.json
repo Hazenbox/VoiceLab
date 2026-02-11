@@ -4,9 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run proxy\" \"npm run vite\"",
+    "dev": "concurrently \"npm run convex:dev\" \"npm run proxy\" \"npm run vite\"",
     "vite": "vite",
     "proxy": "node server/wsProxy.mjs",
+    "convex:dev": "convex dev",
+    "convex:deploy": "convex deploy",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
