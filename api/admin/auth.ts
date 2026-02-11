@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleCors } from '../_cors';
-import { handleRateLimit } from '../_rateLimit';
+import { handleCors } from '../_cors.js';
+import { handleRateLimit } from '../_rateLimit.js';
 import * as crypto from 'crypto';
 
 /**

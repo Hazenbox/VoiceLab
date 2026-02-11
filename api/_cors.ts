@@ -8,7 +8,10 @@ const ALLOWED_ORIGINS = [
   'https://voice-lab.vercel.app',
   'https://voice-designer.vercel.app',
   'https://jio-voice-lab.vercel.app',
-  // Add your production domains here
+  'https://jio-tone-studio.vercel.app',
+  'https://tone-studio-upens-projects-bf30d69d.vercel.app',
+  'https://tone-studio-git-main-upens-projects-bf30d69d.vercel.app',
+  'https://tone-studio-delta.vercel.app',
 ];
 
 // In development, allow localhost
@@ -38,9 +41,9 @@ function isAllowedOrigin(origin: string | undefined): boolean {
   if (isDevEnvironment && DEV_ORIGINS.includes(origin)) return true;
   
   // Allow Vercel preview deployments - only from this project
-  // Pattern: voice-designer-*.vercel.app or voice-lab-*.vercel.app or jio-voice-lab-*.vercel.app
+  // Pattern: voice-designer-*.vercel.app or voice-lab-*.vercel.app or jio-voice-lab-*.vercel.app or tone-studio-*.vercel.app
   if (isDevEnvironment && origin.endsWith('.vercel.app')) {
-    const allowedPrefixes = ['voice-designer-', 'voice-lab-', 'jio-voice-lab-'];
+    const allowedPrefixes = ['voice-designer-', 'voice-lab-', 'jio-voice-lab-', 'tone-studio-', 'jio-tone-studio-'];
     const hostname = new URL(origin).hostname;
     
     for (const prefix of allowedPrefixes) {

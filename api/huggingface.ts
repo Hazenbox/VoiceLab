@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleCors } from './_cors';
-import { handleRateLimit } from './_rateLimit';
-import { validateLLMRequest, validateString, sendValidationError } from './_validation';
+import { handleCors } from './_cors.js';
+import { handleRateLimit } from './_rateLimit.js';
+import { validateLLMRequest, validateString, sendValidationError } from './_validation.js';
 
 const HUGGINGFACE_API_BASE = 'https://router.huggingface.co';
 

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleCors } from './_cors';
-import { handleRateLimit } from './_rateLimit';
-import { validateLLMRequest, sendValidationError } from './_validation';
+import { handleCors } from './_cors.js';
+import { handleRateLimit } from './_rateLimit.js';
+import { validateLLMRequest, sendValidationError } from './_validation.js';
 
 const DASHSCOPE_LLM_ENDPOINT = 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
 
