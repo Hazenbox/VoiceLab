@@ -178,7 +178,8 @@ export function createQwenTextProvider(config?: Partial<QwenConfig>): QwenTextPr
   const apiBase = getApiBaseUrl();
   
   return new QwenTextProvider({
-    apiKey: config?.apiKey || import.meta.env.VITE_DASHSCOPE_API_KEY || '',
+    // API key is server-side only - passed to serverless function via process.env
+    apiKey: config?.apiKey || '',
     model: config?.model || 'qwen-turbo',
     proxyUrl: config?.proxyUrl || apiBase,
   });

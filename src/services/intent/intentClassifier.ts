@@ -17,7 +17,7 @@
  * @module services/intent/intentClassifier
  */
 
-import type { ContentChannelType, EcosystemType } from '../../types';
+// Unused import removed: ContentChannelType, EcosystemType
 import type {
   MessageIntent,
   IntentClassification,

@@ -1,19 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { handleCors } from './_cors';
+import { validateLLMRequest, sendValidationError } from './_validation';
 
 const CLAUDE_API_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
-function setCorsHeaders(res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  setCorsHeaders(res);
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+  // Handle CORS preflight and validation
+  if (!handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -26,6 +19,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   try {
+    // Validate request body
+    const validation = validateLLMRequest(req.body);
+    if (!validation.valid) {
+      return sendValidationError(res, validation.errors);
+    }
+    
     const { stream, ...requestData } = req.body;
     
     // Handle streaming responses

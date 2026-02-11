@@ -108,22 +108,18 @@ export class InworldService {
  * Create an Inworld service instance
  */
 export function createInworldService(): InworldService {
-  const apiKey = import.meta.env.VITE_INWORLD_API_KEY;
   const character = import.meta.env.VITE_INWORLD_CHARACTER;
-  
-  if (!apiKey) {
-    throw new Error('VITE_INWORLD_API_KEY is not configured');
-  }
 
   if (!character) {
     throw new Error('VITE_INWORLD_CHARACTER is not configured');
   }
 
   // Use proxy for API calls - works in both production (Vercel) and development
+  // API key is server-side only - passed to serverless function via process.env
   const proxyUrl = getApiBaseUrl();
 
   return new InworldService({
-    apiKey,
+    apiKey: '', // Server-side only
     character,
     proxyUrl,
   });

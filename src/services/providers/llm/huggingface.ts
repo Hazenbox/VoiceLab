@@ -410,7 +410,8 @@ export function createHuggingFaceProvider(config?: Partial<HuggingFaceConfig>): 
   const proxyUrl = config?.proxyUrl || `${apiBase}/api/huggingface`;
 
   return new HuggingFaceProvider({
-    apiKey: config?.apiKey || import.meta.env.VITE_HUGGINGFACE_API_KEY || '',
+    // API key is server-side only - passed to serverless function via process.env
+    apiKey: config?.apiKey || '',
     model: validModel,
     baseUrl: config?.baseUrl || import.meta.env.VITE_HUGGINGFACE_BASE_URL || 'https://router.huggingface.co',
     proxyUrl,

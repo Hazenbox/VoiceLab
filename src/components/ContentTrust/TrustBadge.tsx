@@ -8,7 +8,6 @@ import { memo } from 'react';
 import { useThemeColors } from '../../theme';
 import type { TrustScore, TrustCertification } from '../../types';
 import { getCertificationBadge } from '../../services/trust';
-import { Button } from '@marcelinodzn/ds-react';
 import { DSIcon } from '../DSIcon';
 
 interface TrustBadgeProps {
@@ -46,6 +45,12 @@ const BADGE_COLORS: Record<TrustCertification, {
   },
 };
 
+const SIZES = {
+  sm: { container: 'h-4 px-1.5', text: 'text-[10px]', score: 'text-[9px] ml-1' },
+  md: { container: 'h-5 px-2', text: 'text-xs', score: 'text-[10px] ml-1' },
+  lg: { container: 'h-6 px-2.5', text: 'text-sm', score: 'text-xs ml-1.5' },
+};
+
 export const TrustBadge = memo(function TrustBadge({
   trustScore,
   onClick,
@@ -64,25 +69,34 @@ export const TrustBadge = memo(function TrustBadge({
   const { certification, overall } = trustScore;
   const badge = getCertificationBadge(certification);
   
+  // Determine button size based on size prop - match action buttons (32px for sm)
+  const buttonSize = size === 'sm' ? '32px' : size === 'lg' ? '32px' : '28px';
+  
   // Shield icon with grey color to match other action icons
   const ShieldIcon = () => {
     const iconName = certification === 'certified' ? 'IcProtection' : 'IcProtectionThreats';
     return (
       <span style={{ color: theme.text.low }}>
-        <DSIcon name={iconName} size="S" attention="low" />
+        <DSIcon name={iconName} size={size === 'sm' ? 'S' : size === 'lg' ? 'M' : 'S'} attention="low" />
       </span>
     );
   };
 
   return (
-    <Button
-      onPress={onClick}
-      aria-label={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : `Trust badge: ${badge.label}`}
-      appearance="ghost"
-      size="S"
+    <button
+      onClick={onClick}
+      className="rounded-full flex items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+      style={{
+        width: buttonSize,
+        height: buttonSize,
+        color: theme.text.low,
+      }}
+      title={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : undefined}
+      type="button"
+      aria-label={`Trust badge: ${badge.label}`}
     >
       <ShieldIcon />
-    </Button>
+    </button>
   );
 });
 

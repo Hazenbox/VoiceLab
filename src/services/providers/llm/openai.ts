@@ -313,7 +313,8 @@ export class OpenAIProvider implements LLMProvider {
 
 export function createOpenAIProvider(config?: Partial<OpenAIConfig>): OpenAIProvider {
   return new OpenAIProvider({
-    apiKey: config?.apiKey || import.meta.env.VITE_OPENAI_API_KEY || '',
+    // API key is server-side only - passed to serverless function via process.env
+    apiKey: config?.apiKey || '',
     model: config?.model || import.meta.env.VITE_OPENAI_MODEL || 'gpt-4o-mini',
     baseUrl: config?.baseUrl || import.meta.env.VITE_OPENAI_BASE_URL || 'https://api.openai.com/v1',
   });

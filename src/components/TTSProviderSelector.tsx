@@ -23,24 +23,37 @@ interface TTSProviderSelectorProps {
 }
 
 /**
+ * Check if running in production
+ */
+function isProduction(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return hostname !== 'localhost' && hostname !== '127.0.0.1';
+}
+
+/**
  * Get available TTS providers with configuration status
+ * In production: all providers are configured (server has keys)
+ * In development: configured if proxy port is set
  */
 function getAvailableTTSProviders(): TTSProvider[] {
+  const isConfigured = isProduction() || Boolean(import.meta.env.VITE_WS_PROXY_PORT);
+  
   return [
     {
       type: 'dashscope',
       displayName: 'Alibaba DashScope',
-      isConfigured: Boolean(import.meta.env.VITE_DASHSCOPE_API_KEY),
+      isConfigured,
     },
     {
       type: 'gemini',
       displayName: 'Google Gemini',
-      isConfigured: Boolean(import.meta.env.VITE_GEMINI_API_KEY),
+      isConfigured,
     },
     {
       type: 'elevenlabs',
       displayName: 'ElevenLabs',
-      isConfigured: Boolean(import.meta.env.VITE_ELEVENLABS_API_KEY),
+      isConfigured,
     },
   ];
 }

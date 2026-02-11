@@ -31,7 +31,7 @@ export class GeminiTTSProvider implements TTSProvider {
    */
   async synthesize(text: string, voiceConfig: VoiceConfig, signal?: AbortSignal): Promise<AudioBuffer> {
     if (!this.isReady()) {
-      throw new Error('Gemini provider is not configured. Please set VITE_GEMINI_API_KEY.');
+      throw new Error('Gemini provider is not configured. Please ensure the server has GEMINI_API_KEY.');
     }
 
     // Check if already aborted

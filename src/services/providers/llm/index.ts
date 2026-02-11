@@ -49,7 +49,18 @@ export function createLLMProvider(type: LLMProviderType): LLMProvider {
 }
 
 /**
+ * Check if running in production
+ */
+function isProduction(): boolean {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return hostname !== 'localhost' && hostname !== '127.0.0.1';
+}
+
+/**
  * Get available LLM providers with configuration status
+ * In production: all providers are considered configured (server has keys)
+ * In development: all providers are configured if proxy is set up
  */
 export function getAvailableLLMProviders(): Array<{
   type: LLMProviderType;
@@ -62,58 +73,55 @@ export function getAvailableLLMProviders(): Array<{
     type: LLMProviderType;
     name: string;
     displayName: string;
-    checkEnvKey: string;
     supportsStreaming: boolean;
   }> = [
     { 
       type: 'openai', 
       name: 'openai', 
       displayName: 'OpenAI (ChatGPT)', 
-      checkEnvKey: 'VITE_OPENAI_API_KEY',
       supportsStreaming: true,
     },
     { 
       type: 'claude', 
       name: 'claude', 
       displayName: 'Anthropic (Claude)', 
-      checkEnvKey: 'VITE_CLAUDE_API_KEY',
       supportsStreaming: true,
     },
     { 
       type: 'gemini-text', 
       name: 'gemini-text', 
       displayName: 'Google Gemini', 
-      checkEnvKey: 'VITE_GEMINI_API_KEY',
       supportsStreaming: true,
     },
     { 
       type: 'qwen-text', 
       name: 'qwen-text', 
       displayName: 'Alibaba Qwen', 
-      checkEnvKey: 'VITE_DASHSCOPE_API_KEY',
       supportsStreaming: false,
     },
     { 
       type: 'inworld', 
       name: 'inworld', 
       displayName: 'Inworld AI', 
-      checkEnvKey: 'VITE_INWORLD_API_KEY',
       supportsStreaming: false,
     },
     { 
       type: 'huggingface', 
       name: 'huggingface', 
       displayName: 'Hugging Face', 
-      checkEnvKey: 'VITE_HUGGINGFACE_API_KEY',
       supportsStreaming: true,
     },
   ];
+
+  // In production, server-side keys are configured via Vercel env vars
+  // In development, assume configured if proxy port is set
+  const isConfigured = isProduction() || Boolean(import.meta.env.VITE_WS_PROXY_PORT);
 
   return providers.map(p => ({
     type: p.type,
     name: p.name,
     displayName: p.displayName,
-    isConfigured: Boolean(import.meta.env[p.checkEnvKey]),
+    isConfigured,
     supportsStreaming: p.supportsStreaming,
   }));
 }

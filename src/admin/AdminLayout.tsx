@@ -5,25 +5,87 @@ import { useThemeColors } from '../theme/useColors';
 import { AdminSidebar, type AdminSection } from './components/AdminSidebar';
 import { AdminStatCard } from './components/AdminStatCard';
 import { AdminTable, AdminTableRow, AdminTableCell } from './components/AdminTable';
+import { getApiBaseUrl } from '../config/providers';
 
 // ── Admin Auth Gate ──────────────────────────────────────────────
-const ADMIN_PASSPHRASE = import.meta.env.VITE_ADMIN_PASSPHRASE || 'voicelab-admin';
-const SESSION_KEY = 'voicelab_admin_auth';
+const SESSION_TOKEN_KEY = 'voicelab_admin_token';
+
+/**
+ * Server-side admin authentication
+ */
+async function authenticateAdmin(passphrase: string): Promise<{ success: boolean; token?: string; error?: string }> {
+  try {
+    const apiBase = getApiBaseUrl();
+    const response = await fetch(`${apiBase}/api/admin/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', passphrase }),
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, error: data.error || 'Authentication failed' };
+    }
+    
+    return { success: true, token: data.token };
+  } catch (error) {
+    console.error('[Admin Auth] Error:', error);
+    return { success: false, error: 'Network error. Please try again.' };
+  }
+}
+
+async function verifyAdminToken(token: string): Promise<boolean> {
+  try {
+    const apiBase = getApiBaseUrl();
+    const response = await fetch(`${apiBase}/api/admin/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', token }),
+    });
+    
+    const data = await response.json();
+    return data.valid === true;
+  } catch {
+    return false;
+  }
+}
+
+async function logoutAdmin(token: string): Promise<void> {
+  try {
+    const apiBase = getApiBaseUrl();
+    await fetch(`${apiBase}/api/admin/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'logout', token }),
+    });
+  } catch {
+    // Ignore logout errors
+  }
+}
 
 function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
   const theme = useThemeColors();
   const [passphrase, setPassphrase] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passphrase === ADMIN_PASSPHRASE) {
-      sessionStorage.setItem(SESSION_KEY, 'true');
+    setIsLoading(true);
+    setError('');
+    
+    const result = await authenticateAdmin(passphrase);
+    
+    if (result.success && result.token) {
+      sessionStorage.setItem(SESSION_TOKEN_KEY, result.token);
       onAuthenticated();
     } else {
-      setError('Incorrect passphrase');
+      setError(result.error || 'Authentication failed');
       setPassphrase('');
     }
+    
+    setIsLoading(false);
   }, [passphrase, onAuthenticated]);
 
   return (
@@ -76,7 +138,8 @@ function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
           )}
           <button
             type="submit"
-            className="w-full rounded-lg mt-4 font-medium cursor-pointer transition-opacity hover:opacity-90"
+            disabled={isLoading}
+            className="w-full rounded-lg mt-4 font-medium cursor-pointer transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
               height: '36px',
               fontSize: '13px',
@@ -85,7 +148,7 @@ function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
               border: 'none',
             }}
           >
-            Enter Admin Panel
+            {isLoading ? 'Authenticating...' : 'Enter Admin Panel'}
           </button>
         </form>
       </div>
@@ -946,16 +1009,46 @@ function AdminConfig() {
 // ═══════════════════════════════════════════════════════════════════
 
 export default function AdminLayout() {
-  const [authenticated, setAuthenticated] = useState(
-    () => sessionStorage.getItem(SESSION_KEY) === 'true'
-  );
+  const [authenticated, setAuthenticated] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const theme = useThemeColors();
 
-  const handleSignOut = useCallback(() => {
-    sessionStorage.removeItem(SESSION_KEY);
+  // Verify existing token on mount
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
+      if (token) {
+        const isValid = await verifyAdminToken(token);
+        if (isValid) {
+          setAuthenticated(true);
+        } else {
+          // Clear invalid token
+          sessionStorage.removeItem(SESSION_TOKEN_KEY);
+        }
+      }
+      setIsVerifying(false);
+    };
+    verifyToken();
+  }, []);
+
+  const handleSignOut = useCallback(async () => {
+    const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
+    if (token) {
+      await logoutAdmin(token);
+    }
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
     setAuthenticated(false);
   }, []);
+
+  // Show loading while verifying token
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: theme.background.ghost }}>
+        <span style={{ color: theme.text.low }}>Verifying session...</span>
+      </div>
+    );
+  }
 
   if (!authenticated) {
     return <AdminAuthGate onAuthenticated={() => setAuthenticated(true)} />;

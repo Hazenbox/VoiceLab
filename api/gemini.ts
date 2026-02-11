@@ -1,19 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { handleCors } from './_cors';
+import { validateArray, sendValidationError } from './_validation';
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-function setCorsHeaders(res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  setCorsHeaders(res);
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+  // Handle CORS preflight and validation
+  if (!handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -26,6 +19,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   try {
+    // Basic validation for Gemini requests
+    const contentsError = validateArray(req.body.contents, 'contents', { minLength: 1, maxLength: 100 });
+    if (contentsError) {
+      return sendValidationError(res, [contentsError]);
+    }
+    
     const { model, stream, action, ...requestData } = req.body;
     const modelName = model || 'gemini-2.0-flash';
     

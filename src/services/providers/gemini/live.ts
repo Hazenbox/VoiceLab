@@ -117,7 +117,7 @@ export class GeminiLiveProvider implements ConversationProvider {
     callbacks: ConversationCallbacks
   ): Promise<void> {
     if (!this.isReady()) {
-      throw new Error('Gemini provider is not configured. Please set VITE_GEMINI_API_KEY.');
+      throw new Error('Gemini provider is not configured. Please ensure the server has GEMINI_API_KEY.');
     }
 
     this.sessionConfig = sessionConfig;

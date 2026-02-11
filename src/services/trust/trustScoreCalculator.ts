@@ -314,7 +314,8 @@ function determineGuardrailStatus(
   }
   
   // Calculate average score from relevant agents
-  const scores = relevantAgents.map(key => trustScore.breakdown[key]);
+  const scores = relevantAgents.map(key => trustScore.breakdown[key]).filter((s): s is number => s !== undefined);
+  if (scores.length === 0) return 'partial';
   const avgScore = scores.reduce((sum, s) => sum + s, 0) / scores.length;
   
   return avgScore >= 90 ? 'followed' : 'partial';

@@ -58,7 +58,7 @@ export class AlibabaConversationProvider implements ConversationProvider {
     callbacks: ConversationCallbacks
   ): Promise<void> {
     if (!this.isReady()) {
-      throw new Error('Alibaba provider is not configured. Please set VITE_DASHSCOPE_API_KEY.');
+      throw new Error('Alibaba provider is not configured. Please ensure the server has DASHSCOPE_API_KEY.');
     }
 
     this.sessionConfig = sessionConfig;

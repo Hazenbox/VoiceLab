@@ -342,7 +342,8 @@ export class GeminiTextProvider implements LLMProvider {
 
 export function createGeminiTextProvider(config?: Partial<GeminiConfig>): GeminiTextProvider {
   return new GeminiTextProvider({
-    apiKey: config?.apiKey || import.meta.env.VITE_GEMINI_API_KEY || '',
+    // API key is server-side only - passed to serverless function via process.env
+    apiKey: config?.apiKey || '',
     model: config?.model || 'gemini-1.5-flash',
   });
 }

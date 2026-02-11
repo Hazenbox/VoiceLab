@@ -86,7 +86,7 @@ export class ElevenLabsTTSProvider implements TTSProvider {
    */
   async synthesize(text: string, voiceConfig: VoiceConfig, signal?: AbortSignal): Promise<AudioBuffer> {
     if (!this.isReady()) {
-      throw new Error('ElevenLabs provider is not configured. Please set VITE_ELEVENLABS_API_KEY.');
+      throw new Error('ElevenLabs provider is not configured. Please ensure the server has ELEVENLABS_API_KEY.');
     }
 
     // Check if already aborted

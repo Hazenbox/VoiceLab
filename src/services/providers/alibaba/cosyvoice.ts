@@ -69,7 +69,7 @@ export class CosyVoiceTTSProvider implements TTSProvider {
    */
   async synthesize(text: string, voiceConfig: VoiceConfig, signal?: AbortSignal): Promise<AudioBuffer> {
     if (!this.isReady()) {
-      throw new Error('CosyVoice provider is not configured. Please set VITE_DASHSCOPE_API_KEY.');
+      throw new Error('CosyVoice provider is not configured. Please ensure the server has DASHSCOPE_API_KEY.');
     }
 
     // Check if already aborted

@@ -1,26 +1,25 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { handleCors } from './_cors';
+import { validateTTSRequest, sendValidationError } from './_validation';
 
 const DASHSCOPE_TTS_ENDPOINT = 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2audio/generation';
 const ELEVENLABS_TTS_ENDPOINT = 'https://api.elevenlabs.io/v1/text-to-speech';
 
-function setCorsHeaders(res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  setCorsHeaders(res);
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
+  // Handle CORS preflight and validation
+  if (!handleCors(req, res)) return;
   
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
   
   try {
+    // Validate request body
+    const validation = validateTTSRequest(req.body);
+    if (!validation.valid) {
+      return sendValidationError(res, validation.errors);
+    }
+    
     const { provider, ...body } = req.body;
     
     if (provider === 'elevenlabs') {

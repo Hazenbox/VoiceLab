@@ -31,7 +31,6 @@ import {
   ContentContextSelector,
   TrustContextPanel,
   AdvancedSettingsPanel,
-  DislikeFeedbackModal,
 } from './components';
 import type { TTSProviderType } from './components';
 // Content Trust System services

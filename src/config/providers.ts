@@ -80,44 +80,62 @@ export function getConversationProviderType(): ProviderType {
 
 /**
  * Get Alibaba DashScope API key
+ * NOTE: In production, keys are server-side only. This returns empty string
+ * but isAlibabaConfigured() returns true in production.
  */
 export function getDashScopeApiKey(): string {
-  return getEnv('VITE_DASHSCOPE_API_KEY', '');
+  // API keys are now server-side only - return empty for client
+  return '';
 }
 
 /**
  * Get Google Gemini API key
+ * NOTE: In production, keys are server-side only.
  */
 export function getGeminiApiKey(): string {
-  return getEnv('VITE_GEMINI_API_KEY', '');
+  // API keys are now server-side only - return empty for client
+  return '';
 }
 
 /**
  * Get ElevenLabs API key
+ * NOTE: In production, keys are server-side only.
  */
 export function getElevenLabsApiKey(): string {
-  return getEnv('VITE_ELEVENLABS_API_KEY', '');
+  // API keys are now server-side only - return empty for client
+  return '';
 }
 
 /**
  * Check if Alibaba provider is configured
+ * In production: always true (server has keys)
+ * In development: check if proxy is running
  */
 export function isAlibabaConfigured(): boolean {
-  return getDashScopeApiKey().length > 0;
+  // In production, server-side keys are configured via Vercel env vars
+  if (isProduction()) return true;
+  // In development, assume configured if proxy is set up
+  return getEnv('VITE_WS_PROXY_PORT', '').length > 0;
 }
 
 /**
  * Check if Gemini provider is configured
  */
 export function isGeminiConfigured(): boolean {
-  return getGeminiApiKey().length > 0;
+  // In production, server-side keys are configured via Vercel env vars
+  if (isProduction()) return true;
+  // In development, assume configured if proxy is set up
+  return getEnv('VITE_WS_PROXY_PORT', '').length > 0;
 }
 
 /**
  * Check if ElevenLabs provider is configured
  */
 export function isElevenLabsConfigured(): boolean {
-  return getElevenLabsApiKey().length > 0;
+  // In production, server-side keys are configured via Vercel env vars
+  if (isProduction()) return true;
+  // In development, assume configured if proxy is set up
+  return getEnv('VITE_WS_PROXY_PORT', '').length > 0;
 }
 
 /**

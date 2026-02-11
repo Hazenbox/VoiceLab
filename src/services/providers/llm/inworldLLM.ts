@@ -206,7 +206,8 @@ export function createInworldLLMProvider(config?: Partial<InworldLLMConfig>): In
   const apiBase = getApiBaseUrl();
   
   return new InworldLLMProvider({
-    apiKey: config?.apiKey || import.meta.env.VITE_INWORLD_API_KEY || '',
+    // API key is server-side only - passed to serverless function via process.env
+    apiKey: config?.apiKey || '',
     character: config?.character || import.meta.env.VITE_INWORLD_CHARACTER || '',
     proxyUrl: config?.proxyUrl || apiBase,
   });

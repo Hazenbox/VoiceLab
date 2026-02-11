@@ -325,7 +325,8 @@ export class ClaudeProvider implements LLMProvider {
 
 export function createClaudeProvider(config?: Partial<ClaudeConfig>): ClaudeProvider {
   return new ClaudeProvider({
-    apiKey: config?.apiKey || import.meta.env.VITE_CLAUDE_API_KEY || '',
+    // API key is server-side only - passed to serverless function via process.env
+    apiKey: config?.apiKey || '',
     model: config?.model || import.meta.env.VITE_CLAUDE_MODEL || 'claude-3-5-sonnet-20241022',
   });
 }

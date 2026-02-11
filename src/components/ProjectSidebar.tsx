@@ -299,7 +299,7 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
 export const ProjectSidebar = memo(function ProjectSidebar({ 
   onProjectSelect,
   onNavigateToDesignSystem,
-  isDesignSystemActive = false,
+  isDesignSystemActive: _isDesignSystemActive = false,
   onNavigateToHowItWorks,
   isHowItWorksActive = false,
   colorMode,
@@ -308,6 +308,8 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   userRole,
   onEditProfile,
 }: ProjectSidebarProps) {
+  // Note: _isDesignSystemActive is available but not currently used
+  void _isDesignSystemActive;
   const theme = useThemeColors();
   const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
   
