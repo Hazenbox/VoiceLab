@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors } from '../theme/useColors';
 import { AdminSidebar, type AdminSection } from './components/AdminSidebar';
 import { AdminStatCard } from './components/AdminStatCard';
 import { AdminTable, AdminTableRow, AdminTableCell } from './components/AdminTable';
 import { getApiBaseUrl } from '../config/providers';
+import type { Id } from '../../convex/_generated/dataModel';
 
 // ── Admin Auth Gate ──────────────────────────────────────────────
 const SESSION_TOKEN_KEY = 'voicelab_admin_token';
@@ -256,8 +257,32 @@ function useLocalData<T>(key: string, fallback: T): T {
 // ── Dashboard ────────────────────────────────────────────────────
 function AdminDashboard() {
   const theme = useThemeColors();
-  const corrections = useLocalData<Array<{ feedbackType: string; timestamp: number; originalContent?: string }>>('voicelab_corrections_cache', []);
-  const examples = useLocalData<Array<{ timestamp: number }>>('voicelab_saved_examples', []);
+  
+  // Use Convex queries for corrections, with localStorage fallback
+  const convexCorrections = useQuery(api.corrections.listAll, { limit: 100 });
+  const convexKnowledgeCounts = useQuery(api.knowledge.countByType);
+  const localCorrections = useLocalData<Array<{ feedbackType: string; timestamp: number; originalContent?: string }>>('voicelab_corrections_cache', []);
+  const localExamples = useLocalData<Array<{ timestamp: number }>>('voicelab_saved_examples', []);
+  
+  // Prefer Convex data, fall back to localStorage if Convex is unavailable
+  const corrections = useMemo(() => {
+    if (convexCorrections !== undefined) {
+      return convexCorrections.map(c => ({
+        feedbackType: c.feedbackType,
+        timestamp: c.timestamp,
+        originalContent: c.originalContent,
+      }));
+    }
+    return localCorrections;
+  }, [convexCorrections, localCorrections]);
+  
+  // Count approved examples from Convex knowledge items
+  const savedExamplesCount = useMemo(() => {
+    if (convexKnowledgeCounts?.approved_example) {
+      return convexKnowledgeCounts.approved_example.active;
+    }
+    return localExamples.length;
+  }, [convexKnowledgeCounts, localExamples]);
 
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); }, []);
   const week = useMemo(() => Date.now() - 7 * 24 * 60 * 60 * 1000, []);
@@ -269,16 +294,18 @@ function AdminDashboard() {
   const edits = corrections.filter(c => c.feedbackType === 'edit').length;
   const comments = corrections.filter(c => c.feedbackType === 'comment').length;
 
+  const isUsingConvex = convexCorrections !== undefined;
+
   return (
     <>
-      <SectionHeader title="Dashboard" subtitle="System overview and recent activity" />
+      <SectionHeader title="Dashboard" subtitle={`System overview and recent activity${isUsingConvex ? ' (Convex)' : ' (Local)'}`} />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         <AdminStatCard label="Today" value={todayCount} colorClass="text-orange-500" />
         <AdminStatCard label="This Week" value={weekCount} colorClass="text-blue-500" />
         <AdminStatCard label="Total Feedback" value={corrections.length} colorClass="text-purple-500" />
-        <AdminStatCard label="Saved Examples" value={examples.length} colorClass="text-green-500" />
+        <AdminStatCard label="Saved Examples" value={savedExamplesCount} colorClass="text-green-500" />
       </div>
 
       {/* Feedback Breakdown */}
@@ -331,7 +358,19 @@ function AdminDashboard() {
 // ── Analytics ────────────────────────────────────────────────────
 function AdminAnalytics() {
   const theme = useThemeColors();
-  const corrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
+  
+  // Use Convex for analytics, with localStorage fallback
+  const convexCorrections = useQuery(api.corrections.listAll, { limit: 500 });
+  const convexFeedbackCounts = useQuery(api.corrections.countByFeedbackType);
+  const localCorrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
+  
+  // Prefer Convex data, fall back to localStorage
+  const corrections = useMemo(() => {
+    if (convexCorrections !== undefined) {
+      return convexCorrections as Array<Record<string, unknown>>;
+    }
+    return localCorrections;
+  }, [convexCorrections, localCorrections]);
 
   const byEcosystem = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -345,11 +384,15 @@ function AdminAnalytics() {
     return Object.entries(counts).sort(([, a], [, b]) => b - a);
   }, [corrections]);
 
+  // Use Convex aggregation if available, otherwise compute locally
   const byType = useMemo(() => {
+    if (convexFeedbackCounts) {
+      return Object.entries(convexFeedbackCounts).sort(([, a], [, b]) => b - a);
+    }
     const counts: Record<string, number> = {};
     for (const c of corrections) { const t = c.feedbackType as string || 'Unknown'; counts[t] = (counts[t] || 0) + 1; }
     return Object.entries(counts).sort(([, a], [, b]) => b - a);
-  }, [corrections]);
+  }, [convexFeedbackCounts, corrections]);
 
   const BarRow = ({ label, count, color }: { label: string; count: number; color: string }) => {
     const max = Math.max(...(byEcosystem.length ? byEcosystem.map(([, c]) => c) : [1]));
@@ -365,9 +408,11 @@ function AdminAnalytics() {
     );
   };
 
+  const isUsingConvex = convexCorrections !== undefined;
+
   return (
     <>
-      <SectionHeader title="Analytics" subtitle="Content quality metrics and usage patterns" />
+      <SectionHeader title="Analytics" subtitle={`Content quality metrics and usage patterns${isUsingConvex ? ' (Convex)' : ' (Local)'}`} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
         <AdminCard className="p-4">
@@ -406,15 +451,57 @@ function AdminAnalytics() {
   );
 }
 
+// ── Status Badge for Admin Status ────────────────────────────────
+function AdminStatusBadge({ status }: { status: string | undefined }) {
+  const statusColors: Record<string, { bg: string; fg: string }> = {
+    pending: { bg: 'rgba(245,158,11,0.12)', fg: '#f59e0b' },
+    approved: { bg: 'rgba(34,197,94,0.12)', fg: '#22c55e' },
+    rejected: { bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
+  };
+  const s = status || 'pending';
+  const c = statusColors[s] || statusColors.pending;
+  return (
+    <span
+      className="inline-block rounded-full font-medium whitespace-nowrap"
+      style={{
+        fontSize: '10px',
+        padding: '1px 6px',
+        backgroundColor: c.bg,
+        color: c.fg,
+      }}
+    >
+      {s}
+    </span>
+  );
+}
+
 // ── Memory & Learnings ───────────────────────────────────────────
 function AdminMemory() {
   const theme = useThemeColors();
-  const corrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
+  
+  // Use Convex for corrections with localStorage fallback
+  const convexCorrections = useQuery(api.corrections.listAll, { limit: 200 });
+  const localCorrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
+  const updateAdminStatus = useMutation(api.corrections.updateAdminStatus);
+  
+  // Prefer Convex data, fall back to localStorage
+  const corrections = useMemo(() => {
+    if (convexCorrections !== undefined) {
+      return convexCorrections as Array<Record<string, unknown>>;
+    }
+    return localCorrections;
+  }, [convexCorrections, localCorrections]);
+  
   const [filter, setFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(() => {
     let result = filter === 'all' ? corrections : corrections.filter(c => c.feedbackType === filter);
+    if (statusFilter !== 'all') {
+      result = result.filter(c => (c.adminStatus as string || 'pending') === statusFilter);
+    }
     if (searchQuery) {
       result = result.filter(c =>
         (c.originalContent as string || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -423,13 +510,40 @@ function AdminMemory() {
       );
     }
     return result;
-  }, [corrections, filter, searchQuery]);
+  }, [corrections, filter, statusFilter, searchQuery]);
 
   const filterOptions = ['all', 'thumbs_up', 'thumbs_down', 'edit', 'comment'];
+  const statusOptions = ['all', 'pending', 'approved', 'rejected'];
+  
+  const isUsingConvex = convexCorrections !== undefined;
+  
+  // Handle approve/reject actions
+  const handleUpdateStatus = useCallback(async (correctionId: string, newStatus: 'approved' | 'rejected') => {
+    if (!isUsingConvex) {
+      console.warn('[Admin] Cannot update status - Convex not connected');
+      return;
+    }
+    
+    setLoadingIds(prev => new Set(prev).add(correctionId));
+    try {
+      await updateAdminStatus({
+        correctionId: correctionId as Id<'corrections'>,
+        adminStatus: newStatus,
+      });
+    } catch (error) {
+      console.error('[Admin] Failed to update status:', error);
+    } finally {
+      setLoadingIds(prev => {
+        const next = new Set(prev);
+        next.delete(correctionId);
+        return next;
+      });
+    }
+  }, [isUsingConvex, updateAdminStatus]);
 
   return (
     <>
-      <SectionHeader title="Memory & Learnings" subtitle="All user feedback and corrections" />
+      <SectionHeader title="Memory & Learnings" subtitle={`All user feedback and corrections${isUsingConvex ? ' (Convex)' : ' (Local)'}`} />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -456,6 +570,32 @@ function AdminMemory() {
             );
           })}
         </div>
+        
+        {/* Status filter (only show when using Convex) */}
+        {isUsingConvex && (
+          <div className="flex flex-wrap gap-1.5">
+            {statusOptions.map((s) => {
+              const isActive = statusFilter === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className="rounded-md px-2.5 cursor-pointer transition-colors"
+                  style={{
+                    height: '28px',
+                    fontSize: '12px',
+                    fontWeight: isActive ? 600 : 400,
+                    backgroundColor: isActive ? '#6366f1' : 'transparent',
+                    color: isActive ? '#fff' : theme.text.medium,
+                    border: isActive ? 'none' : `1px solid ${theme.stroke.low}`,
+                  }}
+                >
+                  {s === 'all' ? 'All Status' : s}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <div className="sm:ml-auto">
           <input
@@ -486,25 +626,64 @@ function AdminMemory() {
             { key: 'edited', label: 'Edited / Comment' },
             { key: 'eco', label: 'Ecosystem' },
             { key: 'ch', label: 'Channel' },
+            { key: 'status', label: 'Status' },
             { key: 'time', label: 'Time' },
+            ...(isUsingConvex ? [{ key: 'actions', label: 'Actions' }] : []),
           ]}
           isEmpty={filtered.length === 0}
           emptyMessage={searchQuery ? 'No feedback matches your search.' : 'No feedback matches this filter.'}
         >
-          {filtered.slice(0, 50).map((c, i) => (
-            <AdminTableRow key={i}>
-              <AdminTableCell><FeedbackBadge type={c.feedbackType as string} /></AdminTableCell>
-              <AdminTableCell className="max-w-[200px] truncate">{(c.originalContent as string || '').slice(0, 100)}</AdminTableCell>
-              <AdminTableCell className="max-w-[200px] truncate">{(c.editedContent as string) || (c.comment as string) || '—'}</AdminTableCell>
-              <AdminTableCell>{c.ecosystem as string || '—'}</AdminTableCell>
-              <AdminTableCell>{c.channel as string || '—'}</AdminTableCell>
-              <AdminTableCell className="whitespace-nowrap">
-                <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                  {new Date(c.timestamp as number).toLocaleString()}
-                </span>
-              </AdminTableCell>
-            </AdminTableRow>
-          ))}
+          {filtered.slice(0, 50).map((c, i) => {
+            const correctionId = (c._id as string) || String(i);
+            const isLoading = loadingIds.has(correctionId);
+            const adminStatus = c.adminStatus as string | undefined;
+            
+            return (
+              <AdminTableRow key={correctionId}>
+                <AdminTableCell><FeedbackBadge type={c.feedbackType as string} /></AdminTableCell>
+                <AdminTableCell className="max-w-[180px] truncate">{(c.originalContent as string || '').slice(0, 80)}</AdminTableCell>
+                <AdminTableCell className="max-w-[180px] truncate">{(c.editedContent as string) || (c.comment as string) || '—'}</AdminTableCell>
+                <AdminTableCell>{c.ecosystem as string || '—'}</AdminTableCell>
+                <AdminTableCell>{c.channel as string || '—'}</AdminTableCell>
+                <AdminTableCell><AdminStatusBadge status={adminStatus} /></AdminTableCell>
+                <AdminTableCell className="whitespace-nowrap">
+                  <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                    {new Date(c.timestamp as number).toLocaleString()}
+                  </span>
+                </AdminTableCell>
+                {isUsingConvex && (
+                  <AdminTableCell>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handleUpdateStatus(correctionId, 'approved')}
+                        disabled={isLoading || adminStatus === 'approved'}
+                        className="rounded px-2 py-0.5 text-xs cursor-pointer transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{
+                          backgroundColor: adminStatus === 'approved' ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)',
+                          color: '#22c55e',
+                          border: 'none',
+                        }}
+                      >
+                        {isLoading ? '...' : 'Approve'}
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(correctionId, 'rejected')}
+                        disabled={isLoading || adminStatus === 'rejected'}
+                        className="rounded px-2 py-0.5 text-xs cursor-pointer transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{
+                          backgroundColor: adminStatus === 'rejected' ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)',
+                          color: '#ef4444',
+                          border: 'none',
+                        }}
+                      >
+                        {isLoading ? '...' : 'Reject'}
+                      </button>
+                    </div>
+                  </AdminTableCell>
+                )}
+              </AdminTableRow>
+            );
+          })}
         </AdminTable>
         {filtered.length > 50 && (
           <span className="block mt-2" style={{ color: theme.text.low, fontSize: '12px' }}>
@@ -520,23 +699,46 @@ function AdminMemory() {
 function AdminKnowledge() {
   const theme = useThemeColors();
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  
+  // Fetch real counts from Convex
+  const convexKnowledgeCounts = useQuery(api.knowledge.countByType);
+  const convexKnowledgeItems = useQuery(api.knowledge.listAll, selectedType ? { type: selectedType, limit: 50 } : { limit: 50 });
+  const localExamples = useLocalData<Array<Record<string, unknown>>>('voicelab_saved_examples', []);
+  
+  const isUsingConvex = convexKnowledgeCounts !== undefined;
 
-  const knowledgeTypes = [
-    { type: 'avoid_word', label: 'Avoid Words', count: '~283', colorClass: 'text-red-500' },
-    { type: 'preferred_word', label: 'Preferred Vocab', count: '~200', colorClass: 'text-green-500' },
-    { type: 'auto_fix', label: 'Auto-Fix Rules', count: '~33', colorClass: 'text-blue-500' },
-    { type: 'product_definition', label: 'Product Defs', count: '14', colorClass: 'text-purple-500' },
-    { type: 'festival', label: 'Festivals', count: '11', colorClass: 'text-yellow-500' },
-    { type: 'approved_example', label: 'Examples', count: '—', colorClass: 'text-cyan-500' },
-  ];
-
-  const examples = useLocalData<Array<Record<string, unknown>>>('voicelab_saved_examples', []);
+  const knowledgeTypes = useMemo(() => {
+    const getCount = (type: string): string => {
+      if (convexKnowledgeCounts?.[type]) {
+        return `${convexKnowledgeCounts[type].active}/${convexKnowledgeCounts[type].total}`;
+      }
+      // Fallback to estimated counts
+      const estimates: Record<string, string> = {
+        avoid_word: '~283',
+        preferred_word: '~200',
+        auto_fix: '~33',
+        product_definition: '14',
+        festival: '11',
+        approved_example: String(localExamples.length) || '—',
+      };
+      return estimates[type] || '—';
+    };
+    
+    return [
+      { type: 'avoid_word', label: 'Avoid Words', count: getCount('avoid_word'), colorClass: 'text-red-500' },
+      { type: 'preferred_word', label: 'Preferred Vocab', count: getCount('preferred_word'), colorClass: 'text-green-500' },
+      { type: 'auto_fix', label: 'Auto-Fix Rules', count: getCount('auto_fix'), colorClass: 'text-blue-500' },
+      { type: 'product_definition', label: 'Product Defs', count: getCount('product_definition'), colorClass: 'text-purple-500' },
+      { type: 'festival', label: 'Festivals', count: getCount('festival'), colorClass: 'text-yellow-500' },
+      { type: 'approved_example', label: 'Examples', count: getCount('approved_example'), colorClass: 'text-cyan-500' },
+    ];
+  }, [convexKnowledgeCounts, localExamples.length]);
 
   const handleCardClick = (type: string) => {
     setSelectedType(prev => prev === type ? null : type);
   };
 
-  // Sample data for drill-down views
+  // Sample data for fallback (used when Convex is not available)
   const sampleAvoidWords = ['giveaway', 'free', 'cash', 'prize', 'winner', 'click here', 'urgent', 'limited time', 'act now', 'guarantee', 'risk-free', 'no obligation'];
   const samplePreferredWords = ['explore', 'discover', 'learn more', 'find out', 'get started', 'join us', 'welcome', 'benefit', 'advantage', 'feature'];
   const sampleAutoFix = [
@@ -554,16 +756,45 @@ function AdminKnowledge() {
   ];
   const sampleFestivals = ['Diwali', 'Holi', 'Eid', 'Christmas', 'New Year', 'Independence Day', 'Republic Day', 'Raksha Bandhan'];
 
+  // Get items for selected type from Convex or fall back to sample data
+  const getItemsForType = (type: string): Array<{ content: string; metadata?: Record<string, unknown> }> => {
+    if (isUsingConvex && convexKnowledgeItems) {
+      const filtered = convexKnowledgeItems.filter(item => item.type === type && item.isActive);
+      return filtered.map(item => ({
+        content: item.content,
+        metadata: item.metadata as Record<string, unknown>,
+      }));
+    }
+    // Fallback to sample data
+    switch (type) {
+      case 'avoid_word':
+        return sampleAvoidWords.map(w => ({ content: w }));
+      case 'preferred_word':
+        return samplePreferredWords.map(w => ({ content: w }));
+      case 'auto_fix':
+        return sampleAutoFix.map(r => ({ content: r.from, metadata: { suggestion: r.to } }));
+      case 'product_definition':
+        return sampleProducts.map(p => ({ content: p.name, metadata: { definition: p.definition } }));
+      case 'festival':
+        return sampleFestivals.map(f => ({ content: f }));
+      default:
+        return [];
+    }
+  };
+
   const renderDetailPanel = () => {
     if (!selectedType) return null;
+
+    const items = getItemsForType(selectedType);
+    const sourceLabel = isUsingConvex ? ' (Convex)' : ' (Sample)';
 
     switch (selectedType) {
       case 'avoid_word':
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>Avoid Words - Sample</CardLabel>
+            <CardLabel>Avoid Words{sourceLabel}</CardLabel>
             <div className="flex flex-wrap gap-2">
-              {sampleAvoidWords.map((word, i) => (
+              {items.slice(0, 30).map((item, i) => (
                 <span
                   key={i}
                   className="inline-block rounded-md px-2 py-1"
@@ -573,10 +804,15 @@ function AdminKnowledge() {
                     color: '#ef4444',
                   }}
                 >
-                  {word}
+                  {item.content}
                 </span>
               ))}
             </div>
+            {items.length > 30 && (
+              <span className="block mt-2" style={{ color: theme.text.low, fontSize: '11px' }}>
+                Showing 30 of {items.length} items.
+              </span>
+            )}
             <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
               These words trigger warnings in the content editor.
             </span>
@@ -586,9 +822,9 @@ function AdminKnowledge() {
       case 'preferred_word':
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>Preferred Vocabulary - Sample</CardLabel>
+            <CardLabel>Preferred Vocabulary{sourceLabel}</CardLabel>
             <div className="flex flex-wrap gap-2">
-              {samplePreferredWords.map((word, i) => (
+              {items.slice(0, 30).map((item, i) => (
                 <span
                   key={i}
                   className="inline-block rounded-md px-2 py-1"
@@ -598,10 +834,15 @@ function AdminKnowledge() {
                     color: '#22c55e',
                   }}
                 >
-                  {word}
+                  {item.content}
                 </span>
               ))}
             </div>
+            {items.length > 30 && (
+              <span className="block mt-2" style={{ color: theme.text.low, fontSize: '11px' }}>
+                Showing 30 of {items.length} items.
+              </span>
+            )}
             <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
               These are recommended alternatives suggested by the content editor.
             </span>
@@ -611,29 +852,35 @@ function AdminKnowledge() {
       case 'auto_fix':
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>Auto-Fix Rules - Sample</CardLabel>
+            <CardLabel>Auto-Fix Rules{sourceLabel}</CardLabel>
             <AdminTable
               columns={[
                 { key: 'from', label: 'Original' },
                 { key: 'to', label: 'Replacement' },
               ]}
-              isEmpty={false}
+              isEmpty={items.length === 0}
+              emptyMessage="No auto-fix rules configured."
             >
-              {sampleAutoFix.map((rule, i) => (
+              {items.slice(0, 20).map((item, i) => (
                 <AdminTableRow key={i}>
                   <AdminTableCell>
                     <code className="px-1.5 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '12px' }}>
-                      {rule.from}
+                      {item.content}
                     </code>
                   </AdminTableCell>
                   <AdminTableCell>
                     <code className="px-1.5 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '12px' }}>
-                      {rule.to}
+                      {(item.metadata?.suggestion as string) || '—'}
                     </code>
                   </AdminTableCell>
                 </AdminTableRow>
               ))}
             </AdminTable>
+            {items.length > 20 && (
+              <span className="block mt-2" style={{ color: theme.text.low, fontSize: '11px' }}>
+                Showing 20 of {items.length} items.
+              </span>
+            )}
             <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
               These rules automatically correct common typos and formatting issues.
             </span>
@@ -643,22 +890,23 @@ function AdminKnowledge() {
       case 'product_definition':
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>Product Definitions - Sample</CardLabel>
+            <CardLabel>Product Definitions{sourceLabel}</CardLabel>
             <AdminTable
               columns={[
                 { key: 'name', label: 'Product' },
                 { key: 'def', label: 'Definition' },
               ]}
-              isEmpty={false}
+              isEmpty={items.length === 0}
+              emptyMessage="No product definitions configured."
             >
-              {sampleProducts.map((prod, i) => (
+              {items.slice(0, 20).map((item, i) => (
                 <AdminTableRow key={i}>
                   <AdminTableCell>
                     <span className="font-semibold" style={{ color: theme.text.high }}>
-                      {prod.name}
+                      {item.content}
                     </span>
                   </AdminTableCell>
-                  <AdminTableCell>{prod.definition}</AdminTableCell>
+                  <AdminTableCell>{(item.metadata?.definition as string) || '—'}</AdminTableCell>
                 </AdminTableRow>
               ))}
             </AdminTable>
@@ -671,9 +919,9 @@ function AdminKnowledge() {
       case 'festival':
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>Festivals - Sample</CardLabel>
+            <CardLabel>Festivals{sourceLabel}</CardLabel>
             <div className="flex flex-wrap gap-2">
-              {sampleFestivals.map((fest, i) => (
+              {items.slice(0, 20).map((item, i) => (
                 <span
                   key={i}
                   className="inline-block rounded-md px-2 py-1"
@@ -683,7 +931,7 @@ function AdminKnowledge() {
                     color: '#f59e0b',
                   }}
                 >
-                  {fest}
+                  {item.content}
                 </span>
               ))}
             </div>
@@ -693,10 +941,16 @@ function AdminKnowledge() {
           </AdminCard>
         );
 
-      case 'approved_example':
+      case 'approved_example': {
+        // For approved examples, prefer Convex data but also show local examples
+        const convexExamples = isUsingConvex && convexKnowledgeItems 
+          ? convexKnowledgeItems.filter(item => item.type === 'approved_example' && item.isActive)
+          : [];
+        const allExamples = convexExamples.length > 0 ? convexExamples : localExamples;
+        
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>Locally Saved Examples ({examples.length})</CardLabel>
+            <CardLabel>Approved Examples ({allExamples.length}){convexExamples.length > 0 ? ' (Convex)' : ' (Local)'}</CardLabel>
             <AdminTable
               columns={[
                 { key: 'content', label: 'Content' },
@@ -704,24 +958,43 @@ function AdminKnowledge() {
                 { key: 'ch', label: 'Channel' },
                 { key: 'saved', label: 'Saved' },
               ]}
-              isEmpty={examples.length === 0}
+              isEmpty={allExamples.length === 0}
               emptyMessage="No examples saved yet. Users can save via the bookmark icon."
             >
-              {examples.slice(0, 20).map((ex, i) => (
-                <AdminTableRow key={i}>
-                  <AdminTableCell className="max-w-md truncate">{(ex.content as string || '').slice(0, 120)}</AdminTableCell>
-                  <AdminTableCell>{ex.ecosystem as string || '—'}</AdminTableCell>
-                  <AdminTableCell>{ex.channel as string || '—'}</AdminTableCell>
-                  <AdminTableCell>
-                    <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                      {new Date(ex.timestamp as number).toLocaleDateString()}
-                    </span>
-                  </AdminTableCell>
-                </AdminTableRow>
-              ))}
+              {allExamples.slice(0, 20).map((ex, i) => {
+                const isConvex = 'metadata' in ex;
+                return (
+                  <AdminTableRow key={i}>
+                    <AdminTableCell className="max-w-md truncate">
+                      {(isConvex ? (ex as { content: string }).content : (ex as Record<string, unknown>).content as string || '').slice(0, 120)}
+                    </AdminTableCell>
+                    <AdminTableCell>
+                      {isConvex 
+                        ? ((ex as { metadata?: { ecosystem?: string } }).metadata?.ecosystem || '—')
+                        : ((ex as Record<string, unknown>).ecosystem as string || '—')
+                      }
+                    </AdminTableCell>
+                    <AdminTableCell>
+                      {isConvex 
+                        ? ((ex as { metadata?: { channel?: string } }).metadata?.channel || '—')
+                        : ((ex as Record<string, unknown>).channel as string || '—')
+                      }
+                    </AdminTableCell>
+                    <AdminTableCell>
+                      <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                        {isConvex 
+                          ? new Date((ex as { createdAt: number }).createdAt).toLocaleDateString()
+                          : new Date((ex as Record<string, unknown>).timestamp as number).toLocaleDateString()
+                        }
+                      </span>
+                    </AdminTableCell>
+                  </AdminTableRow>
+                );
+              })}
             </AdminTable>
           </AdminCard>
         );
+      }
 
       default:
         return null;

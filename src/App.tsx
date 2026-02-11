@@ -64,6 +64,9 @@ import { initSyncService, getSyncService } from './services/sync/convexSync';
 import { getAutoConfig, type PersonaRole } from './services/persona';
 // Feature Flags
 import { featureFlags } from './services/featureFlags';
+// Convex (Phase 2-4: Knowledge Base & RAG)
+import { useQuery, useAction } from 'convex/react';
+import { api } from '../convex/_generated/api';
 // Knowledge & Learning (Phase 2-3)
 import {
   storeLocalCorrection,
@@ -71,7 +74,11 @@ import {
   getCodeDefaults,
   mergeLearnedCorrections,
   getLocalCorrections,
+  retrieveKnowledge,
+  enrichWithSemanticResults,
   type CorrectionEntry,
+  type RetrievedKnowledge,
+  type SemanticSearchResult,
 } from './services/knowledge';
 // Conversational Mode: Intent Classification + Base Persona
 import { classifyIntent } from './services/intent';
@@ -278,6 +285,27 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     responseText: string;
   }>({ userMessageId: null, responseText: '' });
 
+  // ========================================================================
+  // Convex Knowledge Base & Learning Integration (Phase 2-4)
+  // ========================================================================
+  
+  // Fetch knowledge from Convex for prompt injection (gated by knowledgeBase flag)
+  // Returns avoid words, preferred words, auto-fix rules, and approved examples
+  const convexKnowledge = useQuery(
+    featureFlags.knowledgeBase ? api.knowledge.getKnowledgeForPrompt : undefined,
+    featureFlags.knowledgeBase ? { ecosystem, channel: contentChannel } : 'skip'
+  );
+  
+  // Fetch learning corrections from Convex (gated by learning flag)
+  // Returns user edits and thumbs-down feedback for prompt injection
+  const convexCorrections = useQuery(
+    featureFlags.learning ? api.corrections.getLearningCorrections : undefined,
+    featureFlags.learning ? { ecosystem, channel: contentChannel, limit: 20 } : 'skip'
+  );
+  
+  // Semantic search action for RAG (called on-demand during message generation)
+  const runSemanticSearch = useAction(api.embeddings.semanticSearch);
+
   // Inject CSS variables for local tokens
   useEffect(() => {
     document.documentElement.style.setProperty('--local-white', theme.local.white);
@@ -373,20 +401,80 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           persona: featureFlags.persona ? userProfile?.role : undefined,
         });
 
-        // Build knowledge + learning data for prompt injection (Phase 2-3, gated)
-        let promptKnowledge: import('./services/knowledge').RetrievedKnowledge | undefined;
+        // Build knowledge + learning data for prompt injection (Phase 2-4, gated)
+        // Priority: Convex data > Code defaults, with optional RAG enrichment
+        let promptKnowledge: RetrievedKnowledge | undefined;
+        
         if (featureFlags.knowledgeBase) {
-          const baseKnowledge = getCodeDefaults(effectiveEcosystem, effectiveChannel);
+          // Use Convex data if available, otherwise fall back to code defaults
+          if (convexKnowledge) {
+            promptKnowledge = retrieveKnowledge(
+              {
+                avoidWords: convexKnowledge.avoidWords,
+                preferredWords: convexKnowledge.preferredWords,
+                autoFixRules: convexKnowledge.autoFixRules,
+                approvedExamples: convexKnowledge.approvedExamples,
+              },
+              effectiveEcosystem,
+              effectiveChannel
+            );
+          } else {
+            promptKnowledge = getCodeDefaults(effectiveEcosystem, effectiveChannel);
+          }
+          
+          // Merge local corrections for immediate learning (Phase 3)
           if (featureFlags.learning) {
             const localCorrections = getLocalCorrections(effectiveEcosystem, effectiveChannel);
             promptKnowledge = mergeLearnedCorrections(
-              baseKnowledge,
+              promptKnowledge,
               localCorrections,
               effectiveEcosystem,
               effectiveChannel,
             );
-          } else {
-            promptKnowledge = baseKnowledge;
+            
+            // Also merge Convex corrections if available (cloud-synced learning)
+            if (convexCorrections && convexCorrections.length > 0) {
+              const convexCorrectionEntries = convexCorrections
+                .filter(c => c.editedContent || c.comment)
+                .map(c => ({
+                  original: c.originalContent,
+                  edited: c.editedContent || '',
+                  context: c.comment || `${c.feedbackType} feedback`,
+                }));
+              
+              if (convexCorrectionEntries.length > 0) {
+                promptKnowledge = {
+                  ...promptKnowledge,
+                  corrections: [
+                    ...promptKnowledge.corrections,
+                    ...convexCorrectionEntries,
+                  ],
+                };
+              }
+            }
+          }
+          
+          // RAG: Enrich with semantically relevant knowledge (Phase 4)
+          if (featureFlags.rag) {
+            try {
+              const semanticResults = await runSemanticSearch({
+                query: message,
+                limit: 10,
+                filterActiveOnly: true,
+              }) as SemanticSearchResult[];
+              
+              if (semanticResults && semanticResults.length > 0) {
+                promptKnowledge = enrichWithSemanticResults(
+                  promptKnowledge,
+                  semanticResults,
+                  0.3 // minimum similarity score threshold
+                );
+                console.log(`[RAG] Enriched prompt with ${semanticResults.length} semantic results`);
+              }
+            } catch (ragError) {
+              // RAG is optional - log and continue without it
+              console.warn('[RAG] Semantic search failed, continuing without:', ragError);
+            }
           }
         }
 
