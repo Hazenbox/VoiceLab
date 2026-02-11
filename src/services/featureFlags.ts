@@ -11,12 +11,7 @@
 export const featureFlags = {
   /** Background sync of profiles, analytics, corrections to Convex */
   get convexSync(): boolean {
-    const value = import.meta.env.VITE_ENABLE_CONVEX_SYNC;
-    // Default to true in production if not explicitly set
-    if (value === undefined) {
-      return import.meta.env.PROD;
-    }
-    return value === 'true';
+    return import.meta.env.VITE_ENABLE_CONVEX_SYNC === 'true';
   },
 
   /** Role-based persona auto-configuration (channel, warmth, prompt personality) */
@@ -32,11 +27,6 @@ export const featureFlags = {
   /** Learning from user feedback (edits, thumbs down, comments injected into prompt) */
   get learning(): boolean {
     return import.meta.env.VITE_ENABLE_LEARNING === 'true';
-  },
-
-  /** Semantic vector search enriching prompts with contextual knowledge */
-  get rag(): boolean {
-    return import.meta.env.VITE_ENABLE_RAG === 'true';
   },
 
   /** Conversational-first mode: general-purpose assistant with conditional Jio guardrails */

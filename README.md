@@ -28,6 +28,8 @@ AI-powered voice prototyping tool for designing and testing Jio's voice assistan
 - Node.js 20.19+ or 22.12+
 - Alibaba DashScope API key (for CosyVoice)
 - Google Gemini API key (optional, for fallback)
+- HuggingFace API key (for RAG semantic search)
+- Convex account (for knowledge base and vector search)
 
 ### Installation
 
@@ -57,6 +59,55 @@ VITE_DASHSCOPE_API_KEY=your_dashscope_api_key_here
 # Google Gemini API Key (optional)
 VITE_GEMINI_API_KEY=your_gemini_api_key_here
 ```
+
+### RAG Setup (Required for Production)
+
+RAG (Retrieval-Augmented Generation) is always enabled and provides semantic search for contextual knowledge enrichment.
+
+#### 1. Set up Convex
+
+```bash
+# Install Convex CLI
+npm install -g convex
+
+# Initialize Convex (if not already done)
+npx convex dev
+
+# Get your Convex URL from the output and add to .env:
+# VITE_CONVEX_URL=https://your-project.convex.cloud
+```
+
+#### 2. Configure HuggingFace API Key
+
+1. Get a free API key from [HuggingFace](https://huggingface.co/settings/tokens)
+2. Go to [Convex Dashboard](https://dashboard.convex.dev/)
+3. Select your project → Settings → Environment Variables
+4. Add: `HUGGINGFACE_API_KEY` with your key
+
+#### 3. Seed Knowledge Base
+
+```bash
+cd voice-designer
+
+# Seed knowledge items (avoid words, preferred words, etc.)
+npx convex run seed:seedAll
+
+# Verify seeding
+npx convex run seed:checkSeedStatus
+```
+
+#### 4. Generate Embeddings
+
+```bash
+# Generate 384-dimensional embeddings (processes 50 items per call)
+npx convex run embeddings:backfillEmbeddings
+
+# Run multiple times until all items have embeddings
+# Check progress:
+npx convex run seed:checkSeedStatus
+```
+
+**Note:** The embedding generation uses BAAI/bge-small-en-v1.5 model and may take several runs to complete for ~600+ knowledge items.
 
 ### Development
 

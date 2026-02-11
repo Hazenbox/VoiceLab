@@ -1147,7 +1147,7 @@ function AdminConfig() {
     { key: 'VITE_ENABLE_PERSONA', label: 'Persona Engine', value: import.meta.env.VITE_ENABLE_PERSONA === 'true' },
     { key: 'VITE_ENABLE_KNOWLEDGE_BASE', label: 'Knowledge Base', value: import.meta.env.VITE_ENABLE_KNOWLEDGE_BASE === 'true' },
     { key: 'VITE_ENABLE_LEARNING', label: 'Learning Engine', value: import.meta.env.VITE_ENABLE_LEARNING === 'true' },
-    { key: 'VITE_ENABLE_RAG', label: 'RAG (Vector Search)', value: import.meta.env.VITE_ENABLE_RAG === 'true' },
+    { key: 'RAG_ALWAYS_ON', label: 'RAG (Vector Search)', value: true }, // Always enabled
   ];
 
   const envInfo = [

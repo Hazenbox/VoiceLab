@@ -1419,7 +1419,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   { flag: 'VITE_ENABLE_PERSONA', desc: 'Enable/disable role-based persona auto-configuration' },
                   { flag: 'VITE_ENABLE_KNOWLEDGE_BASE', desc: 'Enable/disable dynamic knowledge retrieval from Convex' },
                   { flag: 'VITE_ENABLE_LEARNING', desc: 'Enable/disable learning from user feedback' },
-                  { flag: 'VITE_ENABLE_RAG', desc: 'Enable/disable semantic search (vector embeddings)' },
+                  { flag: 'RAG_NOTE', desc: 'RAG (semantic search) is always enabled - requires HuggingFace API key in Convex' },
                   { flag: 'VITE_ADMIN_PASSPHRASE', desc: 'Custom admin panel passphrase (default: voicelab-admin)' },
                 ].map((item) => (
                   <div key={item.flag} className="flex items-start gap-2 text-xs py-1">

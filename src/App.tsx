@@ -464,27 +464,25 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             }
           }
           
-          // RAG: Enrich with semantically relevant knowledge (Phase 4)
-          if (featureFlags.rag) {
-            try {
-              const semanticResults = await runSemanticSearch({
-                query: message,
-                limit: 10,
-                filterActiveOnly: true,
-              }) as SemanticSearchResult[];
-              
-              if (semanticResults && semanticResults.length > 0) {
-                promptKnowledge = enrichWithSemanticResults(
-                  promptKnowledge,
-                  semanticResults,
-                  0.3 // minimum similarity score threshold
-                );
-                console.log(`[RAG] Enriched prompt with ${semanticResults.length} semantic results`);
-              }
-            } catch (ragError) {
-              // RAG is optional - log and continue without it
-              console.warn('[RAG] Semantic search failed, continuing without:', ragError);
+          // RAG: Enrich with semantically relevant knowledge (always enabled)
+          try {
+            const semanticResults = await runSemanticSearch({
+              query: message,
+              limit: 10,
+              filterActiveOnly: true,
+            }) as SemanticSearchResult[];
+            
+            if (semanticResults && semanticResults.length > 0) {
+              promptKnowledge = enrichWithSemanticResults(
+                promptKnowledge,
+                semanticResults,
+                0.3 // minimum similarity score threshold
+              );
+              console.log(`[RAG] Enriched prompt with ${semanticResults.length} semantic results`);
             }
+          } catch (ragError) {
+            // Graceful degradation - continue without RAG if it fails
+            console.error('[RAG] Semantic search failed, continuing without RAG enrichment:', ragError);
           }
         }
 
