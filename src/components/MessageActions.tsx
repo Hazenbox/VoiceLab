@@ -99,15 +99,13 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   );
   
   const LikeIcon = () => (
-    <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex', color: likeIconColor }}>
-      <DSIcon name="IcDislike" size="S" />
+    <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex' }}>
+      <DSIcon name="IcDislike" size="S" style={{ color: likeIconColor }} />
     </span>
   );
   
   const DislikeIcon = () => (
-    <span style={{ color: dislikeIconColor }}>
-      <DSIcon name="IcDislike" size="S" />
-    </span>
+    <DSIcon name="IcDislike" size="S" style={{ color: dislikeIconColor }} />
   );
   
   const RefreshIcon = () => (
