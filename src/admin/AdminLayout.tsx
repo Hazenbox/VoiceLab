@@ -259,7 +259,13 @@ function useLocalData<T>(key: string, fallback: T): T {
     const interval = setInterval(() => {
       try {
         const stored = localStorage.getItem(key);
-        if (stored) setData(JSON.parse(stored));
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          // Only update if actually different to avoid unnecessary re-renders
+          setData(prev => 
+            JSON.stringify(prev) === stored ? prev : parsed
+          );
+        }
       } catch { /* ignore */ }
     }, 5000);
     return () => clearInterval(interval);
@@ -278,12 +284,25 @@ function AdminDashboard() {
   // Use Convex queries for corrections, with localStorage fallback
   const convexCorrections = useQuery(api.corrections.listAll, { limit: 100 });
   const convexKnowledgeCounts = useQuery(api.knowledge.countByType);
-  const localCorrections = useLocalData<Array<{ feedbackType: string; timestamp: number; originalContent?: string }>>('voicelab_corrections_cache', []);
-  const localExamples = useLocalData<Array<{ timestamp: number }>>('voicelab_saved_examples', []);
   
-  // Stable state to prevent blinking - once Convex loads, stick with it
-  const [stableCorrections, setStableCorrections] = useState<Array<{ feedbackType: string; timestamp: number; originalContent?: string }>>(localCorrections);
-  const [stableExamplesCount, setStableExamplesCount] = useState(localExamples.length);
+  // Stable state to prevent blinking - use lazy initializer to read fresh from localStorage
+  const [stableCorrections, setStableCorrections] = useState<Array<{ feedbackType: string; timestamp: number; originalContent?: string }>>(() => {
+    try {
+      const stored = localStorage.getItem('voicelab_corrections_cache');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [stableExamplesCount, setStableExamplesCount] = useState(() => {
+    try {
+      const stored = localStorage.getItem('voicelab_saved_examples');
+      const examples = stored ? JSON.parse(stored) : [];
+      return examples.length;
+    } catch {
+      return 0;
+    }
+  });
   const [dataSource, setDataSource] = useState<'local' | 'convex'>('local');
   
   // Update stable state when Convex data loads
@@ -384,10 +403,16 @@ function AdminAnalytics() {
   // Use Convex for analytics, with localStorage fallback
   const convexCorrections = useQuery(api.corrections.listAll, { limit: 500 });
   const convexFeedbackCounts = useQuery(api.corrections.countByFeedbackType);
-  const localCorrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
   
-  // Stable state to prevent blinking
-  const [stableCorrections, setStableCorrections] = useState<Array<Record<string, unknown>>>(localCorrections);
+  // Stable state to prevent blinking - use lazy initializer
+  const [stableCorrections, setStableCorrections] = useState<Array<Record<string, unknown>>>(() => {
+    try {
+      const stored = localStorage.getItem('voicelab_corrections_cache');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [stableFeedbackCounts, setStableFeedbackCounts] = useState<Record<string, number> | undefined>(undefined);
   const [dataSource, setDataSource] = useState<'local' | 'convex'>('local');
   
@@ -489,10 +514,16 @@ function AdminMemory() {
   
   // Use Convex for corrections with localStorage fallback
   const convexCorrections = useQuery(api.corrections.listAll, { limit: 200 });
-  const localCorrections = useLocalData<Array<Record<string, unknown>>>('voicelab_corrections_cache', []);
   
-  // Stable state to prevent blinking
-  const [stableCorrections, setStableCorrections] = useState<Array<Record<string, unknown>>>(localCorrections);
+  // Stable state to prevent blinking - use lazy initializer
+  const [stableCorrections, setStableCorrections] = useState<Array<Record<string, unknown>>>(() => {
+    try {
+      const stored = localStorage.getItem('voicelab_corrections_cache');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [dataSource, setDataSource] = useState<'local' | 'convex'>('local');
   
   useEffect(() => {
@@ -622,12 +653,20 @@ function AdminKnowledge() {
   // Fetch real counts from Convex
   const convexKnowledgeCounts = useQuery(api.knowledge.countByType);
   const convexKnowledgeItems = useQuery(api.knowledge.listAll, selectedType ? { type: selectedType, limit: 50 } : { limit: 50 });
-  const localExamples = useLocalData<Array<Record<string, unknown>>>('voicelab_saved_examples', []);
   
-  // Stable state to prevent blinking
+  // Stable state to prevent blinking - use lazy initializer for examples count
   const [stableKnowledgeCounts, setStableKnowledgeCounts] = useState<Record<string, { total: number; active: number }> | undefined>(undefined);
   const [stableKnowledgeItems, setStableKnowledgeItems] = useState<Array<any>>([]);
   const [dataSource, setDataSource] = useState<'local' | 'convex'>('local');
+  const [localExamples] = useState<Array<Record<string, unknown>>>(() => {
+    try {
+      const stored = localStorage.getItem('voicelab_saved_examples');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const localExamplesCount = localExamples.length;
   
   useEffect(() => {
     if (convexKnowledgeCounts !== undefined) {
@@ -654,7 +693,7 @@ function AdminKnowledge() {
         auto_fix: '~33',
         product_definition: '14',
         festival: '11',
-        approved_example: String(localExamples.length) || '—',
+        approved_example: String(localExamplesCount) || '—',
       };
       return estimates[type] || '—';
     };
@@ -667,7 +706,7 @@ function AdminKnowledge() {
       { type: 'festival', label: 'Festivals', count: getCount('festival'), colorClass: 'text-yellow-500' },
       { type: 'approved_example', label: 'Examples', count: getCount('approved_example'), colorClass: 'text-cyan-500' },
     ];
-  }, [stableKnowledgeCounts, localExamples.length]);
+  }, [stableKnowledgeCounts, localExamplesCount]);
 
   const handleCardClick = (type: string) => {
     setSelectedType(prev => prev === type ? null : type);
