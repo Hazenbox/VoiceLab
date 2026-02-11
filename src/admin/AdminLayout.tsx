@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import type { Id } from '../../convex/_generated/dataModel';
 import { useThemeColors } from '../theme/useColors';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { AdminSidebar, type AdminSection } from './components/AdminSidebar';
@@ -195,6 +196,29 @@ function FeedbackBadge({ type }: { type: string }) {
       }}
     >
       {type.replace('_', ' ')}
+    </span>
+  );
+}
+
+// ── Utility: Admin Status badge ──────────────────────────────────
+function StatusBadge({ status }: { status: string }) {
+  const colorMap: Record<string, { bg: string; fg: string }> = {
+    pending: { bg: 'rgba(245,158,11,0.12)', fg: '#f59e0b' },
+    approved: { bg: 'rgba(16,185,129,0.12)', fg: '#10b981' },
+    rejected: { bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
+  };
+  const c = colorMap[status] || { bg: 'rgba(107,114,128,0.12)', fg: '#6b7280' };
+  return (
+    <span
+      className="inline-block rounded-full font-medium whitespace-nowrap"
+      style={{
+        fontSize: '10px',
+        padding: '1px 6px',
+        backgroundColor: c.bg,
+        color: c.fg,
+      }}
+    >
+      {status}
     </span>
   );
 }
@@ -460,8 +484,31 @@ function AdminMemory() {
   // Direct Convex query - no localStorage fallback
   const corrections = useQuery(api.corrections.listAll, { limit: 200 });
   
+  // Mutation for updating admin status
+  const updateAdminStatus = useMutation(api.corrections.updateAdminStatus);
+  
   const [filter, setFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  
+  // Handle approve/reject
+  const handleStatusUpdate = async (correctionId: Id<"corrections">, newStatus: string) => {
+    const idStr = correctionId.toString();
+    setProcessingIds(prev => new Set(prev).add(idStr));
+    
+    try {
+      await updateAdminStatus({ correctionId, adminStatus: newStatus });
+    } catch (error) {
+      console.error('[AdminMemory] Failed to update status:', error);
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(idStr);
+        return next;
+      });
+    }
+  };
 
   // Loading state
   if (corrections === undefined) {
@@ -470,6 +517,12 @@ function AdminMemory() {
 
   const filtered = (() => {
     let result = filter === 'all' ? corrections : corrections.filter(c => c.feedbackType === filter);
+    
+    // Filter by admin status
+    if (statusFilter !== 'all') {
+      result = result.filter(c => c.adminStatus === statusFilter);
+    }
+    
     if (searchQuery) {
       result = result.filter(c =>
         (c.originalContent || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -481,6 +534,14 @@ function AdminMemory() {
   })();
 
   const filterOptions = ['all', 'thumbs_up', 'thumbs_down', 'edit', 'comment'];
+  const statusOptions = ['all', 'pending', 'approved', 'rejected'];
+  
+  // Count by status for display
+  const statusCounts = {
+    pending: corrections?.filter(c => c.adminStatus === 'pending').length ?? 0,
+    approved: corrections?.filter(c => c.adminStatus === 'approved').length ?? 0,
+    rejected: corrections?.filter(c => c.adminStatus === 'rejected').length ?? 0,
+  };
 
   return (
     <>
@@ -488,7 +549,8 @@ function AdminMemory() {
       <SectionHeader title="Memory & Learnings" subtitle="all user feedback and corrections" />
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <div className="flex flex-col gap-3 mb-4">
+        {/* Type filters */}
         <div className="flex flex-wrap gap-1.5">
           {filterOptions.map((f) => {
             const isActive = filter === f;
@@ -512,24 +574,56 @@ function AdminMemory() {
             );
           })}
         </div>
+        
+        {/* Status filters and search */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-wrap gap-1.5">
+            {statusOptions.map((s) => {
+              const isActive = statusFilter === s;
+              const count = s === 'all' ? corrections.length : statusCounts[s as keyof typeof statusCounts];
+              const statusColors: Record<string, string> = {
+                pending: '#f59e0b',
+                approved: '#10b981',
+                rejected: '#ef4444',
+              };
+              return (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className="rounded-md px-2.5 cursor-pointer transition-colors"
+                  style={{
+                    height: '28px',
+                    fontSize: '12px',
+                    fontWeight: isActive ? 600 : 400,
+                    backgroundColor: isActive ? (statusColors[s] || theme.accent) : 'transparent',
+                    color: isActive ? '#fff' : theme.text.medium,
+                    border: isActive ? 'none' : `1px solid ${theme.stroke.low}`,
+                  }}
+                >
+                  {s} ({count})
+                </button>
+              );
+            })}
+          </div>
 
-        <div className="sm:ml-auto">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="search feedback..."
-            aria-label="search feedback"
-            className="rounded-lg px-3 outline-none"
-            style={{
-              height: '28px',
-              width: '200px',
-              fontSize: '12px',
-              backgroundColor: theme.background.ghost,
-              color: theme.text.high,
-              border: `1px solid ${theme.stroke.low}`,
-            }}
-          />
+          <div className="sm:ml-auto">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="search feedback..."
+              aria-label="search feedback"
+              className="rounded-lg px-3 outline-none"
+              style={{
+                height: '28px',
+                width: '200px',
+                fontSize: '12px',
+                backgroundColor: theme.background.ghost,
+                color: theme.text.high,
+                border: `1px solid ${theme.stroke.low}`,
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -538,29 +632,67 @@ function AdminMemory() {
         <AdminTable
           columns={[
             { key: 'type', label: 'type' },
+            { key: 'status', label: 'status' },
             { key: 'original', label: 'original content' },
             { key: 'edited', label: 'edited / comment' },
             { key: 'eco', label: 'ecosystem' },
-            { key: 'ch', label: 'channel' },
             { key: 'time', label: 'time' },
+            { key: 'actions', label: 'actions' },
           ]}
           isEmpty={filtered.length === 0}
           emptyMessage={searchQuery ? 'no feedback matches your search.' : 'no feedback matches this filter.'}
         >
           {filtered.slice(0, 50).map((c, i) => {
-            const correctionId = c._id?.toString() || String(i);
+            const correctionId = c._id;
+            const idStr = correctionId?.toString() || String(i);
+            const isProcessing = processingIds.has(idStr);
+            const currentStatus = c.adminStatus || 'pending';
             
             return (
-              <AdminTableRow key={correctionId}>
+              <AdminTableRow key={idStr}>
                 <AdminTableCell><FeedbackBadge type={c.feedbackType} /></AdminTableCell>
-                <AdminTableCell className="max-w-[200px] truncate">{(c.originalContent || '').slice(0, 100)}</AdminTableCell>
-                <AdminTableCell className="max-w-[200px] truncate">{c.editedContent || c.comment || '—'}</AdminTableCell>
+                <AdminTableCell>
+                  <StatusBadge status={currentStatus} />
+                </AdminTableCell>
+                <AdminTableCell className="max-w-[180px] truncate">{(c.originalContent || '').slice(0, 80)}</AdminTableCell>
+                <AdminTableCell className="max-w-[180px] truncate">{c.editedContent || c.comment || '—'}</AdminTableCell>
                 <AdminTableCell>{(c as Record<string, unknown>).ecosystem as string || '—'}</AdminTableCell>
-                <AdminTableCell>{(c as Record<string, unknown>).channel as string || '—'}</AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap">
                   <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                    {new Date(c.timestamp).toLocaleString()}
+                    {new Date(c.timestamp).toLocaleDateString()}
                   </span>
+                </AdminTableCell>
+                <AdminTableCell>
+                  {correctionId && (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handleStatusUpdate(correctionId, 'approved')}
+                        disabled={isProcessing || currentStatus === 'approved'}
+                        className="px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50"
+                        style={{
+                          backgroundColor: currentStatus === 'approved' ? '#10b981' : 'transparent',
+                          color: currentStatus === 'approved' ? '#fff' : '#10b981',
+                          border: currentStatus === 'approved' ? 'none' : '1px solid #10b981',
+                        }}
+                        title="approve for learning"
+                      >
+                        {isProcessing ? '...' : 'approve'}
+                      </button>
+                      <button
+                        onClick={() => handleStatusUpdate(correctionId, 'rejected')}
+                        disabled={isProcessing || currentStatus === 'rejected'}
+                        className="px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50"
+                        style={{
+                          backgroundColor: currentStatus === 'rejected' ? '#ef4444' : 'transparent',
+                          color: currentStatus === 'rejected' ? '#fff' : '#ef4444',
+                          border: currentStatus === 'rejected' ? 'none' : '1px solid #ef4444',
+                        }}
+                        title="reject from learning"
+                      >
+                        {isProcessing ? '...' : 'reject'}
+                      </button>
+                    </div>
+                  )}
                 </AdminTableCell>
               </AdminTableRow>
             );
