@@ -66,7 +66,8 @@ async function verifyAdminToken(token: string): Promise<boolean> {
     
     const data = await response.json();
     return data.valid === true;
-  } catch {
+  } catch (error) {
+    console.warn('[AdminAuth] Token verification failed:', error);
     return false;
   }
 }
@@ -79,8 +80,9 @@ async function logoutAdmin(token: string): Promise<void> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'logout', token }),
     });
-  } catch {
-    // Ignore logout errors
+  } catch (error) {
+    // Log but don't block logout
+    console.warn('[AdminAuth] Logout request failed:', error);
   }
 }
 

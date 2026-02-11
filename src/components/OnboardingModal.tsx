@@ -92,7 +92,8 @@ export function loadUserProfile(): UserProfile | null {
     }
     console.warn('[OnboardingModal] Invalid stored profile shape, ignoring');
     return null;
-  } catch {
+  } catch (error) {
+    console.warn('[OnboardingModal] Failed to load user profile:', error);
     return null;
   }
 }
@@ -101,13 +102,16 @@ export function saveUserProfile(profile: UserProfile): void {
   try {
     localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
     localStorage.setItem(DEVICE_ID_KEY, profile.deviceId);
-  } catch { /* ignore */ }
+  } catch (error) {
+    console.warn('[OnboardingModal] Failed to save user profile:', error);
+  }
 }
 
 export function getDeviceId(): string | null {
   try {
     return localStorage.getItem(DEVICE_ID_KEY);
-  } catch {
+  } catch (error) {
+    console.warn('[OnboardingModal] Failed to get device ID:', error);
     return null;
   }
 }

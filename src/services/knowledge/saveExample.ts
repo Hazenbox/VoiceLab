@@ -101,7 +101,8 @@ export function getLocalExamples(
         return true;
       })
       .map((e) => e.content);
-  } catch {
+  } catch (error) {
+    console.warn('[SaveExample] Failed to read local examples:', error);
     return [];
   }
 }

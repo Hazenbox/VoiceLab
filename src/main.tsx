@@ -7,10 +7,14 @@ import { DesignSystemProvider } from './context/DesignSystemContext'
 import { ProjectProvider } from './context/ProjectContext'
 import { getSyncService } from './services/sync/convexSync'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { initSentry } from './config/sentry'
 import './index.css'
 import App from './App.tsx'
 import AdminLayout from './admin/AdminLayout'
 import type { ColorMode } from './types'
+
+// Initialize Sentry for error tracking (production only)
+initSentry();
 
 const COLOR_MODE_KEY = 'voiceDesigner_colorMode';
 

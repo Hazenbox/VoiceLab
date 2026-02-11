@@ -216,7 +216,8 @@ export function getLocalCorrections(
       if (channel && (!c.channel || c.channel !== channel)) return false;
       return true;
     });
-  } catch {
+  } catch (error) {
+    console.warn('[LearningEngine] Failed to read local corrections:', error);
     return [];
   }
 }
