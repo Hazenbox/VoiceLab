@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => {
             // Convex - changes rarely
             'vendor-convex': ['convex', 'convex/react'],
             // UI libraries
-            'vendor-ui': ['framer-motion', 'lucide-react'],
+            'vendor-ui': ['lucide-react'],
             // LLM and AI services
             'services-llm': [
               './src/services/providers/llm/qwen.ts',
