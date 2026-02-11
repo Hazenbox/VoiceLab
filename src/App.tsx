@@ -443,9 +443,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             
             // Also merge Convex corrections if available (cloud-synced learning)
             if (convexCorrections && convexCorrections.length > 0) {
+              type CorrectionType = typeof convexCorrections[number];
               const convexCorrectionEntries = convexCorrections
-                .filter(c => c.editedContent || c.comment)
-                .map(c => ({
+                .filter((c: CorrectionType) => c.editedContent || c.comment)
+                .map((c: CorrectionType) => ({
                   original: c.originalContent,
                   edited: c.editedContent || '',
                   context: c.comment || `${c.feedbackType} feedback`,
@@ -570,7 +571,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             persona: finalContext.persona || 'unknown',
             trustScore: trustScore?.overall,
             violationCount: trustScore?.totalViolations ?? 0,
-            topViolations: allViolations.slice(0, 5).map(v => v.id) ?? [],
+            topViolations: allViolations.slice(0, 5).map(v => v.rule) ?? [],
             tokenCount: result.usage?.totalTokens,
             llmProvider: selectedLLMProvider,
             timestamp: Date.now(),
