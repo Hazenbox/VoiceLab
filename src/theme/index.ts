@@ -9,4 +9,5 @@ export {
   useThemeColors,
   type TextEmphasis,
   type BackgroundEmphasis,
+  type ThemeColors,
 } from './useColors';

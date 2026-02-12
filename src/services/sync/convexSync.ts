@@ -127,6 +127,7 @@ export class ConvexSyncService {
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private eventBuffer: AnalyticsEvent[] = [];
   private bufferFlushMs = 5000;
+  private isFlushingBuffer = false; // Prevent concurrent flush operations
   // Store bound handlers so we can remove them in destroy()
   private handleOnline: (() => void) | null = null;
   private handleOffline: (() => void) | null = null;
@@ -264,29 +265,52 @@ export class ConvexSyncService {
   }
 
   private async flushEventBuffer(): Promise<void> {
+    // Prevent concurrent flush operations - race condition fix
+    if (this.isFlushingBuffer) {
+      return;
+    }
+    
     if (this.eventBuffer.length === 0) return;
+    
     if (!this.isAvailable || !this.convexUserId || !this.deviceId) {
-      for (const event of this.eventBuffer) {
+      // Move to persistent queue when can't sync
+      const eventsToQueue = [...this.eventBuffer];
+      this.eventBuffer = [];
+      for (const event of eventsToQueue) {
         queueStorage.addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
       }
-      this.eventBuffer = [];
       return;
     }
 
-    const events = [...this.eventBuffer];
+    // Mark as flushing to prevent race conditions
+    this.isFlushingBuffer = true;
+    
+    // CRITICAL: Take a snapshot of current buffer and clear it atomically
+    // New events arriving during flush will accumulate in the now-empty buffer
+    const events = this.eventBuffer;
     this.eventBuffer = [];
 
-    const result = await this.safeMutation('analytics:batchLogEvents', {
-      events: events.map((e) => ({
-        ...e,
-        userId: this.convexUserId,
-        deviceId: this.deviceId!,
-      })),
-    });
+    try {
+      const result = await this.safeMutation('analytics:batchLogEvents', {
+        events: events.map((e) => ({
+          ...e,
+          userId: this.convexUserId,
+          deviceId: this.deviceId!,
+        })),
+      });
 
-    if (!result.ok) {
-      for (const event of events) {
-        queueStorage.addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
+      if (!result.ok) {
+        // Mutation failed - queue events for retry
+        for (const event of events) {
+          queueStorage.addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
+        }
+      }
+    } finally {
+      this.isFlushingBuffer = false;
+      
+      // If new events accumulated during flush, schedule another flush
+      if (this.eventBuffer.length > 0) {
+        this.scheduleBufferFlush();
       }
     }
   }

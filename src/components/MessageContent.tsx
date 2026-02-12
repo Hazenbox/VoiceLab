@@ -1,25 +1,35 @@
 /**
  * MessageContent Component
  * Renders markdown-formatted chat messages with custom styling
+ * 
+ * Performance: The components object is memoized to prevent unnecessary
+ * re-parsing of markdown on every render. Only regenerates when theme changes.
  */
 
+import { memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { CodeBlock, InlineCode } from './CodeBlock';
 import { useThemeColors } from '../theme';
 import type { Components } from 'react-markdown';
+import type { ThemeColors } from '../theme';
 
 interface MessageContentProps {
   content: string;
   role: 'user' | 'assistant';
 }
 
-export function MessageContent({ content }: MessageContentProps) {
-  const theme = useThemeColors();
+// Memoized remark/rehype plugins (stable references)
+const remarkPlugins = [remarkGfm];
+const rehypePlugins = [rehypeRaw];
 
-  // Custom components for markdown elements
-  const components: Components = {
+/**
+ * Factory function to create markdown components with theme styling.
+ * Returns a memoizable Components object.
+ */
+function createMarkdownComponents(theme: ThemeColors): Components {
+  return {
     // Code blocks
     code({ className, children }) {
       const match = /language-(\w+)/.exec(className || '');
@@ -228,16 +238,31 @@ export function MessageContent({ content }: MessageContentProps) {
       ) : null
     ),
   };
+}
+
+/**
+ * MessageContent renders markdown with custom theming.
+ * Memoized to prevent re-renders when parent state changes but content is same.
+ */
+export const MessageContent = memo(function MessageContent({ content }: MessageContentProps) {
+  const theme = useThemeColors();
+
+  // Memoize components object - only recreate when theme changes
+  // This prevents ReactMarkdown from re-parsing on every render
+  const components = useMemo(
+    () => createMarkdownComponents(theme),
+    [theme]
+  );
 
   return (
     <div className="markdown-content">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
+        remarkPlugins={remarkPlugins}
+        rehypePlugins={rehypePlugins}
         components={components}
       >
         {content}
       </ReactMarkdown>
     </div>
   );
-}
+});

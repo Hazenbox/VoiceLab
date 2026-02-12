@@ -96,6 +96,44 @@ import type {
   PromptVersion,
 } from './types';
 
+// ── Performance Utilities ────────────────────────────────────────────────────
+
+/**
+ * Race a promise against a timeout. If the timeout wins, returns fallback value.
+ * Used for graceful degradation of non-critical async operations like RAG.
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  fallback: T,
+  operationName: string = 'operation'
+): Promise<{ result: T; timedOut: boolean }> {
+  let timeoutId: ReturnType<typeof setTimeout>;
+  
+  const timeoutPromise = new Promise<{ result: T; timedOut: boolean }>((resolve) => {
+    timeoutId = setTimeout(() => {
+      console.warn(`[Timeout] ${operationName} exceeded ${timeoutMs}ms, using fallback`);
+      resolve({ result: fallback, timedOut: true });
+    }, timeoutMs);
+  });
+  
+  const resultPromise = promise.then(result => {
+    clearTimeout(timeoutId);
+    return { result, timedOut: false };
+  }).catch(error => {
+    clearTimeout(timeoutId);
+    console.error(`[${operationName}] Error:`, error);
+    return { result: fallback, timedOut: false };
+  });
+  
+  return Promise.race([resultPromise, timeoutPromise]);
+}
+
+// Timeout configuration for various operations
+const TIMEOUTS = {
+  SEMANTIC_SEARCH_MS: 150, // RAG should not block UX
+} as const;
+
 // Storage key for chat mode persistence
 const CHAT_MODE_STORAGE_KEY = 'voiceDesigner_chatMode';
 
@@ -568,14 +606,22 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           }
           
           // RAG: Enrich with semantically relevant knowledge (always enabled)
+          // Uses timeout to prevent blocking UX - graceful degradation if slow
           try {
-            const semanticResults = await runSemanticSearch({
-              query: message,
-              limit: 10,
-              filterActiveOnly: true,
-            }) as SemanticSearchResult[];
+            const { result: semanticResults, timedOut } = await withTimeout(
+              runSemanticSearch({
+                query: message,
+                limit: 10,
+                filterActiveOnly: true,
+              }) as Promise<SemanticSearchResult[]>,
+              TIMEOUTS.SEMANTIC_SEARCH_MS,
+              [] as SemanticSearchResult[],
+              'RAG semantic search'
+            );
             
-            if (semanticResults && semanticResults.length > 0) {
+            if (timedOut) {
+              console.warn('[RAG] Semantic search timed out, continuing without RAG enrichment');
+            } else if (semanticResults && semanticResults.length > 0) {
               promptKnowledge = enrichWithSemanticResults(
                 promptKnowledge,
                 semanticResults,

@@ -193,3 +193,6 @@ export function useThemeColors() {
 }
 
 export default useThemeColors;
+
+// Export the return type for use in memoization
+export type ThemeColors = ReturnType<typeof useThemeColors>;
