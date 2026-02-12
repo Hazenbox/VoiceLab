@@ -366,6 +366,12 @@ export const dashboardStats = query({
       .withIndex("by_timestamp", (q) => q.gte("timestamp", args.since))
       .take(5000);
 
+    // Get corrections for learning metrics
+    const corrections = await ctx.db
+      .query("corrections")
+      .withIndex("by_timestamp", (q) => q.gte("timestamp", args.since))
+      .take(1000);
+
     // Calculate metrics
     const generations = events.filter(e => e.eventType === "generation");
     const withTrustScore = generations.filter(e => e.trustScore !== undefined);
@@ -379,6 +385,15 @@ export const dashboardStats = query({
     for (const i of interactions) {
       interactionCounts[i.eventType] = (interactionCounts[i.eventType] || 0) + 1;
     }
+
+    // Learning metrics from corrections
+    const learningCorrections = corrections.filter(
+      (c) =>
+        (c.feedbackType === "edit" || c.feedbackType === "thumbs_down") &&
+        c.adminStatus !== "rejected"
+    );
+    const thumbsUpCount = corrections.filter(c => c.feedbackType === "thumbs_up").length;
+    const thumbsDownCount = corrections.filter(c => c.feedbackType === "thumbs_down").length;
 
     return {
       // Generation metrics
@@ -411,6 +426,13 @@ export const dashboardStats = query({
       likeCount: interactionCounts["like"] || 0,
       dislikeCount: interactionCounts["dislike"] || 0,
       errorCount: interactionCounts["error"] || 0,
+      
+      // Learning metrics (for POC dashboard)
+      learningsApplied: learningCorrections.length,
+      totalFeedback: corrections.length,
+      sentimentRatio: (thumbsUpCount + thumbsDownCount) > 0
+        ? Math.round((thumbsUpCount / (thumbsUpCount + thumbsDownCount)) * 100)
+        : null,
     };
   },
 });
