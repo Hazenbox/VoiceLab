@@ -28,11 +28,12 @@ function formatValue(value: string | number | null, format?: string): string {
   switch (format) {
     case 'percent':
       return `${value}%`;
-    case 'duration':
+    case 'duration': {
       if (value < 60) return `${value}s`;
       const mins = Math.floor(value / 60);
       const secs = value % 60;
       return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+    }
     case 'ms':
       if (value < 1000) return `${Math.round(value)}ms`;
       return `${(value / 1000).toFixed(1)}s`;
@@ -102,21 +103,18 @@ export const KPICard = memo(function KPICard({
           {label}
         </span>
         {description && (
-          <button
-            className="opacity-50 hover:opacity-100 transition-opacity p-0.5"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowTooltip(!showTooltip);
-            }}
+          <span
+            className="opacity-50 hover:opacity-100 transition-opacity p-0.5 cursor-help"
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
             aria-label={`Info about ${label}`}
-            aria-expanded={showTooltip}
           >
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="8" r="7" stroke={theme.text.low} strokeWidth="1.5" />
               <path d="M8 7v4" stroke={theme.text.low} strokeWidth="1.5" strokeLinecap="round" />
               <circle cx="8" cy="5" r="0.75" fill={theme.text.low} />
             </svg>
-          </button>
+          </span>
         )}
         {target && (
           <span

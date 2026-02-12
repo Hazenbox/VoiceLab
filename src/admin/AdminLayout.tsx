@@ -739,10 +739,12 @@ function AdminKnowledge() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [displayLimit, setDisplayLimit] = useState(30);
   
   // Direct Convex queries - no localStorage fallback
   const knowledgeCounts = useQuery(api.knowledge.countByType);
-  const knowledgeItems = useQuery(api.knowledge.listAll, selectedType ? { type: selectedType, limit: 50 } : { limit: 50 });
+  // Fetch more items when a type is selected (up to 500 for viewing)
+  const knowledgeItems = useQuery(api.knowledge.listAll, selectedType ? { type: selectedType, limit: 500 } : { limit: 50 });
   
   // Calculate total active rules - moved BEFORE early return to avoid conditional hook
   const totalActiveRules = useMemo(() => {
@@ -779,6 +781,12 @@ function AdminKnowledge() {
 
   const handleCardClick = (type: string) => {
     setSelectedType(prev => prev === type ? null : type);
+    setDisplayLimit(30); // Reset display limit when switching types
+  };
+  
+  // Get total count for selected type from knowledgeCounts
+  const getTotalCount = (type: string): number => {
+    return knowledgeCounts?.[type]?.active || 0;
   };
 
   // Get items for selected type from Convex
@@ -813,12 +821,16 @@ function AdminKnowledge() {
     const items = getItemsForType(selectedType);
 
     switch (selectedType) {
-      case 'avoid_word':
+      case 'avoid_word': {
+        const totalCount = getTotalCount('avoid_word');
+        const displayedItems = items.slice(0, displayLimit);
+        const hasMore = items.length > displayLimit || totalCount > items.length;
+        
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>avoid words</CardLabel>
+            <CardLabel>avoid words ({totalCount} total)</CardLabel>
             <div className="flex flex-wrap gap-2">
-              {items.slice(0, 30).map((item, i) => (
+              {displayedItems.map((item, i) => (
                 <span
                   key={i}
                   className="inline-block rounded-md px-2 py-1"
@@ -832,10 +844,24 @@ function AdminKnowledge() {
                 </span>
               ))}
             </div>
-            {items.length > 30 && (
-              <span className="block mt-2" style={{ color: theme.text.low, fontSize: '11px' }}>
-                showing 30 of {items.length} items.
-              </span>
+            {hasMore && (
+              <div className="mt-3 flex items-center gap-3">
+                <span style={{ color: theme.text.low, fontSize: '11px' }}>
+                  showing {displayedItems.length} of {totalCount}
+                </span>
+                {items.length > displayLimit && (
+                  <button
+                    onClick={() => setDisplayLimit(prev => prev + 50)}
+                    className="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    style={{ 
+                      backgroundColor: theme.accent, 
+                      color: '#fff',
+                    }}
+                  >
+                    load more
+                  </button>
+                )}
+              </div>
             )}
             {items.length === 0 && (
               <span style={{ color: theme.text.low, fontSize: '13px' }}>no avoid words configured yet.</span>
@@ -845,13 +871,18 @@ function AdminKnowledge() {
             </span>
           </AdminCard>
         );
+      }
 
-      case 'preferred_word':
+      case 'preferred_word': {
+        const totalCount = getTotalCount('preferred_word');
+        const displayedItems = items.slice(0, displayLimit);
+        const hasMore = items.length > displayLimit || totalCount > items.length;
+        
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>preferred vocabulary</CardLabel>
+            <CardLabel>preferred vocabulary ({totalCount} total)</CardLabel>
             <div className="flex flex-wrap gap-2">
-              {items.slice(0, 30).map((item, i) => (
+              {displayedItems.map((item, i) => (
                 <span
                   key={i}
                   className="inline-block rounded-md px-2 py-1"
@@ -865,10 +896,24 @@ function AdminKnowledge() {
                 </span>
               ))}
             </div>
-            {items.length > 30 && (
-              <span className="block mt-2" style={{ color: theme.text.low, fontSize: '11px' }}>
-                showing 30 of {items.length} items.
-              </span>
+            {hasMore && (
+              <div className="mt-3 flex items-center gap-3">
+                <span style={{ color: theme.text.low, fontSize: '11px' }}>
+                  showing {displayedItems.length} of {totalCount}
+                </span>
+                {items.length > displayLimit && (
+                  <button
+                    onClick={() => setDisplayLimit(prev => prev + 50)}
+                    className="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    style={{ 
+                      backgroundColor: theme.accent, 
+                      color: '#fff',
+                    }}
+                  >
+                    load more
+                  </button>
+                )}
+              </div>
             )}
             {items.length === 0 && (
               <span style={{ color: theme.text.low, fontSize: '13px' }}>no preferred words configured yet.</span>
@@ -878,11 +923,16 @@ function AdminKnowledge() {
             </span>
           </AdminCard>
         );
+      }
 
-      case 'auto_fix':
+      case 'auto_fix': {
+        const totalCount = getTotalCount('auto_fix');
+        const displayedItems = items.slice(0, displayLimit);
+        const hasMore = items.length > displayLimit || totalCount > items.length;
+        
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>auto-fix rules</CardLabel>
+            <CardLabel>auto-fix rules ({totalCount} total)</CardLabel>
             <AdminTable
               columns={[
                 { key: 'from', label: 'original' },
@@ -891,7 +941,7 @@ function AdminKnowledge() {
               isEmpty={items.length === 0}
               emptyMessage="no auto-fix rules configured."
             >
-              {items.slice(0, 20).map((item, i) => (
+              {displayedItems.map((item, i) => (
                 <AdminTableRow key={i}>
                   <AdminTableCell>
                     <code className="px-1.5 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '12px' }}>
@@ -906,21 +956,40 @@ function AdminKnowledge() {
                 </AdminTableRow>
               ))}
             </AdminTable>
-            {items.length > 20 && (
-              <span className="block mt-2" style={{ color: theme.text.low, fontSize: '11px' }}>
-                showing 20 of {items.length} items.
-              </span>
+            {hasMore && (
+              <div className="mt-3 flex items-center gap-3">
+                <span style={{ color: theme.text.low, fontSize: '11px' }}>
+                  showing {displayedItems.length} of {totalCount}
+                </span>
+                {items.length > displayLimit && (
+                  <button
+                    onClick={() => setDisplayLimit(prev => prev + 50)}
+                    className="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    style={{ 
+                      backgroundColor: theme.accent, 
+                      color: '#fff',
+                    }}
+                  >
+                    load more
+                  </button>
+                )}
+              </div>
             )}
             <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
               these rules automatically correct common typos and formatting issues.
             </span>
           </AdminCard>
         );
+      }
 
-      case 'product_definition':
+      case 'product_definition': {
+        const totalCount = getTotalCount('product_definition');
+        const displayedItems = items.slice(0, displayLimit);
+        const hasMore = items.length > displayLimit || totalCount > items.length;
+        
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>product definitions</CardLabel>
+            <CardLabel>product definitions ({totalCount} total)</CardLabel>
             <AdminTable
               columns={[
                 { key: 'name', label: 'product' },
@@ -929,7 +998,7 @@ function AdminKnowledge() {
               isEmpty={items.length === 0}
               emptyMessage="no product definitions configured."
             >
-              {items.slice(0, 20).map((item, i) => (
+              {displayedItems.map((item, i) => (
                 <AdminTableRow key={i}>
                   <AdminTableCell>
                     <span className="font-semibold" style={{ color: theme.text.high }}>
@@ -940,18 +1009,42 @@ function AdminKnowledge() {
                 </AdminTableRow>
               ))}
             </AdminTable>
+            {hasMore && (
+              <div className="mt-3 flex items-center gap-3">
+                <span style={{ color: theme.text.low, fontSize: '11px' }}>
+                  showing {displayedItems.length} of {totalCount}
+                </span>
+                {items.length > displayLimit && (
+                  <button
+                    onClick={() => setDisplayLimit(prev => prev + 50)}
+                    className="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    style={{ 
+                      backgroundColor: theme.accent, 
+                      color: '#fff',
+                    }}
+                  >
+                    load more
+                  </button>
+                )}
+              </div>
+            )}
             <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
               official product definitions used for consistent messaging.
             </span>
           </AdminCard>
         );
+      }
 
-      case 'festival':
+      case 'festival': {
+        const totalCount = getTotalCount('festival');
+        const displayedItems = items.slice(0, displayLimit);
+        const hasMore = items.length > displayLimit || totalCount > items.length;
+        
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>festivals</CardLabel>
+            <CardLabel>festivals ({totalCount} total)</CardLabel>
             <div className="flex flex-wrap gap-2">
-              {items.slice(0, 20).map((item, i) => (
+              {displayedItems.map((item, i) => (
                 <span
                   key={i}
                   className="inline-block rounded-md px-2 py-1"
@@ -965,6 +1058,25 @@ function AdminKnowledge() {
                 </span>
               ))}
             </div>
+            {hasMore && (
+              <div className="mt-3 flex items-center gap-3">
+                <span style={{ color: theme.text.low, fontSize: '11px' }}>
+                  showing {displayedItems.length} of {totalCount}
+                </span>
+                {items.length > displayLimit && (
+                  <button
+                    onClick={() => setDisplayLimit(prev => prev + 50)}
+                    className="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    style={{ 
+                      backgroundColor: theme.accent, 
+                      color: '#fff',
+                    }}
+                  >
+                    load more
+                  </button>
+                )}
+              </div>
+            )}
             {items.length === 0 && (
               <span style={{ color: theme.text.low, fontSize: '13px' }}>no festivals configured yet.</span>
             )}
@@ -973,23 +1085,26 @@ function AdminKnowledge() {
             </span>
           </AdminCard>
         );
+      }
 
       case 'approved_example': {
-        const examples = getItemsForType('approved_example');
+        const totalCount = getTotalCount('approved_example');
+        const displayedItems = items.slice(0, displayLimit);
+        const hasMore = items.length > displayLimit || totalCount > items.length;
         
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>approved examples ({examples.length})</CardLabel>
+            <CardLabel>approved examples ({totalCount} total)</CardLabel>
             <AdminTable
               columns={[
                 { key: 'content', label: 'content' },
                 { key: 'eco', label: 'ecosystem' },
                 { key: 'ch', label: 'channel' },
               ]}
-              isEmpty={examples.length === 0}
+              isEmpty={items.length === 0}
               emptyMessage="no examples saved yet. users can save via the bookmark icon."
             >
-              {examples.slice(0, 20).map((ex, i) => (
+              {displayedItems.map((ex, i) => (
                 <AdminTableRow key={i}>
                   <AdminTableCell className="max-w-md truncate">
                     {ex.content.slice(0, 120)}
@@ -1003,6 +1118,25 @@ function AdminKnowledge() {
                 </AdminTableRow>
               ))}
             </AdminTable>
+            {hasMore && (
+              <div className="mt-3 flex items-center gap-3">
+                <span style={{ color: theme.text.low, fontSize: '11px' }}>
+                  showing {displayedItems.length} of {totalCount}
+                </span>
+                {items.length > displayLimit && (
+                  <button
+                    onClick={() => setDisplayLimit(prev => prev + 50)}
+                    className="px-2 py-1 rounded text-xs font-medium transition-colors"
+                    style={{ 
+                      backgroundColor: theme.accent, 
+                      color: '#fff',
+                    }}
+                  >
+                    load more
+                  </button>
+                )}
+              </div>
+            )}
           </AdminCard>
         );
       }
@@ -1274,25 +1408,25 @@ function AdminUsers() {
                       fontSize: '12px',
                     }}
                   >
-                    {user.name[0].toUpperCase()}
+                    {(user.name?.[0] ?? '?').toUpperCase()}
                   </div>
                   <span style={{ fontSize: '13px', color: theme.text.high }}>
-                    {user.name}
+                    {user.name || 'unknown'}
                   </span>
                 </div>
               </AdminTableCell>
               <AdminTableCell>
-                <FeedbackBadge type={user.role} />
+                <FeedbackBadge type={user.role || 'unknown'} />
               </AdminTableCell>
-              <AdminTableCell>{user.product}</AdminTableCell>
+              <AdminTableCell>{user.product || '—'}</AdminTableCell>
               <AdminTableCell>
                 <span className="font-mono" style={{ fontSize: '11px', color: theme.text.low }}>
-                  {user.deviceId.slice(0, 20)}...
+                  {user.deviceId ? `${user.deviceId.slice(0, 20)}...` : '—'}
                 </span>
               </AdminTableCell>
               <AdminTableCell className="whitespace-nowrap">
                 <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                  {formatRelativeTime(user.lastSeenAt)}
+                  {user.lastSeenAt ? formatRelativeTime(user.lastSeenAt) : '—'}
                 </span>
               </AdminTableCell>
             </AdminTableRow>
