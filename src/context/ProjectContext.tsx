@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { 
   Project, 
   ConversationConfig, 
@@ -274,26 +274,49 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     }
   }, [activeProjectId, updateProject]);
 
-  const activeProject = projects.find(p => p.id === activeProjectId) || null;
+  const activeProject = useMemo(
+    () => projects.find(p => p.id === activeProjectId) || null,
+    [projects, activeProjectId]
+  );
 
-  const value: ProjectContextValue = {
-    projects,
-    activeProject,
-    createProject,
-    updateProject,
-    deleteProject,
-    setActiveProject,
-    updateProjectConfig,
-    updateProjectVoiceGender,
-    // Legacy methods
-    updateProjectChannel,
-    updateProjectPlatform,
-    // New Content Trust System methods
-    updateProjectDefaultChannel,
-    updateProjectDefaultEcosystem,
-    updateProjectDefaultLanguage,
-    updateProjectDefaultRegion,
-  };
+  // Memoize context value to prevent unnecessary re-renders of consumers
+  // Only recreates when actual dependencies change
+  const value = useMemo<ProjectContextValue>(
+    () => ({
+      projects,
+      activeProject,
+      createProject,
+      updateProject,
+      deleteProject,
+      setActiveProject,
+      updateProjectConfig,
+      updateProjectVoiceGender,
+      // Legacy methods
+      updateProjectChannel,
+      updateProjectPlatform,
+      // New Content Trust System methods
+      updateProjectDefaultChannel,
+      updateProjectDefaultEcosystem,
+      updateProjectDefaultLanguage,
+      updateProjectDefaultRegion,
+    }),
+    [
+      projects,
+      activeProject,
+      createProject,
+      updateProject,
+      deleteProject,
+      setActiveProject,
+      updateProjectConfig,
+      updateProjectVoiceGender,
+      updateProjectChannel,
+      updateProjectPlatform,
+      updateProjectDefaultChannel,
+      updateProjectDefaultEcosystem,
+      updateProjectDefaultLanguage,
+      updateProjectDefaultRegion,
+    ]
+  );
 
   return (
     <ProjectContext.Provider value={value}>

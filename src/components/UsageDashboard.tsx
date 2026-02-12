@@ -1,12 +1,35 @@
 /**
  * Usage Dashboard Component
  * Displays LLM usage statistics, costs, and performance metrics
+ * 
+ * Performance: Polling only runs when document is visible to save resources
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getOrchestratorInstance } from '../services/llm/orchestrator';
 import type { UsageStats } from '../services/monitoring/costTracker';
 import { DSIcon } from './DSIcon';
+
+/**
+ * Hook to check document visibility
+ * Returns true when document is visible, false when hidden (tab switched, minimized)
+ */
+function useDocumentVisibility(): boolean {
+  const [isVisible, setIsVisible] = useState(() => 
+    typeof document !== 'undefined' ? document.visibilityState === 'visible' : true
+  );
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsVisible(document.visibilityState === 'visible');
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  return isVisible;
+}
 
 interface UsageDashboardProps {
   compact?: boolean;
@@ -16,37 +39,30 @@ interface UsageDashboardProps {
 export function UsageDashboard({ compact = false, className = '' }: UsageDashboardProps) {
   const [stats, setStats] = useState<UsageStats | null>(null);
   const [timeRange, setTimeRange] = useState<'hour' | 'day' | 'week' | 'all'>('day');
+  const isVisible = useDocumentVisibility();
+
+  const loadStats = useCallback(() => {
+    const orchestrator = getOrchestratorInstance();
+    const costStats = orchestrator.getCostStats();
+    
+    if (timeRange === 'all') {
+      setStats(costStats);
+    } else {
+      // Re-calculate with time filter (for now uses full stats)
+      setStats(costStats);
+    }
+  }, [timeRange]);
 
   useEffect(() => {
-    const loadStats = () => {
-      const orchestrator = getOrchestratorInstance();
-      const costStats = orchestrator.getCostStats();
-      
-      // Filter by time range
-      // const now = Date.now();
-      // const ranges: Record<string, number> = {
-      //   hour: 60 * 60 * 1000,
-      //   day: 24 * 60 * 60 * 1000,
-      //   week: 7 * 24 * 60 * 60 * 1000,
-      //   all: Infinity,
-      // };
-      
-      // const since = now - ranges[timeRange];
-      
-      if (timeRange === 'all') {
-        setStats(costStats);
-      } else {
-        // Re-calculate with time filter
-        const filtered = orchestrator.getCostStats();
-        // For now, use the full stats (would need costTracker method to filter)
-        setStats(filtered);
-      }
-    };
-
+    // Load immediately
     loadStats();
-    const interval = setInterval(loadStats, 5000); // Refresh every 5s
+    
+    // Only poll when document is visible to save resources
+    if (!isVisible) return;
+    
+    const interval = setInterval(loadStats, 5000); // Refresh every 5s when visible
     return () => clearInterval(interval);
-  }, [timeRange]);
+  }, [loadStats, isVisible]);
 
   const formatCost = (cost: number) => {
     if (cost < 0.01) return `$${cost.toFixed(4)}`;
@@ -213,17 +229,23 @@ export function UsageDashboard({ compact = false, className = '' }: UsageDashboa
  */
 export function UsageStatsBar({ className = '' }: { className?: string }) {
   const [stats, setStats] = useState<UsageStats | null>(null);
+  const isVisible = useDocumentVisibility();
+
+  const loadStats = useCallback(() => {
+    const orchestrator = getOrchestratorInstance();
+    setStats(orchestrator.getCostStats());
+  }, []);
 
   useEffect(() => {
-    const loadStats = () => {
-      const orchestrator = getOrchestratorInstance();
-      setStats(orchestrator.getCostStats());
-    };
-
+    // Load immediately
     loadStats();
-    const interval = setInterval(loadStats, 10000);
+    
+    // Only poll when document is visible
+    if (!isVisible) return;
+    
+    const interval = setInterval(loadStats, 10000); // Refresh every 10s when visible
     return () => clearInterval(interval);
-  }, []);
+  }, [loadStats, isVisible]);
 
   const formatCost = (cost: number) => {
     if (cost < 0.01) return `$${cost.toFixed(4)}`;

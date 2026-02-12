@@ -64,12 +64,12 @@ import { getSyncService } from './services/sync/convexSync';
 import { getAutoConfig, type PersonaRole } from './services/persona';
 // Feature Flags
 import { featureFlags } from './services/featureFlags';
-// Analytics Services (v2)
+// Analytics Services (v2) - hooks now handle most session management
 import { 
-  getSessionManager, 
   getResponseTimer, 
-  getErrorLogger,
 } from './services/analytics';
+// Session analytics hook (extracted from App.tsx for cleaner separation)
+import { useSessionAnalytics } from './hooks';
 // Convex (Phase 2-4: Knowledge Base & RAG)
 import { useQuery, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
@@ -335,57 +335,17 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   } = useChatPersistence(activeProject?.id || null);
 
   // ========================================================================
-  // Session Analytics Tracking (v2)
+  // Session Analytics Tracking (v2) - extracted to hook for cleaner code
   // ========================================================================
-  
-  // Start/end conversation sessions when project changes
-  useEffect(() => {
-    if (!featureFlags.sessionAnalytics || !userProfile?.deviceId || !activeProject?.id) {
-      return;
-    }
-    
-    const syncService = getSyncService();
-    const sessionManager = getSessionManager();
-    
-    // Start a new session for this project
-    sessionManager.startSession({
-      projectId: activeProject.id,
-      projectName: activeProject.name || 'Untitled Project',
-      deviceId: userProfile.deviceId,
-      userId: syncService?.getConvexUserId() || null,
-      ecosystem,
-      channel: contentChannel,
-      persona: featureFlags.persona ? userProfile.role : 'unknown',
-    });
-    
-    // Cleanup: end session when project changes or component unmounts
-    return () => {
-      sessionManager.endSession('project_changed');
-    };
-  }, [activeProject?.id, activeProject?.name, userProfile?.deviceId, ecosystem, contentChannel, userProfile?.role]);
-  
-  // Track context switches (ecosystem, channel, persona changes)
-  useEffect(() => {
-    if (!featureFlags.sessionAnalytics) return;
-    
-    const sessionManager = getSessionManager();
-    sessionManager.trackContextSwitch(ecosystem, contentChannel, featureFlags.persona ? userProfile?.role : undefined);
-  }, [ecosystem, contentChannel, userProfile?.role]);
-  
-  // End session on page unload
-  useEffect(() => {
-    if (!featureFlags.sessionAnalytics) return;
-    
-    const handleBeforeUnload = () => {
-      const sessionManager = getSessionManager();
-      sessionManager.endSession('browser_closed');
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
+  useSessionAnalytics({
+    deviceId: userProfile?.deviceId || null,
+    userRole: userProfile?.role,
+    userProduct: userProfile?.product,
+    projectId: activeProject?.id || null,
+    projectName: activeProject?.name,
+    ecosystem,
+    channel: contentChannel,
+  });
 
   // Chat/Generation State
   const [isChatLoading, setIsChatLoading] = useState(false);
