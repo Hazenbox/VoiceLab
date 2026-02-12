@@ -9,7 +9,7 @@ export { DocumentationPanel } from './DocumentationPanel';
 export { SoundWave } from './SoundWave';
 export { ProjectSidebar } from './ProjectSidebar';
 export { ChatPanel } from './ChatPanel';
-export { ErrorBoundary, ErrorFallback } from './ErrorBoundary';
+export { ErrorBoundary, withErrorBoundary } from './ErrorBoundary';
 export { ModelSelector, ModelSelectorInline } from './ModelSelector';
 export type { TTSProviderType } from './ModelSelector';
 export { TTSProviderSelector, TTSProviderSelectorInline, getConfiguredTTSProviders, getDefaultTTSProviderType } from './TTSProviderSelector';
