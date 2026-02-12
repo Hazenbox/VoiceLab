@@ -5,12 +5,17 @@ import { ConvexProvider, ConvexReactClient } from 'convex/react'
 import { DsProvider } from '@marcelinodzn/ds-react'
 import { DesignSystemProvider } from './context/DesignSystemContext'
 import { ProjectProvider } from './context/ProjectContext'
-import { getSyncService } from './services/sync/convexSync'
+import { initSyncService, getSyncService } from './services/sync/convexSync'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { initSentry } from './config/sentry'
 import './index.css'
 import App from './App.tsx'
 import type { ColorMode } from './types'
+
+// ── Initialize Sync Service at Module Level ──────────────────────────
+// CRITICAL: Must happen BEFORE React render so ConvexSyncBridge can inject mutationFn
+// This ensures the singleton exists when components try to use it
+initSyncService();
 
 // Lazy load admin panel - only loaded when visiting /admin routes
 const AdminLayout = lazy(() => import('./admin/AdminLayout'))
@@ -63,17 +68,36 @@ const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
 function ConvexSyncBridge({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!convex) return;
-    const syncService = getSyncService();
-    if (syncService) {
-      // Inject a real mutation function using the Convex client
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      syncService.setMutationFn(async (name: string, args: Record<string, any>) => {
-        // Convex client.mutation expects an api reference, but we use string names.
-        // The ConvexReactClient exposes .mutation() for dynamic function references.
-        // Use the generic mutation method with the function path string.
+    
+    // Helper to inject mutation function into sync service
+    const injectMutationFn = (): boolean => {
+      const syncService = getSyncService();
+      if (syncService) {
+        // Inject a real mutation function using the Convex client
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return await (convex as any).mutation(name as any, args);
-      });
+        syncService.setMutationFn(async (name: string, args: Record<string, any>) => {
+          // Convex client.mutation expects an api reference, but we use string names.
+          // The ConvexReactClient exposes .mutation() for dynamic function references.
+          // Use the generic mutation method with the function path string.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return await (convex as any).mutation(name as any, args);
+        });
+        console.log('[ConvexSyncBridge] Mutation function injected successfully');
+        return true;
+      }
+      console.warn('[ConvexSyncBridge] Sync service not available yet');
+      return false;
+    };
+    
+    // Try immediately (should work since we init at module level)
+    if (!injectMutationFn()) {
+      // Retry after a short delay as fallback (shouldn't happen but safety net)
+      const timer = setTimeout(() => {
+        if (!injectMutationFn()) {
+          console.error('[ConvexSyncBridge] Failed to inject mutation function after retry');
+        }
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, []);
 

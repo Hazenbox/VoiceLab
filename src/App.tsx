@@ -59,7 +59,7 @@ import { useProject } from './context/ProjectContext';
 import { useAbortController } from './hooks';
 // Onboarding & Sync
 import OnboardingModal, { loadUserProfile, getDeviceId, type UserProfile } from './components/OnboardingModal';
-import { initSyncService, getSyncService } from './services/sync/convexSync';
+import { getSyncService } from './services/sync/convexSync';
 // Persona Engine (Phase 1)
 import { getAutoConfig, type PersonaRole } from './services/persona';
 // Feature Flags
@@ -121,9 +121,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
   const [showOnboarding, setShowOnboarding] = useState(() => !getDeviceId());
   
-  // Initialize sync service on mount or when profile changes (always enabled)
+  // Sync user profile to Convex when profile changes (always enabled)
+  // NOTE: Sync service is initialized at module level in main.tsx
   useEffect(() => {
-    const syncService = initSyncService();
+    const syncService = getSyncService();
+    if (!syncService) {
+      console.warn('[App] Sync service not available');
+      return;
+    }
     
     if (userProfile?.deviceId) {
       syncService.setDeviceId(userProfile.deviceId);
@@ -146,8 +151,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         timestamp: Date.now(),
       });
     }
-
-    return () => syncService.destroy();
   }, [userProfile?.deviceId, userProfile?.name, userProfile?.role, userProfile?.product]);
 
   const handleOnboardingComplete = useCallback((profile: UserProfile) => {

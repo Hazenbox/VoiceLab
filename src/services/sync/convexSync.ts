@@ -145,6 +145,7 @@ export class ConvexSyncService {
 
   async syncUserProfile(profile: UserProfileSync): Promise<string | null> {
     if (!this.isAvailable) {
+      console.log('[ConvexSync] syncUserProfile: not available, queuing');
       queueStorage.addToQueue({
         type: 'user_sync',
         data: { ...profile },
@@ -164,8 +165,17 @@ export class ConvexSyncService {
 
     if (result.ok && result.value) {
       this.setConvexUserId(result.value);
+      console.log('[ConvexSync] syncUserProfile: success, userId:', result.value);
       return result.value;
     }
+    
+    // Mutation failed - queue for retry
+    console.warn('[ConvexSync] syncUserProfile: mutation failed, queuing for retry');
+    queueStorage.addToQueue({
+      type: 'user_sync',
+      data: { ...profile },
+      timestamp: Date.now(),
+    });
     return null;
   }
 
@@ -269,7 +279,12 @@ export class ConvexSyncService {
   // ── Flush Queued Events ──────────────────────────────────────
 
   async flushQueue(): Promise<void> {
-    if (!this.isAvailable || !this.convexUserId || !this.deviceId) return;
+    // CRITICAL: Only require isAvailable and deviceId initially
+    // convexUserId may be established by processing user_sync events
+    if (!this.isAvailable || !this.deviceId) {
+      console.log('[ConvexSync] Cannot flush: isAvailable=%s, deviceId=%s', this.isAvailable, !!this.deviceId);
+      return;
+    }
 
     const queue = await queueStorage.getQueue();
     if (queue.length === 0) return;
@@ -282,7 +297,8 @@ export class ConvexSyncService {
     const heartbeatEvents = queue.filter((e) => e.type === 'heartbeat');
     const userSyncEvents = queue.filter((e) => e.type === 'user_sync');
 
-    // Replay user_sync events first (needed for convexUserId)
+    // FIRST: Replay user_sync events to establish convexUserId
+    // This MUST happen before processing other events that require convexUserId
     for (const event of userSyncEvents) {
       const result = await this.safeMutation('users:createOrUpdate', {
         ...event.data,
@@ -290,11 +306,20 @@ export class ConvexSyncService {
       if (result.ok) {
         // Success - remove from queue
         if (event.id) await queueStorage.removeFromQueue(event.id);
-        if (result.value) this.setConvexUserId(result.value);
+        if (result.value) {
+          this.setConvexUserId(result.value);
+          console.log('[ConvexSync] User synced, convexUserId established:', result.value);
+        }
       } else {
         // Failure - increment attempts
         if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
       }
+    }
+
+    // NOW check for convexUserId before processing events that require it
+    if (!this.convexUserId) {
+      console.warn('[ConvexSync] Cannot flush analytics/corrections: no convexUserId established');
+      // Still continue with heartbeats which don't require convexUserId
     }
 
     // Replay heartbeat events
@@ -311,44 +336,47 @@ export class ConvexSyncService {
       }
     }
 
-    // Batch analytics events
-    if (analyticsEvents.length > 0) {
-      const result = await this.safeMutation('analytics:batchLogEvents', {
-        events: analyticsEvents.map((e) => ({
-          ...e.data,
-          userId: this.convexUserId,
-          deviceId: this.deviceId!,
-          timestamp: e.data.timestamp || e.timestamp,
-        })),
-      });
+    // Only process analytics and corrections if we have a convexUserId
+    if (this.convexUserId) {
+      // Batch analytics events
+      if (analyticsEvents.length > 0) {
+        const result = await this.safeMutation('analytics:batchLogEvents', {
+          events: analyticsEvents.map((e) => ({
+            ...e.data,
+            userId: this.convexUserId,
+            deviceId: this.deviceId!,
+            timestamp: e.data.timestamp || e.timestamp,
+          })),
+        });
 
-      if (result.ok) {
-        // Success - remove all from queue
-        for (const event of analyticsEvents) {
-          if (event.id) await queueStorage.removeFromQueue(event.id);
-        }
-      } else {
-        // Failure - increment attempts for all
-        for (const event of analyticsEvents) {
-          if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+        if (result.ok) {
+          // Success - remove all from queue
+          for (const event of analyticsEvents) {
+            if (event.id) await queueStorage.removeFromQueue(event.id);
+          }
+        } else {
+          // Failure - increment attempts for all
+          for (const event of analyticsEvents) {
+            if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+          }
         }
       }
-    }
 
-    // Replay correction events (individual)
-    for (const event of correctionEvents) {
-      const result = await this.safeMutation('corrections:create', {
-        ...event.data,
-        userId: this.convexUserId,
-        deviceId: this.deviceId!,
-      });
+      // Replay correction events (individual)
+      for (const event of correctionEvents) {
+        const result = await this.safeMutation('corrections:create', {
+          ...event.data,
+          userId: this.convexUserId,
+          deviceId: this.deviceId!,
+        });
 
-      if (result.ok) {
-        // Success - remove from queue
-        if (event.id) await queueStorage.removeFromQueue(event.id);
-      } else {
-        // Failure - increment attempts
-        if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+        if (result.ok) {
+          // Success - remove from queue
+          if (event.id) await queueStorage.removeFromQueue(event.id);
+        } else {
+          // Failure - increment attempts
+          if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+        }
       }
     }
 
