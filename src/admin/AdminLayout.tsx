@@ -22,13 +22,17 @@ const SESSION_TOKEN_KEY = 'voicelab_admin_token';
 async function authenticateAdmin(passphrase: string): Promise<{ success: boolean; token?: string; error?: string }> {
   try {
     const apiBase = getApiBaseUrl();
+    console.log('[Admin Auth] Attempting login to:', `${apiBase}/api/admin/auth`);
+    
     const response = await fetch(`${apiBase}/api/admin/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'login', passphrase }),
     });
     
+    console.log('[Admin Auth] Response status:', response.status);
     const data = await response.json();
+    console.log('[Admin Auth] Response data:', { success: data.success, hasToken: !!data.token, error: data.error });
     
     if (!response.ok) {
       return { success: false, error: data.error || 'Authentication failed' };
@@ -141,6 +145,15 @@ function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
         </span>
 
         <form onSubmit={handleSubmit}>
+          {/* Hidden username field for accessibility (password managers expect this) */}
+          <input
+            type="text"
+            name="username"
+            autoComplete="username"
+            defaultValue="admin"
+            aria-hidden="true"
+            style={{ display: 'none' }}
+          />
           <input
             id="admin-passphrase"
             name="passphrase"
