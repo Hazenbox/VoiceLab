@@ -163,3 +163,60 @@ export const countByFeedbackType = query({
     return counts;
   },
 });
+
+// ── Get learning statistics (admin dashboard) ────────────────────
+// Returns unique patterns count, edit counts, avoid reasons for POC demo
+export const getLearningStats = query({
+  args: {
+    since: v.optional(v.number()), // Timestamp to start counting from
+  },
+  handler: async (ctx, args) => {
+    // Default to last 90 days if not specified
+    const since = args.since ?? Date.now() - 90 * 24 * 60 * 60 * 1000;
+    
+    const corrections = await ctx.db
+      .query("corrections")
+      .withIndex("by_timestamp", (q) => q.gte("timestamp", since))
+      .take(1000); // Limit for performance
+    
+    // Filter to learning signals only (edits + thumbs_down), exclude rejected
+    const learningCorrections = corrections.filter(
+      (c) =>
+        (c.feedbackType === "edit" || c.feedbackType === "thumbs_down") &&
+        c.adminStatus !== "rejected"
+    );
+    
+    // Unique edit patterns (by original content hash - first 50 chars)
+    const uniqueEdits = new Set(
+      learningCorrections
+        .filter((c) => c.feedbackType === "edit" && c.editedContent)
+        .map((c) => c.originalContent.slice(0, 50))
+    );
+    
+    // Unique avoid patterns (from reasons)
+    const avoidPatterns = new Set<string>();
+    learningCorrections
+      .filter((c) => c.feedbackType === "thumbs_down" && c.reasons)
+      .forEach((c) => c.reasons?.forEach((r) => avoidPatterns.add(r)));
+    
+    // Count by feedback type within learning corrections
+    const editsCount = learningCorrections.filter(
+      (c) => c.feedbackType === "edit"
+    ).length;
+    const thumbsDownCount = learningCorrections.filter(
+      (c) => c.feedbackType === "thumbs_down"
+    ).length;
+    
+    return {
+      totalLearningCorrections: learningCorrections.length,
+      uniqueEditPatterns: uniqueEdits.size,
+      uniqueAvoidPatterns: avoidPatterns.size,
+      totalPatternsApplied: uniqueEdits.size + avoidPatterns.size,
+      byFeedbackType: {
+        edits: editsCount,
+        thumbsDown: thumbsDownCount,
+      },
+      topAvoidReasons: Array.from(avoidPatterns).slice(0, 10),
+    };
+  },
+});
