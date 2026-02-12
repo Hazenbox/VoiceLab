@@ -120,6 +120,41 @@ export const KPI_DESCRIPTIONS: Record<string, KPIDescription> = {
     description: 'Quality score per ecosystem/channel combination. Identifies contexts where the model struggles and needs more training examples.',
     importance: 'high',
   },
+
+  // Learning Metrics (POC Dashboard)
+  learningsApplied: {
+    label: 'learnings applied',
+    description: 'Number of unique correction patterns (edits and negative feedback) that influence content generation. Higher numbers indicate the system is actively learning from user feedback.',
+    importance: 'critical',
+  },
+  totalFeedback: {
+    label: 'total feedback',
+    description: 'Total user feedback collected (likes, dislikes, edits, comments). More feedback provides more learning signals for the system.',
+    importance: 'high',
+  },
+  sentimentRatio: {
+    label: 'sentiment ratio',
+    description: 'Percentage of positive feedback among all thumbs up/down signals. High ratios indicate users are satisfied with generated content.',
+    target: '>70%',
+    importance: 'high',
+  },
+  editCorrections: {
+    label: 'edit corrections',
+    description: 'Number of times users edited AI responses. Each edit creates a before/after pair that teaches the system better outputs.',
+    importance: 'critical',
+  },
+  avoidPatterns: {
+    label: 'avoid patterns',
+    description: 'Unique patterns identified from negative feedback reasons. These patterns are actively avoided in future content generation.',
+    importance: 'high',
+  },
+
+  // Knowledge Base Metrics
+  totalActiveRules: {
+    label: 'total active rules',
+    description: 'Total number of active rules in the knowledge base enforcing Jio brand guidelines. Includes avoid words, auto-fix rules, and approved examples.',
+    importance: 'high',
+  },
 };
 
 /**
