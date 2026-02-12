@@ -74,6 +74,7 @@ export default defineSchema({
     .index("by_ecosystem", ["ecosystem"])
     .index("by_userId", ["userId"])
     .index("by_eventType", ["eventType"])
+    .index("by_eventType_timestamp", ["eventType", "timestamp"]) // Compound index for efficient filtered time queries
     .index("by_persona", ["persona"])
     .index("by_sessionId", ["sessionId"]),
 

@@ -61,10 +61,11 @@ export const set = mutation({
 
 // ── Get all config values (admin) ────────────────────────────────
 // Read operations are public for simplicity
+// Note: Admin configs are typically <100 entries
 export const getAll = query({
   args: {},
   handler: async (ctx) => {
-    const configs = await ctx.db.query("adminConfig").collect();
+    const configs = await ctx.db.query("adminConfig").take(100);
     return configs.map((config) => {
       try {
         return { ...config, parsedValue: JSON.parse(config.value) };

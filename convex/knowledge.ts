@@ -3,6 +3,9 @@ import { mutation, query } from "./_generated/server";
 import { requireKnowledgeEditor, requireAuthenticated } from "./_auth";
 
 // ── Get knowledge items by type ──────────────────────────────────
+// Note: Knowledge items are curated, typically <500 per type
+const MAX_KNOWLEDGE_ITEMS_PER_TYPE = 500;
+
 export const getByType = query({
   args: {
     type: v.string(),
@@ -17,18 +20,19 @@ export const getByType = query({
         .withIndex("by_type_active", (q) =>
           q.eq("type", args.type).eq("isActive", true)
         )
-        .collect();
+        .take(MAX_KNOWLEDGE_ITEMS_PER_TYPE);
     }
 
     return await ctx.db
       .query("knowledgeItems")
       .withIndex("by_type", (q) => q.eq("type", args.type))
-      .collect();
+      .take(MAX_KNOWLEDGE_ITEMS_PER_TYPE);
   },
 });
 
 // ── Get relevant items for a generation context ──────────────────
 // Metadata-based retrieval (Phase 2). Upgraded to vector search in Phase 4.
+// Parallelized queries for better performance
 export const getRelevantItems = query({
   args: {
     ecosystem: v.optional(v.string()),
@@ -36,16 +40,21 @@ export const getRelevantItems = query({
     types: v.array(v.string()),
   },
   handler: async (ctx, args) => {
+    // Parallelize queries for all types
+    const itemsByType = await Promise.all(
+      args.types.map(type =>
+        ctx.db
+          .query("knowledgeItems")
+          .withIndex("by_type_active", (q) =>
+            q.eq("type", type).eq("isActive", true)
+          )
+          .take(MAX_KNOWLEDGE_ITEMS_PER_TYPE)
+      )
+    );
+
+    // Flatten and filter results
     const results = [];
-
-    for (const type of args.types) {
-      const items = await ctx.db
-        .query("knowledgeItems")
-        .withIndex("by_type_active", (q) =>
-          q.eq("type", type).eq("isActive", true)
-        )
-        .collect();
-
+    for (const items of itemsByType) {
       // Filter by ecosystem/channel if specified in metadata
       const filtered = items.filter((item) => {
         // Global items (no ecosystem/channel filter) always match
@@ -222,15 +231,16 @@ export const batchCreate = mutation({
     await requireKnowledgeEditor(ctx, args.createdBy);
 
     const now = Date.now();
-    const ids = [];
-    for (const item of args.items) {
-      const id = await ctx.db.insert("knowledgeItems", {
-        ...item,
-        createdAt: now,
-        updatedAt: now,
-      });
-      ids.push(id);
-    }
+    // Parallelize inserts for better throughput
+    const ids = await Promise.all(
+      args.items.map(item => 
+        ctx.db.insert("knowledgeItems", {
+          ...item,
+          createdAt: now,
+          updatedAt: now,
+        })
+      )
+    );
     return ids;
   },
 });
@@ -296,13 +306,16 @@ export const softDelete = mutation({
 
 // ── Get all knowledge for prompt injection (Phase 2) ─────────────
 // Single query to fetch everything the prompt builder needs.
+// Note: Each type is capped at 200 items for prompt - prevents token overflow
+const MAX_KNOWLEDGE_FOR_PROMPT = 200;
+
 export const getKnowledgeForPrompt = query({
   args: {
     ecosystem: v.optional(v.string()),
     channel: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Fetch all types in parallel
+    // Fetch all types in parallel with limits
     const [avoidWords, preferredWords, autoFixRules, approvedExamples] =
       await Promise.all([
         ctx.db
@@ -310,25 +323,25 @@ export const getKnowledgeForPrompt = query({
           .withIndex("by_type_active", (q) =>
             q.eq("type", "avoid_word").eq("isActive", true)
           )
-          .collect(),
+          .take(MAX_KNOWLEDGE_FOR_PROMPT),
         ctx.db
           .query("knowledgeItems")
           .withIndex("by_type_active", (q) =>
             q.eq("type", "preferred_word").eq("isActive", true)
           )
-          .collect(),
+          .take(MAX_KNOWLEDGE_FOR_PROMPT),
         ctx.db
           .query("knowledgeItems")
           .withIndex("by_type_active", (q) =>
             q.eq("type", "auto_fix").eq("isActive", true)
           )
-          .collect(),
+          .take(MAX_KNOWLEDGE_FOR_PROMPT),
         ctx.db
           .query("knowledgeItems")
           .withIndex("by_type_active", (q) =>
             q.eq("type", "approved_example").eq("isActive", true)
           )
-          .collect(),
+          .take(MAX_KNOWLEDGE_FOR_PROMPT),
       ]);
 
     // Filter examples by ecosystem/channel if specified

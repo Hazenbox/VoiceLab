@@ -14,11 +14,11 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     
-    // Clean up any existing sessions for this device
+    // Clean up any existing sessions for this device (cap at 10 - shouldn't have many)
     const existingSessions = await ctx.db
       .query("adminSessions")
       .withIndex("by_deviceId", (q) => q.eq("deviceId", args.deviceId))
-      .collect();
+      .take(10);
     
     for (const session of existingSessions) {
       await ctx.db.delete(session._id);

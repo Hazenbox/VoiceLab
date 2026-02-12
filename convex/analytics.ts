@@ -26,6 +26,7 @@ export const logEvent = mutation({
 });
 
 // ── Batch log events (for flushing sync queue) ───────────────────
+// Parallelized with Promise.all for better performance
 export const batchLogEvents = mutation({
   args: {
     events: v.array(
@@ -54,9 +55,10 @@ export const batchLogEvents = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    for (const event of args.events) {
-      await ctx.db.insert("analyticsEvents", event);
-    }
+    // Parallelize inserts for better throughput
+    await Promise.all(
+      args.events.map(event => ctx.db.insert("analyticsEvents", event))
+    );
   },
 });
 
@@ -108,20 +110,22 @@ export const getInRange = query({
 });
 
 // ── Count generations today (admin dashboard) ────────────────────
+// Uses compound index by_eventType_timestamp for efficient filtering
 export const countGenerationsToday = query({
   args: {},
   handler: async (ctx) => {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
+    // Use compound index to filter by eventType AND timestamp
     const events = await ctx.db
       .query("analyticsEvents")
-      .withIndex("by_timestamp", (q) =>
-        q.gte("timestamp", startOfDay.getTime())
+      .withIndex("by_eventType_timestamp", (q) =>
+        q.eq("eventType", "generation").gte("timestamp", startOfDay.getTime())
       )
       .take(10000); // Hard limit for performance
 
-    return events.filter((e) => e.eventType === "generation").length;
+    return events.length;
   },
 });
 

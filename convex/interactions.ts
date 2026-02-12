@@ -24,6 +24,7 @@ export const log = mutation({
 });
 
 // ── Batch log interaction events ───────────────────────────────────
+// Parallelized with Promise.all for better performance
 export const batchLog = mutation({
   args: {
     events: v.array(
@@ -39,9 +40,10 @@ export const batchLog = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    for (const event of args.events) {
-      await ctx.db.insert("interactionEvents", event);
-    }
+    // Parallelize inserts for better throughput
+    await Promise.all(
+      args.events.map(event => ctx.db.insert("interactionEvents", event))
+    );
   },
 });
 

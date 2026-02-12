@@ -46,14 +46,15 @@ export const seedAll = mutation({
   args: {},
   handler: async (ctx) => {
     // Check if already seeded (count multiple types to detect partial seeds)
+    // Note: Using take() instead of collect() for performance
     const avoidWordCount = (await ctx.db
       .query("knowledgeItems")
       .withIndex("by_type", (q) => q.eq("type", "avoid_word"))
-      .collect()).length;
+      .take(200)).length;
     const prefWordCount = (await ctx.db
       .query("knowledgeItems")
       .withIndex("by_type", (q) => q.eq("type", "preferred_word"))
-      .collect()).length;
+      .take(200)).length;
 
     // If both categories have data, assume fully seeded
     if (avoidWordCount > 100 && prefWordCount > 100) {
@@ -419,15 +420,15 @@ export const seedAll = mutation({
 });
 
 // ── Check Seed Status ────────────────────────────────────────────
-
+// Note: Caps at 10000 - sufficient for status check
 export const checkSeedStatus = query({
   args: {},
   handler: async (ctx) => {
-    const all = await ctx.db.query("knowledgeItems").collect();
+    const all = await ctx.db.query("knowledgeItems").take(10000);
     const byType: Record<string, number> = {};
     for (const item of all) {
       byType[item.type] = (byType[item.type] || 0) + 1;
     }
-    return { total: all.length, byType };
+    return { total: all.length, byType, isCapped: all.length >= 10000 };
   },
 });
