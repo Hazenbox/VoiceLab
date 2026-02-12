@@ -54,11 +54,17 @@ initSentry();
 
 const COLOR_MODE_KEY = 'voiceDesigner_colorMode';
 
-// ── Convex Client ────────────────────────────────────────────────
-// Initialize only if VITE_CONVEX_URL is configured.
-// When not configured, the app works in local-only mode.
+// ── Convex Client (REQUIRED) ────────────────────────────────────────
+// Convex is required for data sync, analytics, and RAG features.
+// The app will not start without a valid VITE_CONVEX_URL.
 const convexUrl = import.meta.env.VITE_CONVEX_URL;
-const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
+if (!convexUrl) {
+  throw new Error(
+    'VITE_CONVEX_URL environment variable is required. ' +
+    'Please configure your Convex deployment URL in .env.local or Vercel environment variables.'
+  );
+}
+const convex = new ConvexReactClient(convexUrl);
 
 /**
  * Bridge component that wires up the ConvexSyncService with
@@ -67,8 +73,6 @@ const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
  */
 function ConvexSyncBridge({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    if (!convex) return;
-    
     // Helper to inject mutation function into sync service
     const injectMutationFn = (): boolean => {
       const syncService = getSyncService();
@@ -153,18 +157,14 @@ function Root() {
     </DesignSystemProvider>
   );
 
-  // Wrap with ConvexProvider only if Convex is configured
-  if (convex) {
-    return (
-      <ConvexProvider client={convex}>
-        <ConvexSyncBridge>
-          {appTree}
-        </ConvexSyncBridge>
-      </ConvexProvider>
-    );
-  }
-
-  return appTree;
+  // Always wrap with ConvexProvider (Convex is required)
+  return (
+    <ConvexProvider client={convex}>
+      <ConvexSyncBridge>
+        {appTree}
+      </ConvexSyncBridge>
+    </ConvexProvider>
+  );
 }
 
 createRoot(document.getElementById('root')!).render(
