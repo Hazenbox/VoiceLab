@@ -292,33 +292,117 @@ function OfflineBanner() {
 // SECTIONS
 // ═══════════════════════════════════════════════════════════════════
 
+// ── Query Error Display Component ─────────────────────────────────
+function QueryErrorDisplay({ error, queryName, onRetry }: { 
+  error: string; 
+  queryName: string;
+  onRetry?: () => void;
+}) {
+  const theme = useThemeColors();
+  return (
+    <div 
+      className="p-4 rounded-lg mb-4"
+      style={{ 
+        backgroundColor: 'rgba(239, 68, 68, 0.1)', 
+        border: '1px solid rgba(239, 68, 68, 0.3)' 
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <span style={{ color: '#ef4444', fontSize: '20px' }}>⚠</span>
+        <div className="flex-1">
+          <p className="font-medium" style={{ color: '#ef4444', fontSize: '14px' }}>
+            failed to load {queryName}
+          </p>
+          <p className="mt-1" style={{ color: theme.text.low, fontSize: '12px' }}>
+            {error}
+          </p>
+          {onRetry && (
+            <button
+              onClick={onRetry}
+              className="mt-2 px-3 py-1 rounded text-sm font-medium"
+              style={{ 
+                backgroundColor: theme.accent, 
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              retry
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Dashboard ────────────────────────────────────────────────────
 // Redesigned for POC: Focus on value delivery metrics
 function AdminDashboard() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
+  const [queryError, setQueryError] = useState<string | null>(null);
   
   // Time range for analytics - last 24 hours from mount time
   const [since] = useState(() => Date.now() - 24 * 60 * 60 * 1000);
   
-  // Direct Convex queries
+  // Direct Convex queries with error logging
   const dashboardStats = useQuery(api.analytics.dashboardStats, { since });
   const learningStats = useQuery(api.corrections.getLearningStats, { since });
   const hourlyBreakdown = useQuery(api.analytics.hourlyBreakdown, { since });
   const recentSessions = useQuery(api.sessions.getRecent, { limit: 5 });
   
+  // Debug logging for production troubleshooting
+  useEffect(() => {
+    console.log('[AdminDashboard] Query states:', {
+      dashboardStats: dashboardStats === undefined ? 'loading' : dashboardStats === null ? 'null' : 'loaded',
+      learningStats: learningStats === undefined ? 'loading' : learningStats === null ? 'null' : 'loaded',
+      hourlyBreakdown: hourlyBreakdown === undefined ? 'loading' : hourlyBreakdown === null ? 'null' : 'loaded',
+      recentSessions: recentSessions === undefined ? 'loading' : recentSessions === null ? 'null' : 'loaded',
+      isOnline,
+    });
+  }, [dashboardStats, learningStats, hourlyBreakdown, recentSessions, isOnline]);
+  
   // Format hourly data for charts
   const hourlyChartData = useMemo(() => {
     if (!hourlyBreakdown) return [];
-    return hourlyBreakdown.map(h => ({
-      label: `${h.hour.toString().padStart(2, '0')}`,
-      value: h.count,
-    }));
+    try {
+      return hourlyBreakdown.map(h => ({
+        label: `${h.hour.toString().padStart(2, '0')}`,
+        value: h.count,
+      }));
+    } catch (err) {
+      console.error('[AdminDashboard] Error formatting hourly data:', err);
+      return [];
+    }
   }, [hourlyBreakdown]);
   
   // Loading state - show skeleton while data is loading
   if (dashboardStats === undefined || learningStats === undefined) {
     return <AdminLoadingSkeleton />;
+  }
+  
+  // Handle null responses (query returned but no data - could indicate Convex issue)
+  if (dashboardStats === null) {
+    console.error('[AdminDashboard] dashboardStats returned null - possible Convex connection issue');
+    return (
+      <QueryErrorDisplay 
+        error="dashboard stats query returned no data. check convex connection and deployment." 
+        queryName="dashboard stats"
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
+  
+  if (learningStats === null) {
+    console.error('[AdminDashboard] learningStats returned null - possible Convex connection issue');
+    return (
+      <QueryErrorDisplay 
+        error="learning stats query returned no data. check convex connection and deployment." 
+        queryName="learning stats"
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   // Calculate completion rate safely
@@ -560,9 +644,30 @@ function AdminLearningCenter() {
   const [filter, setFilter] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Debug logging for production troubleshooting
+  useEffect(() => {
+    console.log('[AdminLearningCenter] Query states:', {
+      corrections: corrections === undefined ? 'loading' : corrections === null ? 'null' : `loaded (${corrections?.length ?? 0})`,
+      learningStats: learningStats === undefined ? 'loading' : learningStats === null ? 'null' : 'loaded',
+      feedbackCounts: feedbackCounts === undefined ? 'loading' : feedbackCounts === null ? 'null' : 'loaded',
+    });
+  }, [corrections, learningStats, feedbackCounts]);
+
   // Loading state
   if (corrections === undefined || learningStats === undefined) {
     return <AdminLoadingSkeleton />;
+  }
+  
+  // Handle null responses
+  if (corrections === null || learningStats === null) {
+    console.error('[AdminLearningCenter] Query returned null - possible Convex issue');
+    return (
+      <QueryErrorDisplay 
+        error="learning center data query returned no data. check convex connection." 
+        queryName="learning center"
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   // Filter corrections for the table
@@ -749,6 +854,15 @@ function AdminKnowledge() {
   // Fetch more items when a type is selected (up to 500 for viewing)
   const knowledgeItems = useQuery(api.knowledge.listAll, selectedType ? { type: selectedType, limit: 500 } : { limit: 50 });
   
+  // Debug logging for production troubleshooting
+  useEffect(() => {
+    console.log('[AdminKnowledge] Query states:', {
+      knowledgeCounts: knowledgeCounts === undefined ? 'loading' : knowledgeCounts === null ? 'null' : 'loaded',
+      knowledgeItems: knowledgeItems === undefined ? 'loading' : knowledgeItems === null ? 'null' : `loaded (${knowledgeItems?.length ?? 0})`,
+      selectedType,
+    });
+  }, [knowledgeCounts, knowledgeItems, selectedType]);
+  
   // Calculate total active rules - moved BEFORE early return to avoid conditional hook
   const totalActiveRules = useMemo(() => {
     if (!knowledgeCounts) return 0;
@@ -780,6 +894,18 @@ function AdminKnowledge() {
   // Loading state - after all hooks
   if (knowledgeCounts === undefined) {
     return <AdminLoadingSkeleton />;
+  }
+  
+  // Handle null response
+  if (knowledgeCounts === null) {
+    console.error('[AdminKnowledge] knowledgeCounts returned null - possible Convex issue');
+    return (
+      <QueryErrorDisplay 
+        error="knowledge base data query returned no data. check convex connection." 
+        queryName="knowledge base"
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   const handleCardClick = (type: string) => {
@@ -1227,6 +1353,15 @@ function AdminUsageAnalytics() {
   const contextStats = useQuery(api.analytics.statsByEcosystemChannel, { since });
   const users = useQuery(api.users.listAll);
   
+  // Debug logging for production troubleshooting
+  useEffect(() => {
+    console.log('[AdminUsageAnalytics] Query states:', {
+      contextStats: contextStats === undefined ? 'loading' : contextStats === null ? 'null' : `loaded (${contextStats?.length ?? 0})`,
+      users: users === undefined ? 'loading' : users === null ? 'null' : `loaded (${users?.length ?? 0})`,
+      timeRange,
+    });
+  }, [contextStats, users, timeRange]);
+  
   // Group by ecosystem and channel
   const byEcosystem = useMemo(() => {
     if (!contextStats) return [];
@@ -1253,6 +1388,18 @@ function AdminUsageAnalytics() {
   // Loading state
   if (contextStats === undefined) {
     return <AdminLoadingSkeleton />;
+  }
+  
+  // Handle null response
+  if (contextStats === null) {
+    console.error('[AdminUsageAnalytics] contextStats returned null - possible Convex issue');
+    return (
+      <QueryErrorDisplay 
+        error="usage analytics data query returned no data. check convex connection." 
+        queryName="usage analytics"
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   return (
@@ -1344,9 +1491,28 @@ function AdminUsers() {
   // Direct Convex query - no localStorage fallback
   const users = useQuery(api.users.listAll);
 
+  // Debug logging for production troubleshooting
+  useEffect(() => {
+    console.log('[AdminUsers] Query states:', {
+      users: users === undefined ? 'loading' : users === null ? 'null' : `loaded (${users?.length ?? 0})`,
+    });
+  }, [users]);
+
   // Loading state
   if (users === undefined) {
     return <AdminLoadingSkeleton />;
+  }
+  
+  // Handle null response
+  if (users === null) {
+    console.error('[AdminUsers] users query returned null - possible Convex issue');
+    return (
+      <QueryErrorDisplay 
+        error="users data query returned no data. check convex connection." 
+        queryName="users"
+        onRetry={() => window.location.reload()}
+      />
+    );
   }
 
   const filteredUsers = (() => {

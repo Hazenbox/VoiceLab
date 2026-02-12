@@ -17,11 +17,21 @@ const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
 // Initialize Convex client
 function getConvexClient(): ConvexHttpClient | null {
-  const convexUrl = process.env.CONVEX_URL || process.env.NEXT_PUBLIC_CONVEX_URL;
+  // Check multiple possible env var names for Convex URL
+  // CONVEX_URL: Standard Convex env var
+  // VITE_CONVEX_URL: Vite client-side env var (also accessible server-side)
+  // NEXT_PUBLIC_CONVEX_URL: Next.js convention
+  const convexUrl = process.env.CONVEX_URL 
+    || process.env.VITE_CONVEX_URL 
+    || process.env.NEXT_PUBLIC_CONVEX_URL;
+  
   if (!convexUrl) {
     console.warn('[Admin Auth] CONVEX_URL not configured - falling back to in-memory sessions');
+    console.warn('[Admin Auth] Available env vars:', Object.keys(process.env).filter(k => k.includes('CONVEX')));
     return null;
   }
+  
+  console.log('[Admin Auth] Using Convex URL:', convexUrl.slice(0, 30) + '...');
   return new ConvexHttpClient(convexUrl);
 }
 
