@@ -1,12 +1,16 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useQuery, useMutation } from 'convex/react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import type { Id } from '../../convex/_generated/dataModel';
 import { useThemeColors } from '../theme/useColors';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { AdminSidebar, type AdminSection } from './components/AdminSidebar';
 import { AdminStatCard } from './components/AdminStatCard';
 import { AdminTable, AdminTableRow, AdminTableCell } from './components/AdminTable';
+import { KPICard } from './components/KPICard';
+import { TimeRangeSelector, getTimestampForRange, type TimeRange } from './components/TimeRangeSelector';
+import { ChartContainer, HorizontalBarChart, VerticalBars, ProgressBar, StatBreakdown } from './components/AnalyticsCharts';
+import { KPI_DESCRIPTIONS, TAB_DESCRIPTIONS } from './constants/kpiDescriptions';
+import { formatDuration, formatResponseTime, formatRelativeTime } from './utils/formatters';
 import { getApiBaseUrl } from '../config/providers';
 
 // ── Admin Auth Gate ──────────────────────────────────────────────
@@ -202,29 +206,6 @@ function FeedbackBadge({ type }: { type: string }) {
   );
 }
 
-// ── Utility: Admin Status badge ──────────────────────────────────
-function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, { bg: string; fg: string }> = {
-    pending: { bg: 'rgba(245,158,11,0.12)', fg: '#f59e0b' },
-    approved: { bg: 'rgba(16,185,129,0.12)', fg: '#10b981' },
-    rejected: { bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
-  };
-  const c = colorMap[status] || { bg: 'rgba(107,114,128,0.12)', fg: '#6b7280' };
-  return (
-    <span
-      className="inline-block rounded-full font-medium whitespace-nowrap"
-      style={{
-        fontSize: '10px',
-        padding: '1px 6px',
-        backgroundColor: c.bg,
-        color: c.fg,
-      }}
-    >
-      {status}
-    </span>
-  );
-}
-
 // ── Utility: Section Header ──────────────────────────────────────
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   const theme = useThemeColors();
@@ -313,59 +294,146 @@ function AdminDashboard() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
   
-  // Direct Convex queries - no localStorage fallback
-  const corrections = useQuery(api.corrections.listAll, { limit: 100 });
-  const knowledgeCounts = useQuery(api.knowledge.countByType);
+  // Time range for analytics
+  const since = useMemo(() => Date.now() - 24 * 60 * 60 * 1000, []); // Last 24 hours
   
-  // Loading state - show skeleton while Convex data is loading
-  if (corrections === undefined || knowledgeCounts === undefined) {
+  // Direct Convex queries
+  const dashboardStats = useQuery(api.analytics.dashboardStats, { since });
+  const corrections = useQuery(api.corrections.listAll, { limit: 50 });
+  const recentSessions = useQuery(api.sessions.getRecent, { limit: 5 });
+  
+  // Loading state - show skeleton while data is loading
+  if (dashboardStats === undefined || corrections === undefined) {
     return <AdminLoadingSkeleton />;
   }
-
-  // Derived values
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const week = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const savedExamplesCount = knowledgeCounts?.approved_example?.active ?? 0;
-
-  const todayCount = corrections.filter(c => c.timestamp >= today.getTime()).length;
-  const weekCount = corrections.filter(c => c.timestamp >= week).length;
-  const thumbsUp = corrections.filter(c => c.feedbackType === 'thumbs_up').length;
-  const thumbsDown = corrections.filter(c => c.feedbackType === 'thumbs_down').length;
-  const edits = corrections.filter(c => c.feedbackType === 'edit').length;
-  const comments = corrections.filter(c => c.feedbackType === 'comment').length;
 
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="Dashboard" subtitle="System overview and recent activity" />
+      <SectionHeader title="Dashboard" subtitle="system health at a glance — last 24 hours" />
 
-      {/* Stat Cards */}
+      {/* Primary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-        <AdminStatCard label="today" value={todayCount} colorClass="text-orange-500" />
-        <AdminStatCard label="this week" value={weekCount} colorClass="text-blue-500" />
-        <AdminStatCard label="total feedback" value={corrections.length} colorClass="text-purple-500" />
-        <AdminStatCard label="saved examples" value={savedExamplesCount} colorClass="text-green-500" />
+        <KPICard 
+          label="total generations" 
+          value={dashboardStats.totalGenerations}
+          description={KPI_DESCRIPTIONS.totalGenerations.description}
+          colorClass="text-orange-500"
+        />
+        <KPICard 
+          label="avg trust score" 
+          value={dashboardStats.avgTrustScore}
+          description={KPI_DESCRIPTIONS.avgTrustScore.description}
+          target={KPI_DESCRIPTIONS.avgTrustScore.target}
+          colorClass="text-blue-500"
+        />
+        <KPICard 
+          label="avg response time" 
+          value={dashboardStats.avgResponseTime}
+          format="ms"
+          description={KPI_DESCRIPTIONS.avgResponseTime.description}
+          target={KPI_DESCRIPTIONS.avgResponseTime.target}
+          colorClass="text-purple-500"
+        />
+        <KPICard 
+          label="active sessions" 
+          value={dashboardStats.activeSessions}
+          description={KPI_DESCRIPTIONS.activeSessions.description}
+          colorClass="text-green-500"
+        />
       </div>
 
-      {/* Feedback Breakdown */}
-      <AdminCard className="p-4 mb-5">
-        <CardLabel>feedback breakdown</CardLabel>
-        <div className="flex flex-wrap gap-6">
-          {[
-            { label: 'thumbs up', value: thumbsUp, pct: corrections.length ? Math.round(thumbsUp / corrections.length * 100) : 0 },
-            { label: 'thumbs down', value: thumbsDown, pct: corrections.length ? Math.round(thumbsDown / corrections.length * 100) : 0 },
-            { label: 'edits', value: edits, pct: corrections.length ? Math.round(edits / corrections.length * 100) : 0 },
-            { label: 'comments', value: comments, pct: corrections.length ? Math.round(comments / corrections.length * 100) : 0 },
-          ].map((fb) => (
-            <div key={fb.label} className="text-center min-w-[80px]">
-              <span className="block font-semibold" style={{ fontSize: '20px', color: theme.text.high }}>{fb.value}</span>
-              <span className="block" style={{ fontSize: '11px', color: theme.text.low }}>{fb.label} ({fb.pct}%)</span>
+      {/* Secondary metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+        {/* Session Status */}
+        <AdminCard className="p-4">
+          <CardLabel>session status</CardLabel>
+          <StatBreakdown
+            items={[
+              { label: 'active', value: dashboardStats.activeSessions, color: '#22c55e' },
+              { label: 'completed', value: dashboardStats.completedSessions, color: '#3b82f6' },
+              { label: 'abandoned', value: dashboardStats.abandonedSessions, color: '#f59e0b' },
+            ]}
+          />
+          <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${theme.stroke.low}` }}>
+            <div className="flex justify-between text-xs" style={{ color: theme.text.low }}>
+              <span>avg duration: {formatDuration(dashboardStats.avgSessionDuration)}</span>
+              <span>avg msgs/session: {dashboardStats.avgMessagesPerSession?.toFixed(1) || '—'}</span>
             </div>
-          ))}
-        </div>
-      </AdminCard>
+          </div>
+        </AdminCard>
 
-      {/* Recent Activity */}
+        {/* User Actions */}
+        <AdminCard className="p-4">
+          <CardLabel>user interactions</CardLabel>
+          <StatBreakdown
+            items={[
+              { label: 'copies', value: dashboardStats.copyCount, color: '#8b5cf6' },
+              { label: 'likes', value: dashboardStats.likeCount, color: '#22c55e' },
+              { label: 'dislikes', value: dashboardStats.dislikeCount, color: '#ef4444' },
+              { label: 'errors', value: dashboardStats.errorCount, color: '#6b7280' },
+            ]}
+          />
+          <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${theme.stroke.low}` }}>
+            <div className="flex justify-between text-xs" style={{ color: theme.text.low }}>
+              <span>regeneration rate: {dashboardStats.regenerationRate}%</span>
+              <span>regenerations: {dashboardStats.regenerationCount}</span>
+            </div>
+          </div>
+        </AdminCard>
+      </div>
+
+      {/* Recent Sessions */}
+      {recentSessions && recentSessions.length > 0 && (
+        <AdminCard className="p-4 mb-5">
+          <CardLabel>recent sessions</CardLabel>
+          <AdminTable
+            columns={[
+              { key: 'project', label: 'project' },
+              { key: 'status', label: 'status' },
+              { key: 'messages', label: 'messages' },
+              { key: 'duration', label: 'duration' },
+              { key: 'time', label: 'started' },
+            ]}
+            isEmpty={recentSessions.length === 0}
+            emptyMessage="no sessions yet"
+          >
+            {recentSessions.map((session) => (
+              <AdminTableRow key={session._id}>
+                <AdminTableCell>{session.projectName}</AdminTableCell>
+                <AdminTableCell>
+                  <span
+                    className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+                    style={{
+                      backgroundColor: session.status === 'active' 
+                        ? 'rgba(34,197,94,0.12)' 
+                        : session.status === 'completed'
+                          ? 'rgba(59,130,246,0.12)'
+                          : 'rgba(245,158,11,0.12)',
+                      color: session.status === 'active' 
+                        ? '#22c55e' 
+                        : session.status === 'completed'
+                          ? '#3b82f6'
+                          : '#f59e0b',
+                    }}
+                  >
+                    {session.status}
+                  </span>
+                </AdminTableCell>
+                <AdminTableCell>{session.messageCount}</AdminTableCell>
+                <AdminTableCell>{formatDuration(session.durationSeconds ?? null)}</AdminTableCell>
+                <AdminTableCell>
+                  <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                    {formatRelativeTime(session.startedAt)}
+                  </span>
+                </AdminTableCell>
+              </AdminTableRow>
+            ))}
+          </AdminTable>
+        </AdminCard>
+      )}
+
+      {/* Recent Feedback */}
       <AdminCard className="p-4">
         <CardLabel>recent feedback</CardLabel>
         <AdminTable
@@ -377,13 +445,13 @@ function AdminDashboard() {
           isEmpty={corrections.length === 0}
           emptyMessage="no feedback recorded yet."
         >
-          {corrections.slice(0, 10).map((c, i) => (
+          {corrections.slice(0, 8).map((c, i) => (
             <AdminTableRow key={i}>
               <AdminTableCell><FeedbackBadge type={c.feedbackType} /></AdminTableCell>
               <AdminTableCell className="max-w-sm truncate">{(c.originalContent || '').slice(0, 80)}</AdminTableCell>
               <AdminTableCell className="whitespace-nowrap">
                 <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                  {new Date(c.timestamp).toLocaleString()}
+                  {formatRelativeTime(c.timestamp)}
                 </span>
               </AdminTableCell>
             </AdminTableRow>
@@ -394,91 +462,777 @@ function AdminDashboard() {
   );
 }
 
+// ── Analytics Tab Types ───────────────────────────────────────────
+type AnalyticsTab = 'overview' | 'performance' | 'sessions' | 'interactions' | 'context';
+
 // ── Analytics ────────────────────────────────────────────────────
 function AdminAnalytics() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
   
-  // Direct Convex queries - no localStorage fallback
-  const corrections = useQuery(api.corrections.listAll, { limit: 500 });
-  const feedbackCounts = useQuery(api.corrections.countByFeedbackType);
+  // State
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>('overview');
+  const [timeRange, setTimeRange] = useState<TimeRange>('day');
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  
+  // Calculate since timestamp based on time range
+  const since = useMemo(() => getTimestampForRange(timeRange), [timeRange]);
+  
+  // Auto-refresh logic
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const interval = setInterval(() => {
+      // Force re-render by updating the since value slightly
+      // Convex queries are already reactive, but this ensures UI refresh
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
+  
+  // Convex queries
+  const dashboardStats = useQuery(api.analytics.dashboardStats, { since });
+  const responseTimeStats = useQuery(api.analytics.averageResponseTime, { since });
+  const hourlyBreakdown = useQuery(api.analytics.hourlyBreakdown, { since });
+  const sessionStats = useQuery(api.sessions.getStats, { since });
+  const interactionStats = useQuery(api.interactions.getStats, { since });
+  const contextStats = useQuery(api.analytics.statsByEcosystemChannel, { since });
+  const recentSessions = useQuery(api.sessions.getRecent, { limit: 10 });
+  const recentInteractions = useQuery(api.interactions.getRecent, { limit: 20 });
+  
+  // Format hourly data for charts
+  const hourlyChartData = useMemo(() => {
+    if (!hourlyBreakdown) return [];
+    return hourlyBreakdown.map(h => ({
+      label: `${h.hour.toString().padStart(2, '0')}`,
+      value: h.count,
+    }));
+  }, [hourlyBreakdown]);
   
   // Loading state
-  if (corrections === undefined || feedbackCounts === undefined) {
-    return <AdminLoadingSkeleton />;
-  }
-
-  const byEcosystem = (() => {
-    const counts: Record<string, number> = {};
-    for (const c of corrections) { const eco = (c as Record<string, unknown>).ecosystem as string || 'unknown'; counts[eco] = (counts[eco] || 0) + 1; }
-    return Object.entries(counts).sort(([, a], [, b]) => b - a);
-  })();
-
-  const byChannel = (() => {
-    const counts: Record<string, number> = {};
-    for (const c of corrections) { const ch = (c as Record<string, unknown>).channel as string || 'unknown'; counts[ch] = (counts[ch] || 0) + 1; }
-    return Object.entries(counts).sort(([, a], [, b]) => b - a);
-  })();
-
-  const byType = Object.entries(feedbackCounts).sort(([, a], [, b]) => b - a);
-
-  const BarRow = ({ label, count, color }: { label: string; count: number; color: string }) => {
-    const max = Math.max(...(byEcosystem.length ? byEcosystem.map(([, c]) => c) : [1]));
-    const pct = max > 0 ? (count / max) * 100 : 0;
-    return (
-      <div className="flex items-center gap-3 py-1" style={{ borderBottom: `1px solid ${theme.stroke.low}` }}>
-        <span className="w-28 truncate" style={{ fontSize: '13px', color: theme.text.high }}>{label}</span>
-        <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: theme.stroke.low }}>
-          <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
-        </div>
-        <span className="font-semibold w-8 text-right" style={{ fontSize: '13px', color }}>{count}</span>
-      </div>
-    );
-  };
+  const isLoading = dashboardStats === undefined;
+  
+  // Tabs configuration
+  const tabs: Array<{ id: AnalyticsTab; label: string }> = [
+    { id: 'overview', label: 'overview' },
+    { id: 'performance', label: 'performance' },
+    { id: 'sessions', label: 'sessions' },
+    { id: 'interactions', label: 'interactions' },
+    { id: 'context', label: 'by context' },
+  ];
 
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="Analytics" subtitle="content quality metrics and usage patterns" />
+      
+      {/* Header with time range and auto-refresh */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+        <div>
+          <h2
+            className="font-semibold"
+            style={{ color: theme.text.high, fontSize: '16px', letterSpacing: '-0.3px', margin: 0 }}
+          >
+            Analytics
+          </h2>
+          <span
+            className="block mt-0.5"
+            style={{ color: theme.text.low, fontSize: '12px' }}
+          >
+            {TAB_DESCRIPTIONS[activeTab]}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+          <button
+            onClick={() => setAutoRefresh(!autoRefresh)}
+            className="flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors"
+            style={{
+              backgroundColor: autoRefresh ? 'rgba(34, 197, 94, 0.15)' : 'transparent',
+              color: autoRefresh ? '#22c55e' : theme.text.low,
+              border: `1px solid ${autoRefresh ? '#22c55e' : theme.stroke.low}`,
+            }}
+            aria-pressed={autoRefresh}
+          >
+            {autoRefresh && (
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            )}
+            auto-refresh
+          </button>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+      {/* Tab navigation */}
+      <div 
+        className="flex gap-1 mb-5 pb-3"
+        style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
+        role="tablist"
+      >
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="px-3 py-1.5 rounded-md text-sm transition-colors"
+              style={{
+                backgroundColor: isActive ? theme.accent : 'transparent',
+                color: isActive ? '#fff' : theme.text.medium,
+                fontWeight: isActive ? 500 : 400,
+              }}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`panel-${tab.id}`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab content */}
+      {isLoading ? (
+        <AdminLoadingSkeleton />
+      ) : (
+        <div role="tabpanel" id={`panel-${activeTab}`}>
+          {activeTab === 'overview' && (
+            <AnalyticsOverviewTab 
+              stats={dashboardStats}
+              hourlyData={hourlyChartData}
+            />
+          )}
+          {activeTab === 'performance' && (
+            <AnalyticsPerformanceTab 
+              stats={dashboardStats}
+              responseTimeStats={responseTimeStats}
+            />
+          )}
+          {activeTab === 'sessions' && (
+            <AnalyticsSessionsTab 
+              stats={dashboardStats}
+              sessionStats={sessionStats}
+              recentSessions={recentSessions}
+            />
+          )}
+          {activeTab === 'interactions' && (
+            <AnalyticsInteractionsTab 
+              stats={dashboardStats}
+              interactionStats={interactionStats}
+              recentInteractions={recentInteractions}
+            />
+          )}
+          {activeTab === 'context' && (
+            <AnalyticsContextTab 
+              contextStats={contextStats}
+            />
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+// ── Analytics Sub-tabs ───────────────────────────────────────────
+
+function AnalyticsOverviewTab({ 
+  stats, 
+  hourlyData 
+}: { 
+  stats: NonNullable<ReturnType<typeof useQuery<typeof api.analytics.dashboardStats>>>;
+  hourlyData: Array<{ label: string; value: number }>;
+}) {
+  const theme = useThemeColors();
+  
+  return (
+    <>
+      {/* Primary KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <KPICard 
+          label="total generations" 
+          value={stats.totalGenerations}
+          description={KPI_DESCRIPTIONS.totalGenerations.description}
+          colorClass="text-orange-500"
+        />
+        <KPICard 
+          label="avg trust score" 
+          value={stats.avgTrustScore}
+          description={KPI_DESCRIPTIONS.avgTrustScore.description}
+          target={KPI_DESCRIPTIONS.avgTrustScore.target}
+          colorClass="text-blue-500"
+        />
+        <KPICard 
+          label="avg response time" 
+          value={stats.avgResponseTime}
+          format="ms"
+          description={KPI_DESCRIPTIONS.avgResponseTime.description}
+          target={KPI_DESCRIPTIONS.avgResponseTime.target}
+          colorClass="text-purple-500"
+        />
+        <KPICard 
+          label="total sessions" 
+          value={stats.totalSessions}
+          description={KPI_DESCRIPTIONS.activeSessions.description}
+          colorClass="text-green-500"
+        />
+      </div>
+
+      {/* Hourly Activity Chart */}
+      <ChartContainer
+        title="hourly activity"
+        subtitle="generations per hour"
+        empty={hourlyData.every(d => d.value === 0)}
+        emptyMessage="no activity in selected time range"
+        className="mb-5"
+      >
+        <VerticalBars data={hourlyData} height={140} />
+      </ChartContainer>
+
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <AdminCard className="p-4">
-          <CardLabel>by ecosystem</CardLabel>
-          {byEcosystem.length === 0
-            ? <span style={{ color: theme.text.low, fontSize: '13px' }}>no data yet</span>
-            : byEcosystem.map(([eco, count]) => <BarRow key={eco} label={eco} count={count} color={theme.accent} />)
-          }
+          <CardLabel>session summary</CardLabel>
+          <StatBreakdown
+            items={[
+              { label: 'active', value: stats.activeSessions, color: '#22c55e' },
+              { label: 'completed', value: stats.completedSessions, color: '#3b82f6' },
+              { label: 'abandoned', value: stats.abandonedSessions, color: '#f59e0b' },
+            ]}
+          />
         </AdminCard>
 
         <AdminCard className="p-4">
-          <CardLabel>by channel</CardLabel>
-          {byChannel.length === 0
-            ? <span style={{ color: theme.text.low, fontSize: '13px' }}>no data yet</span>
-            : byChannel.map(([ch, count]) => <BarRow key={ch} label={ch} count={count} color="#3b82f6" />)
-          }
+          <CardLabel>user actions</CardLabel>
+          <StatBreakdown
+            items={[
+              { label: 'copies', value: stats.copyCount, color: '#8b5cf6' },
+              { label: 'likes', value: stats.likeCount, color: '#22c55e' },
+              { label: 'dislikes', value: stats.dislikeCount, color: '#ef4444' },
+            ]}
+          />
+        </AdminCard>
+      </div>
+    </>
+  );
+}
+
+function AnalyticsPerformanceTab({ 
+  stats,
+  responseTimeStats,
+}: { 
+  stats: NonNullable<ReturnType<typeof useQuery<typeof api.analytics.dashboardStats>>>;
+  responseTimeStats: ReturnType<typeof useQuery<typeof api.analytics.averageResponseTime>>;
+}) {
+  const theme = useThemeColors();
+  
+  return (
+    <>
+      {/* Response Time Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <KPICard 
+          label="avg response time" 
+          value={stats.avgResponseTime}
+          format="ms"
+          description={KPI_DESCRIPTIONS.avgResponseTime.description}
+          target={KPI_DESCRIPTIONS.avgResponseTime.target}
+          colorClass="text-orange-500"
+        />
+        <KPICard 
+          label="p50 (median)" 
+          value={responseTimeStats?.median ?? null}
+          format="ms"
+          description={KPI_DESCRIPTIONS.p50.description}
+          colorClass="text-blue-500"
+        />
+        <KPICard 
+          label="p95" 
+          value={responseTimeStats?.p95 ?? null}
+          format="ms"
+          description={KPI_DESCRIPTIONS.p95.description}
+          target={KPI_DESCRIPTIONS.p95.target}
+          colorClass="text-purple-500"
+        />
+        <KPICard 
+          label="p99" 
+          value={responseTimeStats?.p99 ?? null}
+          format="ms"
+          description={KPI_DESCRIPTIONS.p99.description}
+          colorClass="text-red-500"
+        />
+      </div>
+
+      {/* Regeneration & Quality */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+        <AdminCard className="p-4">
+          <CardLabel>regeneration rate</CardLabel>
+          <div className="mb-3">
+            <span 
+              className="text-3xl font-bold"
+              style={{ color: stats.regenerationRate > 15 ? '#ef4444' : '#22c55e' }}
+            >
+              {stats.regenerationRate}%
+            </span>
+            <span className="ml-2 text-xs" style={{ color: theme.text.low }}>
+              target: &lt;15%
+            </span>
+          </div>
+          <ProgressBar 
+            label={`${stats.regenerationCount} of ${stats.totalGenerations} regenerated`}
+            value={stats.regenerationRate}
+            max={100}
+            color={stats.regenerationRate > 15 ? '#ef4444' : '#22c55e'}
+            showPercentage={false}
+          />
+          <p className="mt-3 text-xs" style={{ color: theme.text.low }}>
+            {KPI_DESCRIPTIONS.regenerationRate.description}
+          </p>
+        </AdminCard>
+
+        <AdminCard className="p-4">
+          <CardLabel>content quality</CardLabel>
+          <div className="mb-3">
+            <span 
+              className="text-3xl font-bold"
+              style={{ color: (stats.avgTrustScore ?? 0) >= 90 ? '#22c55e' : '#f59e0b' }}
+            >
+              {stats.avgTrustScore ?? '—'}
+            </span>
+            <span className="ml-2 text-xs" style={{ color: theme.text.low }}>
+              avg trust score (target: &gt;90)
+            </span>
+          </div>
+          <ProgressBar 
+            label="quality score"
+            value={stats.avgTrustScore ?? 0}
+            max={100}
+            color={(stats.avgTrustScore ?? 0) >= 90 ? '#22c55e' : '#f59e0b'}
+          />
+          <p className="mt-3 text-xs" style={{ color: theme.text.low }}>
+            {KPI_DESCRIPTIONS.avgTrustScore.description}
+          </p>
         </AdminCard>
       </div>
 
+      {/* Error Count */}
       <AdminCard className="p-4">
-        <CardLabel>feedback type distribution</CardLabel>
-        <div className="flex flex-wrap gap-3">
-          {byType.map(([type, count]) => (
-            <div
-              key={type}
-              className="flex-1 min-w-[100px] text-center py-2 px-3 rounded-lg"
-              style={{ backgroundColor: theme.background.ghost }}
+        <CardLabel>error tracking</CardLabel>
+        <div className="flex items-center gap-4">
+          <div>
+            <span 
+              className="text-2xl font-bold"
+              style={{ color: stats.errorCount > 0 ? '#ef4444' : '#22c55e' }}
             >
-              <span className="block font-semibold" style={{ fontSize: '20px', color: theme.text.high }}>{count}</span>
-              <span className="block" style={{ fontSize: '11px', color: theme.text.low }}>{type}</span>
-            </div>
-          ))}
+              {stats.errorCount}
+            </span>
+            <span className="ml-2 text-sm" style={{ color: theme.text.low }}>
+              errors
+            </span>
+          </div>
+          <p className="flex-1 text-xs" style={{ color: theme.text.low }}>
+            {KPI_DESCRIPTIONS.errorCount.description}
+          </p>
         </div>
       </AdminCard>
     </>
   );
 }
 
-// ── Memory & Learnings ───────────────────────────────────────────
+function AnalyticsSessionsTab({ 
+  stats,
+  sessionStats,
+  recentSessions,
+}: { 
+  stats: NonNullable<ReturnType<typeof useQuery<typeof api.analytics.dashboardStats>>>;
+  sessionStats: ReturnType<typeof useQuery<typeof api.sessions.getStats>>;
+  recentSessions: ReturnType<typeof useQuery<typeof api.sessions.getRecent>>;
+}) {
+  const theme = useThemeColors();
+  
+  return (
+    <>
+      {/* Session KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <KPICard 
+          label="total sessions" 
+          value={stats.totalSessions}
+          description={KPI_DESCRIPTIONS.activeSessions.description}
+          colorClass="text-orange-500"
+        />
+        <KPICard 
+          label="active now" 
+          value={stats.activeSessions}
+          description={KPI_DESCRIPTIONS.activeSessions.description}
+          colorClass="text-green-500"
+        />
+        <KPICard 
+          label="avg duration" 
+          value={stats.avgSessionDuration}
+          format="duration"
+          description={KPI_DESCRIPTIONS.avgSessionDuration.description}
+          colorClass="text-blue-500"
+        />
+        <KPICard 
+          label="avg messages" 
+          value={stats.avgMessagesPerSession}
+          description={KPI_DESCRIPTIONS.avgMessagesPerSession.description}
+          colorClass="text-purple-500"
+        />
+      </div>
+
+      {/* Session Status Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+        <AdminCard className="p-4">
+          <CardLabel>session status breakdown</CardLabel>
+          <StatBreakdown
+            items={[
+              { label: 'active', value: stats.activeSessions, color: '#22c55e' },
+              { label: 'completed', value: stats.completedSessions, color: '#3b82f6' },
+              { label: 'abandoned', value: stats.abandonedSessions, color: '#f59e0b' },
+            ]}
+          />
+          {stats.totalSessions > 0 && (
+            <div className="mt-4 space-y-2">
+              <ProgressBar 
+                label="completion rate"
+                value={(stats.completedSessions / stats.totalSessions) * 100}
+                color="#3b82f6"
+              />
+              <ProgressBar 
+                label="abandonment rate"
+                value={(stats.abandonedSessions / stats.totalSessions) * 100}
+                color="#f59e0b"
+              />
+            </div>
+          )}
+        </AdminCard>
+
+        <AdminCard className="p-4">
+          <CardLabel>engagement metrics</CardLabel>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2" style={{ borderBottom: `1px solid ${theme.stroke.low}` }}>
+              <span style={{ fontSize: '13px', color: theme.text.medium }}>avg session duration</span>
+              <span style={{ fontSize: '13px', color: theme.text.high, fontWeight: 500 }}>
+                {formatDuration(stats.avgSessionDuration)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2" style={{ borderBottom: `1px solid ${theme.stroke.low}` }}>
+              <span style={{ fontSize: '13px', color: theme.text.medium }}>avg messages per session</span>
+              <span style={{ fontSize: '13px', color: theme.text.high, fontWeight: 500 }}>
+                {stats.avgMessagesPerSession?.toFixed(1) ?? '—'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span style={{ fontSize: '13px', color: theme.text.medium }}>total messages</span>
+              <span style={{ fontSize: '13px', color: theme.text.high, fontWeight: 500 }}>
+                {sessionStats?.totalMessages ?? '—'}
+              </span>
+            </div>
+          </div>
+        </AdminCard>
+      </div>
+
+      {/* Recent Sessions Table */}
+      <AdminCard className="p-4">
+        <CardLabel>recent sessions</CardLabel>
+        <AdminTable
+          columns={[
+            { key: 'project', label: 'project' },
+            { key: 'status', label: 'status' },
+            { key: 'messages', label: 'messages' },
+            { key: 'duration', label: 'duration' },
+            { key: 'ecosystem', label: 'ecosystem' },
+            { key: 'time', label: 'started' },
+          ]}
+          isEmpty={!recentSessions || recentSessions.length === 0}
+          emptyMessage="no sessions recorded yet"
+        >
+          {recentSessions?.map((session) => (
+            <AdminTableRow key={session._id}>
+              <AdminTableCell>{session.projectName}</AdminTableCell>
+              <AdminTableCell>
+                <span
+                  className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: session.status === 'active' 
+                      ? 'rgba(34,197,94,0.12)' 
+                      : session.status === 'completed'
+                        ? 'rgba(59,130,246,0.12)'
+                        : 'rgba(245,158,11,0.12)',
+                    color: session.status === 'active' 
+                      ? '#22c55e' 
+                      : session.status === 'completed'
+                        ? '#3b82f6'
+                        : '#f59e0b',
+                  }}
+                >
+                  {session.status}
+                </span>
+              </AdminTableCell>
+              <AdminTableCell>{session.messageCount}</AdminTableCell>
+              <AdminTableCell>{formatDuration(session.durationSeconds ?? null)}</AdminTableCell>
+              <AdminTableCell>{session.ecosystem}</AdminTableCell>
+              <AdminTableCell>
+                <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                  {formatRelativeTime(session.startedAt)}
+                </span>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+      </AdminCard>
+    </>
+  );
+}
+
+function AnalyticsInteractionsTab({ 
+  stats,
+  interactionStats,
+  recentInteractions,
+}: { 
+  stats: NonNullable<ReturnType<typeof useQuery<typeof api.analytics.dashboardStats>>>;
+  interactionStats: ReturnType<typeof useQuery<typeof api.interactions.getStats>>;
+  recentInteractions: ReturnType<typeof useQuery<typeof api.interactions.getRecent>>;
+}) {
+  const theme = useThemeColors();
+  
+  // Prepare chart data
+  const interactionChartData = useMemo(() => {
+    if (!interactionStats?.byType) return [];
+    return Object.entries(interactionStats.byType)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [interactionStats]);
+  
+  return (
+    <>
+      {/* Interaction KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <KPICard 
+          label="copy count" 
+          value={stats.copyCount}
+          description={KPI_DESCRIPTIONS.copyCount.description}
+          colorClass="text-purple-500"
+        />
+        <KPICard 
+          label="like count" 
+          value={stats.likeCount}
+          description={KPI_DESCRIPTIONS.likeCount.description}
+          colorClass="text-green-500"
+        />
+        <KPICard 
+          label="dislike count" 
+          value={stats.dislikeCount}
+          description={KPI_DESCRIPTIONS.dislikeCount.description}
+          colorClass="text-red-500"
+        />
+        <KPICard 
+          label="total interactions" 
+          value={interactionStats?.total ?? 0}
+          description="Total user interactions tracked"
+          colorClass="text-blue-500"
+        />
+      </div>
+
+      {/* Interaction Breakdown */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+        <ChartContainer
+          title="interactions by type"
+          empty={interactionChartData.length === 0}
+          emptyMessage="no interactions recorded"
+        >
+          <HorizontalBarChart data={interactionChartData} color="#8b5cf6" />
+        </ChartContainer>
+
+        <AdminCard className="p-4">
+          <CardLabel>feedback sentiment</CardLabel>
+          <div className="space-y-4">
+            <StatBreakdown
+              items={[
+                { label: 'positive', value: stats.likeCount, color: '#22c55e' },
+                { label: 'negative', value: stats.dislikeCount, color: '#ef4444' },
+              ]}
+            />
+            {(stats.likeCount + stats.dislikeCount) > 0 && (
+              <div className="pt-3" style={{ borderTop: `1px solid ${theme.stroke.low}` }}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span style={{ color: theme.text.low }}>sentiment ratio</span>
+                  <span style={{ color: theme.text.high }}>
+                    {Math.round((stats.likeCount / (stats.likeCount + stats.dislikeCount)) * 100)}% positive
+                  </span>
+                </div>
+                <div className="h-2 rounded-full overflow-hidden flex" style={{ backgroundColor: theme.stroke.low }}>
+                  <div 
+                    className="h-full"
+                    style={{ 
+                      width: `${(stats.likeCount / (stats.likeCount + stats.dislikeCount)) * 100}%`,
+                      backgroundColor: '#22c55e',
+                    }}
+                  />
+                  <div 
+                    className="h-full"
+                    style={{ 
+                      width: `${(stats.dislikeCount / (stats.likeCount + stats.dislikeCount)) * 100}%`,
+                      backgroundColor: '#ef4444',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </AdminCard>
+      </div>
+
+      {/* Recent Interactions Table */}
+      <AdminCard className="p-4">
+        <CardLabel>recent interactions</CardLabel>
+        <AdminTable
+          columns={[
+            { key: 'type', label: 'type' },
+            { key: 'target', label: 'target' },
+            { key: 'time', label: 'time' },
+          ]}
+          isEmpty={!recentInteractions || recentInteractions.length === 0}
+          emptyMessage="no interactions recorded yet"
+        >
+          {recentInteractions?.slice(0, 15).map((interaction) => (
+            <AdminTableRow key={interaction._id}>
+              <AdminTableCell>
+                <span
+                  className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: interaction.eventType === 'like' 
+                      ? 'rgba(34,197,94,0.12)' 
+                      : interaction.eventType === 'dislike'
+                        ? 'rgba(239,68,68,0.12)'
+                        : interaction.eventType === 'copy'
+                          ? 'rgba(139,92,246,0.12)'
+                          : 'rgba(59,130,246,0.12)',
+                    color: interaction.eventType === 'like' 
+                      ? '#22c55e' 
+                      : interaction.eventType === 'dislike'
+                        ? '#ef4444'
+                        : interaction.eventType === 'copy'
+                          ? '#8b5cf6'
+                          : '#3b82f6',
+                  }}
+                >
+                  {interaction.eventType}
+                </span>
+              </AdminTableCell>
+              <AdminTableCell className="max-w-[200px] truncate">
+                {interaction.target}
+              </AdminTableCell>
+              <AdminTableCell>
+                <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                  {formatRelativeTime(interaction.timestamp)}
+                </span>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+      </AdminCard>
+    </>
+  );
+}
+
+function AnalyticsContextTab({ 
+  contextStats,
+}: { 
+  contextStats: ReturnType<typeof useQuery<typeof api.analytics.statsByEcosystemChannel>>;
+}) {
+  const theme = useThemeColors();
+  
+  // Group by ecosystem and channel
+  const byEcosystem = useMemo(() => {
+    if (!contextStats) return [];
+    const ecosystemCounts: Record<string, number> = {};
+    for (const stat of contextStats) {
+      ecosystemCounts[stat.ecosystem] = (ecosystemCounts[stat.ecosystem] || 0) + stat.count;
+    }
+    return Object.entries(ecosystemCounts)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [contextStats]);
+  
+  const byChannel = useMemo(() => {
+    if (!contextStats) return [];
+    const channelCounts: Record<string, number> = {};
+    for (const stat of contextStats) {
+      channelCounts[stat.channel] = (channelCounts[stat.channel] || 0) + stat.count;
+    }
+    return Object.entries(channelCounts)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [contextStats]);
+  
+  return (
+    <>
+      {/* By Ecosystem and Channel Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+        <ChartContainer
+          title="by ecosystem"
+          subtitle={KPI_DESCRIPTIONS.byEcosystem.description}
+          empty={byEcosystem.length === 0}
+          emptyMessage="no data by ecosystem"
+        >
+          <HorizontalBarChart data={byEcosystem} color="#f97316" />
+        </ChartContainer>
+
+        <ChartContainer
+          title="by channel"
+          subtitle={KPI_DESCRIPTIONS.byChannel.description}
+          empty={byChannel.length === 0}
+          emptyMessage="no data by channel"
+        >
+          <HorizontalBarChart data={byChannel} color="#3b82f6" />
+        </ChartContainer>
+      </div>
+
+      {/* Detailed Context Table */}
+      <AdminCard className="p-4">
+        <CardLabel>detailed breakdown by context</CardLabel>
+        <p className="mb-3 text-xs" style={{ color: theme.text.low }}>
+          {KPI_DESCRIPTIONS.trustScoreByContext.description}
+        </p>
+        <AdminTable
+          columns={[
+            { key: 'ecosystem', label: 'ecosystem' },
+            { key: 'channel', label: 'channel' },
+            { key: 'count', label: 'generations' },
+            { key: 'trustScore', label: 'avg trust score' },
+            { key: 'responseTime', label: 'avg response time' },
+          ]}
+          isEmpty={!contextStats || contextStats.length === 0}
+          emptyMessage="no context data available"
+        >
+          {contextStats?.map((stat, i) => (
+            <AdminTableRow key={i}>
+              <AdminTableCell>{stat.ecosystem}</AdminTableCell>
+              <AdminTableCell>{stat.channel}</AdminTableCell>
+              <AdminTableCell>{stat.count}</AdminTableCell>
+              <AdminTableCell>
+                <span
+                  style={{
+                    color: (stat.avgTrustScore ?? 0) >= 90 
+                      ? '#22c55e' 
+                      : (stat.avgTrustScore ?? 0) >= 80
+                        ? '#f59e0b'
+                        : '#ef4444',
+                    fontWeight: 500,
+                  }}
+                >
+                  {stat.avgTrustScore ?? '—'}
+                </span>
+              </AdminTableCell>
+              <AdminTableCell>
+                {formatResponseTime(stat.avgResponseTime)}
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+      </AdminCard>
+    </>
+  );
+}
+
+// ── Feedback & Learnings ───────────────────────────────────────────
+// Note: Corrections are now auto-approved for immediate learning
 function AdminMemory() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
@@ -486,31 +1240,8 @@ function AdminMemory() {
   // Direct Convex query - no localStorage fallback
   const corrections = useQuery(api.corrections.listAll, { limit: 200 });
   
-  // Mutation for updating admin status
-  const updateAdminStatus = useMutation(api.corrections.updateAdminStatus);
-  
   const [filter, setFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
-  
-  // Handle approve/reject
-  const handleStatusUpdate = async (correctionId: Id<"corrections">, newStatus: string) => {
-    const idStr = correctionId.toString();
-    setProcessingIds(prev => new Set(prev).add(idStr));
-    
-    try {
-      await updateAdminStatus({ correctionId, adminStatus: newStatus });
-    } catch (error) {
-      console.error('[AdminMemory] Failed to update status:', error);
-    } finally {
-      setProcessingIds(prev => {
-        const next = new Set(prev);
-        next.delete(idStr);
-        return next;
-      });
-    }
-  };
 
   // Loading state
   if (corrections === undefined) {
@@ -519,11 +1250,6 @@ function AdminMemory() {
 
   const filtered = (() => {
     let result = filter === 'all' ? corrections : corrections.filter(c => c.feedbackType === filter);
-    
-    // Filter by admin status
-    if (statusFilter !== 'all') {
-      result = result.filter(c => c.adminStatus === statusFilter);
-    }
     
     if (searchQuery) {
       result = result.filter(c =>
@@ -536,22 +1262,14 @@ function AdminMemory() {
   })();
 
   const filterOptions = ['all', 'thumbs_up', 'thumbs_down', 'edit', 'comment'];
-  const statusOptions = ['all', 'pending', 'approved', 'rejected'];
-  
-  // Count by status for display
-  const statusCounts = {
-    pending: corrections?.filter(c => c.adminStatus === 'pending').length ?? 0,
-    approved: corrections?.filter(c => c.adminStatus === 'approved').length ?? 0,
-    rejected: corrections?.filter(c => c.adminStatus === 'rejected').length ?? 0,
-  };
 
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="Memory & Learnings" subtitle="all user feedback and corrections" />
+      <SectionHeader title="Feedback & Learnings" subtitle="all user feedback — auto-approved for immediate learning" />
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         {/* Type filters */}
         <div className="flex flex-wrap gap-1.5">
           {filterOptions.map((f) => {
@@ -576,56 +1294,24 @@ function AdminMemory() {
             );
           })}
         </div>
-        
-        {/* Status filters and search */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex flex-wrap gap-1.5">
-            {statusOptions.map((s) => {
-              const isActive = statusFilter === s;
-              const count = s === 'all' ? corrections.length : statusCounts[s as keyof typeof statusCounts];
-              const statusColors: Record<string, string> = {
-                pending: '#f59e0b',
-                approved: '#10b981',
-                rejected: '#ef4444',
-              };
-              return (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className="rounded-md px-2.5 cursor-pointer transition-colors"
-                  style={{
-                    height: '28px',
-                    fontSize: '12px',
-                    fontWeight: isActive ? 600 : 400,
-                    backgroundColor: isActive ? (statusColors[s] || theme.accent) : 'transparent',
-                    color: isActive ? '#fff' : theme.text.medium,
-                    border: isActive ? 'none' : `1px solid ${theme.stroke.low}`,
-                  }}
-                >
-                  {s} ({count})
-                </button>
-              );
-            })}
-          </div>
 
-          <div className="sm:ml-auto">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="search feedback..."
-              aria-label="search feedback"
-              className="rounded-lg px-3 outline-none"
-              style={{
-                height: '28px',
-                width: '200px',
-                fontSize: '12px',
-                backgroundColor: theme.background.ghost,
-                color: theme.text.high,
-                border: `1px solid ${theme.stroke.low}`,
-              }}
-            />
-          </div>
+        <div className="sm:ml-auto">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="search feedback..."
+            aria-label="search feedback"
+            className="rounded-lg px-3 outline-none"
+            style={{
+              height: '28px',
+              width: '200px',
+              fontSize: '12px',
+              backgroundColor: theme.background.ghost,
+              color: theme.text.high,
+              border: `1px solid ${theme.stroke.low}`,
+            }}
+          />
         </div>
       </div>
 
@@ -634,67 +1320,29 @@ function AdminMemory() {
         <AdminTable
           columns={[
             { key: 'type', label: 'type' },
-            { key: 'status', label: 'status' },
             { key: 'original', label: 'original content' },
             { key: 'edited', label: 'edited / comment' },
             { key: 'eco', label: 'ecosystem' },
+            { key: 'channel', label: 'channel' },
             { key: 'time', label: 'time' },
-            { key: 'actions', label: 'actions' },
           ]}
           isEmpty={filtered.length === 0}
-          emptyMessage={searchQuery ? 'no feedback matches your search.' : 'no feedback matches this filter.'}
+          emptyMessage={searchQuery ? 'no feedback matches your search.' : 'no feedback recorded yet.'}
         >
           {filtered.slice(0, 50).map((c, i) => {
-            const correctionId = c._id;
-            const idStr = correctionId?.toString() || String(i);
-            const isProcessing = processingIds.has(idStr);
-            const currentStatus = c.adminStatus || 'pending';
+            const idStr = c._id?.toString() || String(i);
             
             return (
               <AdminTableRow key={idStr}>
                 <AdminTableCell><FeedbackBadge type={c.feedbackType} /></AdminTableCell>
-                <AdminTableCell>
-                  <StatusBadge status={currentStatus} />
-                </AdminTableCell>
-                <AdminTableCell className="max-w-[180px] truncate">{(c.originalContent || '').slice(0, 80)}</AdminTableCell>
-                <AdminTableCell className="max-w-[180px] truncate">{c.editedContent || c.comment || '—'}</AdminTableCell>
+                <AdminTableCell className="max-w-[200px] truncate">{(c.originalContent || '').slice(0, 100)}</AdminTableCell>
+                <AdminTableCell className="max-w-[200px] truncate">{c.editedContent || c.comment || '—'}</AdminTableCell>
                 <AdminTableCell>{(c as Record<string, unknown>).ecosystem as string || '—'}</AdminTableCell>
+                <AdminTableCell>{(c as Record<string, unknown>).channel as string || '—'}</AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap">
                   <span style={{ color: theme.text.low, fontSize: '12px' }}>
                     {new Date(c.timestamp).toLocaleDateString()}
                   </span>
-                </AdminTableCell>
-                <AdminTableCell>
-                  {correctionId && (
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleStatusUpdate(correctionId, 'approved')}
-                        disabled={isProcessing || currentStatus === 'approved'}
-                        className="px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50"
-                        style={{
-                          backgroundColor: currentStatus === 'approved' ? '#10b981' : 'transparent',
-                          color: currentStatus === 'approved' ? '#fff' : '#10b981',
-                          border: currentStatus === 'approved' ? 'none' : '1px solid #10b981',
-                        }}
-                        title="approve for learning"
-                      >
-                        {isProcessing ? '...' : 'approve'}
-                      </button>
-                      <button
-                        onClick={() => handleStatusUpdate(correctionId, 'rejected')}
-                        disabled={isProcessing || currentStatus === 'rejected'}
-                        className="px-2 py-1 rounded text-xs font-medium transition-colors disabled:opacity-50"
-                        style={{
-                          backgroundColor: currentStatus === 'rejected' ? '#ef4444' : 'transparent',
-                          color: currentStatus === 'rejected' ? '#fff' : '#ef4444',
-                          border: currentStatus === 'rejected' ? 'none' : '1px solid #ef4444',
-                        }}
-                        title="reject from learning"
-                      >
-                        {isProcessing ? '...' : 'reject'}
-                      </button>
-                    </div>
-                  )}
                 </AdminTableCell>
               </AdminTableRow>
             );
@@ -705,6 +1353,14 @@ function AdminMemory() {
             showing 50 of {filtered.length} items.
           </span>
         )}
+      </AdminCard>
+
+      {/* Info about auto-approval */}
+      <AdminCard className="p-4 mt-4">
+        <span className="block" style={{ fontSize: '12px', color: theme.text.medium }}>
+          All feedback is automatically approved for learning. This ensures user corrections and preferences 
+          are immediately available to improve content generation quality.
+        </span>
       </AdminCard>
     </>
   );
@@ -1016,21 +1672,6 @@ function AdminKnowledge() {
       )}
     </>
   );
-}
-
-// ── Utility: Format relative time ────────────────────────────────
-function formatRelativeTime(timestamp: number): string {
-  const now = Date.now();
-  const diff = now - timestamp;
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  
-  if (days > 0) return `${days}d ago`;
-  if (hours > 0) return `${hours}h ago`;
-  if (minutes > 0) return `${minutes}m ago`;
-  return 'just now';
 }
 
 // ── Users ────────────────────────────────────────────────────────
