@@ -352,22 +352,47 @@ function QueryErrorDisplay({ error, queryName, onRetry }: {
 // ── Dashboard ────────────────────────────────────────────────────
 // Redesigned for POC: Focus on value delivery metrics
 function AdminDashboard() {
+  // Log immediately on render start (before any hooks)
+  console.log('[AdminDashboard] Render started at', new Date().toISOString());
+  
+  // Initialize hooks (logging between them for debugging)
+  console.log('[AdminDashboard] Calling useThemeColors...');
   const theme = useThemeColors();
+  console.log('[AdminDashboard] useThemeColors complete, theme exists:', !!theme);
+  
+  console.log('[AdminDashboard] Calling useNetworkStatus...');
   const { isOnline } = useNetworkStatus();
+  console.log('[AdminDashboard] useNetworkStatus complete, isOnline:', isOnline);
+  
+  console.log('[AdminDashboard] Calling useState for queryError...');
   const [queryError, setQueryError] = useState<string | null>(null);
+  console.log('[AdminDashboard] queryError state initialized');
   
   // Time range for analytics - last 24 hours from mount time
+  console.log('[AdminDashboard] Calling useState for since...');
   const [since] = useState(() => Date.now() - 24 * 60 * 60 * 1000);
+  console.log('[AdminDashboard] since state initialized:', since);
   
   // Direct Convex queries with error logging
+  console.log('[AdminDashboard] Calling useQuery for dashboardStats...');
   const dashboardStats = useQuery(api.analytics.dashboardStats, { since });
+  console.log('[AdminDashboard] dashboardStats query called, result:', dashboardStats === undefined ? 'loading' : dashboardStats === null ? 'null' : 'has data');
+  
+  console.log('[AdminDashboard] Calling useQuery for learningStats...');
   const learningStats = useQuery(api.corrections.getLearningStats, { since });
+  console.log('[AdminDashboard] learningStats query called, result:', learningStats === undefined ? 'loading' : learningStats === null ? 'null' : 'has data');
+  
+  console.log('[AdminDashboard] Calling useQuery for hourlyBreakdown...');
   const hourlyBreakdown = useQuery(api.analytics.hourlyBreakdown, { since });
+  console.log('[AdminDashboard] hourlyBreakdown query called');
+  
+  console.log('[AdminDashboard] Calling useQuery for recentSessions...');
   const recentSessions = useQuery(api.sessions.getRecent, { limit: 5 });
+  console.log('[AdminDashboard] All hooks initialized successfully');
   
   // Debug logging for production troubleshooting
   useEffect(() => {
-    console.log('[AdminDashboard] Query states:', {
+    console.log('[AdminDashboard] Query states (useEffect):', {
       dashboardStats: dashboardStats === undefined ? 'loading' : dashboardStats === null ? 'null' : 'loaded',
       learningStats: learningStats === undefined ? 'loading' : learningStats === null ? 'null' : 'loaded',
       hourlyBreakdown: hourlyBreakdown === undefined ? 'loading' : hourlyBreakdown === null ? 'null' : 'loaded',

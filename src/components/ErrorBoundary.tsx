@@ -83,16 +83,27 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const boundaryName = this.props.name || 'unknown';
-    const severity = classifyError(error);
     
-    // Log to analytics with boundary context
-    const errorLogger = getErrorLogger();
-    errorLogger.logReactError(error, {
-      componentStack: errorInfo.componentStack ?? undefined,
-      boundaryName,
-      severity,
-      retryCount: this.state.retryCount,
-    });
+    // FIRST: Log to console immediately (before any analytics that could fail)
+    console.error(`[ErrorBoundary:${boundaryName}] Caught error:`, error);
+    console.error('[ErrorBoundary] Error message:', error?.message);
+    console.error('[ErrorBoundary] Error stack:', error?.stack);
+    console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
+    
+    // THEN: Try to classify and log to analytics (may fail)
+    let severity: 'recoverable' | 'warning' | 'fatal' = 'recoverable';
+    try {
+      severity = classifyError(error);
+      const errorLogger = getErrorLogger();
+      errorLogger.logReactError(error, {
+        componentStack: errorInfo.componentStack ?? undefined,
+        boundaryName,
+        severity,
+        retryCount: this.state.retryCount,
+      });
+    } catch (analyticsError) {
+      console.error('[ErrorBoundary] Analytics logging failed:', analyticsError);
+    }
 
     // Update state with error info
     this.setState({ errorInfo, errorSeverity: severity });
@@ -101,10 +112,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
-
-    // Also log to console for debugging
-    console.error(`[ErrorBoundary:${boundaryName}] Caught ${severity} error:`, error);
-    console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
     
     // Auto-retry for recoverable errors (max 3 times)
     if (
