@@ -8,8 +8,8 @@ import { AdminStatCard } from './components/AdminStatCard';
 import { AdminTable, AdminTableRow, AdminTableCell } from './components/AdminTable';
 import { KPICard } from './components/KPICard';
 import { TimeRangeSelector, getTimestampForRange, type TimeRange } from './components/TimeRangeSelector';
-import { ChartContainer, HorizontalBarChart, VerticalBars, ProgressBar, StatBreakdown } from './components/AnalyticsCharts';
-import { KPI_DESCRIPTIONS, TAB_DESCRIPTIONS } from './constants/kpiDescriptions';
+import { ChartContainer, HorizontalBarChart, VerticalBars, ProgressBar, StatBreakdown, SentimentBar } from './components/AnalyticsCharts';
+import { KPI_DESCRIPTIONS } from './constants/kpiDescriptions';
 import { formatDuration, formatResponseTime, formatRelativeTime } from './utils/formatters';
 import { getApiBaseUrl } from '../config/providers';
 
@@ -290,6 +290,7 @@ function OfflineBanner() {
 // ═══════════════════════════════════════════════════════════════════
 
 // ── Dashboard ────────────────────────────────────────────────────
+// Redesigned for POC: Focus on value delivery metrics
 function AdminDashboard() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
@@ -299,20 +300,35 @@ function AdminDashboard() {
   
   // Direct Convex queries
   const dashboardStats = useQuery(api.analytics.dashboardStats, { since });
-  const corrections = useQuery(api.corrections.listAll, { limit: 50 });
+  const learningStats = useQuery(api.corrections.getLearningStats, { since });
+  const hourlyBreakdown = useQuery(api.analytics.hourlyBreakdown, { since });
   const recentSessions = useQuery(api.sessions.getRecent, { limit: 5 });
   
+  // Format hourly data for charts
+  const hourlyChartData = useMemo(() => {
+    if (!hourlyBreakdown) return [];
+    return hourlyBreakdown.map(h => ({
+      label: `${h.hour.toString().padStart(2, '0')}`,
+      value: h.count,
+    }));
+  }, [hourlyBreakdown]);
+  
   // Loading state - show skeleton while data is loading
-  if (dashboardStats === undefined || corrections === undefined) {
+  if (dashboardStats === undefined || learningStats === undefined) {
     return <AdminLoadingSkeleton />;
   }
+
+  // Calculate completion rate safely
+  const completionRate = dashboardStats.totalSessions > 0
+    ? Math.round((dashboardStats.completedSessions / dashboardStats.totalSessions) * 100)
+    : 0;
 
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="Dashboard" subtitle="system health at a glance — last 24 hours" />
+      <SectionHeader title="dashboard" subtitle="system health and value delivery — last 24 hours" />
 
-      {/* Primary KPIs */}
+      {/* Hero KPIs - 4 cards, most important metrics for POC */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         <KPICard 
           label="total generations" 
@@ -328,64 +344,75 @@ function AdminDashboard() {
           colorClass="text-blue-500"
         />
         <KPICard 
-          label="avg response time" 
-          value={dashboardStats.avgResponseTime}
-          format="ms"
-          description={KPI_DESCRIPTIONS.avgResponseTime.description}
-          target={KPI_DESCRIPTIONS.avgResponseTime.target}
+          label="content copied" 
+          value={dashboardStats.copyCount}
+          description={KPI_DESCRIPTIONS.copyCount.description}
           colorClass="text-purple-500"
         />
         <KPICard 
-          label="active sessions" 
-          value={dashboardStats.activeSessions}
-          description={KPI_DESCRIPTIONS.activeSessions.description}
+          label="learnings applied" 
+          value={learningStats.totalPatternsApplied}
+          description={KPI_DESCRIPTIONS.learningsApplied.description}
           colorClass="text-green-500"
         />
       </div>
 
-      {/* Secondary metrics */}
+      {/* Quality & Engagement Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-        {/* Session Status */}
+        {/* Sentiment Widget */}
         <AdminCard className="p-4">
-          <CardLabel>session status</CardLabel>
-          <StatBreakdown
-            items={[
-              { label: 'active', value: dashboardStats.activeSessions, color: '#22c55e' },
-              { label: 'completed', value: dashboardStats.completedSessions, color: '#3b82f6' },
-              { label: 'abandoned', value: dashboardStats.abandonedSessions, color: '#f59e0b' },
-            ]}
+          <CardLabel>feedback sentiment</CardLabel>
+          <SentimentBar 
+            likes={dashboardStats.likeCount}
+            dislikes={dashboardStats.dislikeCount}
           />
           <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${theme.stroke.low}` }}>
-            <div className="flex justify-between text-xs" style={{ color: theme.text.low }}>
-              <span>avg duration: {formatDuration(dashboardStats.avgSessionDuration)}</span>
-              <span>avg msgs/session: {dashboardStats.avgMessagesPerSession?.toFixed(1) || '—'}</span>
-            </div>
+            <span className="text-xs" style={{ color: theme.text.low }}>
+              {dashboardStats.sentimentRatio !== null ? `${dashboardStats.sentimentRatio}% positive feedback` : 'no feedback yet'}
+            </span>
           </div>
         </AdminCard>
 
-        {/* User Actions */}
+        {/* Quality Metrics */}
         <AdminCard className="p-4">
-          <CardLabel>user interactions</CardLabel>
+          <CardLabel>content quality</CardLabel>
           <StatBreakdown
             items={[
-              { label: 'copies', value: dashboardStats.copyCount, color: '#8b5cf6' },
-              { label: 'likes', value: dashboardStats.likeCount, color: '#22c55e' },
-              { label: 'dislikes', value: dashboardStats.dislikeCount, color: '#ef4444' },
-              { label: 'errors', value: dashboardStats.errorCount, color: '#6b7280' },
+              { 
+                label: 'regeneration rate', 
+                value: `${dashboardStats.regenerationRate}%`, 
+                color: dashboardStats.regenerationRate > 15 ? '#ef4444' : '#22c55e' 
+              },
+              { 
+                label: 'completion rate', 
+                value: `${completionRate}%`,
+                color: '#3b82f6' 
+              },
             ]}
           />
           <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${theme.stroke.low}` }}>
             <div className="flex justify-between text-xs" style={{ color: theme.text.low }}>
-              <span>regeneration rate: {dashboardStats.regenerationRate}%</span>
               <span>regenerations: {dashboardStats.regenerationCount}</span>
+              <span>errors: {dashboardStats.errorCount}</span>
             </div>
           </div>
         </AdminCard>
       </div>
 
-      {/* Recent Sessions */}
+      {/* Hourly Activity Chart */}
+      <ChartContainer
+        title="hourly activity"
+        subtitle="content generations over time"
+        empty={hourlyChartData.every(d => d.value === 0)}
+        emptyMessage="no activity in selected time range"
+        className="mb-5"
+      >
+        <VerticalBars data={hourlyChartData} height={140} />
+      </ChartContainer>
+
+      {/* Recent Sessions (collapsed view) */}
       {recentSessions && recentSessions.length > 0 && (
-        <AdminCard className="p-4 mb-5">
+        <AdminCard className="p-4">
           <CardLabel>recent sessions</CardLabel>
           <AdminTable
             columns={[
@@ -432,32 +459,6 @@ function AdminDashboard() {
           </AdminTable>
         </AdminCard>
       )}
-
-      {/* Recent Feedback */}
-      <AdminCard className="p-4">
-        <CardLabel>recent feedback</CardLabel>
-        <AdminTable
-          columns={[
-            { key: 'type', label: 'type' },
-            { key: 'content', label: 'content (preview)' },
-            { key: 'time', label: 'time' },
-          ]}
-          isEmpty={corrections.length === 0}
-          emptyMessage="no feedback recorded yet."
-        >
-          {corrections.slice(0, 8).map((c, i) => (
-            <AdminTableRow key={i}>
-              <AdminTableCell><FeedbackBadge type={c.feedbackType} /></AdminTableCell>
-              <AdminTableCell className="max-w-sm truncate">{(c.originalContent || '').slice(0, 80)}</AdminTableCell>
-              <AdminTableCell className="whitespace-nowrap">
-                <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                  {formatRelativeTime(c.timestamp)}
-                </span>
-              </AdminTableCell>
-            </AdminTableRow>
-          ))}
-        </AdminTable>
-      </AdminCard>
     </>
   );
 }
@@ -1231,92 +1232,235 @@ function AnalyticsContextTab({
   );
 }
 
-// ── Feedback & Learnings ───────────────────────────────────────────
-// Note: Corrections are now auto-approved for immediate learning
-function AdminMemory() {
+// ── CorrectionDiff Component ───────────────────────────────────────
+// Shows before/after comparison for edit corrections
+function CorrectionDiff({
+  original,
+  edited,
+  ecosystem,
+  channel,
+  timestamp,
+  expanded,
+  onToggle,
+}: {
+  original: string;
+  edited: string;
+  ecosystem: string;
+  channel: string;
+  timestamp: number;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const theme = useThemeColors();
+  
+  return (
+    <div 
+      className="mb-3 p-3 rounded-lg cursor-pointer transition-all"
+      style={{ 
+        backgroundColor: theme.background.ghost,
+        border: `1px solid ${expanded ? theme.accent : theme.stroke.low}`,
+      }}
+      onClick={onToggle}
+    >
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex gap-2">
+          <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low }}>
+            {ecosystem}
+          </span>
+          <span className="text-xs px-2 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low }}>
+            {channel}
+          </span>
+        </div>
+        <span className="text-xs" style={{ color: theme.text.low }}>
+          {formatRelativeTime(timestamp)}
+        </span>
+      </div>
+      
+      {expanded ? (
+        <div className="space-y-2">
+          <div>
+            <span className="block text-xs font-medium mb-1" style={{ color: '#ef4444' }}>
+              before (ai generated):
+            </span>
+            <p className="text-sm p-2 rounded" style={{ 
+              backgroundColor: 'rgba(239,68,68,0.08)', 
+              color: theme.text.high,
+              textDecoration: 'line-through',
+              opacity: 0.7,
+            }}>
+              {original}
+            </p>
+          </div>
+          <div>
+            <span className="block text-xs font-medium mb-1" style={{ color: '#22c55e' }}>
+              after (user edited):
+            </span>
+            <p className="text-sm p-2 rounded" style={{ 
+              backgroundColor: 'rgba(34,197,94,0.08)', 
+              color: theme.text.high,
+            }}>
+              {edited}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm truncate" style={{ color: theme.text.medium }}>
+          {original.slice(0, 100)}{original.length > 100 ? '...' : ''}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── Learning Center (renamed from Memory) ────────────────────────────
+// Purpose: Prove the system learns and improves from user feedback
+function AdminLearningCenter() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
   
-  // Direct Convex query - no localStorage fallback
+  // Direct Convex queries
   const corrections = useQuery(api.corrections.listAll, { limit: 200 });
+  const learningStats = useQuery(api.corrections.getLearningStats, {});
+  const feedbackCounts = useQuery(api.corrections.countByFeedbackType, {});
   
   const [filter, setFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Loading state
-  if (corrections === undefined) {
+  if (corrections === undefined || learningStats === undefined) {
     return <AdminLoadingSkeleton />;
   }
 
-  const filtered = (() => {
-    let result = filter === 'all' ? corrections : corrections.filter(c => c.feedbackType === filter);
-    
-    if (searchQuery) {
-      result = result.filter(c =>
-        (c.originalContent || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.editedContent || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.comment || '').toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    return result;
-  })();
+  // Filter corrections for the table
+  const filtered = filter === 'all' 
+    ? corrections 
+    : corrections.filter(c => c.feedbackType === filter);
 
-  const filterOptions = ['all', 'thumbs_up', 'thumbs_down', 'edit', 'comment'];
+  // Get edit corrections for the diff view
+  const editCorrections = corrections.filter(c => c.feedbackType === 'edit' && c.editedContent);
 
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="Feedback & Learnings" subtitle="all user feedback — auto-approved for immediate learning" />
+      <SectionHeader 
+        title="learning center" 
+        subtitle="how user feedback improves content generation" 
+      />
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        {/* Type filters */}
-        <div className="flex flex-wrap gap-1.5">
-          {filterOptions.map((f) => {
-            const isActive = filter === f;
-            return (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className="rounded-md px-2.5 cursor-pointer transition-colors"
-                style={{
-                  height: '28px',
-                  fontSize: '12px',
-                  fontWeight: isActive ? 600 : 400,
-                  backgroundColor: isActive ? theme.accent : 'transparent',
-                  color: isActive ? '#fff' : theme.text.medium,
-                  border: isActive ? 'none' : `1px solid ${theme.stroke.low}`,
-                }}
-              >
-                {f === 'all' ? 'all' : f.replace('_', ' ')}
-                {f !== 'all' && ` (${corrections.filter(c => c.feedbackType === f).length})`}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="sm:ml-auto">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="search feedback..."
-            aria-label="search feedback"
-            className="rounded-lg px-3 outline-none"
-            style={{
-              height: '28px',
-              width: '200px',
-              fontSize: '12px',
-              backgroundColor: theme.background.ghost,
-              color: theme.text.high,
-              border: `1px solid ${theme.stroke.low}`,
-            }}
-          />
-        </div>
+      {/* Learning Stats Hero */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <KPICard 
+          label="learnings applied" 
+          value={learningStats.totalPatternsApplied}
+          description={KPI_DESCRIPTIONS.learningsApplied.description}
+          colorClass="text-green-500"
+        />
+        <KPICard 
+          label="edit corrections" 
+          value={learningStats.byFeedbackType.edits}
+          description={KPI_DESCRIPTIONS.editCorrections.description}
+          colorClass="text-blue-500"
+        />
+        <KPICard 
+          label="avoid patterns" 
+          value={learningStats.uniqueAvoidPatterns}
+          description={KPI_DESCRIPTIONS.avoidPatterns.description}
+          colorClass="text-red-500"
+        />
+        <KPICard 
+          label="total feedback" 
+          value={corrections.length}
+          description={KPI_DESCRIPTIONS.totalFeedback.description}
+          colorClass="text-purple-500"
+        />
       </div>
 
-      {/* Table */}
+      {/* Feedback Distribution */}
+      <AdminCard className="p-4 mb-5">
+        <CardLabel>feedback distribution</CardLabel>
+        <div className="grid grid-cols-4 gap-4">
+          {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
+            <div 
+              key={type}
+              className="text-center p-3 rounded-lg cursor-pointer transition-all"
+              style={{ 
+                backgroundColor: filter === type ? theme.accent : theme.background.ghost,
+                opacity: filter === type ? 1 : 0.7,
+              }}
+              onClick={() => setFilter(filter === type ? 'all' : type)}
+            >
+              <span 
+                className="block text-2xl font-bold" 
+                style={{ color: filter === type ? '#fff' : theme.text.high }}
+              >
+                {feedbackCounts?.[type] ?? 0}
+              </span>
+              <span 
+                className="text-xs" 
+                style={{ color: filter === type ? '#fff' : theme.text.low }}
+              >
+                {type.replace('_', ' ')}
+              </span>
+            </div>
+          ))}
+        </div>
+      </AdminCard>
+
+      {/* Before/After Comparison View */}
+      <AdminCard className="p-4 mb-5">
+        <CardLabel>recent edit corrections (before → after)</CardLabel>
+        {editCorrections.length > 0 ? (
+          editCorrections.slice(0, 5).map((c, i) => (
+            <CorrectionDiff 
+              key={c._id?.toString() || i}
+              original={c.originalContent}
+              edited={c.editedContent!}
+              ecosystem={(c as Record<string, unknown>).ecosystem as string || 'unknown'}
+              channel={(c as Record<string, unknown>).channel as string || 'unknown'}
+              timestamp={c.timestamp}
+              expanded={expandedId === (c._id?.toString() || String(i))}
+              onToggle={() => setExpandedId(
+                expandedId === (c._id?.toString() || String(i)) 
+                  ? null 
+                  : (c._id?.toString() || String(i))
+              )}
+            />
+          ))
+        ) : (
+          <span style={{ color: theme.text.low, fontSize: '13px' }}>
+            no edit corrections yet. users can edit AI responses to teach better outputs.
+          </span>
+        )}
+      </AdminCard>
+
+      {/* Top Avoid Patterns */}
+      {learningStats.topAvoidReasons.length > 0 && (
+        <AdminCard className="p-4 mb-5">
+          <CardLabel>top patterns to avoid (from negative feedback)</CardLabel>
+          <div className="flex flex-wrap gap-2">
+            {learningStats.topAvoidReasons.map((reason, i) => (
+              <span
+                key={i}
+                className="inline-block rounded-md px-2 py-1"
+                style={{
+                  fontSize: '12px',
+                  backgroundColor: 'rgba(239,68,68,0.12)',
+                  color: '#ef4444',
+                }}
+              >
+                {reason}
+              </span>
+            ))}
+          </div>
+        </AdminCard>
+      )}
+
+      {/* Full Feedback Table */}
       <AdminCard className="p-4">
+        <CardLabel>
+          {filter === 'all' ? 'all feedback' : `${filter.replace('_', ' ')} feedback`} 
+          {' '}({filtered.length} items)
+        </CardLabel>
         <AdminTable
           columns={[
             { key: 'type', label: 'type' },
@@ -1327,7 +1471,7 @@ function AdminMemory() {
             { key: 'time', label: 'time' },
           ]}
           isEmpty={filtered.length === 0}
-          emptyMessage={searchQuery ? 'no feedback matches your search.' : 'no feedback recorded yet.'}
+          emptyMessage="no feedback recorded yet."
         >
           {filtered.slice(0, 50).map((c, i) => {
             const idStr = c._id?.toString() || String(i);
@@ -1341,7 +1485,7 @@ function AdminMemory() {
                 <AdminTableCell>{(c as Record<string, unknown>).channel as string || '—'}</AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap">
                   <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                    {new Date(c.timestamp).toLocaleDateString()}
+                    {formatRelativeTime(c.timestamp)}
                   </span>
                 </AdminTableCell>
               </AdminTableRow>
@@ -1354,19 +1498,12 @@ function AdminMemory() {
           </span>
         )}
       </AdminCard>
-
-      {/* Info about auto-approval */}
-      <AdminCard className="p-4 mt-4">
-        <span className="block" style={{ fontSize: '12px', color: theme.text.medium }}>
-          All feedback is automatically approved for learning. This ensures user corrections and preferences 
-          are immediately available to improve content generation quality.
-        </span>
-      </AdminCard>
     </>
   );
 }
 
 // ── Knowledge Base ───────────────────────────────────────────────
+// Updated for POC: High-priority rules first, total counter, RAG status
 function AdminKnowledge() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
@@ -1381,6 +1518,15 @@ function AdminKnowledge() {
     return <AdminLoadingSkeleton />;
   }
 
+  // Calculate total active rules
+  const totalActiveRules = useMemo(() => {
+    if (!knowledgeCounts) return 0;
+    return Object.values(knowledgeCounts).reduce(
+      (sum, counts) => sum + (counts.active || 0), 0
+    );
+  }, [knowledgeCounts]);
+
+  // Reordered knowledge types - high priority first for POC demo
   const knowledgeTypes = (() => {
     const getCount = (type: string): string => {
       if (knowledgeCounts?.[type]) {
@@ -1389,13 +1535,14 @@ function AdminKnowledge() {
       return '—';
     };
     
+    // Reordered: high-priority types first (avoid, auto-fix, examples)
     return [
-      { type: 'avoid_word', label: 'avoid words', count: getCount('avoid_word'), colorClass: 'text-red-500' },
-      { type: 'preferred_word', label: 'preferred vocab', count: getCount('preferred_word'), colorClass: 'text-green-500' },
-      { type: 'auto_fix', label: 'auto-fix rules', count: getCount('auto_fix'), colorClass: 'text-blue-500' },
-      { type: 'product_definition', label: 'product defs', count: getCount('product_definition'), colorClass: 'text-purple-500' },
-      { type: 'festival', label: 'festivals', count: getCount('festival'), colorClass: 'text-yellow-500' },
-      { type: 'approved_example', label: 'examples', count: getCount('approved_example'), colorClass: 'text-cyan-500' },
+      { type: 'avoid_word', label: 'avoid words', count: getCount('avoid_word'), colorClass: 'text-red-500', priority: 'high' },
+      { type: 'auto_fix', label: 'auto-fix rules', count: getCount('auto_fix'), colorClass: 'text-blue-500', priority: 'high' },
+      { type: 'approved_example', label: 'approved examples', count: getCount('approved_example'), colorClass: 'text-cyan-500', priority: 'high' },
+      { type: 'preferred_word', label: 'preferred vocab', count: getCount('preferred_word'), colorClass: 'text-green-500', priority: 'medium' },
+      { type: 'product_definition', label: 'product defs', count: getCount('product_definition'), colorClass: 'text-purple-500', priority: 'low' },
+      { type: 'festival', label: 'festivals', count: getCount('festival'), colorClass: 'text-yellow-500', priority: 'low' },
     ];
   })();
 
@@ -1637,9 +1784,34 @@ function AdminKnowledge() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="Knowledge Base" subtitle="managed rules, vocabulary, and content examples" />
+      <SectionHeader title="knowledge base" subtitle="brand rules, vocabulary, and content guidelines" />
 
-      {/* Type Overview */}
+      {/* Total Rules Counter with RAG Status */}
+      <AdminCard className="p-4 mb-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-3xl font-bold" style={{ color: theme.accent }}>
+              {totalActiveRules}
+            </span>
+            <span className="ml-2 text-sm" style={{ color: theme.text.low }}>
+              active rules enforcing Jio brand guidelines
+            </span>
+          </div>
+          <div className="text-right">
+            <span className="block text-xs" style={{ color: theme.text.low }}>
+              semantic search enabled (RAG)
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ 
+              backgroundColor: 'rgba(34,197,94,0.12)', 
+              color: '#22c55e' 
+            }}>
+              vector index active
+            </span>
+          </div>
+        </div>
+      </AdminCard>
+
+      {/* Type Overview - Reordered with high-priority first */}
       <div className="grid grid-cols-3 lg:grid-cols-6 gap-2.5 mb-5">
         {knowledgeTypes.map((kt) => (
           <AdminStatCard
@@ -1670,6 +1842,127 @@ function AdminKnowledge() {
           </ul>
         </AdminCard>
       )}
+    </>
+  );
+}
+
+// ── Usage Analytics (simplified from Analytics) ─────────────────────
+// Purpose: Show adoption across Jio ecosystem for POC demo
+function AdminUsageAnalytics() {
+  const theme = useThemeColors();
+  const { isOnline } = useNetworkStatus();
+  
+  const [timeRange, setTimeRange] = useState<TimeRange>('week');
+  const since = useMemo(() => getTimestampForRange(timeRange), [timeRange]);
+  
+  // Direct Convex queries
+  const contextStats = useQuery(api.analytics.statsByEcosystemChannel, { since });
+  const users = useQuery(api.users.listAll);
+  
+  // Group by ecosystem and channel
+  const byEcosystem = useMemo(() => {
+    if (!contextStats) return [];
+    const counts: Record<string, number> = {};
+    for (const stat of contextStats) {
+      counts[stat.ecosystem] = (counts[stat.ecosystem] || 0) + stat.count;
+    }
+    return Object.entries(counts)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [contextStats]);
+  
+  const byChannel = useMemo(() => {
+    if (!contextStats) return [];
+    const counts: Record<string, number> = {};
+    for (const stat of contextStats) {
+      counts[stat.channel] = (counts[stat.channel] || 0) + stat.count;
+    }
+    return Object.entries(counts)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [contextStats]);
+
+  // Loading state
+  if (contextStats === undefined) {
+    return <AdminLoadingSkeleton />;
+  }
+
+  return (
+    <>
+      {!isOnline && <OfflineBanner />}
+      
+      <div className="flex justify-between items-center mb-5">
+        <SectionHeader 
+          title="usage analytics" 
+          subtitle="adoption across Jio ecosystem and content channels" 
+        />
+        <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+      </div>
+
+      {/* User Count */}
+      <AdminCard className="p-4 mb-5">
+        <div className="flex items-center gap-4">
+          <span className="text-3xl font-bold" style={{ color: theme.accent }}>
+            {users?.length ?? 0}
+          </span>
+          <span style={{ color: theme.text.low, fontSize: '13px' }}>
+            registered users across Jio products
+          </span>
+        </div>
+      </AdminCard>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+        <ChartContainer
+          title="by ecosystem"
+          subtitle="content generations per Jio product"
+          empty={byEcosystem.length === 0}
+          emptyMessage="no ecosystem data available"
+        >
+          <HorizontalBarChart data={byEcosystem} color="#f97316" />
+        </ChartContainer>
+
+        <ChartContainer
+          title="by channel"
+          subtitle="content generations per channel type"
+          empty={byChannel.length === 0}
+          emptyMessage="no channel data available"
+        >
+          <HorizontalBarChart data={byChannel} color="#3b82f6" />
+        </ChartContainer>
+      </div>
+
+      {/* Context Performance Table */}
+      <AdminCard className="p-4">
+        <CardLabel>quality by context</CardLabel>
+        <AdminTable
+          columns={[
+            { key: 'ecosystem', label: 'ecosystem' },
+            { key: 'channel', label: 'channel' },
+            { key: 'count', label: 'generations' },
+            { key: 'trustScore', label: 'avg trust score' },
+          ]}
+          isEmpty={!contextStats || contextStats.length === 0}
+          emptyMessage="no usage data in selected time range"
+        >
+          {contextStats?.slice(0, 15).map((stat, i) => (
+            <AdminTableRow key={i}>
+              <AdminTableCell>{stat.ecosystem}</AdminTableCell>
+              <AdminTableCell>{stat.channel}</AdminTableCell>
+              <AdminTableCell>{stat.count}</AdminTableCell>
+              <AdminTableCell>
+                <span style={{
+                  color: (stat.avgTrustScore ?? 0) >= 90 ? '#22c55e' : 
+                         (stat.avgTrustScore ?? 0) >= 80 ? '#f59e0b' : '#ef4444',
+                  fontWeight: 500,
+                }}>
+                  {stat.avgTrustScore ?? '—'}
+                </span>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+      </AdminCard>
     </>
   );
 }
@@ -1910,9 +2203,9 @@ export default function AdminLayout() {
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard': return <AdminDashboard />;
-      case 'analytics': return <AdminAnalytics />;
-      case 'memory': return <AdminMemory />;
+      case 'learning': return <AdminLearningCenter />;
       case 'knowledge': return <AdminKnowledge />;
+      case 'usage': return <AdminUsageAnalytics />;
       case 'users': return <AdminUsers />;
       case 'config': return <AdminConfig />;
       default: return <AdminDashboard />;
