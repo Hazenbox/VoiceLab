@@ -84,13 +84,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const boundaryName = this.props.name || 'unknown';
     
-    // FIRST: Log to console immediately (before any analytics that could fail)
-    console.error(`[ErrorBoundary:${boundaryName}] Caught error:`, error);
-    console.error('[ErrorBoundary] Error message:', error?.message);
-    console.error('[ErrorBoundary] Error stack:', error?.stack);
-    console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
+    // Log to console first (before analytics that could fail)
+    console.error(`[ErrorBoundary:${boundaryName}] Caught error:`, error?.message);
+    if (import.meta.env.DEV) {
+      console.error('[ErrorBoundary] Stack:', error?.stack);
+      console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
+    }
     
-    // THEN: Try to classify and log to analytics (may fail)
+    // Classify and log to analytics
     let severity: 'recoverable' | 'warning' | 'fatal' = 'recoverable';
     try {
       severity = classifyError(error);
@@ -102,7 +103,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         retryCount: this.state.retryCount,
       });
     } catch (analyticsError) {
-      console.error('[ErrorBoundary] Analytics logging failed:', analyticsError);
+      console.warn('[ErrorBoundary] Analytics logging failed:', analyticsError);
     }
 
     // Update state with error info
@@ -121,7 +122,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       this.state.retryCount < 3
     ) {
       this.autoRetryTimeout = setTimeout(() => {
-        console.log(`[ErrorBoundary:${boundaryName}] Auto-retrying (attempt ${this.state.retryCount + 1})`);
         this.handleRetry();
       }, this.props.autoRetryMs);
     }
