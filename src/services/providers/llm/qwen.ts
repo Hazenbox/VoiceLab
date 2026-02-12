@@ -14,7 +14,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
-import { getApiBaseUrl, isProduction } from '../../../config/providers';
+import { getApiBaseUrl, getApiHeaders, isProduction } from '../../../config/providers';
 
 export interface QwenConfig {
   apiKey: string;
@@ -42,9 +42,7 @@ export class QwenTextProvider implements LLMProvider {
       // Use proxy for API calls (avoids CORS)
       const response = await fetch(`${this.config.proxyUrl}/api/llm`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getApiHeaders(),
         body: JSON.stringify({
           model: this.config.model,
           messages: options.messages.map(m => ({

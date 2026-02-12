@@ -177,6 +177,30 @@ export function getApiBaseUrl(): string {
 }
 
 /**
+ * Get internal API key for authenticated requests
+ * This is bundled into the client - acceptable for internal tools only
+ */
+export function getInternalApiKey(): string {
+  return getEnv('VITE_INTERNAL_API_KEY', '');
+}
+
+/**
+ * Get default headers for API calls including authentication
+ */
+export function getApiHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  const apiKey = getInternalApiKey();
+  if (apiKey) {
+    headers['x-api-key'] = apiKey;
+  }
+  
+  return headers;
+}
+
+/**
  * Get proxy server configuration
  * The proxy is needed because:
  * - Browser WebSockets cannot send custom Authorization headers

@@ -2,7 +2,7 @@ import type { TTSProvider, VoiceConfig } from '../types';
 import type { Voice } from '../../../types';
 import { VoiceGender } from '../../../types';
 import { ALIBABA_VOICES, getAlibabaVoiceByGender } from '../../../constants';
-import { getAlibabaConfig, isAlibabaConfigured, getProxyConfig } from '../../../config/providers';
+import { getAlibabaConfig, isAlibabaConfigured, getProxyConfig, getApiHeaders } from '../../../config/providers';
 import { generateUUID, createAudioContext, decodeMP3 } from '../../audioUtils';
 
 /**
@@ -272,9 +272,7 @@ export class CosyVoiceTTSProvider implements TTSProvider {
     try {
       const response = await fetch(proxyUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getApiHeaders(),
         body: JSON.stringify({
           model: this.config.ttsModel,
           input: {

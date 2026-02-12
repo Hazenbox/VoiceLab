@@ -14,7 +14,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
-import { getApiBaseUrl, isProduction } from '../../../config/providers';
+import { getApiBaseUrl, getInternalApiKey, isProduction } from '../../../config/providers';
 
 export interface OpenAIConfig {
   apiKey: string;
@@ -55,15 +55,21 @@ export class OpenAIProvider implements LLMProvider {
 
   /**
    * Get headers for API request
-   * In production: no auth header (handled by serverless function)
-   * In development with proxy: no auth header (handled by proxy)
+   * In production: include internal API key for authentication
+   * In development with proxy: include internal API key if configured
    */
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     
-    // Only include auth header for direct API calls (fallback only)
+    // Include internal API key for authenticated requests
+    const internalApiKey = getInternalApiKey();
+    if (internalApiKey) {
+      headers['x-api-key'] = internalApiKey;
+    }
+    
+    // Only include OpenAI auth header for direct API calls (fallback only)
     const proxyBase = getApiBaseUrl();
     if (!isProduction() && !proxyBase) {
       headers['Authorization'] = `Bearer ${this.config.apiKey}`;

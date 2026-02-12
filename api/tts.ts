@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from './_cors.js';
 import { handleRateLimit } from './_rateLimit.js';
+import { handleApiAuth } from './_auth.js';
 import { validateTTSRequest, sendValidationError } from './_validation.js';
 import { fetchWithTimeout } from './_timeout.js';
 
@@ -10,6 +11,9 @@ const ELEVENLABS_TTS_ENDPOINT = 'https://api.elevenlabs.io/v1/text-to-speech';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS preflight and validation
   if (!handleCors(req, res)) return;
+  
+  // Verify API key authentication
+  if (!handleApiAuth(req, res)) return;
   
   // Apply rate limiting (30 requests/minute for TTS)
   if (!handleRateLimit(req, res, 'tts')) return;

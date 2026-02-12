@@ -5,7 +5,7 @@
  */
 
 import { cronJobs } from "convex/server";
-import { internal } from "./_generated/api";
+import { internal, api } from "./_generated/api";
 
 const crons = cronJobs();
 
@@ -21,6 +21,13 @@ crons.hourly(
   "timeout-stale-sessions",
   { minuteUTC: 30 },
   internal.maintenance.timeoutStale
+);
+
+// Daily cleanup of expired admin sessions
+crons.daily(
+  "cleanup-admin-sessions",
+  { hourUTC: 4, minuteUTC: 0 },
+  api.adminSessions.cleanupExpired
 );
 
 export default crons;

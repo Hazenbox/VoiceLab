@@ -14,7 +14,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
-import { getApiBaseUrl, isProduction } from '../../../config/providers';
+import { getApiBaseUrl, getInternalApiKey, isProduction } from '../../../config/providers';
 
 export interface ClaudeConfig {
   apiKey: string;
@@ -54,15 +54,21 @@ export class ClaudeProvider implements LLMProvider {
 
   /**
    * Get headers for API request
-   * In production: no auth header (handled by serverless function)
-   * In development with proxy: no auth header (handled by proxy)
+   * In production: include internal API key for authentication
+   * In development with proxy: include internal API key if configured
    */
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     
-    // Only include auth headers for direct API calls (fallback only)
+    // Include internal API key for authenticated requests
+    const internalApiKey = getInternalApiKey();
+    if (internalApiKey) {
+      headers['x-api-key'] = internalApiKey;
+    }
+    
+    // Only include Anthropic auth headers for direct API calls (fallback only)
     const proxyBase = getApiBaseUrl();
     if (!isProduction() && !proxyBase) {
       headers['x-api-key'] = this.config.apiKey;

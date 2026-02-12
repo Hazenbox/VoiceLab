@@ -189,4 +189,20 @@ export default defineSchema({
     updatedAt: v.number(),
     updatedBy: v.optional(v.string()), // admin deviceId
   }).index("by_key", ["key"]),
+
+  // ── Admin Sessions ───────────────────────────────────────────────
+  // Persistent admin authentication sessions (replaces in-memory storage)
+  // This ensures sessions survive Vercel cold starts
+  adminSessions: defineTable({
+    token: v.string(), // Session token (secure random string)
+    deviceId: v.string(), // Device that created the session
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    lastUsedAt: v.number(),
+    userAgent: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
+  })
+    .index("by_token", ["token"])
+    .index("by_deviceId", ["deviceId"])
+    .index("by_expiresAt", ["expiresAt"]),
 });

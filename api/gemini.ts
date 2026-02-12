@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from './_cors.js';
 import { handleRateLimit } from './_rateLimit.js';
+import { handleApiAuth } from './_auth.js';
 import { validateArray, sendValidationError } from './_validation.js';
 import { fetchWithTimeout } from './_timeout.js';
 
@@ -9,6 +10,9 @@ const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS preflight and validation
   if (!handleCors(req, res)) return;
+  
+  // Verify API key authentication
+  if (!handleApiAuth(req, res)) return;
   
   // Apply rate limiting (20 requests/minute for LLM)
   if (!handleRateLimit(req, res, 'llm')) return;

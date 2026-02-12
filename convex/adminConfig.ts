@@ -1,7 +1,9 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireAdmin } from "./_auth";
 
 // ── Get a config value by key ────────────────────────────────────
+// Read operations are public - config values are not sensitive
 export const get = query({
   args: { key: v.string() },
   handler: async (ctx, args) => {
@@ -21,13 +23,17 @@ export const get = query({
 });
 
 // ── Set a config value ───────────────────────────────────────────
+// ADMIN ONLY: Requires leadership role
 export const set = mutation({
   args: {
     key: v.string(),
     value: v.string(), // JSON stringified
-    updatedBy: v.optional(v.string()),
+    updatedBy: v.optional(v.string()), // deviceId of admin making the change
   },
   handler: async (ctx, args) => {
+    // Verify admin authorization
+    await requireAdmin(ctx, args.updatedBy);
+
     const existing = await ctx.db
       .query("adminConfig")
       .withIndex("by_key", (q) => q.eq("key", args.key))
@@ -54,6 +60,7 @@ export const set = mutation({
 });
 
 // ── Get all config values (admin) ────────────────────────────────
+// Read operations are public for simplicity
 export const getAll = query({
   args: {},
   handler: async (ctx) => {

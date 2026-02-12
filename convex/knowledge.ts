@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireKnowledgeEditor, requireAuthenticated } from "./_auth";
 
 // ── Get knowledge items by type ──────────────────────────────────
 export const getByType = query({
@@ -101,6 +102,7 @@ export const listAll = query({
 });
 
 // ── Create a knowledge item ──────────────────────────────────────
+// PROTECTED: Requires knowledge editor role (leadership, product, ux_writer)
 export const createItem = mutation({
   args: {
     type: v.string(),
@@ -116,9 +118,12 @@ export const createItem = mutation({
     }),
     tags: v.array(v.string()),
     isActive: v.boolean(),
-    createdBy: v.optional(v.string()),
+    createdBy: v.optional(v.string()), // deviceId
   },
   handler: async (ctx, args) => {
+    // Verify authorization
+    await requireKnowledgeEditor(ctx, args.createdBy);
+
     const now = Date.now();
     return await ctx.db.insert("knowledgeItems", {
       ...args,
@@ -129,6 +134,7 @@ export const createItem = mutation({
 });
 
 // ── Update a knowledge item ──────────────────────────────────────
+// PROTECTED: Requires knowledge editor role (leadership, product, ux_writer)
 export const updateItem = mutation({
   args: {
     id: v.id("knowledgeItems"),
@@ -146,9 +152,13 @@ export const updateItem = mutation({
     ),
     tags: v.optional(v.array(v.string())),
     isActive: v.optional(v.boolean()),
+    updatedBy: v.optional(v.string()), // deviceId for authorization
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    // Verify authorization
+    await requireKnowledgeEditor(ctx, args.updatedBy);
+
+    const { id, updatedBy, ...updates } = args;
     const cleanUpdates: Record<string, unknown> = { updatedAt: Date.now() };
 
     if (updates.content !== undefined) cleanUpdates.content = updates.content;
@@ -165,12 +175,17 @@ export const updateItem = mutation({
 });
 
 // ── Toggle active status ─────────────────────────────────────────
+// PROTECTED: Requires knowledge editor role
 export const toggleActive = mutation({
   args: {
     id: v.id("knowledgeItems"),
     isActive: v.boolean(),
+    updatedBy: v.optional(v.string()), // deviceId for authorization
   },
   handler: async (ctx, args) => {
+    // Verify authorization
+    await requireKnowledgeEditor(ctx, args.updatedBy);
+
     await ctx.db.patch(args.id, {
       isActive: args.isActive,
       updatedAt: Date.now(),
@@ -179,6 +194,7 @@ export const toggleActive = mutation({
 });
 
 // ── Batch create items (for seeding) ─────────────────────────────
+// PROTECTED: Requires knowledge editor role
 export const batchCreate = mutation({
   args: {
     items: v.array(
@@ -199,8 +215,12 @@ export const batchCreate = mutation({
         createdBy: v.optional(v.string()),
       })
     ),
+    createdBy: v.optional(v.string()), // deviceId for authorization
   },
   handler: async (ctx, args) => {
+    // Verify authorization
+    await requireKnowledgeEditor(ctx, args.createdBy);
+
     const now = Date.now();
     const ids = [];
     for (const item of args.items) {
@@ -216,6 +236,7 @@ export const batchCreate = mutation({
 });
 
 // ── Save approved content as an example ──────────────────────────
+// PROTECTED: Requires authenticated user (any role can approve their own edits)
 export const saveApprovedExample = mutation({
   args: {
     content: v.string(),
@@ -223,9 +244,12 @@ export const saveApprovedExample = mutation({
     channel: v.string(),
     persona: v.optional(v.string()),
     trustScore: v.optional(v.number()),
-    createdBy: v.optional(v.string()),
+    createdBy: v.optional(v.string()), // deviceId for authorization
   },
   handler: async (ctx, args) => {
+    // Verify user is authenticated (any role can save approved examples)
+    await requireAuthenticated(ctx, args.createdBy);
+
     const now = Date.now();
     return await ctx.db.insert("knowledgeItems", {
       type: "approved_example",
@@ -253,9 +277,16 @@ export const saveApprovedExample = mutation({
 });
 
 // ── Delete (soft) ────────────────────────────────────────────────
+// PROTECTED: Requires knowledge editor role
 export const softDelete = mutation({
-  args: { id: v.id("knowledgeItems") },
+  args: { 
+    id: v.id("knowledgeItems"),
+    deletedBy: v.optional(v.string()), // deviceId for authorization
+  },
   handler: async (ctx, args) => {
+    // Verify authorization
+    await requireKnowledgeEditor(ctx, args.deletedBy);
+
     await ctx.db.patch(args.id, {
       isActive: false,
       updatedAt: Date.now(),

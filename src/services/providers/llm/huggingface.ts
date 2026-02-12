@@ -15,7 +15,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
-import { getApiBaseUrl, isProduction } from '../../../config/providers';
+import { getApiBaseUrl, getInternalApiKey, isProduction } from '../../../config/providers';
 
 // Available HuggingFace models configuration
 export const HF_MODELS = {
@@ -100,14 +100,21 @@ export class HuggingFaceProvider implements LLMProvider {
   }
 
   /**
-   * Get headers for API request (no auth header when using proxy)
+   * Get headers for API request
+   * Includes internal API key for proxy authentication
    */
   private getHeaders(): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     
-    // Only include auth header for direct API calls (not through proxy)
+    // Include internal API key for authenticated requests
+    const internalApiKey = getInternalApiKey();
+    if (internalApiKey) {
+      headers['x-api-key'] = internalApiKey;
+    }
+    
+    // Only include HuggingFace auth header for direct API calls (not through proxy)
     if (!this.isBrowser() || !this.config.proxyUrl) {
       headers['Authorization'] = `Bearer ${this.config.apiKey}`;
     }

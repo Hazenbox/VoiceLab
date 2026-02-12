@@ -1,7 +1,9 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireAuthenticated, requireAdmin } from "./_auth";
 
 // ── Create a correction/feedback entry ───────────────────────────
+// PROTECTED: Requires authenticated user
 export const create = mutation({
   args: {
     userId: v.id("users"),
@@ -19,6 +21,9 @@ export const create = mutation({
     generationContext: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Verify user is authenticated
+    await requireAuthenticated(ctx, args.deviceId);
+
     return await ctx.db.insert("corrections", {
       ...args,
       adminStatus: "approved", // Auto-approve all corrections for immediate learning
@@ -119,12 +124,17 @@ export const listAll = query({
 });
 
 // ── Update admin status on a correction ──────────────────────────
+// ADMIN ONLY: Requires leadership role
 export const updateAdminStatus = mutation({
   args: {
     correctionId: v.id("corrections"),
     adminStatus: v.string(), // approved | rejected
+    updatedBy: v.optional(v.string()), // deviceId for authorization
   },
   handler: async (ctx, args) => {
+    // Verify admin authorization
+    await requireAdmin(ctx, args.updatedBy);
+
     await ctx.db.patch(args.correctionId, {
       adminStatus: args.adminStatus,
     });

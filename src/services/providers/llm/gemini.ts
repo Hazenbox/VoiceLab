@@ -14,7 +14,7 @@ import {
   ERROR_CODES,
   createLLMError,
 } from './types';
-import { getApiBaseUrl, isProduction } from '../../../config/providers';
+import { getApiBaseUrl, getApiHeaders, isProduction } from '../../../config/providers';
 
 export interface GeminiConfig {
   apiKey: string;
@@ -97,7 +97,7 @@ export class GeminiTextProvider implements LLMProvider {
       
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders(),
         body: JSON.stringify(requestBody),
         signal: options.signal,
       });
@@ -183,7 +183,7 @@ export class GeminiTextProvider implements LLMProvider {
       
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getApiHeaders(),
         body: JSON.stringify(requestBody),
         signal: options.signal,
       });
