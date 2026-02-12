@@ -60,6 +60,13 @@ import { useAbortController } from './hooks';
 // Onboarding & Sync
 import OnboardingModal, { loadUserProfile, getDeviceId, type UserProfile } from './components/OnboardingModal';
 import { getSyncService } from './services/sync/convexSync';
+// Reliability utilities (Phase 4)
+import { 
+  generateIdempotencyKey, 
+  isIdempotencyKeyProcessed, 
+  markIdempotencyKeyProcessed,
+  deduplicateRequest,
+} from './services/reliability';
 // Persona Engine (Phase 1)
 import { getAutoConfig, type PersonaRole } from './services/persona';
 // Feature Flags
@@ -447,6 +454,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   ): Promise<SendMessageResult | null> => {
     const { parentMessageId, replaceResponseId, skipUserMessage } = options;
     
+    // =========================================================================
+    // Idempotency: Prevent duplicate rapid submissions
+    // =========================================================================
+    const idempotencyKey = generateIdempotencyKey(message.substring(0, 20));
+    
+    // Use request deduplication - if same message is already in flight, wait for it
+    return deduplicateRequest(`chat-${message.substring(0, 50)}`, async () => {
+    
     // Reset abort controller for new request
     resetChatAbort();
 
@@ -796,7 +811,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       return { userMessageId, aiMessageId: '', success: false } as SendMessageResult;
     } finally {
       setIsChatLoading(false);
+      // Mark idempotency key as processed (even on error, to prevent retry storms)
+      markIdempotencyKeyProcessed(idempotencyKey);
     }
+    }); // End deduplicateRequest wrapper
   }, [resetChatAbort, chatMode, addMessage, replaceMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings, temperature, maxTokens, streamResponse, userProfile]);
 
   // ========================================================================

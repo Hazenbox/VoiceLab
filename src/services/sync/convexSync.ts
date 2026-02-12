@@ -5,11 +5,33 @@
  * If Convex is unreachable, events are queued in IndexedDB (with localStorage fallback)
  * and flushed on next successful connection.
  * 
+ * Phase 4 Enhancements:
+ * - Retry with exponential backoff for transient failures
+ * - Improved error classification (retryable vs non-retryable)
+ * 
  * This module has ZERO compile-time dependencies on Convex generated types.
  * All Convex calls go through the injected mutationFn callback.
  */
 
 import * as queueStorage from './queueStorage';
+import { withRetry, type RetryOptions } from '../reliability';
+
+// ── Retry Configuration ───────────────────────────────────────────
+const RETRY_CONFIG: RetryOptions = {
+  maxAttempts: 3,
+  initialDelayMs: 500,
+  maxDelayMs: 5000,
+  backoffMultiplier: 2,
+  isRetryable: (error: Error) => {
+    // Don't retry validation errors or permission errors
+    const message = error.message.toLowerCase();
+    if (message.includes('validation') || message.includes('invalid')) return false;
+    if (message.includes('permission') || message.includes('unauthorized')) return false;
+    if (message.includes('not found')) return false;
+    // Retry network errors, timeouts, and server errors
+    return true;
+  },
+};
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -169,17 +191,40 @@ export class ConvexSyncService {
     return this.mutationFn !== null && this.isOnline;
   }
 
-  // ── Safe mutation call ───────────────────────────────────────
+  // ── Safe mutation call with retry ────────────────────────────
 
   // Returns { ok: true, value } on success, { ok: false } on failure.
+  // Uses exponential backoff for transient failures.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async safeMutation(name: string, args: Record<string, any>): Promise<{ ok: true; value: any } | { ok: false }> {
+    if (!this.mutationFn) return { ok: false };
+    
+    try {
+      const result = await withRetry(
+        () => this.mutationFn!(name, args),
+        {
+          ...RETRY_CONFIG,
+          onRetry: (attempt, error, delay) => {
+            console.log(`[ConvexSync] Retry ${attempt} for ${name} after ${delay}ms:`, error.message);
+          },
+        }
+      );
+      return { ok: true, value: result };
+    } catch (error) {
+      console.warn('[ConvexSync] Mutation failed after retries:', name, error);
+      return { ok: false };
+    }
+  }
+  
+  // For operations that should not retry (e.g., idempotent operations or quick fails)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async safeMutationNoRetry(name: string, args: Record<string, any>): Promise<{ ok: true; value: any } | { ok: false }> {
     if (!this.mutationFn) return { ok: false };
     try {
       const result = await this.mutationFn(name, args);
       return { ok: true, value: result };
     } catch (error) {
-      console.warn('[ConvexSync] Mutation failed:', error);
+      console.warn('[ConvexSync] Mutation failed:', name, error);
       return { ok: false };
     }
   }

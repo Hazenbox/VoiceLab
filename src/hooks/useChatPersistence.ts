@@ -9,12 +9,17 @@
  * - Large audio storage via IndexedDB (supports 5+ mins per chat)
  * - Storage usage warnings
  * - Project-scoped storage
+ * - Multi-tab synchronization (Phase 4: Reliability)
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { chatStorage, type StorageUsage } from '../services/chatStorage';
 import type { ChatMessage, ChatMode } from '../types';
 import { migrateMessageVersion } from '../types';
+import { subscribeToStorageChanges } from '../services/reliability';
+
+// Storage key constant (must match chatStorage)
+const CHAT_HISTORY_KEY = 'voicelab_chat_history';
 
 // =============================================================================
 // Types
@@ -130,6 +135,40 @@ export function useChatPersistence(
     chatStorage.save(projectId, messages);
     setStorageUsage(chatStorage.getStorageUsage());
   }, [messages, projectId, autoSave, isLoaded]);
+  
+  // Multi-tab synchronization: Listen for changes from other tabs
+  useEffect(() => {
+    if (!projectId) return;
+    
+    const unsubscribe = subscribeToStorageChanges(CHAT_HISTORY_KEY, (_key, newValue) => {
+      if (!newValue || !projectIdRef.current) return;
+      
+      try {
+        const allProjectMessages = JSON.parse(newValue);
+        const projectMessages = allProjectMessages[projectIdRef.current];
+        
+        if (projectMessages && Array.isArray(projectMessages)) {
+          // Only update if different from current state (avoid infinite loops)
+          const currentIds = new Set(messagesRef.current.map(m => m.id));
+          const newIds = new Set(projectMessages.map((m: ChatMessage) => m.id));
+          
+          // Check if there are actual differences
+          const hasNewMessages = projectMessages.some((m: ChatMessage) => !currentIds.has(m.id));
+          const hasRemovedMessages = messagesRef.current.some(m => !newIds.has(m.id));
+          
+          if (hasNewMessages || hasRemovedMessages) {
+            console.log('[useChatPersistence] Syncing messages from another tab');
+            const migratedMessages = projectMessages.map(migrateMessageVersion);
+            setMessagesInternal(migratedMessages);
+          }
+        }
+      } catch (error) {
+        console.error('[useChatPersistence] Failed to sync from other tab:', error);
+      }
+    });
+    
+    return unsubscribe;
+  }, [projectId]);
   
   // Set messages wrapper
   const setMessages = useCallback<React.Dispatch<React.SetStateAction<ChatMessage[]>>>(
