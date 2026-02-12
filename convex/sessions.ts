@@ -188,15 +188,22 @@ export const getByUser = query({
 });
 
 // ── Get session statistics (admin dashboard) ───────────────────────
+// Note: Capped at 5000 sessions for performance. For exact counts at scale,
+// consider using aggregation tables or scheduled background jobs.
+const MAX_SESSIONS_FOR_STATS = 5000;
+
 export const getStats = query({
   args: {
     since: v.number(),
   },
   handler: async (ctx, args) => {
+    // Cap to prevent unbounded queries
     const sessions = await ctx.db
       .query("conversationSessions")
       .withIndex("by_startedAt", (q) => q.gte("startedAt", args.since))
-      .collect();
+      .take(MAX_SESSIONS_FOR_STATS);
+    
+    const isCapped = sessions.length >= MAX_SESSIONS_FOR_STATS;
     
     if (sessions.length === 0) {
       return {
@@ -208,6 +215,7 @@ export const getStats = query({
         averageMessageCount: 0,
         averageRegenerations: 0,
         totalCopyActions: 0,
+        isCapped: false,
       };
     }
     
@@ -232,6 +240,7 @@ export const getStats = query({
       averageMessageCount: Math.round(avgMessages * 10) / 10,
       averageRegenerations: Math.round(avgRegenerations * 100) / 100,
       totalCopyActions: totalCopies,
+      isCapped, // Indicates if results were capped
     };
   },
 });

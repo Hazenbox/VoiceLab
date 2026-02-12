@@ -14,6 +14,52 @@
 import { rateLimiter, RATE_LIMITS } from './rateLimiter';
 import { featureFlags } from '../featureFlags';
 
+// ── Debounce Helper ─────────────────────────────────────────────────
+// Simple debounce to prevent excessive localStorage writes
+
+function debounce<T extends (...args: Parameters<T>) => void>(
+  fn: T,
+  delay: number
+): T & { flush: () => void; cancel: () => void } {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let lastArgs: Parameters<T> | null = null;
+
+  const debounced = function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+    lastArgs = args;
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      if (lastArgs) {
+        fn.apply(this, lastArgs);
+        lastArgs = null;
+      }
+      timeoutId = null;
+    }, delay);
+  } as T & { flush: () => void; cancel: () => void };
+
+  debounced.flush = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+      if (lastArgs) {
+        fn.apply(null, lastArgs);
+        lastArgs = null;
+      }
+    }
+  };
+
+  debounced.cancel = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+      lastArgs = null;
+    }
+  };
+
+  return debounced;
+}
+
 // ── Types ────────────────────────────────────────────────────────────
 
 export interface SessionState {
@@ -71,6 +117,8 @@ export interface InteractionEvent {
 
 const SESSION_STORAGE_KEY = 'voicelab_active_session';
 const SESSION_SYNC_INTERVAL_MS = 30_000; // 30 seconds
+const LOCAL_STORAGE_DEBOUNCE_MS = 500; // Debounce localStorage writes
+const MAX_RESPONSE_TIMES = 100; // Cap response times array to prevent unbounded growth
 
 // ── Session Manager Class ────────────────────────────────────────────
 
@@ -82,8 +130,17 @@ export class SessionManager {
   // Callback for syncing to Convex (injected from React layer)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private syncCallback: ((action: string, data: Record<string, any>) => Promise<any>) | null = null;
+  
+  // Debounced localStorage save to prevent excessive writes
+  private debouncedSaveToStorage: ReturnType<typeof debounce>;
 
   constructor() {
+    // Initialize debounced save
+    this.debouncedSaveToStorage = debounce(
+      this._saveSessionToStorage.bind(this),
+      LOCAL_STORAGE_DEBOUNCE_MS
+    );
+    
     // Restore session from localStorage if exists
     this.restoreSession();
   }
@@ -234,6 +291,10 @@ export class SessionManager {
     this.session.lastActivityAt = Date.now();
     
     if (responseTimeMs !== undefined && responseTimeMs > 0) {
+      // Cap array size to prevent unbounded growth
+      if (this.session.responseTimes.length >= MAX_RESPONSE_TIMES) {
+        this.session.responseTimes.shift(); // Remove oldest
+      }
       this.session.responseTimes.push(responseTimeMs);
     }
     
@@ -424,7 +485,7 @@ export class SessionManager {
         
         this.session.sessionId = sessionId;
         this.session.lastSyncAt = Date.now();
-        this.saveSessionLocally();
+        this.saveSessionLocallyImmediate(); // Critical: save Convex ID immediately
         
         console.log(`[SessionManager] Session created in Convex: ${sessionId}`);
       } else {
@@ -450,7 +511,7 @@ export class SessionManager {
         });
         
         this.session.lastSyncAt = Date.now();
-        this.saveSessionLocally();
+        this.saveSessionLocallyImmediate(); // Critical: save sync state immediately
       }
       
       // Also flush pending events
@@ -462,7 +523,29 @@ export class SessionManager {
 
   // ── Local Storage ──────────────────────────────────────────────────
 
+  /**
+   * Save session locally (debounced to prevent excessive writes)
+   * Multiple rapid calls will be coalesced into a single write after 500ms
+   */
   private saveSessionLocally(): void {
+    if (!this.session) return;
+    this.debouncedSaveToStorage();
+  }
+  
+  /**
+   * Immediately save session to localStorage (bypasses debounce)
+   * Use for critical saves like session end
+   */
+  private saveSessionLocallyImmediate(): void {
+    if (!this.session) return;
+    this.debouncedSaveToStorage.flush();
+    this._saveSessionToStorage();
+  }
+  
+  /**
+   * Internal method that performs the actual localStorage write
+   */
+  private _saveSessionToStorage(): void {
     if (!this.session) return;
     
     try {
@@ -544,6 +627,9 @@ export class SessionManager {
   destroy(): void {
     this.stopSyncTimer();
     
+    // Flush any pending localStorage writes
+    this.debouncedSaveToStorage.flush();
+    
     // End session if active
     if (this.session?.isActive) {
       this.endSession('browser_closed');
@@ -551,6 +637,9 @@ export class SessionManager {
     
     // Flush any remaining events
     this.flushPendingEvents();
+    
+    // Cancel any pending debounced calls
+    this.debouncedSaveToStorage.cancel();
   }
 }
 

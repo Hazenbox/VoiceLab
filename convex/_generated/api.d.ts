@@ -8,7 +8,9 @@
  * @module
  */
 
+import type * as _auth from "../_auth.js";
 import type * as adminConfig from "../adminConfig.js";
+import type * as adminSessions from "../adminSessions.js";
 import type * as analytics from "../analytics.js";
 import type * as corrections from "../corrections.js";
 import type * as crons from "../crons.js";
@@ -28,7 +30,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  _auth: typeof _auth;
   adminConfig: typeof adminConfig;
+  adminSessions: typeof adminSessions;
   analytics: typeof analytics;
   corrections: typeof corrections;
   crons: typeof crons;

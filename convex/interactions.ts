@@ -1,6 +1,10 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 
+// Performance caps to prevent unbounded queries
+const MAX_EVENTS_FOR_STATS = 10000;
+const MAX_EVENTS_FOR_COUNT = 50000;
+
 // ── Log a single interaction event ─────────────────────────────────
 export const log = mutation({
   args: {
@@ -82,6 +86,7 @@ export const getRecent = query({
 });
 
 // ── Get interaction statistics (admin dashboard) ───────────────────
+// Note: Capped for performance. For exact counts at scale, use aggregation tables.
 export const getStats = query({
   args: {
     since: v.number(),
@@ -90,7 +95,9 @@ export const getStats = query({
     const events = await ctx.db
       .query("interactionEvents")
       .withIndex("by_timestamp", (q) => q.gte("timestamp", args.since))
-      .collect();
+      .take(MAX_EVENTS_FOR_STATS);
+    
+    const isCapped = events.length >= MAX_EVENTS_FOR_STATS;
     
     // Count by event type
     const counts: Record<string, number> = {};
@@ -107,6 +114,7 @@ export const getStats = query({
       dislikeCount: counts["dislike"] || 0,
       editCount: counts["edit"] || 0,
       errorCount: counts["error"] || 0,
+      isCapped, // Indicates if results were capped
     };
   },
 });
@@ -151,6 +159,7 @@ export const remove = internalMutation({
 });
 
 // ── Count interactions in time range ───────────────────────────────
+// Note: Capped for performance. Returns approximate count if exceeded.
 export const countInRange = query({
   args: {
     since: v.number(),
@@ -164,13 +173,17 @@ export const countInRange = query({
       .withIndex("by_timestamp", (q) =>
         q.gte("timestamp", args.since).lte("timestamp", until)
       )
-      .collect();
+      .take(MAX_EVENTS_FOR_COUNT);
     
-    return events.length;
+    return {
+      count: events.length,
+      isCapped: events.length >= MAX_EVENTS_FOR_COUNT,
+    };
   },
 });
 
 // ── Get hourly interaction breakdown ───────────────────────────────
+// Note: Capped for performance.
 export const getHourlyBreakdown = query({
   args: {
     since: v.number(),
@@ -179,7 +192,9 @@ export const getHourlyBreakdown = query({
     const events = await ctx.db
       .query("interactionEvents")
       .withIndex("by_timestamp", (q) => q.gte("timestamp", args.since))
-      .collect();
+      .take(MAX_EVENTS_FOR_STATS);
+    
+    const isCapped = events.length >= MAX_EVENTS_FOR_STATS;
     
     // Group by hour
     const hourlyData: Record<number, Record<string, number>> = {};
@@ -192,6 +207,9 @@ export const getHourlyBreakdown = query({
       hourlyData[hour][event.eventType] = (hourlyData[hour][event.eventType] || 0) + 1;
     }
     
-    return hourlyData;
+    return {
+      data: hourlyData,
+      isCapped,
+    };
   },
 });
