@@ -33,4 +33,51 @@ export const featureFlags = {
   get conversationalMode(): boolean {
     return import.meta.env.VITE_ENABLE_CONVERSATIONAL_MODE === 'true';
   },
+
+  // ── Analytics Feature Flags ──────────────────────────────────────────
+
+  /** 
+   * Session-level analytics tracking (conversation sessions, metrics)
+   * Default: true for comprehensive analytics
+   */
+  get sessionAnalytics(): boolean {
+    const env = import.meta.env.VITE_ENABLE_SESSION_ANALYTICS;
+    // Default to true unless explicitly disabled
+    return env !== 'false';
+  },
+
+  /**
+   * Interaction event tracking (copy, regenerate, like, dislike, etc.)
+   * Default: true for user behavior insights
+   */
+  get interactionTracking(): boolean {
+    const env = import.meta.env.VITE_ENABLE_INTERACTION_TRACKING;
+    // Default to true unless explicitly disabled
+    return env !== 'false';
+  },
+
+  /**
+   * Response time measurement for AI responses
+   * Default: true for performance monitoring
+   */
+  get responseTimeTracking(): boolean {
+    const env = import.meta.env.VITE_ENABLE_RESPONSE_TIME_TRACKING;
+    // Default to true unless explicitly disabled
+    return env !== 'false';
+  },
+
+  // ── Helper Methods ───────────────────────────────────────────────────
+
+  /**
+   * Generic flag getter with default value support
+   */
+  getFlag(key: string, defaultValue: boolean = false): boolean {
+    const envKey = `VITE_ENABLE_${key.toUpperCase()}`;
+    const env = import.meta.env[envKey];
+    
+    if (env === undefined) return defaultValue;
+    if (env === 'true') return true;
+    if (env === 'false') return false;
+    return defaultValue;
+  },
 } as const;

@@ -62,12 +62,92 @@ export default defineSchema({
     tokenCount: v.optional(v.number()),
     llmProvider: v.optional(v.string()),
     timestamp: v.number(),
+    // v2 additions for session tracking
+    sessionId: v.optional(v.id("conversationSessions")),
+    responseTimeMs: v.optional(v.number()),
+    messageSequenceNumber: v.optional(v.number()),
+    wasRegeneration: v.optional(v.boolean()),
+    errorType: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
   })
     .index("by_timestamp", ["timestamp"])
     .index("by_ecosystem", ["ecosystem"])
     .index("by_userId", ["userId"])
     .index("by_eventType", ["eventType"])
-    .index("by_persona", ["persona"]),
+    .index("by_persona", ["persona"])
+    .index("by_sessionId", ["sessionId"]),
+
+  // ── Conversation Sessions ────────────────────────────────────────
+  // Tracks user sessions for analytics and behavior analysis.
+  // One session = one continuous usage period per project.
+  conversationSessions: defineTable({
+    userId: v.id("users"),
+    deviceId: v.string(),
+    projectId: v.string(),
+    projectName: v.string(),
+
+    // Session timing
+    startedAt: v.number(),
+    lastActivityAt: v.number(),
+    endedAt: v.optional(v.number()),
+    durationSeconds: v.optional(v.number()),
+
+    // Conversation metrics
+    messageCount: v.number(),
+    userMessageCount: v.number(),
+    assistantMessageCount: v.number(),
+    averageResponseTimeMs: v.optional(v.number()),
+
+    // Context at session start
+    ecosystem: v.string(),
+    channel: v.string(),
+    persona: v.string(),
+
+    // Session characteristics
+    contextSwitches: v.number(), // times user changed ecosystem/channel/persona
+    regenerationCount: v.number(), // "try again" clicks
+    copyActionCount: v.number(), // times user copied content
+    voiceMessageCount: v.number(), // voice inputs
+    textMessageCount: v.number(), // text inputs
+
+    // Completion status
+    status: v.string(), // active | completed | abandoned
+    exitReason: v.optional(v.string()), // user_left | browser_closed | timeout | error
+
+    // Client environment (for UX insights)
+    userAgent: v.optional(v.string()),
+    screenWidth: v.optional(v.number()),
+    screenHeight: v.optional(v.number()),
+
+    // Archival flag for data retention
+    isArchived: v.optional(v.boolean()),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_deviceId", ["deviceId"])
+    .index("by_projectId", ["projectId"])
+    .index("by_startedAt", ["startedAt"])
+    .index("by_status", ["status"])
+    .index("by_isArchived", ["isArchived"]),
+
+  // ── Interaction Events ───────────────────────────────────────────
+  // Granular user interactions for behavior analysis.
+  // Tracks copy, regenerate, edit, settings changes, feature usage, errors.
+  interactionEvents: defineTable({
+    userId: v.id("users"),
+    sessionId: v.optional(v.id("conversationSessions")),
+    deviceId: v.string(),
+
+    // Event details
+    eventType: v.string(), // copy | regenerate | edit | settings_change | feature_access | like | dislike | error
+    target: v.string(), // messageId, feature name, or error source
+    metadata: v.optional(v.string()), // JSON stringified additional context
+
+    timestamp: v.number(),
+  })
+    .index("by_sessionId", ["sessionId"])
+    .index("by_userId", ["userId"])
+    .index("by_eventType", ["eventType"])
+    .index("by_timestamp", ["timestamp"]),
 
   // ── Knowledge Base ─────────────────────────────────────────────
   // Dynamic rules, vocabulary, examples, products, festivals.

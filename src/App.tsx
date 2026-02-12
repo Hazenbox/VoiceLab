@@ -64,6 +64,12 @@ import { getSyncService } from './services/sync/convexSync';
 import { getAutoConfig, type PersonaRole } from './services/persona';
 // Feature Flags
 import { featureFlags } from './services/featureFlags';
+// Analytics Services (v2)
+import { 
+  getSessionManager, 
+  getResponseTimer, 
+  getErrorLogger,
+} from './services/analytics';
 // Convex (Phase 2-4: Knowledge Base & RAG)
 import { useQuery, useAction } from 'convex/react';
 import { api } from '../convex/_generated/api';
@@ -150,6 +156,30 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         persona: featureFlags.persona ? userProfile.role : 'unknown',
         timestamp: Date.now(),
       });
+
+      // v2: Initialize SessionManager for detailed session tracking
+      if (featureFlags.sessionAnalytics) {
+        const sessionManager = getSessionManager();
+        const errorLogger = getErrorLogger();
+        
+        // Wire up the sync callback for Convex operations
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sessionManager.setSyncCallback(async (action: string, data: Record<string, any>) => {
+          // Route action to appropriate sync service method
+          const [module, method] = action.split(':');
+          if (module === 'sessions') {
+            if (method === 'create') return syncService.createSession(data as Parameters<typeof syncService.createSession>[0]);
+            if (method === 'updateMetrics') return syncService.updateSession(data as Parameters<typeof syncService.updateSession>[0]);
+            if (method === 'end') return syncService.endSession(data.sessionId, data.exitReason);
+          } else if (module === 'interactions') {
+            if (method === 'log') return syncService.logInteraction(data as Parameters<typeof syncService.logInteraction>[0]);
+            if (method === 'batchLog') return syncService.batchLogInteractions(data.events);
+          }
+        });
+        
+        // Also wire up error logger
+        errorLogger.setSyncCallback(sessionManager.setSyncCallback.bind(sessionManager));
+      }
     }
   }, [userProfile?.deviceId, userProfile?.name, userProfile?.role, userProfile?.product]);
 
@@ -266,6 +296,59 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     replaceMessage,
   } = useChatPersistence(activeProject?.id || null);
 
+  // ========================================================================
+  // Session Analytics Tracking (v2)
+  // ========================================================================
+  
+  // Start/end conversation sessions when project changes
+  useEffect(() => {
+    if (!featureFlags.sessionAnalytics || !userProfile?.deviceId || !activeProject?.id) {
+      return;
+    }
+    
+    const syncService = getSyncService();
+    const sessionManager = getSessionManager();
+    
+    // Start a new session for this project
+    sessionManager.startSession({
+      projectId: activeProject.id,
+      projectName: activeProject.name || 'Untitled Project',
+      deviceId: userProfile.deviceId,
+      userId: syncService?.getConvexUserId() || null,
+      ecosystem,
+      channel: contentChannel,
+      persona: featureFlags.persona ? userProfile.role : 'unknown',
+    });
+    
+    // Cleanup: end session when project changes or component unmounts
+    return () => {
+      sessionManager.endSession('project_changed');
+    };
+  }, [activeProject?.id, activeProject?.name, userProfile?.deviceId, ecosystem, contentChannel, userProfile?.role]);
+  
+  // Track context switches (ecosystem, channel, persona changes)
+  useEffect(() => {
+    if (!featureFlags.sessionAnalytics) return;
+    
+    const sessionManager = getSessionManager();
+    sessionManager.trackContextSwitch(ecosystem, contentChannel, featureFlags.persona ? userProfile?.role : undefined);
+  }, [ecosystem, contentChannel, userProfile?.role]);
+  
+  // End session on page unload
+  useEffect(() => {
+    if (!featureFlags.sessionAnalytics) return;
+    
+    const handleBeforeUnload = () => {
+      const sessionManager = getSessionManager();
+      sessionManager.endSession('browser_closed');
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   // Chat/Generation State
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [selectedLLMProvider, setSelectedLLMProvider] = useState<LLMProviderType>(getDefaultLLMProviderType());
@@ -377,6 +460,25 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       const userMessage = createTextMessage('user', message, chatMode);
       addMessage(userMessage);
       userMessageId = userMessage.id;
+      
+      // v2: Track user message in session
+      if (featureFlags.sessionAnalytics) {
+        const sessionManager = getSessionManager();
+        sessionManager.trackUserMessage(false); // false = text input
+      }
+    }
+    
+    // v2: Start response timer
+    const isRegeneration = !!replaceResponseId;
+    if (featureFlags.responseTimeTracking) {
+      const responseTimer = getResponseTimer();
+      responseTimer.startTimer({
+        requestId: userMessageId,
+        wasRegeneration: isRegeneration,
+        ecosystem,
+        channel: contentChannel,
+        persona: featureFlags.persona ? (userProfile?.role || 'unknown') : 'unknown',
+      });
     }
     
     setIsChatLoading(true);
@@ -559,6 +661,18 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           addMessage(aiMessage);
         }
         
+        // v2: Track assistant message and response time
+        let responseTimeMs: number | undefined;
+        if (featureFlags.responseTimeTracking || featureFlags.sessionAnalytics) {
+          const responseTimer = getResponseTimer();
+          responseTimeMs = responseTimer.endTimer() ?? undefined;
+          
+          if (featureFlags.sessionAnalytics) {
+            const sessionManager = getSessionManager();
+            sessionManager.trackAssistantMessage(responseTimeMs);
+          }
+        }
+        
         // Log analytics event for content generation (always enabled)
         const syncService = getSyncService();
         const allViolations = trustScore?.validationResults.flatMap(r => r.violations) ?? [];
@@ -573,6 +687,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           tokenCount: result.usage?.totalTokens,
           llmProvider: selectedLLMProvider,
           timestamp: Date.now(),
+          // v2: Add response time and regeneration flag
+          responseTimeMs,
+          wasRegeneration: isRegeneration,
         });
         
         return {
@@ -631,6 +748,17 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           addMessage(aiMessage);
         }
         
+        // v2: Track assistant message and response time for conversational path
+        if (featureFlags.responseTimeTracking || featureFlags.sessionAnalytics) {
+          const responseTimer = getResponseTimer();
+          const responseTimeMs = responseTimer.endTimer();
+          
+          if (featureFlags.sessionAnalytics) {
+            const sessionManager = getSessionManager();
+            sessionManager.trackAssistantMessage(responseTimeMs ?? undefined);
+          }
+        }
+        
         return {
           userMessageId,
           aiMessageId: aiMessage.id,
@@ -638,11 +766,21 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         } as SendMessageResult;
       }
     } catch (err) {
+      // Cancel response timer on error
+      if (featureFlags.responseTimeTracking) {
+        const responseTimer = getResponseTimer();
+        responseTimer.cancelTimer();
+      }
+      
       // Don't show error if request was cancelled
       if ((err as Error).name === 'AbortError' || (err as Error).message?.includes('cancelled')) {
         console.log('Chat request cancelled');
         return null;
       }
+      
+      // v2: Track error in analytics
+      const errorLogger = getErrorLogger();
+      errorLogger.logLLMError(selectedLLMProvider, err as Error);
       
       console.error('Chat error:', err);
       setError({

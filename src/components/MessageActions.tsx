@@ -19,6 +19,9 @@ import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { useThemeColors } from '../theme';
 import { ActionButton } from './ActionButton';
 import { DSIcon } from './DSIcon';
+// v2: Analytics tracking
+import { getSessionManager } from '../services/analytics';
+import { featureFlags } from '../services/featureFlags';
 
 // ============================================================================
 // Types (exported for external use)
@@ -116,18 +119,42 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   
   const handleCopy = useCallback(() => {
     copyToClipboard(content);
-  }, [content, copyToClipboard]);
+    // v2: Track copy action
+    if (featureFlags.interactionTracking) {
+      const sessionManager = getSessionManager();
+      sessionManager.trackCopy(messageId);
+    }
+  }, [content, copyToClipboard, messageId]);
   
   const handleLike = useCallback(() => {
-    if (!feedbackGiven) onLike(messageId);
+    if (!feedbackGiven) {
+      onLike(messageId);
+      // v2: Track like action
+      if (featureFlags.interactionTracking) {
+        const sessionManager = getSessionManager();
+        sessionManager.trackFeedback(messageId, true);
+      }
+    }
   }, [messageId, onLike, feedbackGiven]);
   
   const handleDislike = useCallback(() => {
-    if (!feedbackGiven) onDislike(messageId);
+    if (!feedbackGiven) {
+      onDislike(messageId);
+      // v2: Track dislike action
+      if (featureFlags.interactionTracking) {
+        const sessionManager = getSessionManager();
+        sessionManager.trackFeedback(messageId, false);
+      }
+    }
   }, [messageId, onDislike, feedbackGiven]);
   
   const handleTryAgain = useCallback(() => {
     onTryAgain(messageId);
+    // v2: Track regeneration action
+    if (featureFlags.interactionTracking) {
+      const sessionManager = getSessionManager();
+      sessionManager.trackRegeneration();
+    }
   }, [messageId, onTryAgain]);
   
   return (
@@ -202,10 +229,20 @@ export const UserMessageActions = memo(function UserMessageActions({
   
   const handleCopy = useCallback(() => {
     copyToClipboard(content);
-  }, [content, copyToClipboard]);
+    // v2: Track copy action (user messages)
+    if (featureFlags.interactionTracking) {
+      const sessionManager = getSessionManager();
+      sessionManager.trackCopy(messageId);
+    }
+  }, [content, copyToClipboard, messageId]);
   
   const handleEdit = useCallback(() => {
     onEdit(messageId, content);
+    // v2: Track edit action
+    if (featureFlags.interactionTracking) {
+      const sessionManager = getSessionManager();
+      sessionManager.trackFeatureAccess('user_message_edit');
+    }
   }, [messageId, content, onEdit]);
   
   return (

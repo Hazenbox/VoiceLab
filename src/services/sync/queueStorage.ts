@@ -13,7 +13,7 @@ const MAX_RETRY_ATTEMPTS = 5;
 
 export interface QueuedEvent {
   id?: number;  // auto-increment key from IndexedDB
-  type: 'analytics' | 'correction' | 'heartbeat' | 'user_sync';
+  type: 'analytics' | 'correction' | 'heartbeat' | 'user_sync' | 'session_create' | 'session_update' | 'session_end' | 'interaction';
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>;
   timestamp: number;

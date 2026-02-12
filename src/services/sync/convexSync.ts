@@ -25,6 +25,13 @@ export interface AnalyticsEvent {
   tokenCount?: number;
   llmProvider?: string;
   timestamp: number;
+  // v2: Session tracking fields
+  sessionId?: string;
+  responseTimeMs?: number;
+  messageSequenceNumber?: number;
+  wasRegeneration?: boolean;
+  errorType?: string;
+  errorMessage?: string;
 }
 
 export interface CorrectionEvent {
@@ -39,6 +46,41 @@ export interface CorrectionEvent {
   persona: string;
   trustScore?: number;
   generationContext?: string;
+}
+
+// v2: Session tracking types
+export interface SessionCreateParams {
+  projectId: string;
+  projectName: string;
+  ecosystem: string;
+  channel: string;
+  persona: string;
+  userAgent?: string;
+  screenWidth?: number;
+  screenHeight?: number;
+}
+
+export interface SessionUpdateParams {
+  sessionId: string;
+  messageCount?: number;
+  userMessageCount?: number;
+  assistantMessageCount?: number;
+  averageResponseTimeMs?: number;
+  contextSwitches?: number;
+  regenerationCount?: number;
+  copyActionCount?: number;
+  voiceMessageCount?: number;
+  textMessageCount?: number;
+  ecosystem?: string;
+  channel?: string;
+  persona?: string;
+}
+
+export interface InteractionEventParams {
+  sessionId?: string;
+  eventType: string;
+  target: string;
+  metadata?: string;
 }
 
 export interface UserProfileSync {
@@ -276,6 +318,170 @@ export class ConvexSyncService {
     }
   }
 
+  // ── Session Management (v2) ─────────────────────────────────────
+
+  /**
+   * Create a new conversation session in Convex
+   * Returns the session ID or null if failed
+   */
+  async createSession(params: SessionCreateParams): Promise<string | null> {
+    if (!this.isAvailable || !this.convexUserId || !this.deviceId) {
+      queueStorage.addToQueue({
+        type: 'session_create',
+        data: { ...params },
+        timestamp: Date.now(),
+      });
+      return null;
+    }
+
+    const result = await this.safeMutation('sessions:create', {
+      userId: this.convexUserId,
+      deviceId: this.deviceId,
+      ...params,
+    });
+
+    if (result.ok && result.value) {
+      console.log('[ConvexSync] Session created:', result.value);
+      return result.value;
+    }
+
+    // Queue for retry
+    queueStorage.addToQueue({
+      type: 'session_create',
+      data: { ...params },
+      timestamp: Date.now(),
+    });
+    return null;
+  }
+
+  /**
+   * Update session metrics
+   */
+  async updateSession(params: SessionUpdateParams): Promise<void> {
+    if (!this.isAvailable) {
+      queueStorage.addToQueue({
+        type: 'session_update',
+        data: { ...params },
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
+    const result = await this.safeMutation('sessions:updateMetrics', params);
+
+    if (!result.ok) {
+      queueStorage.addToQueue({
+        type: 'session_update',
+        data: { ...params },
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  /**
+   * End a session
+   */
+  async endSession(sessionId: string, exitReason: string = 'user_left'): Promise<void> {
+    if (!this.isAvailable) {
+      queueStorage.addToQueue({
+        type: 'session_end',
+        data: { sessionId, exitReason },
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
+    const result = await this.safeMutation('sessions:end', {
+      sessionId,
+      exitReason,
+    });
+
+    if (!result.ok) {
+      queueStorage.addToQueue({
+        type: 'session_end',
+        data: { sessionId, exitReason },
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  // ── Interaction Event Logging (v2) ──────────────────────────────
+
+  /**
+   * Log a single interaction event
+   */
+  async logInteraction(params: InteractionEventParams): Promise<void> {
+    if (!this.isAvailable || !this.convexUserId || !this.deviceId) {
+      queueStorage.addToQueue({
+        type: 'interaction',
+        data: { ...params },
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
+    const result = await this.safeMutation('interactions:log', {
+      userId: this.convexUserId,
+      deviceId: this.deviceId,
+      ...params,
+    });
+
+    if (!result.ok) {
+      queueStorage.addToQueue({
+        type: 'interaction',
+        data: { ...params },
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  /**
+   * Batch log interaction events
+   */
+  async batchLogInteractions(events: InteractionEventParams[]): Promise<void> {
+    if (!this.isAvailable || !this.convexUserId || !this.deviceId) {
+      for (const event of events) {
+        queueStorage.addToQueue({
+          type: 'interaction',
+          data: { ...event },
+          timestamp: Date.now(),
+        });
+      }
+      return;
+    }
+
+    const formattedEvents = events.map(e => ({
+      userId: this.convexUserId!,
+      deviceId: this.deviceId!,
+      ...e,
+      timestamp: Date.now(),
+    }));
+
+    const result = await this.safeMutation('interactions:batchLog', {
+      events: formattedEvents,
+    });
+
+    if (!result.ok) {
+      for (const event of events) {
+        queueStorage.addToQueue({
+          type: 'interaction',
+          data: { ...event },
+          timestamp: Date.now(),
+        });
+      }
+    }
+  }
+
+  // ── Getters ─────────────────────────────────────────────────────
+
+  getConvexUserId(): string | null {
+    return this.convexUserId;
+  }
+
+  getDeviceId(): string | null {
+    return this.deviceId;
+  }
+
   // ── Flush Queued Events ──────────────────────────────────────
 
   async flushQueue(): Promise<void> {
@@ -296,6 +502,11 @@ export class ConvexSyncService {
     const correctionEvents = queue.filter((e) => e.type === 'correction');
     const heartbeatEvents = queue.filter((e) => e.type === 'heartbeat');
     const userSyncEvents = queue.filter((e) => e.type === 'user_sync');
+    // v2: Session and interaction events
+    const sessionCreateEvents = queue.filter((e) => e.type === 'session_create');
+    const sessionUpdateEvents = queue.filter((e) => e.type === 'session_update');
+    const sessionEndEvents = queue.filter((e) => e.type === 'session_end');
+    const interactionEvents = queue.filter((e) => e.type === 'interaction');
 
     // FIRST: Replay user_sync events to establish convexUserId
     // This MUST happen before processing other events that require convexUserId
@@ -336,7 +547,7 @@ export class ConvexSyncService {
       }
     }
 
-    // Only process analytics and corrections if we have a convexUserId
+    // Only process events requiring convexUserId if we have one
     if (this.convexUserId) {
       // Batch analytics events
       if (analyticsEvents.length > 0) {
@@ -376,6 +587,62 @@ export class ConvexSyncService {
         } else {
           // Failure - increment attempts
           if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+        }
+      }
+
+      // v2: Replay session create events
+      for (const event of sessionCreateEvents) {
+        const result = await this.safeMutation('sessions:create', {
+          userId: this.convexUserId,
+          deviceId: this.deviceId!,
+          ...event.data,
+        });
+        if (result.ok) {
+          if (event.id) await queueStorage.removeFromQueue(event.id);
+        } else {
+          if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+        }
+      }
+
+      // v2: Replay session update events
+      for (const event of sessionUpdateEvents) {
+        const result = await this.safeMutation('sessions:updateMetrics', event.data);
+        if (result.ok) {
+          if (event.id) await queueStorage.removeFromQueue(event.id);
+        } else {
+          if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+        }
+      }
+
+      // v2: Replay session end events
+      for (const event of sessionEndEvents) {
+        const result = await this.safeMutation('sessions:end', event.data);
+        if (result.ok) {
+          if (event.id) await queueStorage.removeFromQueue(event.id);
+        } else {
+          if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+        }
+      }
+
+      // v2: Batch interaction events
+      if (interactionEvents.length > 0) {
+        const result = await this.safeMutation('interactions:batchLog', {
+          events: interactionEvents.map((e) => ({
+            userId: this.convexUserId,
+            deviceId: this.deviceId!,
+            ...e.data,
+            timestamp: e.data.timestamp || e.timestamp,
+          })),
+        });
+
+        if (result.ok) {
+          for (const event of interactionEvents) {
+            if (event.id) await queueStorage.removeFromQueue(event.id);
+          }
+        } else {
+          for (const event of interactionEvents) {
+            if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+          }
         }
       }
     }
