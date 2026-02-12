@@ -68,12 +68,15 @@ export const heartbeat = mutation({
 
 // ── List all users (admin) ───────────────────────────────────────
 export const listAll = query({
-  args: {},
-  handler: async (ctx) => {
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 500; // Default limit for performance
     return await ctx.db
       .query("users")
       .order("desc")
-      .collect();
+      .take(limit);
   },
 });
 
@@ -89,12 +92,14 @@ export const getById = query({
 export const countActive = query({
   args: {
     since: v.number(), // Timestamp: only count users seen after this
+    limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const limit = args.limit ?? 10000; // Default limit for performance
     const users = await ctx.db
       .query("users")
       .withIndex("by_lastSeenAt", (q) => q.gte("lastSeenAt", args.since))
-      .collect();
+      .take(limit);
     return users.length;
   },
 });

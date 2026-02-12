@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from './_cors.js';
 import { handleRateLimit } from './_rateLimit.js';
 import { validateArray, sendValidationError } from './_validation.js';
+import { fetchWithTimeout } from './_timeout.js';
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -58,12 +59,13 @@ async function handleGenerateContent(
     ? `${GEMINI_API_BASE}/${model}:streamGenerateContent?alt=sse&key=${apiKey}`
     : `${GEMINI_API_BASE}/${model}:generateContent?key=${apiKey}`;
   
-  const response = await fetch(endpoint, {
+  const response = await fetchWithTimeout(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(requestData),
+    timeoutMs: stream ? 60000 : 30000, // 60s for streaming, 30s for regular
   });
   
   if (!response.ok) {
@@ -91,6 +93,10 @@ async function handleGenerateContent(
         const chunk = decoder.decode(value, { stream: true });
         res.write(chunk);
       }
+    } catch (error) {
+      // Send error event to client before closing connection
+      const errorMessage = error instanceof Error ? error.message : 'Stream interrupted';
+      res.write(`data: ${JSON.stringify({ error: errorMessage, type: 'stream_error' })}\n\n`);
     } finally {
       reader.releaseLock();
       res.end();

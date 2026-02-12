@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from './_cors.js';
 import { handleRateLimit } from './_rateLimit.js';
 import { validateLLMRequest, sendValidationError } from './_validation.js';
+import { fetchWithTimeout } from './_timeout.js';
 
 const CLAUDE_API_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
@@ -36,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return handleStreamingResponse(apiKey, requestData, res);
     }
     
-    const response = await fetch(CLAUDE_API_ENDPOINT, {
+    const response = await fetchWithTimeout(CLAUDE_API_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,6 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify(requestData),
+      timeoutMs: 30000, // 30 second timeout for LLM requests
     });
     
     if (!response.ok) {
@@ -64,7 +66,7 @@ async function handleStreamingResponse(
   requestData: Record<string, unknown>,
   res: VercelResponse
 ) {
-  const response = await fetch(CLAUDE_API_ENDPOINT, {
+  const response = await fetchWithTimeout(CLAUDE_API_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -72,6 +74,7 @@ async function handleStreamingResponse(
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({ ...requestData, stream: true }),
+    timeoutMs: 60000, // 60 second timeout for streaming requests
   });
   
   if (!response.ok) {
@@ -98,6 +101,10 @@ async function handleStreamingResponse(
       const chunk = decoder.decode(value, { stream: true });
       res.write(chunk);
     }
+  } catch (error) {
+    // Send error event to client before closing connection
+    const errorMessage = error instanceof Error ? error.message : 'Stream interrupted';
+    res.write(`data: ${JSON.stringify({ error: errorMessage, type: 'stream_error' })}\n\n`);
   } finally {
     reader.releaseLock();
     res.end();

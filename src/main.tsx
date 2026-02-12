@@ -142,7 +142,9 @@ function Root() {
                 </ErrorBoundary>
               } />
               <Route path="/*" element={
-                <App colorMode={colorMode} onColorModeChange={setColorMode} />
+                <ErrorBoundary>
+                  <App colorMode={colorMode} onColorModeChange={setColorMode} />
+                </ErrorBoundary>
               } />
             </Routes>
           </BrowserRouter>

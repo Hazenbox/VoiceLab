@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from './_cors.js';
 import { handleRateLimit } from './_rateLimit.js';
 import { validateLLMRequest, validateString, sendValidationError } from './_validation.js';
+import { fetchWithTimeout } from './_timeout.js';
 
 const HUGGINGFACE_API_BASE = 'https://router.huggingface.co';
 
@@ -44,13 +45,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return handleStreamingResponse(apiKey, endpoint, { ...requestData, stream: true }, res);
     }
     
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify(requestData),
+      timeoutMs: 30000, // 30 second timeout for LLM requests
     });
     
     if (!response.ok) {
@@ -72,13 +74,14 @@ async function handleStreamingResponse(
   requestData: Record<string, unknown>,
   res: VercelResponse
 ) {
-  const response = await fetch(endpoint, {
+  const response = await fetchWithTimeout(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
     body: JSON.stringify(requestData),
+    timeoutMs: 60000, // 60 second timeout for streaming requests
   });
   
   if (!response.ok) {
@@ -105,6 +108,10 @@ async function handleStreamingResponse(
       const chunk = decoder.decode(value, { stream: true });
       res.write(chunk);
     }
+  } catch (error) {
+    // Send error event to client before closing connection
+    const errorMessage = error instanceof Error ? error.message : 'Stream interrupted';
+    res.write(`data: ${JSON.stringify({ error: errorMessage, type: 'stream_error' })}\n\n`);
   } finally {
     reader.releaseLock();
     res.end();

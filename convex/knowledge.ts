@@ -328,10 +328,14 @@ export const getKnowledgeForPrompt = query({
 });
 
 // ── Count by type (admin) ────────────────────────────────────────
+// Note: Knowledge items are relatively stable (seeded data), so a higher limit is acceptable
 export const countByType = query({
-  args: {},
-  handler: async (ctx) => {
-    const all = await ctx.db.query("knowledgeItems").collect();
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 10000; // Higher limit for knowledge items
+    const all = await ctx.db.query("knowledgeItems").take(limit);
     const counts: Record<string, { total: number; active: number }> = {};
     for (const item of all) {
       if (!counts[item.type]) counts[item.type] = { total: 0, active: 0 };

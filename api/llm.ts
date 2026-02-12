@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from './_cors.js';
 import { handleRateLimit } from './_rateLimit.js';
 import { validateLLMRequest, sendValidationError } from './_validation.js';
+import { fetchWithTimeout } from './_timeout.js';
 
 const DASHSCOPE_LLM_ENDPOINT = 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
 
@@ -45,13 +46,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     };
     
-    const response = await fetch(DASHSCOPE_LLM_ENDPOINT, {
+    const response = await fetchWithTimeout(DASHSCOPE_LLM_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify(dashscopeRequest),
+      timeoutMs: 30000, // 30 second timeout for LLM requests
     });
     
     if (!response.ok) {

@@ -132,12 +132,22 @@ export const updateAdminStatus = mutation({
 });
 
 // ── Count corrections by feedback type (admin analytics) ─────────
+// Limited to recent corrections for performance (last 10,000 or 90 days)
 export const countByFeedbackType = query({
-  args: {},
-  handler: async (ctx) => {
-    const all = await ctx.db.query("corrections").collect();
+  args: {
+    since: v.optional(v.number()), // Timestamp to start counting from
+  },
+  handler: async (ctx, args) => {
+    // Default to last 90 days if not specified
+    const since = args.since ?? Date.now() - 90 * 24 * 60 * 60 * 1000;
+    
+    const corrections = await ctx.db
+      .query("corrections")
+      .withIndex("by_timestamp", (q) => q.gte("timestamp", since))
+      .take(10000); // Hard limit for performance
+    
     const counts: Record<string, number> = {};
-    for (const c of all) {
+    for (const c of corrections) {
       counts[c.feedbackType] = (counts[c.feedbackType] || 0) + 1;
     }
     return counts;

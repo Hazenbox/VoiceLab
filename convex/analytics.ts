@@ -112,7 +112,7 @@ export const countGenerationsToday = query({
       .withIndex("by_timestamp", (q) =>
         q.gte("timestamp", startOfDay.getTime())
       )
-      .collect();
+      .take(10000); // Hard limit for performance
 
     return events.filter((e) => e.eventType === "generation").length;
   },
@@ -122,12 +122,15 @@ export const countGenerationsToday = query({
 export const averageTrustScore = query({
   args: {
     since: v.number(),
+    limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const limit = args.limit ?? 5000; // Default limit for performance
+    
     const events = await ctx.db
       .query("analyticsEvents")
       .withIndex("by_timestamp", (q) => q.gte("timestamp", args.since))
-      .collect();
+      .take(limit);
 
     const withScores = events.filter(
       (e) => e.trustScore !== undefined && e.trustScore !== null
@@ -148,20 +151,22 @@ export const topViolations = query({
   args: {
     since: v.number(),
     limit: v.optional(v.number()),
+    eventsLimit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 5;
+    const eventsLimit = args.eventsLimit ?? 5000; // Default limit for performance
 
     const events = await ctx.db
       .query("analyticsEvents")
       .withIndex("by_timestamp", (q) => q.gte("timestamp", args.since))
-      .collect();
+      .take(eventsLimit);
 
     const violationCounts: Record<string, number> = {};
     for (const event of events) {
       if (event.topViolations) {
-        for (const v of event.topViolations) {
-          violationCounts[v] = (violationCounts[v] || 0) + 1;
+        for (const viol of event.topViolations) {
+          violationCounts[viol] = (violationCounts[viol] || 0) + 1;
         }
       }
     }

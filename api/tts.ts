@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { handleCors } from './_cors.js';
 import { handleRateLimit } from './_rateLimit.js';
 import { validateTTSRequest, sendValidationError } from './_validation.js';
+import { fetchWithTimeout } from './_timeout.js';
 
 const DASHSCOPE_TTS_ENDPOINT = 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text2audio/generation';
 const ELEVENLABS_TTS_ENDPOINT = 'https://api.elevenlabs.io/v1/text-to-speech';
@@ -47,7 +48,7 @@ async function handleElevenLabsTTS(body: Record<string, unknown>, res: VercelRes
   const { voiceId, text, modelId, voiceSettings } = body;
   const url = `${ELEVENLABS_TTS_ENDPOINT}/${voiceId}`;
   
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -61,6 +62,7 @@ async function handleElevenLabsTTS(body: Record<string, unknown>, res: VercelRes
         similarity_boost: 0.75,
       },
     }),
+    timeoutMs: 30000, // 30 second timeout for TTS
   });
   
   if (!response.ok) {
@@ -80,7 +82,7 @@ async function handleDashScopeTTS(body: Record<string, unknown>, res: VercelResp
     return res.status(500).json({ error: 'DashScope API key not configured' });
   }
   
-  const response = await fetch(DASHSCOPE_TTS_ENDPOINT, {
+  const response = await fetchWithTimeout(DASHSCOPE_TTS_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -88,6 +90,7 @@ async function handleDashScopeTTS(body: Record<string, unknown>, res: VercelResp
       'X-DashScope-Async': 'enable',
     },
     body: JSON.stringify(body),
+    timeoutMs: 30000, // 30 second timeout for TTS
   });
   
   if (!response.ok) {

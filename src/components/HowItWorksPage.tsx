@@ -1221,7 +1221,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             </div>
 
             <p className="text-sm" style={{ color: theme.text.medium }}>
-              Access the admin panel at <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>/admin</code>. Default passphrase: <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>voicelab-admin</code> (configurable via <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>VITE_ADMIN_PASSPHRASE</code> env var). Session stored in sessionStorage -- re-enter after browser close. The admin panel reads from localStorage with a 5-second polling interval and is designed to also pull directly from Convex when connected.
+              Access the admin panel at <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>/admin</code>. Passphrase is configured via <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>ADMIN_PASSPHRASE</code> environment variable (set in Vercel dashboard for production). Session stored in sessionStorage -- re-enter after browser close. The admin panel reads from localStorage with a 5-second polling interval and is designed to also pull directly from Convex when connected.
             </p>
           </Section>
 
@@ -1420,7 +1420,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   { flag: 'VITE_ENABLE_KNOWLEDGE_BASE', desc: 'Enable/disable dynamic knowledge retrieval from Convex' },
                   { flag: 'VITE_ENABLE_LEARNING', desc: 'Enable/disable learning from user feedback' },
                   { flag: 'RAG_NOTE', desc: 'RAG (semantic search) is always enabled - requires HuggingFace API key in Convex' },
-                  { flag: 'VITE_ADMIN_PASSPHRASE', desc: 'Custom admin panel passphrase (default: voicelab-admin)' },
+                  { flag: 'ADMIN_PASSPHRASE', desc: 'Admin panel passphrase (set in Vercel dashboard - no default)' },
                 ].map((item) => (
                   <div key={item.flag} className="flex items-start gap-2 text-xs py-1">
                     <code className="px-1.5 py-0.5 rounded flex-shrink-0" style={{ backgroundColor: theme.stroke.low, color: theme.text.high }}>
