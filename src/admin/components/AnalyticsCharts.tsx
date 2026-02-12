@@ -293,3 +293,55 @@ export const StatBreakdown = memo(function StatBreakdown({
     </div>
   );
 });
+
+/**
+ * Sentiment bar - shows positive vs negative feedback ratio
+ * Used in Dashboard and Learning Center for POC demo
+ */
+export const SentimentBar = memo(function SentimentBar({
+  likes,
+  dislikes,
+  showLabels = true,
+  showCounts = true,
+}: {
+  likes: number;
+  dislikes: number;
+  showLabels?: boolean;
+  showCounts?: boolean;
+}) {
+  const theme = useThemeColors();
+  const total = likes + dislikes;
+  const likePercent = total > 0 ? (likes / total) * 100 : 50;
+  
+  return (
+    <div>
+      {showCounts && (
+        <div className="flex justify-between mb-2">
+          <span className="text-2xl font-bold" style={{ color: '#22c55e' }}>{likes}</span>
+          <span className="text-2xl font-bold" style={{ color: '#ef4444' }}>{dislikes}</span>
+        </div>
+      )}
+      {showLabels && (
+        <div className="flex justify-between text-xs mb-1" style={{ color: theme.text.low }}>
+          <span>positive</span>
+          <span>negative</span>
+        </div>
+      )}
+      <div className="h-3 rounded-full overflow-hidden flex" style={{ backgroundColor: theme.stroke.low }}>
+        <div 
+          className="h-full transition-all duration-300"
+          style={{ width: `${likePercent}%`, backgroundColor: '#22c55e' }}
+        />
+        <div 
+          className="h-full transition-all duration-300"
+          style={{ width: `${100 - likePercent}%`, backgroundColor: '#ef4444' }}
+        />
+      </div>
+      {total === 0 && (
+        <span className="block mt-2 text-xs" style={{ color: theme.text.low }}>
+          no feedback yet
+        </span>
+      )}
+    </div>
+  );
+});
