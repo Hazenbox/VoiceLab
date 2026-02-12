@@ -63,7 +63,6 @@ import { getSyncService } from './services/sync/convexSync';
 // Reliability utilities (Phase 4)
 import { 
   generateIdempotencyKey, 
-  isIdempotencyKeyProcessed, 
   markIdempotencyKeyProcessed,
   deduplicateRequest,
 } from './services/reliability';
@@ -73,7 +72,9 @@ import { getAutoConfig, type PersonaRole } from './services/persona';
 import { featureFlags } from './services/featureFlags';
 // Analytics Services (v2) - hooks now handle most session management
 import { 
-  getResponseTimer, 
+  getResponseTimer,
+  getSessionManager,
+  getErrorLogger,
 } from './services/analytics';
 // Session analytics hook (extracted from App.tsx for cleaner separation)
 import { useSessionAnalytics } from './hooks';
