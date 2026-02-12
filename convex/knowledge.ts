@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireKnowledgeEditor, requireAuthenticated } from "./_auth";
+import { api } from "./_generated/api";
 
 // ── Get knowledge items by type ──────────────────────────────────
 // Note: Knowledge items are curated, typically <500 per type
@@ -112,6 +113,7 @@ export const listAll = query({
 
 // ── Create a knowledge item ──────────────────────────────────────
 // PROTECTED: Requires knowledge editor role (leadership, product, ux_writer)
+// P0-FIX: Now auto-generates embeddings after creation
 export const createItem = mutation({
   args: {
     type: v.string(),
@@ -134,16 +136,27 @@ export const createItem = mutation({
     await requireKnowledgeEditor(ctx, args.createdBy);
 
     const now = Date.now();
-    return await ctx.db.insert("knowledgeItems", {
+    const id = await ctx.db.insert("knowledgeItems", {
       ...args,
       createdAt: now,
       updatedAt: now,
     });
+
+    // P0-FIX: Auto-generate embedding for new item (scheduled action)
+    // Only generate if item is active (embeddings are used for search)
+    if (args.isActive) {
+      await ctx.scheduler.runAfter(0, api.embeddings.generateEmbedding, {
+        knowledgeItemId: id,
+      });
+    }
+
+    return id;
   },
 });
 
 // ── Update a knowledge item ──────────────────────────────────────
 // PROTECTED: Requires knowledge editor role (leadership, product, ux_writer)
+// P0-FIX: Now invalidates/regenerates embeddings when content changes
 export const updateItem = mutation({
   args: {
     id: v.id("knowledgeItems"),
@@ -170,6 +183,13 @@ export const updateItem = mutation({
     const { id, updatedBy, ...updates } = args;
     const cleanUpdates: Record<string, unknown> = { updatedAt: Date.now() };
 
+    // P0-FIX: Track if content or semantic-relevant fields changed
+    const needsEmbeddingUpdate = 
+      updates.content !== undefined ||
+      updates.category !== undefined ||
+      updates.tags !== undefined ||
+      updates.metadata !== undefined;
+
     if (updates.content !== undefined) cleanUpdates.content = updates.content;
     if (updates.category !== undefined)
       cleanUpdates.category = updates.category;
@@ -179,7 +199,21 @@ export const updateItem = mutation({
     if (updates.isActive !== undefined)
       cleanUpdates.isActive = updates.isActive;
 
+    // P0-FIX: Clear existing embedding if content changed (will be regenerated)
+    if (needsEmbeddingUpdate) {
+      cleanUpdates.embedding = undefined;
+    }
+
     await ctx.db.patch(id, cleanUpdates);
+
+    // P0-FIX: Regenerate embedding if semantic-relevant fields changed
+    // Only if item is/will be active
+    const finalIsActive = updates.isActive ?? (await ctx.db.get(id))?.isActive;
+    if (needsEmbeddingUpdate && finalIsActive) {
+      await ctx.scheduler.runAfter(0, api.embeddings.generateEmbedding, {
+        knowledgeItemId: id,
+      });
+    }
   },
 });
 
@@ -204,6 +238,7 @@ export const toggleActive = mutation({
 
 // ── Batch create items (for seeding) ─────────────────────────────
 // PROTECTED: Requires knowledge editor role
+// P0-FIX: Now auto-generates embeddings after batch creation
 export const batchCreate = mutation({
   args: {
     items: v.array(
@@ -225,6 +260,7 @@ export const batchCreate = mutation({
       })
     ),
     createdBy: v.optional(v.string()), // deviceId for authorization
+    skipEmbeddings: v.optional(v.boolean()), // Skip auto-embedding (use for large batches, run backfill separately)
   },
   handler: async (ctx, args) => {
     // Verify authorization
@@ -241,6 +277,23 @@ export const batchCreate = mutation({
         })
       )
     );
+
+    // P0-FIX: Schedule embedding generation for active items
+    // For large batches, use skipEmbeddings=true and run backfillEmbeddings separately
+    if (!args.skipEmbeddings) {
+      const activeIds = ids.filter((id, idx) => args.items[idx].isActive);
+      // Schedule in batches to avoid overwhelming the scheduler
+      // Max 10 concurrent embedding generations
+      for (let i = 0; i < activeIds.length; i += 10) {
+        const batch = activeIds.slice(i, i + 10);
+        for (const id of batch) {
+          await ctx.scheduler.runAfter(i * 100, api.embeddings.generateEmbedding, {
+            knowledgeItemId: id,
+          });
+        }
+      }
+    }
+
     return ids;
   },
 });

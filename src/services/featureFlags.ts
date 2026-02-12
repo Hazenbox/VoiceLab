@@ -79,6 +79,20 @@ export const featureFlags = {
     return env !== 'false';
   },
 
+  // ── Validation Flags ──────────────────────────────────────────────────
+
+  /**
+   * P0-FIX: Validate conversational content (general_chat, jio_inquiry)
+   * Previously, conversational path bypassed ALL validation - this is a security risk.
+   * Default: true (validate all content)
+   * Set VITE_VALIDATE_CONVERSATIONAL=false to disable (not recommended)
+   */
+  get validateConversational(): boolean {
+    const env = import.meta.env.VITE_VALIDATE_CONVERSATIONAL;
+    // Default to true unless explicitly disabled
+    return env !== 'false';
+  },
+
   // ── Helper Methods ───────────────────────────────────────────────────
 
   /**

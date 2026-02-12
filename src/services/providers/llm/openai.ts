@@ -78,8 +78,29 @@ export class OpenAIProvider implements LLMProvider {
     return headers;
   }
 
+  /**
+   * Create an abort signal that combines user signal with timeout (P0-FIX)
+   */
+  private createTimeoutSignal(userSignal?: AbortSignal, timeoutMs: number = 30000): { signal: AbortSignal; cleanup: () => void } {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(new Error('Request timeout after 30s')), timeoutMs);
+    
+    // If user provides a signal, abort when it aborts
+    const onUserAbort = () => controller.abort(userSignal?.reason);
+    userSignal?.addEventListener('abort', onUserAbort);
+    
+    return {
+      signal: controller.signal,
+      cleanup: () => {
+        clearTimeout(timeoutId);
+        userSignal?.removeEventListener('abort', onUserAbort);
+      }
+    };
+  }
+
   async generate(options: LLMGenerateOptions): Promise<LLMGenerateResult> {
     const startTime = Date.now();
+    const { signal, cleanup } = this.createTimeoutSignal(options.signal);
 
     try {
       const response = await fetch(this.getApiUrl(), {
@@ -96,7 +117,7 @@ export class OpenAIProvider implements LLMProvider {
           top_p: options.topP,
           stop: options.stopSequences,
         }),
-        signal: options.signal,
+        signal,
       });
 
       if (!response.ok) {
@@ -123,14 +144,17 @@ export class OpenAIProvider implements LLMProvider {
       };
     } catch (error) {
       if ((error as Error).name === 'AbortError') {
+        const isTimeout = (error as Error).message?.includes('timeout');
         throw createLLMError(
-          'Request cancelled',
+          isTimeout ? 'Request timeout after 30s' : 'Request cancelled',
           ERROR_CODES.TIMEOUT,
           this.name,
-          false
+          isTimeout // Timeout errors are retryable
         );
       }
       throw error;
+    } finally {
+      cleanup();
     }
   }
 
@@ -142,6 +166,7 @@ export class OpenAIProvider implements LLMProvider {
     const startTime = Date.now();
     let fullText = '';
     let totalTokens = 0;
+    const { signal, cleanup } = this.createTimeoutSignal(options.signal, 60000); // 60s for streaming
 
     try {
       const response = await fetch(this.getApiUrl(), {
@@ -157,7 +182,7 @@ export class OpenAIProvider implements LLMProvider {
           temperature: options.temperature ?? 0.7,
           stream: true,
         }),
-        signal: options.signal,
+        signal,
       });
 
       if (!response.ok) {
@@ -215,14 +240,17 @@ export class OpenAIProvider implements LLMProvider {
 
     } catch (error) {
       if ((error as Error).name === 'AbortError') {
+        const isTimeout = (error as Error).message?.includes('timeout');
         throw createLLMError(
-          'Stream cancelled',
+          isTimeout ? 'Stream timeout after 60s' : 'Stream cancelled',
           ERROR_CODES.TIMEOUT,
           this.name,
-          false
+          isTimeout // Timeout errors are retryable
         );
       }
       throw error;
+    } finally {
+      cleanup();
     }
   }
 

@@ -723,7 +723,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       } else {
         // =================================================================
         // CONVERSATIONAL PATH (General Chat / Jio Inquiry)
-        // Lightweight prompt, NO validation, NO trust scoring
+        // Lightweight prompt, with optional validation (P0-FIX)
         // =================================================================
         const systemPrompt = intentClassification.intent === 'jio_inquiry'
           ? buildJioInquiryPrompt()
@@ -758,10 +758,51 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           [`intent:${intentClassification.intent}`]
         );
 
-        // Create AI response -- NO trustScore, NO validation, NO generationContext
+        // P0-FIX: Run lightweight validation on conversational content
+        // This catches safety issues that could slip through in chat mode
+        let conversationalTrustScore: TrustScore | undefined;
+        if (featureFlags.validateConversational) {
+          try {
+            // Build minimal context for validation (no full generation context)
+            const minimalContext = buildGenerationContext({
+              ecosystem: finalContext.ecosystem,
+              channel: finalContext.channel,
+              persona: finalContext.persona,
+              originalInput: message,
+              userMessageId,
+              messageHistory: contextMessages.slice(-5),
+            });
+
+            // Run validation pipeline
+            const validationResults = await runValidationPipeline(
+              result.content,
+              minimalContext
+            );
+
+            // Calculate trust score
+            conversationalTrustScore = calculateTrustScore(validationResults, minimalContext);
+
+            // Log if score is concerning (but don't block - conversational is lower risk)
+            if (conversationalTrustScore.overall < 60) {
+              console.warn(
+                `[P0-FIX] Conversational content scored low (${conversationalTrustScore.overall}):`,
+                conversationalTrustScore.validationResults
+                  .flatMap(r => r.violations)
+                  .slice(0, 3)
+                  .map(v => v.rule)
+              );
+            }
+          } catch (validationErr) {
+            // Don't fail the response if validation fails - log and continue
+            console.error('[P0-FIX] Conversational validation error:', validationErr);
+          }
+        }
+
+        // Create AI response -- now WITH optional trustScore
         const aiMessage = {
           ...createTextMessage('assistant', result.content, chatMode, userMessageId),
           messageIntent: intentClassification.intent,
+          ...(conversationalTrustScore && { trustScore: conversationalTrustScore }),
         };
         
         if (replaceResponseId) {

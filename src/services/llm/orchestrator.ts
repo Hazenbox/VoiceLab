@@ -187,6 +187,7 @@ export class LLMOrchestrator {
 
   /**
    * Generate text with streaming
+   * Now includes retry and fallback support for resilience (P0-FIX)
    */
   async generateStream(
     providerType: LLMProviderType,
@@ -194,24 +195,28 @@ export class LLMOrchestrator {
     createProvider: (type: LLMProviderType) => LLMProvider,
     onChunk: (text: string) => void
   ): Promise<LLMGenerateResult> {
-    const provider = createProvider(providerType);
-
-    if (!provider.isReady()) {
-      const reason = isProduction()
-        ? "Server configuration missing. Check Vercel environment variables."
-        : "Proxy server not running (run 'npm run dev') and no direct API key configured.";
-      throw new Error(`Provider ${providerType} is not ready: ${reason}`);
-    }
-
-    if (!provider.supportsStreaming || !provider.generateStream) {
-      throw new Error(`Provider ${providerType} does not support streaming`);
-    }
-
-    let usage: LLMUsageMetrics | undefined;
+    const requestId = this.generateRequestId();
     const startTime = Date.now();
 
-    try {
-      const content = await provider.generateStream(
+    // Define the streaming operation
+    const streamOperation = async (provider: LLMProviderType): Promise<LLMGenerateResult> => {
+      const providerInstance = createProvider(provider);
+
+      if (!providerInstance.isReady()) {
+        const reason = isProduction()
+          ? "Server configuration missing. Check Vercel environment variables."
+          : "Proxy server not running (run 'npm run dev') and no direct API key configured.";
+        throw new Error(`Provider ${provider} is not ready: ${reason}`);
+      }
+
+      if (!providerInstance.supportsStreaming || !providerInstance.generateStream) {
+        throw new Error(`Provider ${provider} does not support streaming`);
+      }
+
+      let usage: LLMUsageMetrics | undefined;
+      const opStartTime = Date.now();
+
+      const content = await providerInstance.generateStream(
         options,
         onChunk,
         (u) => { usage = u; }
@@ -219,33 +224,70 @@ export class LLMOrchestrator {
 
       // If usage wasn't provided, estimate it
       if (!usage) {
-        const latency = Date.now() - startTime;
+        const latency = Date.now() - opStartTime;
         usage = {
           promptTokens: 0,
           completionTokens: content.length / 4, // Rough estimate
           totalTokens: content.length / 4,
           estimatedCost: 0,
           latencyMs: latency,
-          model: provider.name,
-          provider: provider.name,
+          model: providerInstance.name,
+          provider: providerInstance.name,
           timestamp: Date.now(),
         };
       }
 
-      // Track usage
-      if (this.config.enableCostTracking) {
-        this.costTracker.track(usage, { success: true });
+      return { content, usage };
+    };
+
+    let result: LLMGenerateResult;
+    let usedProvider = providerType;
+
+    try {
+      // Execute with fallback and retry (same as non-streaming generate)
+      if (this.config.enableFallback) {
+        result = await this.fallbackManager.executeWithFallback(
+          providerType,
+          async (fallbackProvider) => {
+            usedProvider = fallbackProvider;
+            
+            if (this.config.enableRetry) {
+              return await this.retryManager.executeWithRetry(
+                () => streamOperation(fallbackProvider),
+                `LLM stream request to ${fallbackProvider}`
+              );
+            } else {
+              return await streamOperation(fallbackProvider);
+            }
+          }
+        );
+      } else if (this.config.enableRetry) {
+        result = await this.retryManager.executeWithRetry(
+          () => streamOperation(providerType),
+          `LLM stream request to ${providerType}`
+        );
+      } else {
+        result = await streamOperation(providerType);
       }
 
+      // Track usage
+      if (this.config.enableCostTracking) {
+        this.costTracker.track(result.usage, {
+          requestId,
+          success: true,
+        });
+      }
+
+      const totalLatency = Date.now() - startTime;
       console.log(
-        `[Orchestrator] Stream completed with ${providerType} ` +
-        `(${usage.latencyMs}ms, ${usage.totalTokens} tokens)`
+        `[Orchestrator] Stream completed with ${usedProvider} ` +
+        `(${totalLatency}ms, ${result.usage.totalTokens} tokens)`
       );
 
-      return { content, usage };
+      return result;
 
     } catch (error) {
-      const latency = Date.now() - startTime;
+      const totalLatency = Date.now() - startTime;
       
       // Track failed stream
       if (this.config.enableCostTracking) {
@@ -254,18 +296,20 @@ export class LLMOrchestrator {
           completionTokens: 0,
           totalTokens: 0,
           estimatedCost: 0,
-          latencyMs: latency,
-          model: provider.name,
-          provider: provider.name,
+          latencyMs: totalLatency,
+          model: '',
+          provider: usedProvider,
           timestamp: Date.now(),
         };
         
         this.costTracker.track(errorUsage, {
+          requestId,
           success: false,
           errorCode: (error as any).code || 'UNKNOWN',
         });
       }
 
+      console.error(`[Orchestrator] Stream failed after ${totalLatency}ms with all fallbacks exhausted`);
       throw error;
     }
   }
