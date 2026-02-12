@@ -16,6 +16,7 @@ import type * as embeddings from "../embeddings.js";
 import type * as interactions from "../interactions.js";
 import type * as knowledge from "../knowledge.js";
 import type * as maintenance from "../maintenance.js";
+import type * as migrations from "../migrations.js";
 import type * as seed from "../seed.js";
 import type * as sessions from "../sessions.js";
 import type * as users from "../users.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   interactions: typeof interactions;
   knowledge: typeof knowledge;
   maintenance: typeof maintenance;
+  migrations: typeof migrations;
   seed: typeof seed;
   sessions: typeof sessions;
   users: typeof users;

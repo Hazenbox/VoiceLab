@@ -66,6 +66,19 @@ export const featureFlags = {
     return env !== 'false';
   },
 
+  // ── Learning & Memory Flags ──────────────────────────────────────────
+
+  /**
+   * Auto-approve user corrections/feedback for immediate learning
+   * Default: true (auto-approve all corrections)
+   * Set VITE_AUTO_APPROVE_CORRECTIONS=false to require manual admin approval
+   */
+  get autoApproveCorrections(): boolean {
+    const env = import.meta.env.VITE_AUTO_APPROVE_CORRECTIONS;
+    // Default to true unless explicitly disabled
+    return env !== 'false';
+  },
+
   // ── Helper Methods ───────────────────────────────────────────────────
 
   /**

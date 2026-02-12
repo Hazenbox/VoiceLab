@@ -21,7 +21,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     return await ctx.db.insert("corrections", {
       ...args,
-      adminStatus: "pending",
+      adminStatus: "approved", // Auto-approve all corrections for immediate learning
       timestamp: Date.now(),
     });
   },
