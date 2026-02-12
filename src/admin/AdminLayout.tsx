@@ -142,11 +142,14 @@ function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
 
         <form onSubmit={handleSubmit}>
           <input
+            id="admin-passphrase"
+            name="passphrase"
             type="password"
             value={passphrase}
             onChange={(e) => { setPassphrase(e.target.value); setError(''); }}
             placeholder="Passphrase"
             autoFocus
+            autoComplete="current-password"
             aria-label="Admin passphrase"
             className="w-full rounded-lg px-3 outline-none"
             style={{
@@ -1366,6 +1369,8 @@ function AdminUsers() {
       {/* Search */}
       <div className="mb-4">
         <input
+          id="user-search"
+          name="user-search"
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
