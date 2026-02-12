@@ -3,7 +3,7 @@ import { useThemeColors } from '../../theme/useColors';
 import { DSIcon } from '../../components/DSIcon';
 
 // ── Types ────────────────────────────────────────────────────────
-export type AdminSection = 'dashboard' | 'analytics' | 'memory' | 'knowledge' | 'users' | 'config';
+export type AdminSection = 'dashboard' | 'learning' | 'knowledge' | 'usage' | 'users' | 'config';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -11,13 +11,18 @@ interface AdminSidebarProps {
   onSignOut: () => void;
 }
 
+// Primary navigation items - always visible
 const NAV_ITEMS: { id: AdminSection; label: string; iconName: string }[] = [
-  { id: 'dashboard', label: 'Dashboard', iconName: 'IcHome' },
-  { id: 'analytics', label: 'Analytics', iconName: 'IcAnalytics' },
-  { id: 'memory', label: 'Memory', iconName: 'IcDatabase' },
-  { id: 'knowledge', label: 'Knowledge', iconName: 'IcLibrary' },
-  { id: 'users', label: 'Users', iconName: 'IcUser' },
-  { id: 'config', label: 'Config', iconName: 'IcSettings' },
+  { id: 'dashboard', label: 'dashboard', iconName: 'IcHome' },
+  { id: 'learning', label: 'learning center', iconName: 'IcLightbulb' },
+  { id: 'knowledge', label: 'knowledge base', iconName: 'IcLibrary' },
+  { id: 'usage', label: 'usage analytics', iconName: 'IcAnalytics' },
+];
+
+// Advanced navigation items - collapsible
+const ADVANCED_ITEMS: { id: AdminSection; label: string; iconName: string }[] = [
+  { id: 'users', label: 'users', iconName: 'IcUser' },
+  { id: 'config', label: 'system config', iconName: 'IcSettings' },
 ];
 
 // ── Sidebar Nav Item (mirrors ProjectSidebar SidebarNavItem) ─────
@@ -68,6 +73,7 @@ export const AdminSidebar = memo(function AdminSidebar({
   onSignOut,
 }: AdminSidebarProps) {
   const theme = useThemeColors();
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   return (
     <aside
@@ -96,10 +102,10 @@ export const AdminSidebar = memo(function AdminSidebar({
           letterSpacing: '-0.2px',
         }}
       >
-        Admin
+        admin panel
       </div>
 
-      {/* Navigation */}
+      {/* Primary Navigation */}
       <nav className="flex-1 overflow-y-auto px-2.5 py-1 space-y-0.5">
         {NAV_ITEMS.map((item) => (
           <SidebarNavItem
@@ -110,6 +116,39 @@ export const AdminSidebar = memo(function AdminSidebar({
             isActive={activeSection === item.id}
           />
         ))}
+
+        {/* Advanced Section Toggle */}
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer mt-3"
+          style={{
+            height: '28px',
+            color: theme.text.low,
+            fontSize: '11px',
+          }}
+        >
+          <DSIcon 
+            name={showAdvanced ? 'IcChevronDown' : 'IcChevronRight'} 
+            size="XS" 
+            attention="low" 
+          />
+          <span>{showAdvanced ? 'hide advanced' : 'show advanced'}</span>
+        </button>
+
+        {/* Advanced Navigation Items */}
+        {showAdvanced && (
+          <div className="space-y-0.5 mt-1">
+            {ADVANCED_ITEMS.map((item) => (
+              <SidebarNavItem
+                key={item.id}
+                icon={<DSIcon name={item.iconName} size="XS" attention="high" />}
+                label={item.label}
+                onClick={() => onSectionChange(item.id)}
+                isActive={activeSection === item.id}
+              />
+            ))}
+          </div>
+        )}
       </nav>
 
       {/* Bottom Actions */}
@@ -120,7 +159,7 @@ export const AdminSidebar = memo(function AdminSidebar({
         {/* Back to App */}
         <SidebarNavItem
           icon={<DSIcon name="IcArrowBack" size="XS" attention="high" />}
-          label="Back to App"
+          label="back to app"
           onClick={() => { window.location.href = '/'; }}
           ariaLabel="Back to Voice Lab"
         />
@@ -128,7 +167,7 @@ export const AdminSidebar = memo(function AdminSidebar({
         {/* Sign Out */}
         <SidebarNavItem
           icon={<DSIcon name="IcLogout" size="XS" attention="high" />}
-          label="Sign out"
+          label="sign out"
           onClick={onSignOut}
           ariaLabel="Sign out of admin"
         />
