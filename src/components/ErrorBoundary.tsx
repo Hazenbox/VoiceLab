@@ -3,50 +3,99 @@
  * 
  * Catches React render errors and logs them to analytics.
  * Provides a fallback UI when errors occur.
+ * 
+ * Phase 5 Enhancements:
+ * - Granular error boundaries for individual features
+ * - Error classification (recoverable vs fatal)
+ * - Session recovery support
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { getErrorLogger } from '../services/analytics/errorLogger';
+
+// ── Error Classification ──────────────────────────────────────────────
+
+type ErrorSeverity = 'recoverable' | 'warning' | 'fatal';
+
+function classifyError(error: Error): ErrorSeverity {
+  const message = error.message.toLowerCase();
+  
+  // Fatal errors that require reload
+  if (message.includes('chunk') || message.includes('loading')) return 'fatal'; // Code splitting failure
+  if (message.includes('out of memory')) return 'fatal';
+  if (message.includes('maximum call stack')) return 'fatal';
+  
+  // Warnings that don't need full recovery
+  if (message.includes('failed to fetch')) return 'warning';
+  if (message.includes('network')) return 'warning';
+  if (message.includes('timeout')) return 'warning';
+  
+  // Most errors are recoverable
+  return 'recoverable';
+}
 
 // ── Types ────────────────────────────────────────────────────────────
 
 interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
+  /** Optional name for this boundary (for analytics) */
+  name?: string;
+  /** Render a minimal inline error instead of full-page */
+  inline?: boolean;
+  /** Callback when error is caught */
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  /** Auto-retry after this many ms (0 = no auto-retry) */
+  autoRetryMs?: number;
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  errorSeverity: ErrorSeverity;
+  retryCount: number;
 }
 
 // ── Error Boundary Component ─────────────────────────────────────────
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  private autoRetryTimeout: ReturnType<typeof setTimeout> | null = null;
+  
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
       hasError: false,
       error: null,
       errorInfo: null,
+      errorSeverity: 'recoverable',
+      retryCount: 0,
     };
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    return { hasError: true, error };
+    return { 
+      hasError: true, 
+      error,
+      errorSeverity: classifyError(error),
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log to analytics
+    const boundaryName = this.props.name || 'unknown';
+    const severity = classifyError(error);
+    
+    // Log to analytics with boundary context
     const errorLogger = getErrorLogger();
     errorLogger.logReactError(error, {
       componentStack: errorInfo.componentStack ?? undefined,
+      boundaryName,
+      severity,
+      retryCount: this.state.retryCount,
     });
 
     // Update state with error info
-    this.setState({ errorInfo });
+    this.setState({ errorInfo, errorSeverity: severity });
 
     // Call custom error handler if provided
     if (this.props.onError) {
@@ -54,16 +103,37 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     // Also log to console for debugging
-    console.error('[ErrorBoundary] Caught error:', error);
+    console.error(`[ErrorBoundary:${boundaryName}] Caught ${severity} error:`, error);
     console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
+    
+    // Auto-retry for recoverable errors (max 3 times)
+    if (
+      this.props.autoRetryMs && 
+      this.props.autoRetryMs > 0 && 
+      severity === 'recoverable' && 
+      this.state.retryCount < 3
+    ) {
+      this.autoRetryTimeout = setTimeout(() => {
+        console.log(`[ErrorBoundary:${boundaryName}] Auto-retrying (attempt ${this.state.retryCount + 1})`);
+        this.handleRetry();
+      }, this.props.autoRetryMs);
+    }
+  }
+  
+  componentWillUnmount(): void {
+    if (this.autoRetryTimeout) {
+      clearTimeout(this.autoRetryTimeout);
+    }
   }
 
   handleRetry = (): void => {
-    this.setState({
+    this.setState(prevState => ({
       hasError: false,
       error: null,
       errorInfo: null,
-    });
+      errorSeverity: 'recoverable',
+      retryCount: prevState.retryCount + 1,
+    }));
   };
 
   handleReload = (): void => {
@@ -76,11 +146,24 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       if (this.props.fallback) {
         return this.props.fallback;
       }
+      
+      // Render inline error for non-critical boundaries
+      if (this.props.inline) {
+        return (
+          <InlineErrorFallback
+            error={this.state.error}
+            severity={this.state.errorSeverity}
+            onRetry={this.handleRetry}
+            boundaryName={this.props.name}
+          />
+        );
+      }
 
-      // Default fallback UI
+      // Default full-page fallback UI
       return (
         <ErrorFallback
           error={this.state.error}
+          severity={this.state.errorSeverity}
           onRetry={this.handleRetry}
           onReload={this.handleReload}
         />
@@ -91,15 +174,74 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 }
 
-// ── Default Fallback UI ──────────────────────────────────────────────
+// ── Inline Error Fallback (for feature boundaries) ──────────────────
+
+interface InlineErrorFallbackProps {
+  error: Error | null;
+  severity: ErrorSeverity;
+  onRetry: () => void;
+  boundaryName?: string;
+}
+
+function InlineErrorFallback({ error, severity, onRetry, boundaryName }: InlineErrorFallbackProps): JSX.Element {
+  const isWarning = severity === 'warning';
+  const bgColor = isWarning ? '#fffbeb' : '#fef2f2';
+  const borderColor = isWarning ? '#fbbf24' : '#fca5a5';
+  const textColor = isWarning ? '#92400e' : '#991b1b';
+  
+  return (
+    <div
+      style={{
+        padding: '16px',
+        backgroundColor: bgColor,
+        borderRadius: '8px',
+        border: `1px solid ${borderColor}`,
+        margin: '8px 0',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+        <span style={{ fontSize: '20px' }}>{isWarning ? '⚠️' : '❌'}</span>
+        <div style={{ flex: 1 }}>
+          <p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: textColor }}>
+            {boundaryName ? `${boundaryName} failed to load` : 'something went wrong'}
+          </p>
+          {error && process.env.NODE_ENV === 'development' && (
+            <p style={{ margin: '4px 0 0', fontSize: '12px', color: textColor, opacity: 0.8 }}>
+              {error.message}
+            </p>
+          )}
+        </div>
+        <button
+          onClick={onRetry}
+          style={{
+            padding: '6px 12px',
+            fontSize: '12px',
+            fontWeight: 500,
+            color: 'white',
+            backgroundColor: '#5046e5',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+          }}
+        >
+          retry
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Default Full-Page Fallback UI ────────────────────────────────────
 
 interface ErrorFallbackProps {
   error: Error | null;
+  severity: ErrorSeverity;
   onRetry: () => void;
   onReload: () => void;
 }
 
-function ErrorFallback({ error, onRetry, onReload }: ErrorFallbackProps): JSX.Element {
+function ErrorFallback({ error, severity, onRetry, onReload }: ErrorFallbackProps): JSX.Element {
+  const isFatal = severity === 'fatal';
   return (
     <div
       style={{
@@ -151,8 +293,9 @@ function ErrorFallback({ error, onRetry, onReload }: ErrorFallbackProps): JSX.El
             lineHeight: 1.5,
           }}
         >
-          we've logged this error and will look into it.
-          you can try again or reload the page.
+          {isFatal 
+            ? 'a critical error occurred. please reload the page to continue.'
+            : 'we\'ve logged this error and will look into it. you can try again or reload the page.'}
         </p>
 
         {error && process.env.NODE_ENV === 'development' && (
