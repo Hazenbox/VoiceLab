@@ -93,6 +93,192 @@ export const featureFlags = {
     return env !== 'false';
   },
 
+  // ── Constitutional AI Flags ────────────────────────────────────────────
+
+  /**
+   * Enable safety gate pre-generation check
+   * Checks user input for safety concerns before LLM generation
+   * Default: true (safety first)
+   */
+  get safetyGate(): boolean {
+    const env = import.meta.env.VITE_ENABLE_SAFETY_GATE;
+    return env !== 'false';
+  },
+
+  /**
+   * Enable constitutional wrapper for generation
+   * Applies token classification, directive loading, state management
+   * Default: true
+   */
+  get constitutionalWrapper(): boolean {
+    const env = import.meta.env.VITE_ENABLE_CONSTITUTIONAL_WRAPPER;
+    return env !== 'false';
+  },
+
+  /**
+   * Enable post-generation validation agents
+   * Runs voice traits, emotion, pattern block, and self-check validations
+   * Default: true
+   */
+  get validationAgents(): boolean {
+    const env = import.meta.env.VITE_ENABLE_VALIDATION_AGENTS;
+    return env !== 'false';
+  },
+
+  /**
+   * Enable conversation state machine
+   * Tracks multi-turn conversation state and provides state-aware suggestions
+   * Default: true
+   */
+  get conversationState(): boolean {
+    const env = import.meta.env.VITE_ENABLE_CONVERSATION_STATE;
+    return env !== 'false';
+  },
+
+  /**
+   * Enable handoff trigger detection
+   * Detects when conversation should escalate to human support
+   * Default: true
+   */
+  get handoffDetection(): boolean {
+    const env = import.meta.env.VITE_ENABLE_HANDOFF_DETECTION;
+    return env !== 'false';
+  },
+
+  // ── RAG Enhancement Flags ──────────────────────────────────────────────
+
+  /**
+   * Enable query expansion with Jio synonyms
+   * Expands search queries with related terms for better recall
+   * Default: true
+   */
+  get ragQueryExpansion(): boolean {
+    const env = import.meta.env.VITE_ENABLE_RAG_QUERY_EXPANSION;
+    return env !== 'false';
+  },
+
+  /**
+   * Enable result ranking with recency/relevance scoring
+   * Re-ranks vector search results based on multiple factors
+   * Default: true
+   */
+  get ragResultRanking(): boolean {
+    const env = import.meta.env.VITE_ENABLE_RAG_RESULT_RANKING;
+    return env !== 'false';
+  },
+
+  /**
+   * Enable RAG resilience (retry, circuit breaker)
+   * Adds fault tolerance to RAG operations
+   * Default: true
+   */
+  get ragResilience(): boolean {
+    const env = import.meta.env.VITE_ENABLE_RAG_RESILIENCE;
+    return env !== 'false';
+  },
+
+  // ── Learning Enhancement Flags ─────────────────────────────────────────
+
+  /**
+   * Enable correction weighting (recency + frequency decay)
+   * Weights corrections by age and frequency for smarter learning
+   * Default: true
+   */
+  get correctionWeighting(): boolean {
+    const env = import.meta.env.VITE_ENABLE_CORRECTION_WEIGHTING;
+    return env !== 'false';
+  },
+
+  /**
+   * Enable user learning profiles
+   * Aggregates user preferences across sessions for personalization
+   * Default: true
+   */
+  get userLearningProfiles(): boolean {
+    const env = import.meta.env.VITE_ENABLE_USER_LEARNING_PROFILES;
+    return env !== 'false';
+  },
+
+  /**
+   * Enable admin rejection sync
+   * Syncs admin-rejected corrections to local cache to prevent re-use
+   * Default: true
+   */
+  get adminRejectionSync(): boolean {
+    const env = import.meta.env.VITE_ENABLE_ADMIN_REJECTION_SYNC;
+    return env !== 'false';
+  },
+
+  // ── Token Management Flags ─────────────────────────────────────────────
+
+  /**
+   * Enable token classification
+   * Classifies user input into 14 token categories
+   * Default: true
+   */
+  get tokenClassification(): boolean {
+    const env = import.meta.env.VITE_ENABLE_TOKEN_CLASSIFICATION;
+    return env !== 'false';
+  },
+
+  /**
+   * Enable selective directive loading
+   * Loads only relevant directives (5-10) instead of full rule set
+   * Default: true (reduces prompt size)
+   */
+  get selectiveDirectives(): boolean {
+    const env = import.meta.env.VITE_ENABLE_SELECTIVE_DIRECTIVES;
+    return env !== 'false';
+  },
+
+  // ── Emergency & Safety Flags ───────────────────────────────────────────
+
+  /**
+   * Enable emergency response templates
+   * Uses pre-defined responses for critical safety situations
+   * Default: true (NEVER disable in production)
+   */
+  get emergencyResponses(): boolean {
+    const env = import.meta.env.VITE_ENABLE_EMERGENCY_RESPONSES;
+    return env !== 'false';
+  },
+
+  /**
+   * Log safety events for review
+   * Logs detected safety concerns for admin review
+   * Default: true
+   */
+  get safetyLogging(): boolean {
+    const env = import.meta.env.VITE_ENABLE_SAFETY_LOGGING;
+    return env !== 'false';
+  },
+
+  // ── Debug & Development Flags ──────────────────────────────────────────
+
+  /**
+   * Show token classification debug info in console
+   * Default: false (only enable in development)
+   */
+  get debugTokens(): boolean {
+    return import.meta.env.VITE_DEBUG_TOKENS === 'true';
+  },
+
+  /**
+   * Show validation agent results in console
+   * Default: false (only enable in development)
+   */
+  get debugValidation(): boolean {
+    return import.meta.env.VITE_DEBUG_VALIDATION === 'true';
+  },
+
+  /**
+   * Show state machine transitions in console
+   * Default: false (only enable in development)
+   */
+  get debugStateMachine(): boolean {
+    return import.meta.env.VITE_DEBUG_STATE_MACHINE === 'true';
+  },
+
   // ── Helper Methods ───────────────────────────────────────────────────
 
   /**
