@@ -917,25 +917,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         let validationSummary: { passedCount: number; warningCount: number; errorCount: number; autoFixesApplied: number } | undefined;
 
         try {
-          console.log('[App] Starting validation pipeline...');
           const validationResult = await runValidationPipeline(result.content, finalContext);
-          console.log('[App] Validation pipeline returned, calculating trust score...');
           trustScore = calculateTrustScore(validationResult, trustSettings);
-          console.log('[App] Trust score calculated:', { autoFixableCount: trustScore.autoFixableCount });
-          
-          // Debug logging for auto-fix pipeline diagnosis
-          const allViolationsForDebug = validationResult.agentResults.flatMap(r => r.violations);
-          console.log('[Validation] Pipeline completed:', {
-            totalViolations: validationResult.totalViolations,
-            autoFixableCount: trustScore.autoFixableCount,
-            violationSample: allViolationsForDebug.slice(0, 5).map(v => ({
-              text: v.text,
-              rule: v.rule,
-              autoFixable: v.autoFixable,
-              severity: v.severity,
-            })),
-            contentSnippet: result.content.substring(0, 100) + '...',
-          });
           
           validationSummary = {
             passedCount: validationResult.agentResults.filter(r => r.passed).length,
@@ -1196,8 +1179,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         
         if (conversationalTrustScore && conversationalTrustScore.autoFixableCount > 0) {
           try {
-            console.log('[AutoFix-Conv] Auto-fixable count:', conversationalTrustScore.autoFixableCount);
-            
             // Gather all auto-fixable violations
             const autoFixableViolations = conversationalTrustScore.validationResults
               .flatMap(r => r.violations)
@@ -1212,8 +1193,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               
               // Generate and apply fixes to create preview
               const fixes = generateAutoFixes(autoFixableViolations, dynamicReplacements);
-              console.log('[AutoFix-Conv] Generated fixes:', fixes.length);
-              
               const fixResult = applyAutoFixes(result.content, fixes);
               
               // Only show preview if fixes were actually applied
@@ -1224,11 +1203,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   appliedFixes: fixResult.appliedFixes,
                   isPending: true,
                 };
-                console.log(`[AutoFix-Conv] Generated preview with ${fixResult.appliedFixes.length} fixes`);
               }
             }
           } catch (autoFixError) {
-            console.warn('[AutoFix-Conv] Failed to generate preview:', autoFixError);
+            console.warn('[AutoFix] Failed to generate preview:', autoFixError);
           }
         }
 
