@@ -142,6 +142,11 @@ export function generateAutoFixes(
   
   if (dynamicReplacements && dynamicReplacements.length > 0) {
     for (const rule of dynamicReplacements) {
+      // Skip rules with missing from/to values
+      if (!rule.from || !rule.to) {
+        console.warn('[AutoFix] Skipping invalid Convex rule:', rule);
+        continue;
+      }
       // Convex admin rules get 0.92 confidence (higher than vocabulary but lower than brand rules)
       mergedReplacements[rule.from.toLowerCase()] = { 
         replacement: rule.to, 
@@ -152,6 +157,12 @@ export function generateAutoFixes(
   
   for (const violation of violations) {
     if (!violation.autoFixable) continue;
+    
+    // Skip violations with missing text
+    if (!violation.text) {
+      console.warn('[AutoFix] Skipping violation with missing text:', violation);
+      continue;
+    }
     
     const text = violation.text.toLowerCase();
     const directFix = mergedReplacements[text];

@@ -240,8 +240,9 @@ export class ConstitutionalWrapper {
     }
     
     // Check 3: Emotion appropriateness
-    const emotionDirective = context.directives.emotionDirective;
-    for (const forbidden of emotionDirective.forbiddenToneShifts) {
+    const emotionDirective = context.directives?.emotionDirective;
+    const forbiddenToneShifts = emotionDirective?.forbiddenToneShifts || [];
+    for (const forbidden of forbiddenToneShifts) {
       const forbiddenLower = forbidden.toLowerCase();
       if (response.toLowerCase().includes(forbiddenLower)) {
         checks.push({
@@ -263,9 +264,11 @@ export class ConstitutionalWrapper {
     }
     
     // Check 4: Safety domain compliance
-    if (context.safetyResult.classification.detectedDomains.length > 0) {
-      const criticalDomains = context.safetyResult.classification.detectedDomains.filter(
-        d => d.level === 'critical' || d.level === 'high'
+    const detectedDomains = context.safetyResult?.classification?.detectedDomains || 
+                            context.safetyResult?.classification?.allDetectedDomains || [];
+    if (detectedDomains.length > 0) {
+      const criticalDomains = detectedDomains.filter(
+        (d: { level?: string; domain?: string; advisoryBoundary?: string }) => d.level === 'critical' || d.level === 'high'
       );
       
       for (const domain of criticalDomains) {

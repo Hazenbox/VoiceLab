@@ -921,12 +921,13 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           trustScore = calculateTrustScore(validationResult, trustSettings);
           
           // Debug logging for auto-fix pipeline diagnosis
+          const allViolationsForDebug = validationResult.agentResults.flatMap(r => r.violations);
           console.log('[Validation] Pipeline completed:', {
-            totalViolations: validationResult.allViolations.length,
+            totalViolations: validationResult.totalViolations,
             autoFixableCount: trustScore.autoFixableCount,
-            violationSample: validationResult.allViolations.slice(0, 5).map(v => ({
-              term: v.term,
-              type: v.type,
+            violationSample: allViolationsForDebug.slice(0, 5).map(v => ({
+              text: v.text,
+              rule: v.rule,
               autoFixable: v.autoFixable,
               severity: v.severity,
             })),
