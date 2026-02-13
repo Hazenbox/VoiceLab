@@ -30,100 +30,194 @@ const HF_MODEL = "BAAI/bge-small-en-v1.5";
 const HF_API_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`;
 const EXPECTED_DIMENSIONS = 384;
 
+// P1-FIX: Timeout and rate limit configuration
+const HF_TIMEOUT_MS = 30_000; // 30 second timeout
+const RATE_LIMIT_INITIAL_DELAY_MS = 1000; // Start with 1 second
+const RATE_LIMIT_MAX_DELAY_MS = 32_000; // Max 32 seconds
+const RATE_LIMIT_MAX_RETRIES = 5;
+
+// ── P1-FIX: Fetch with Timeout Helper ────────────────────────────
+
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  timeoutMs: number = HF_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`HuggingFace API request timed out after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+// ── P1-FIX: Rate Limit Handler with Exponential Backoff ──────────
+
+async function handleRateLimit<T>(
+  operation: () => Promise<T>,
+  operationName: string = 'API call'
+): Promise<T> {
+  let delay = RATE_LIMIT_INITIAL_DELAY_MS;
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= RATE_LIMIT_MAX_RETRIES; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // Check if this is a rate limit error (429)
+      const isRateLimit = lastError.message.includes('429') || 
+                          lastError.message.toLowerCase().includes('rate limit') ||
+                          lastError.message.toLowerCase().includes('too many requests');
+      
+      // Also retry on 503 (model loading) and timeouts
+      const isRetryable = isRateLimit || 
+                          lastError.message.includes('503') ||
+                          lastError.message.includes('timed out') ||
+                          lastError.message.includes('loading');
+      
+      if (!isRetryable || attempt === RATE_LIMIT_MAX_RETRIES) {
+        throw lastError;
+      }
+      
+      console.log(
+        `[Embeddings] ${operationName} failed (attempt ${attempt}/${RATE_LIMIT_MAX_RETRIES}), ` +
+        `retrying in ${delay}ms: ${lastError.message}`
+      );
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Exponential backoff with jitter
+      delay = Math.min(delay * 2 + Math.random() * 500, RATE_LIMIT_MAX_DELAY_MS);
+    }
+  }
+  
+  throw lastError || new Error(`${operationName} failed after ${RATE_LIMIT_MAX_RETRIES} retries`);
+}
+
 // ── Hugging Face Feature Extraction Helper ───────────────────────
 
 async function getHuggingFaceEmbedding(text: string, apiKey: string): Promise<number[]> {
-  const response = await fetch(HF_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      inputs: text,
-      options: { wait_for_model: true },
-    }),
-  });
+  return handleRateLimit(async () => {
+    // P1-FIX: Use fetch with timeout
+    const response = await fetchWithTimeout(HF_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        inputs: text,
+        options: { wait_for_model: true },
+      }),
+    });
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    if (response.status === 503) {
+    if (!response.ok) {
+      const errorBody = await response.text();
+      if (response.status === 429) {
+        throw new Error(
+          `Rate limited by Hugging Face (429). ${errorBody}`
+        );
+      }
+      if (response.status === 503) {
+        throw new Error(
+          `Model is loading on Hugging Face. Retry in a few seconds. (${errorBody})`
+        );
+      }
       throw new Error(
-        `Model is loading on Hugging Face. Retry in a few seconds. (${errorBody})`
+        `Hugging Face API error (${response.status}): ${errorBody}`
       );
     }
-    throw new Error(
-      `Hugging Face API error (${response.status}): ${errorBody}`
-    );
-  }
 
-  const data = await response.json();
+    const data = await response.json();
 
-  // HF feature-extraction returns a nested array: [[...384 floats...]]
-  // For a single input, we get the first (and only) result
-  let embedding: number[];
-  if (Array.isArray(data) && Array.isArray(data[0]) && typeof data[0][0] === "number") {
-    embedding = data[0];
-  } else if (Array.isArray(data) && typeof data[0] === "number") {
-    // Some models return a flat array directly
-    embedding = data;
-  } else {
-    throw new Error(
-      `Unexpected embedding response shape: ${JSON.stringify(data).slice(0, 200)}`
-    );
-  }
+    // HF feature-extraction returns a nested array: [[...384 floats...]]
+    // For a single input, we get the first (and only) result
+    let embedding: number[];
+    if (Array.isArray(data) && Array.isArray(data[0]) && typeof data[0][0] === "number") {
+      embedding = data[0];
+    } else if (Array.isArray(data) && typeof data[0] === "number") {
+      // Some models return a flat array directly
+      embedding = data;
+    } else {
+      throw new Error(
+        `Unexpected embedding response shape: ${JSON.stringify(data).slice(0, 200)}`
+      );
+    }
 
-  if (embedding.length !== EXPECTED_DIMENSIONS) {
-    throw new Error(
-      `Expected ${EXPECTED_DIMENSIONS} dimensions, got ${embedding.length}`
-    );
-  }
+    if (embedding.length !== EXPECTED_DIMENSIONS) {
+      throw new Error(
+        `Expected ${EXPECTED_DIMENSIONS} dimensions, got ${embedding.length}`
+      );
+    }
 
-  return embedding;
+    return embedding;
+  }, 'getHuggingFaceEmbedding');
 }
 
 /**
  * Batch embed multiple texts in one API call.
  * HF feature-extraction accepts an array of strings as `inputs`.
+ * P1-FIX: Now includes timeout and rate limit handling
  */
 async function getHuggingFaceBatchEmbeddings(
   texts: string[],
   apiKey: string
 ): Promise<number[][]> {
-  const response = await fetch(HF_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      inputs: texts,
-      options: { wait_for_model: true },
-    }),
-  });
+  return handleRateLimit(async () => {
+    // P1-FIX: Use fetch with timeout
+    const response = await fetchWithTimeout(HF_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        inputs: texts,
+        options: { wait_for_model: true },
+      }),
+    });
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    if (response.status === 503) {
+    if (!response.ok) {
+      const errorBody = await response.text();
+      if (response.status === 429) {
+        throw new Error(
+          `Rate limited by Hugging Face (429). ${errorBody}`
+        );
+      }
+      if (response.status === 503) {
+        throw new Error(
+          `Model is loading on Hugging Face. Retry in a few seconds. (${errorBody})`
+        );
+      }
       throw new Error(
-        `Model is loading on Hugging Face. Retry in a few seconds. (${errorBody})`
+        `Hugging Face API error (${response.status}): ${errorBody}`
       );
     }
-    throw new Error(
-      `Hugging Face API error (${response.status}): ${errorBody}`
-    );
-  }
 
-  const data = await response.json();
+    const data = await response.json();
 
-  // HF feature-extraction returns [[...384...], [...384...], ...] for batch input
-  if (!Array.isArray(data) || !Array.isArray(data[0])) {
-    throw new Error(
-      `Unexpected batch response shape: ${JSON.stringify(data).slice(0, 200)}`
-    );
-  }
+    // HF feature-extraction returns [[...384...], [...384...], ...] for batch input
+    if (!Array.isArray(data) || !Array.isArray(data[0])) {
+      throw new Error(
+        `Unexpected batch response shape: ${JSON.stringify(data).slice(0, 200)}`
+      );
+    }
 
-  return data as number[][];
+    return data as number[][];
+  }, 'getHuggingFaceBatchEmbeddings');
 }
 
 // ── Generate Embedding for a Single Item ─────────────────────────

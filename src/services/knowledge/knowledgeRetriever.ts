@@ -273,20 +273,39 @@ export function getAvoidWordsByCategory(knowledge: RetrievedKnowledge): Array<{
   }];
 }
 
+// ── Semantic Search Configuration (P1 Update) ───────────────────
+
+/** 
+ * P1: Increased minimum relevance score from 0.3 to 0.5
+ * This reduces noise from low-relevance results
+ */
+export const RAG_CONFIG = {
+  /** Minimum similarity score to include results (0-1) */
+  minScore: 0.5,
+  /** Timeout for semantic search operations in ms */
+  timeoutMs: 300,
+  /** Maximum results to request from vector search */
+  maxResults: 10,
+  /** Maximum results to include in prompt */
+  maxPromptResults: 5,
+} as const;
+
 // ── Semantic Search Enrichment (Phase 4) ─────────────────────────
 
 /**
  * Enrich existing knowledge with semantic search results.
  * Called after the Convex semanticSearch action returns results.
  * 
+ * P1 Update: Default minScore increased to 0.5 for better precision
+ * 
  * @param baseKnowledge - The base knowledge (from type-based retrieval or code defaults)
  * @param semanticResults - Results from Convex vector search
- * @param minScore - Minimum similarity score to include (0-1)
+ * @param minScore - Minimum similarity score to include (default: 0.5)
  */
 export function enrichWithSemanticResults(
   baseKnowledge: RetrievedKnowledge,
   semanticResults: SemanticSearchResult[],
-  minScore: number = 0.3,
+  minScore: number = RAG_CONFIG.minScore,
 ): RetrievedKnowledge {
   // Filter by minimum relevance score
   const relevant = semanticResults.filter((r) => r._score >= minScore);

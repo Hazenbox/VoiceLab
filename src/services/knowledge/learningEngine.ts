@@ -270,12 +270,59 @@ export function clearRejectedCorrections(): void {
 }
 
 /**
+ * P1: Generate a fingerprint for deduplication
+ * Based on original content + feedback type + ecosystem/channel
+ */
+export function generateCorrectionFingerprint(correction: Omit<CorrectionEntry, '_id' | 'timestamp'>): string {
+  const content = correction.originalContent.slice(0, 100).toLowerCase().trim();
+  const type = correction.feedbackType;
+  const context = `${correction.ecosystem}-${correction.channel}`;
+  
+  // Simple hash function
+  let hash = 0;
+  const str = `${content}|${type}|${context}`;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+/**
+ * P1: Check if a similar correction already exists
+ */
+export function isDuplicateCorrection(
+  correction: Omit<CorrectionEntry, '_id' | 'timestamp'>,
+  existingCorrections: CorrectionEntry[]
+): boolean {
+  const newFingerprint = generateCorrectionFingerprint(correction);
+  
+  for (const existing of existingCorrections) {
+    const existingFingerprint = generateCorrectionFingerprint(existing);
+    if (newFingerprint === existingFingerprint) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
  * Store a correction locally for immediate learning availability.
+ * P1: Now includes fingerprint-based deduplication
  */
 export function storeLocalCorrection(correction: CorrectionEntry): void {
   try {
     const stored = localStorage.getItem(LOCAL_CORRECTIONS_KEY);
     const corrections: CorrectionEntry[] = stored ? JSON.parse(stored) : [];
+    
+    // P1: Check for duplicates before adding
+    if (isDuplicateCorrection(correction, corrections)) {
+      console.log('[LearningEngine] Duplicate correction detected, skipping');
+      return;
+    }
+    
     corrections.unshift(correction);
     const trimmed = corrections.slice(0, MAX_LOCAL_CORRECTIONS);
     localStorage.setItem(LOCAL_CORRECTIONS_KEY, JSON.stringify(trimmed));
