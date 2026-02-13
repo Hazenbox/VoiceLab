@@ -1188,11 +1188,56 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           }
         }
 
-        // Create AI response -- now WITH optional trustScore
+        // =================================================================
+        // Auto-Fix Preview for Conversational Path
+        // Generate side-by-side preview if auto-fixable violations exist
+        // =================================================================
+        let conversationalAutoFixPreview: import('./types').AutoFixPreview | undefined;
+        
+        if (conversationalTrustScore && conversationalTrustScore.autoFixableCount > 0) {
+          try {
+            console.log('[AutoFix-Conv] Auto-fixable count:', conversationalTrustScore.autoFixableCount);
+            
+            // Gather all auto-fixable violations
+            const autoFixableViolations = conversationalTrustScore.validationResults
+              .flatMap(r => r.violations)
+              .filter(v => v.autoFixable);
+            
+            if (autoFixableViolations.length > 0) {
+              // Extract Convex dynamic rules (admin-managed auto-fix rules)
+              const dynamicReplacements = convexKnowledge?.autoFixRules?.map(rule => ({
+                from: rule.content,
+                to: rule.metadata?.suggestion,
+              }));
+              
+              // Generate and apply fixes to create preview
+              const fixes = generateAutoFixes(autoFixableViolations, dynamicReplacements);
+              console.log('[AutoFix-Conv] Generated fixes:', fixes.length);
+              
+              const fixResult = applyAutoFixes(result.content, fixes);
+              
+              // Only show preview if fixes were actually applied
+              if (fixResult.appliedFixes.length > 0) {
+                conversationalAutoFixPreview = {
+                  originalContent: result.content,
+                  fixedContent: fixResult.fixedContent,
+                  appliedFixes: fixResult.appliedFixes,
+                  isPending: true,
+                };
+                console.log(`[AutoFix-Conv] Generated preview with ${fixResult.appliedFixes.length} fixes`);
+              }
+            }
+          } catch (autoFixError) {
+            console.warn('[AutoFix-Conv] Failed to generate preview:', autoFixError);
+          }
+        }
+
+        // Create AI response -- now WITH optional trustScore and autoFixPreview
         const aiMessage = {
           ...createTextMessage('assistant', result.content, chatMode, userMessageId),
           messageIntent: intentClassification.intent,
           ...(conversationalTrustScore && { trustScore: conversationalTrustScore }),
+          ...(conversationalAutoFixPreview && { autoFixPreview: conversationalAutoFixPreview }),
         };
         
         if (replaceResponseId) {
