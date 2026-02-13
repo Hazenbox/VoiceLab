@@ -26,42 +26,70 @@ import { getChannel } from '../guidelines/channels';
  * When multiple agents flag the same word/phrase (e.g., "utilize" caught by
  * both style_consistency regex and avoid_words agent), keep only the one
  * with higher severity to avoid double-counting in scores.
+ * 
+ * IMPORTANT: When merging, preserve autoFixable=true if ANY violation has it.
  */
 function deduplicateViolations(violations: ValidationViolation[]): ValidationViolation[] {
   if (violations.length === 0) return [];
   
   const severityRank: Record<string, number> = { error: 3, warning: 2, info: 1 };
   
-  // Sort by position start
+  // Sort by position start, then by whether it has autoFixable (prioritize autoFixable)
   const sorted = [...violations].sort((a, b) => {
-    const aStart = a.position?.start ?? 0;
-    const bStart = b.position?.start ?? 0;
-    return aStart - bStart;
+    const aStart = a.position?.start ?? -1;  // Use -1 for missing positions
+    const bStart = b.position?.start ?? -1;
+    if (aStart !== bStart) return aStart - bStart;
+    // If same position, prioritize autoFixable=true
+    if (a.autoFixable && !b.autoFixable) return -1;
+    if (!a.autoFixable && b.autoFixable) return 1;
+    return 0;
   });
   
   const result: ValidationViolation[] = [];
   
   for (const v of sorted) {
-    // Check if any existing result overlaps this position
+    // Skip violations without valid positions (can't deduplicate properly)
+    if (!v.position || v.position.start === undefined || v.position.end === undefined) {
+      result.push(v);
+      continue;
+    }
+    
+    // Check if any existing result overlaps this position (exact or near-exact match)
     const overlappingIndex = result.findIndex(existing => {
-      if (!existing.position || !v.position) return false;
-      // Check for overlap: ranges overlap if one starts before the other ends
-      return (
-        existing.position.start <= v.position.end &&
-        existing.position.end >= v.position.start
-      );
+      if (!existing.position || existing.position.start === undefined) return false;
+      
+      // Check for significant overlap (at least 50% of the smaller span)
+      const existingLength = existing.position.end - existing.position.start;
+      const newLength = v.position!.end - v.position!.start;
+      const minLength = Math.min(existingLength, newLength);
+      
+      const overlapStart = Math.max(existing.position.start, v.position!.start);
+      const overlapEnd = Math.min(existing.position.end, v.position!.end);
+      const overlapLength = Math.max(0, overlapEnd - overlapStart);
+      
+      // Only consider it overlapping if they share > 50% of the smaller term
+      return overlapLength > minLength * 0.5;
     });
     
     if (overlappingIndex >= 0) {
       const existing = result[overlappingIndex];
-      // Keep the higher-severity one
       const existingSeverity = severityRank[existing.severity] || 0;
       const newSeverity = severityRank[v.severity] || 0;
       
+      // Decide which to keep: higher severity wins, but PRESERVE autoFixable
       if (newSeverity > existingSeverity) {
-        result[overlappingIndex] = v;
+        // New violation has higher severity - use it but preserve autoFixable
+        result[overlappingIndex] = {
+          ...v,
+          autoFixable: v.autoFixable || existing.autoFixable,
+        };
+      } else {
+        // Keep existing but ensure autoFixable is preserved
+        result[overlappingIndex] = {
+          ...existing,
+          autoFixable: existing.autoFixable || v.autoFixable,
+        };
       }
-      // Otherwise keep existing (skip this one)
     } else {
       result.push(v);
     }
