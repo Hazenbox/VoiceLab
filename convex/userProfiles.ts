@@ -354,6 +354,132 @@ export const getHighCorrectionUsers = query({
   },
 });
 
+// ── Profile Aggregation (Internal - for Cron Job) ─────────────────
+
+/**
+ * Aggregate stale profiles - called by cron job daily
+ * Finds profiles that haven't been aggregated in 24+ hours and updates them
+ */
+export const aggregateStaleProfiles = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const staleThreshold = Date.now() - (24 * 60 * 60 * 1000); // 24 hours
+    
+    // Find profiles that need re-aggregation
+    const staleProfiles = await ctx.db
+      .query("userLearningProfiles")
+      .filter((q) => 
+        q.or(
+          q.lt(q.field("lastAggregatedAt"), staleThreshold),
+          q.eq(q.field("lastAggregatedAt"), undefined)
+        )
+      )
+      .take(50);
+    
+    let aggregated = 0;
+    let errors = 0;
+    
+    for (const profile of staleProfiles) {
+      try {
+        const now = Date.now();
+        const lookbackStart = now - (90 * 24 * 60 * 60 * 1000); // 90 days
+        
+        // Get corrections for this user
+        const corrections = await ctx.db
+          .query("corrections")
+          .withIndex("by_userId", (q) => q.eq("userId", profile.userId))
+          .filter((q) => q.gte(q.field("timestamp"), lookbackStart))
+          .take(500);
+        
+        // Get sessions for this user
+        const sessions = await ctx.db
+          .query("conversationSessions")
+          .withIndex("by_userId", (q) => q.eq("userId", profile.userId))
+          .filter((q) => q.gte(q.field("startedAt"), lookbackStart))
+          .take(200);
+        
+        // Get analytics events
+        const analyticsEvents = await ctx.db
+          .query("analyticsEvents")
+          .withIndex("by_userId", (q) => q.eq("userId", profile.userId))
+          .filter((q) => q.gte(q.field("timestamp"), lookbackStart))
+          .take(500);
+        
+        // Calculate metrics
+        const totalInteractions = analyticsEvents.filter(e => e.eventType === "generation").length;
+        const correctionFrequency = totalInteractions > 0 
+          ? (corrections.length / totalInteractions) * 100 
+          : 0;
+        
+        // Top correction reasons
+        const reasonCounts: Record<string, number> = {};
+        for (const c of corrections) {
+          if (c.feedbackType === "thumbs_down" && c.reasons) {
+            for (const reason of c.reasons) {
+              reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
+            }
+          }
+        }
+        const topCorrectionReasons = Object.entries(reasonCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([reason]) => reason);
+        
+        // Common intents
+        const intentCounts: Record<string, number> = {};
+        for (const e of analyticsEvents) {
+          if (e.eventType === "generation") {
+            const intent = e.userAction || "unknown";
+            intentCounts[intent] = (intentCounts[intent] || 0) + 1;
+          }
+        }
+        const commonIntents = Object.entries(intentCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([intent, frequency]) => ({ intent, frequency }));
+        
+        // Common ecosystems
+        const ecosystemCounts: Record<string, number> = {};
+        for (const e of analyticsEvents) {
+          if (e.ecosystem) {
+            ecosystemCounts[e.ecosystem] = (ecosystemCounts[e.ecosystem] || 0) + 1;
+          }
+        }
+        const commonEcosystems = Object.entries(ecosystemCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([ecosystem, frequency]) => ({ ecosystem, frequency }));
+        
+        // Session metrics
+        const completedSessions = sessions.filter(s => s.status === "completed");
+        const averageSessionLength = completedSessions.length > 0
+          ? completedSessions.reduce((sum, s) => sum + s.messageCount, 0) / completedSessions.length
+          : undefined;
+        
+        // Update profile
+        await ctx.db.patch(profile._id, {
+          commonIntents,
+          commonEcosystems,
+          correctionFrequency,
+          topCorrectionReasons,
+          averageSessionLength,
+          totalInteractions,
+          totalCorrections: corrections.length,
+          lastAggregatedAt: now,
+          updatedAt: now,
+        });
+        
+        aggregated++;
+      } catch (e) {
+        console.error(`Failed to aggregate profile ${profile._id}:`, e);
+        errors++;
+      }
+    }
+    
+    return { aggregated, errors, totalStale: staleProfiles.length };
+  },
+});
+
 // ── Profile Cleanup ───────────────────────────────────────────────
 
 /**

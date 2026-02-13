@@ -48,6 +48,21 @@ export interface ConstitutionalContext {
   };
 }
 
+/**
+ * Directive override from Convex
+ */
+export interface DirectiveOverride {
+  directiveType: string; // voice_trait | safety_rule | pattern_block | emotion_rule
+  directiveKey: string;
+  ecosystem?: string;
+  channel?: string;
+  overrideAction: string; // modify | enable | disable
+  overrideValue?: string; // JSON stringified value
+  priority: number;
+  reason?: string;
+  isActive: boolean;
+}
+
 export interface GenerationRequest {
   /** User input message */
   userMessage: string;
@@ -70,6 +85,8 @@ export interface GenerationRequest {
     role: 'user' | 'assistant';
     content: string;
   }>;
+  /** Directive overrides from Convex */
+  directiveOverrides?: DirectiveOverride[];
 }
 
 export interface ValidationResult {
@@ -123,7 +140,12 @@ export class ConstitutionalWrapper {
     });
     
     // 4. Load directives
-    const directives = loadDirectives(tokens);
+    let directives = loadDirectives(tokens);
+    
+    // 4.5. Apply directive overrides from Convex if provided
+    if (request.directiveOverrides && request.directiveOverrides.length > 0) {
+      directives = this.applyDirectiveOverrides(directives, request.directiveOverrides, request.ecosystem, request.channel);
+    }
     
     // 5. Get/create state manager
     const stateManager = this.getOrCreateStateManager(request);
@@ -352,6 +374,177 @@ export class ConstitutionalWrapper {
   // ═══════════════════════════════════════════════════════════════════════════
   // PRIVATE HELPERS
   // ═══════════════════════════════════════════════════════════════════════════
+  
+  /**
+   * Apply directive overrides from Convex to loaded directives
+   * Overrides are sorted by priority and applied in order
+   */
+  private applyDirectiveOverrides(
+    directives: LoadedDirectives,
+    overrides: DirectiveOverride[],
+    ecosystem?: string,
+    channel?: string
+  ): LoadedDirectives {
+    // Filter overrides applicable to current context
+    const applicableOverrides = overrides
+      .filter(o => o.isActive)
+      .filter(o => {
+        // Global overrides (no ecosystem/channel) apply everywhere
+        if (!o.ecosystem && !o.channel) return true;
+        // Ecosystem-specific
+        if (o.ecosystem && o.ecosystem === ecosystem && !o.channel) return true;
+        // Channel-specific
+        if (o.channel && o.channel === channel && !o.ecosystem) return true;
+        // Ecosystem + channel specific
+        if (o.ecosystem === ecosystem && o.channel === channel) return true;
+        return false;
+      })
+      .sort((a, b) => a.priority - b.priority); // Lower priority number = higher precedence
+    
+    // Apply each override
+    let modifiedDirectives = { ...directives };
+    
+    for (const override of applicableOverrides) {
+      try {
+        const value = override.overrideValue ? JSON.parse(override.overrideValue) : undefined;
+        
+        switch (override.directiveType) {
+          case 'voice_trait':
+            modifiedDirectives = this.applyVoiceTraitOverride(modifiedDirectives, override, value);
+            break;
+          case 'safety_rule':
+            modifiedDirectives = this.applySafetyOverride(modifiedDirectives, override, value);
+            break;
+          case 'pattern_block':
+            modifiedDirectives = this.applyPatternOverride(modifiedDirectives, override, value);
+            break;
+          case 'emotion_rule':
+            modifiedDirectives = this.applyEmotionOverride(modifiedDirectives, override, value);
+            break;
+          default:
+            console.warn(`[ConstitutionalWrapper] Unknown directive type: ${override.directiveType}`);
+        }
+      } catch (e) {
+        console.error(`[ConstitutionalWrapper] Failed to apply override ${override.directiveKey}:`, e);
+      }
+    }
+    
+    return modifiedDirectives;
+  }
+  
+  private applyVoiceTraitOverride(
+    directives: LoadedDirectives,
+    override: DirectiveOverride,
+    value: Record<string, unknown> | undefined
+  ): LoadedDirectives {
+    if (override.overrideAction === 'disable') {
+      // Remove trait from list
+      return {
+        ...directives,
+        voiceTraits: directives.voiceTraits.filter(t => t.trait !== override.directiveKey),
+      };
+    }
+    
+    if (override.overrideAction === 'modify' && value) {
+      // Modify tone settings if warmth/detail related
+      if (override.directiveKey === 'warmth_level' && 'minWarmth' in value) {
+        return {
+          ...directives,
+          toneDirective: {
+            ...directives.toneDirective,
+            warmth: {
+              ...directives.toneDirective.warmth,
+              level: Math.max(directives.toneDirective.warmth.level, (value.minWarmth as number) || 1),
+            },
+          },
+        };
+      }
+      if (override.directiveKey === 'detail_level' && 'maxDetail' in value) {
+        return {
+          ...directives,
+          toneDirective: {
+            ...directives.toneDirective,
+            detail: {
+              ...directives.toneDirective.detail,
+              level: Math.min(directives.toneDirective.detail.level, (value.maxDetail as number) || 3),
+            },
+          },
+        };
+      }
+    }
+    
+    return directives;
+  }
+  
+  private applySafetyOverride(
+    directives: LoadedDirectives,
+    override: DirectiveOverride,
+    value: Record<string, unknown> | undefined
+  ): LoadedDirectives {
+    if (override.overrideAction === 'enable' || override.overrideAction === 'modify') {
+      // Add or modify safety directive
+      const existingIndex = directives.safetyDirectives.findIndex(
+        s => s.domain === override.directiveKey
+      );
+      
+      if (existingIndex >= 0 && value) {
+        // Modify existing
+        const updated = [...directives.safetyDirectives];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          advisoryBoundary: (value.advisoryBoundary as string) || updated[existingIndex].advisoryBoundary,
+        };
+        return { ...directives, safetyDirectives: updated };
+      }
+    }
+    
+    return directives;
+  }
+  
+  private applyPatternOverride(
+    directives: LoadedDirectives,
+    override: DirectiveOverride,
+    value: Record<string, unknown> | undefined
+  ): LoadedDirectives {
+    if (override.overrideAction === 'modify' && value) {
+      const requiredBlocks = (value.requiredBlocks as string[]) || [];
+      const forbiddenBlocks = (value.forbiddenBlocks as string[]) || [];
+      
+      // Add required blocks
+      let blocks = [...new Set([...directives.patternDirective.blocks, ...requiredBlocks])];
+      // Remove forbidden blocks
+      blocks = blocks.filter(b => !forbiddenBlocks.includes(b));
+      
+      return {
+        ...directives,
+        patternDirective: {
+          ...directives.patternDirective,
+          blocks,
+        },
+      };
+    }
+    
+    return directives;
+  }
+  
+  private applyEmotionOverride(
+    directives: LoadedDirectives,
+    override: DirectiveOverride,
+    value: Record<string, unknown> | undefined
+  ): LoadedDirectives {
+    if (override.overrideAction === 'modify' && value) {
+      return {
+        ...directives,
+        emotionDirective: {
+          ...directives.emotionDirective,
+          targetEmotion: (value.targetEmotion as string) || directives.emotionDirective.targetEmotion,
+          forbiddenToneShifts: (value.forbiddenTraits as string[]) || directives.emotionDirective.forbiddenToneShifts,
+        },
+      };
+    }
+    
+    return directives;
+  }
   
   private getOrCreateStateManager(request: GenerationRequest): StateManager {
     // Use provided state manager if available

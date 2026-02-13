@@ -938,10 +938,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             ...convexTrainingExamples.map((ex, i) => {
               const lines = [
                 `## example ${i + 1}`,
-                `input: "${ex.input}"`,
-                `output: "${ex.content}"`,
+                `input: "${ex.inputContext}"`,
+                `output: "${ex.outputContent}"`,
               ];
-              if (ex.context) lines.push(`context: ${ex.context}`);
+              if (ex.ecosystem) lines.push(`ecosystem: ${ex.ecosystem}`);
+              if (ex.channel) lines.push(`channel: ${ex.channel}`);
               return lines.join('\n');
             }),
           ].join('\n\n');

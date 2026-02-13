@@ -1,7 +1,7 @@
 # RAG Stress Test Report
 
-**Generated:** 2026-02-11T13:15:43.853Z
-**Total Duration:** 14731ms (14.7s)
+**Generated:** 2026-02-13T12:54:08.554Z
+**Total Duration:** 13784ms (13.8s)
 **Convex URL:** https://tidy-guanaco-955.eu-west-1.convex.cloud
 
 ## Executive Summary
@@ -9,33 +9,33 @@
 | Metric | Value |
 |--------|-------|
 | Total Tests | 10 |
-| Passed | 10 |
-| Failed | 0 |
-| Success Rate | 100.0% |
-| Production Ready | ✅ YES |
+| Passed | 9 |
+| Failed | 1 |
+| Success Rate | 90.0% |
+| Production Ready | ❌ NO |
 
 ## Pre-Test Verification
 
-**Status:** 1/1 passed
+**Status:** 0/1 passed
 
-### ✅ Embeddings Completeness Check
+### ❌ Embeddings Completeness Check
 
-- **Status:** PASSED
-- **Duration:** 1463ms
-- **Details:** All 486 items have embeddings generated
+- **Status:** FAILED
+- **Duration:** 1021ms
+- **Details:** All 637 items have embeddings generated
 
 **Metrics:**
 
 ```json
 {
-  "totalItems": 486,
-  "itemsWithEmbeddings": 486,
+  "totalItems": 637,
+  "itemsWithEmbeddings": 637,
   "itemsWithoutEmbeddings": 0,
   "breakdown": {
-    "auto_fix": 33,
-    "avoid_word": 236,
+    "auto_fix": 72,
+    "avoid_word": 299,
     "festival": 11,
-    "preferred_word": 192,
+    "preferred_word": 241,
     "product_definition": 14
   }
 }
@@ -48,7 +48,7 @@
 ### ✅ Semantic Similarity Detection
 
 - **Status:** PASSED
-- **Duration:** 2738ms
+- **Duration:** 2263ms
 - **Details:** Tested 5 semantic queries. 5/5 passed
 
 **Metrics:**
@@ -98,7 +98,7 @@
 ### ✅ Cross-Category Search
 
 - **Status:** PASSED
-- **Duration:** 417ms
+- **Duration:** 415ms
 - **Details:** Found 10 results across 3 types and 4 categories
 
 **Metrics:**
@@ -115,7 +115,7 @@
 ### ✅ Negative Match Prevention
 
 - **Status:** PASSED
-- **Duration:** 1677ms
+- **Duration:** 1804ms
 - **Details:** Tested 3 irrelevant vs 1 relevant query. 2/3 had lower scores
 
 **Metrics:**
@@ -127,8 +127,8 @@
       "query": "Random gibberish xyz123 asdfqwer",
       "results": 10,
       "avgScore": "0.66",
-      "maxScore": "0.66",
-      "vsRelevant": "96%",
+      "maxScore": "0.67",
+      "vsRelevant": "97%",
       "passed": false
     },
     {
@@ -160,23 +160,23 @@
 ### ✅ Latency Measurement
 
 - **Status:** PASSED
-- **Duration:** 2110ms
-- **Details:** Avg: 422ms, Max: 439ms, Min: 401ms
+- **Duration:** 2199ms
+- **Details:** Avg: 440ms, Max: 552ms, Min: 396ms
 
 **Metrics:**
 
 ```json
 {
-  "avgLatency": 422,
-  "maxLatency": 439,
-  "minLatency": 401,
+  "avgLatency": 440,
+  "maxLatency": 552,
+  "minLatency": 396,
   "target": "< 700ms avg",
   "allLatencies": [
-    431,
-    439,
-    422,
-    416,
-    401
+    396,
+    407,
+    437,
+    407,
+    552
   ]
 }
 ```
@@ -184,15 +184,15 @@
 ### ✅ Concurrent Load Test
 
 - **Status:** PASSED
-- **Duration:** 1148ms
-- **Details:** 10/10 requests succeeded in 1143ms (114ms/request)
+- **Duration:** 982ms
+- **Details:** 10/10 requests succeeded in 978ms (98ms/request)
 
 **Metrics:**
 
 ```json
 {
-  "totalDuration": 1143,
-  "avgPerRequest": 114,
+  "totalDuration": 978,
+  "avgPerRequest": 98,
   "successRate": "10/10",
   "target": "< 5000ms total"
 }
@@ -205,7 +205,7 @@
 ### ✅ Edge Case Handling
 
 - **Status:** PASSED
-- **Duration:** 2225ms
+- **Duration:** 2045ms
 - **Details:** Tested 5 edge cases. 5/5 handled correctly
 
 **Metrics:**
@@ -254,7 +254,7 @@
 ### ✅ All Knowledge Types Coverage
 
 - **Status:** PASSED
-- **Duration:** 2119ms
+- **Duration:** 2195ms
 - **Details:** Tested all 5 knowledge types. 5/5 types returned sufficient results
 
 **Metrics:**
@@ -273,14 +273,14 @@
       "type": "preferred_word",
       "results": 10,
       "expected": ">= 5",
-      "avgScore": "0.67",
+      "avgScore": "0.68",
       "passed": true
     },
     {
       "type": "auto_fix",
       "results": 10,
       "expected": ">= 2",
-      "avgScore": "0.62",
+      "avgScore": "0.63",
       "passed": true
     },
     {
@@ -304,7 +304,7 @@
 ### ✅ Severity Level Filtering
 
 - **Status:** PASSED
-- **Duration:** 413ms
+- **Duration:** 427ms
 - **Details:** Found 19 error, 1 warning, 0 info severity items
 
 **Metrics:**
@@ -328,7 +328,7 @@
 ### ✅ Content Quality Enhancement
 
 - **Status:** PASSED
-- **Duration:** 421ms
+- **Duration:** 433ms
 - **Details:** Found 10 results across 1 types. Avg score: 0.66. Quality indicators: 2/4
 
 **Metrics:**
@@ -349,14 +349,13 @@
 
 ## Recommendations
 
-✅ **Production Ready!**
+⚠️ **Requires Attention**
 
-All tests passed successfully. RAG is working at full capacity with all 486 embeddings.
+1 test(s) failed. Review the failures above and:
 
-Next steps:
-1. Deploy to production per RAG_DEPLOYMENT_CHECKLIST.md
-2. Monitor HuggingFace API usage
-3. Set up performance monitoring
+- **Embeddings Completeness Check:** All 637 items have embeddings generated
+
+Do not deploy to production until all tests pass.
 
 ---
 

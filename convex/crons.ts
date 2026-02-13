@@ -30,4 +30,12 @@ crons.daily(
   api.adminSessions.cleanupExpired
 );
 
+// Daily aggregation of stale user learning profiles at 5 AM UTC
+// Aggregates user preferences and behaviors from corrections and sessions
+crons.daily(
+  "aggregate-stale-profiles",
+  { hourUTC: 5, minuteUTC: 0 },
+  internal.userProfiles.aggregateStaleProfiles
+);
+
 export default crons;
