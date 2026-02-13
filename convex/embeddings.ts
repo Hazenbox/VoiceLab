@@ -494,16 +494,16 @@ export const getItem = internalQuery({
 });
 
 // Get items that don't have embeddings yet (public for testing)
-// Note: Caps at 1000 to prevent full table scan - called iteratively for backfill
+// Note: Scans ALL items to find those missing embeddings
 export const getItemsWithoutEmbeddings = query({
   args: { limit: v.number() },
   handler: async (ctx, args) => {
-    // Cap the total items we scan to prevent performance issues
-    const maxScan = Math.min(args.limit * 10, 1000);
+    // Scan all items to ensure we don't miss any without embeddings
+    // This is necessary because items are created at different times
+    // and a limited ascending scan may miss newer items
     const items = await ctx.db
       .query("knowledgeItems")
-      .order("asc")
-      .take(maxScan);
+      .collect();
 
     return items
       .filter((item) => item.isActive && !item.embedding)
