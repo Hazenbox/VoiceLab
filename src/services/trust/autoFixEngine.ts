@@ -167,6 +167,9 @@ export function generateAutoFixes(
     const text = violation.text.toLowerCase();
     const directFix = mergedReplacements[text];
     
+    // Debug: log lookup attempts
+    console.log('[AutoFix] Looking up:', { text, found: !!directFix, suggestion: violation.suggestion?.substring(0, 50) });
+    
     if (directFix) {
       fixes.push({
         original: violation.text,
@@ -175,14 +178,28 @@ export function generateAutoFixes(
         rule: violation.rule,
         violation,
       });
-    } else if (violation.suggestion.length < 50) {
-      fixes.push({
-        original: violation.text,
-        replacement: violation.suggestion,
-        confidence: 0.7,
-        rule: violation.rule,
-        violation,
-      });
+    } else if (violation.suggestion && violation.suggestion.length < 50) {
+      // Try to extract replacement from suggestion (format: "Replace X with: Y")
+      const suggestionMatch = violation.suggestion.match(/Replace\s+["']?[^"']+["']?\s+with:\s*(.+)/i);
+      if (suggestionMatch) {
+        const suggestedReplacement = suggestionMatch[1].trim();
+        fixes.push({
+          original: violation.text,
+          replacement: matchCase(violation.text, suggestedReplacement),
+          confidence: 0.75,
+          rule: violation.rule,
+          violation,
+        });
+      } else {
+        // Fallback to raw suggestion
+        fixes.push({
+          original: violation.text,
+          replacement: violation.suggestion,
+          confidence: 0.7,
+          rule: violation.rule,
+          violation,
+        });
+      }
     }
   }
   
