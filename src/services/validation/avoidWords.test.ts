@@ -160,11 +160,11 @@ describe('WORD_CATEGORIES', () => {
     expect(complexCategory?.words).toContain('avail');
   });
 
-  it('should have 7 categories total', () => {
-    expect(WORD_CATEGORIES).toHaveLength(7);
+  it('should have 8 categories total', () => {
+    expect(WORD_CATEGORIES).toHaveLength(8);
   });
 
-  const categoryIds = ['complex', 'robotic', 'fear_based', 'bureaucratic', 'technical', 'shame_inducing', 'elitist'];
+  const categoryIds = ['complex', 'robotic', 'fear_based', 'bureaucratic', 'technical', 'shame_inducing', 'elitist', 'marketing_jargon'];
   categoryIds.forEach(id => {
     it(`should include "${id}" category`, () => {
       const category = WORD_CATEGORIES.find(c => c.id === id);

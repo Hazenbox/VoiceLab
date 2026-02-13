@@ -250,9 +250,25 @@ export function generateAutoFixes(
 }
 
 /**
+ * Brand names that should always preserve their capitalization
+ * regardless of the original case
+ */
+const BRAND_NAMES = new Set([
+  'Jio', 'JioCinema', 'JioMart', 'JioSaavn', 'JioFiber', 'JioAirFiber',
+  'JioTV', 'JioCloud', 'JioGames', 'JioMoney', 'JioNews', 'JioPhone',
+  'MyJio', 'Reliance', 'Tata',
+]);
+
+/**
  * Match case of replacement to original
+ * Special handling for brand names - they preserve their exact capitalization
  */
 function matchCase(original: string, replacement: string): string {
+  // Check if replacement is a brand name (preserve exact capitalization)
+  if (BRAND_NAMES.has(replacement)) {
+    return replacement;
+  }
+  
   if (original === original.toUpperCase()) {
     return replacement.toUpperCase();
   }

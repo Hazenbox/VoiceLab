@@ -253,8 +253,8 @@ describe('AutoFixEngine', () => {
       
       const fixes = generateAutoFixes(violations);
       
-      // Apply with high confidence threshold (leverage is 0.85)
-      const result = applyAutoFixes(content, fixes, 0.90);
+      // Apply with confidence threshold higher than SIMPLE_ALTERNATIVES (0.90)
+      const result = applyAutoFixes(content, fixes, 0.95);
 
       expect(result.fixedContent).toBe(content); // Not changed
       expect(result.skippedFixes).toHaveLength(1);
