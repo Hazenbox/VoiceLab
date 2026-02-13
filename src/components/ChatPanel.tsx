@@ -109,6 +109,10 @@ interface ChatPanelProps {
   onDislikeModalSubmit?: (reasons: string[], comment: string) => void;
   /** Callback when user closes dislike modal without detailed feedback */
   onDislikeModalClose?: () => void;
+  
+  // Auto-fix preview props
+  /** Callback when user accepts the recommended auto-fixed content */
+  onAcceptAutoFix?: (messageId: string) => void;
 }
 
 // =============================================================================
@@ -156,6 +160,8 @@ export const ChatPanel = memo(function ChatPanel({
   dislikeModalMessageId,
   onDislikeModalSubmit,
   onDislikeModalClose,
+  // Auto-fix preview
+  onAcceptAutoFix,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -359,6 +365,93 @@ export const ChatPanel = memo(function ChatPanel({
     }
     
     // Text message - Assistant
+    // Check if this message has a pending auto-fix preview
+    const hasAutoFixPreview = message.autoFixPreview?.isPending;
+    
+    if (hasAutoFixPreview && message.autoFixPreview) {
+      // Side-by-side auto-fix preview layout
+      return (
+        <div
+          key={message.id}
+          className="flex justify-start w-full"
+          role="listitem"
+        >
+          <div className="autofix-preview-container flex gap-3 w-full max-w-[95%]">
+            {/* Original content - left side, muted */}
+            <div 
+              className="flex-1 px-3 py-2 rounded-xl autofix-original"
+              style={{
+                backgroundColor: `${theme.stroke.low}80`,
+                color: theme.text.medium,
+                opacity: 0.7,
+              }}
+            >
+              <MessageContent content={message.autoFixPreview.originalContent} role="assistant" />
+              <div className="flex items-center gap-1 mt-2">
+                <span 
+                  className="text-[10px] px-2 py-0.5 rounded-full"
+                  style={{ 
+                    backgroundColor: theme.stroke.low,
+                    color: theme.text.low,
+                  }}
+                >
+                  original
+                </span>
+              </div>
+            </div>
+            
+            {/* Recommended content - right side, highlighted */}
+            <div 
+              className="flex-1 px-3 py-2 rounded-xl autofix-recommended"
+              style={{
+                backgroundColor: theme.background.ghost,
+                color: theme.text.high,
+                borderLeft: '3px solid #00A859',
+              }}
+            >
+              <MessageContent content={message.autoFixPreview.fixedContent} role="assistant" />
+              
+              {/* Tag + Accept button row */}
+              <div className="flex items-center justify-between gap-2 mt-2">
+                <span 
+                  className="text-[10px] px-2 py-0.5 rounded-full"
+                  style={{ 
+                    backgroundColor: 'rgba(0, 168, 89, 0.1)',
+                    color: '#00A859',
+                  }}
+                >
+                  recommended based on jio rules
+                </span>
+                <button
+                  onClick={() => onAcceptAutoFix?.(message.id)}
+                  className="text-xs px-3 py-1 rounded-full transition-colors hover:opacity-90"
+                  style={{
+                    backgroundColor: '#00A859',
+                    color: '#ffffff',
+                  }}
+                >
+                  accept
+                </button>
+              </div>
+              
+              {/* Trust Badge for recommended version */}
+              {message.trustScore && (
+                <div className="flex items-center gap-2 mt-2">
+                  <TrustBadge
+                    trustScore={message.trustScore}
+                    onClick={() => onTrustBadgeClick?.(message.id)}
+                    size="sm"
+                    showScore={true}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Regular assistant message (no auto-fix preview)
     return (
       <div
         key={message.id}
@@ -413,6 +506,7 @@ export const ChatPanel = memo(function ChatPanel({
     onSubmitEdit,
     onCancelEdit,
     onVersionChange,
+    onAcceptAutoFix,
   ]);
 
   // Render input area (reusable for both layouts)

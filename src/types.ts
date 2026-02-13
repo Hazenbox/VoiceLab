@@ -216,6 +216,21 @@ export interface AutoFix {
 }
 
 /**
+ * Auto-fix preview state for inline side-by-side display
+ * Shows original and recommended content in chat interface
+ */
+export interface AutoFixPreview {
+  /** Original content before fixes */
+  originalContent: string;
+  /** Content with all auto-fixes applied */
+  fixedContent: string;
+  /** List of fixes that were applied */
+  appliedFixes: AutoFix[];
+  /** True while user hasn't accepted or dismissed the preview */
+  isPending: boolean;
+}
+
+/**
  * Result from a single validation agent
  */
 export interface ValidationResult {
@@ -707,6 +722,17 @@ export interface ChatMessage {
    * Undefined for legacy messages or when conversational mode is disabled.
    */
   messageIntent?: 'general_chat' | 'content_generation' | 'jio_inquiry';
+  
+  // ==========================================================================
+  // AUTO-FIX PREVIEW (inline side-by-side display)
+  // ==========================================================================
+  
+  /**
+   * Auto-fix preview for side-by-side display in chat interface.
+   * When present and isPending=true, shows original (left) and 
+   * recommended (right) content with accept button.
+   */
+  autoFixPreview?: AutoFixPreview;
 }
 
 // Inworld configuration

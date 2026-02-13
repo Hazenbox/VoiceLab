@@ -965,13 +965,47 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           }
         }
 
-        // Create AI response with trust data and intent tag
+        // =================================================================
+        // Auto-Fix Preview: Generate side-by-side preview if fixes available
+        // =================================================================
+        let autoFixPreview: import('./types').AutoFixPreview | undefined;
+        
+        if (trustScore && trustScore.autoFixableCount > 0) {
+          try {
+            // Gather all auto-fixable violations
+            const autoFixableViolations = trustScore.validationResults
+              .flatMap(r => r.violations)
+              .filter(v => v.autoFixable);
+            
+            if (autoFixableViolations.length > 0) {
+              // Generate and apply fixes to create preview
+              const fixes = generateAutoFixes(autoFixableViolations);
+              const fixResult = applyAutoFixes(result.content, fixes);
+              
+              // Only show preview if fixes were actually applied
+              if (fixResult.appliedFixes.length > 0) {
+                autoFixPreview = {
+                  originalContent: result.content,
+                  fixedContent: fixResult.fixedContent,
+                  appliedFixes: fixResult.appliedFixes,
+                  isPending: true,
+                };
+                console.log(`[AutoFix] Generated preview with ${fixResult.appliedFixes.length} fixes`);
+              }
+            }
+          } catch (autoFixError) {
+            console.warn('[AutoFix] Failed to generate preview:', autoFixError);
+          }
+        }
+
+        // Create AI response with trust data, intent tag, and auto-fix preview
         const aiMessage = {
           ...createTextMessage('assistant', result.content, chatMode, userMessageId),
           messageIntent: 'content_generation' as const,
           trustScore,
           generationContext: finalContext,
           validationSummary,
+          autoFixPreview,
         };
         
         if (replaceResponseId) {
@@ -1583,6 +1617,56 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     }
   }, [selectedMessageForTrust, chatMessages, isAutoFixing, trustSettings, setMessages]);
 
+  // Handle accepting the auto-fix preview (inline side-by-side)
+  const handleAcceptAutoFix = useCallback(async (messageId: string) => {
+    const message = chatMessages.find(m => m.id === messageId);
+    
+    if (!message?.autoFixPreview?.isPending) {
+      console.log('[AutoFix Accept] No pending auto-fix preview for message:', messageId);
+      return;
+    }
+    
+    const { fixedContent, appliedFixes } = message.autoFixPreview;
+    
+    try {
+      console.log(`[AutoFix Accept] Accepting ${appliedFixes.length} fixes for message:`, messageId);
+      
+      // Re-validate the fixed content to get updated trust score
+      const newValidation = await runValidationPipeline(
+        fixedContent, 
+        message.generationContext
+      );
+      const newTrustScore = calculateTrustScore(newValidation, trustSettings);
+      
+      // Update the message: replace content, clear autoFixPreview
+      setMessages(prev => prev.map(m =>
+        m.id === messageId
+          ? {
+              ...m,
+              content: fixedContent,
+              trustScore: newTrustScore,
+              validationSummary: {
+                passedCount: newValidation.agentResults.filter(r => r.passed).length,
+                warningCount: newValidation.agentResults
+                  .flatMap(r => r.violations)
+                  .filter(v => v.severity === 'warning').length,
+                errorCount: newValidation.agentResults
+                  .flatMap(r => r.violations)
+                  .filter(v => v.severity === 'error').length,
+                autoFixesApplied: appliedFixes.length,
+              },
+              // Clear the auto-fix preview since user accepted
+              autoFixPreview: undefined,
+            }
+          : m
+      ));
+      
+      console.log(`[AutoFix Accept] Successfully applied ${appliedFixes.length} fixes`);
+    } catch (err) {
+      console.error('[AutoFix Accept] Error accepting fixes:', err);
+    }
+  }, [chatMessages, trustSettings, setMessages]);
+
   // Get selected message for trust panel
   const selectedMessageForTrustPanel = useMemo(() => 
     selectedMessageForTrust 
@@ -2153,6 +2237,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   dislikeModalMessageId={dislikeModalMessageId}
                   onDislikeModalSubmit={handleDislikeModalSubmit}
                   onDislikeModalClose={handleDislikeModalClose}
+                  // Auto-fix preview accept handler
+                  onAcceptAutoFix={handleAcceptAutoFix}
                 />
               </div>
             </div>
