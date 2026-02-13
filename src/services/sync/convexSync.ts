@@ -15,6 +15,7 @@
 
 import * as queueStorage from './queueStorage';
 import { withRetry, type RetryOptions } from '../reliability';
+import { getSyncStatusManager } from './syncStatus';
 
 // ── Retry Configuration ───────────────────────────────────────────
 const RETRY_CONFIG: RetryOptions = {
@@ -575,6 +576,11 @@ export class ConvexSyncService {
 
     this.isFlushingQueue = true;
     console.log(`[ConvexSync] Flushing ${queue.length} queued events`);
+    
+    // P3: Notify sync status manager that sync is starting
+    try {
+      getSyncStatusManager().startSync();
+    } catch { /* ignore if manager not initialized */ }
 
     // Group events by type for batch flush
     const analyticsEvents = queue.filter((e) => e.type === 'analytics');
@@ -740,6 +746,11 @@ export class ConvexSyncService {
     
     // P0-FIX: Reset flushing flag
     this.isFlushingQueue = false;
+    
+    // P3: Notify sync status manager that sync is complete
+    try {
+      getSyncStatusManager().endSync();
+    } catch { /* ignore if manager not initialized */ }
     
     // P0-FIX: Periodically clear processed keys to prevent memory bloat (keep last 1000)
     if (this.processedIdempotencyKeys.size > 1000) {

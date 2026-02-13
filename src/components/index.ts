@@ -4,6 +4,7 @@ export { LabeledSlider } from './LabeledSlider';
 export { Slider } from './Slider';
 export { Toggle } from './Toggle';
 export { StatusIndicator } from './StatusIndicator';
+export { SyncStatusIndicator } from './SyncStatusIndicator';
 export { AudioPlayer } from './AudioPlayer';
 export { DocumentationPanel } from './DocumentationPanel';
 export { SoundWave } from './SoundWave';
