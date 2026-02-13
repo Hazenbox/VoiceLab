@@ -36,7 +36,7 @@ import type { TTSProviderType } from './components';
 // Content Trust System services
 import { buildPrompt } from './services/prompt';
 import { buildGenerationContext } from './services/context';
-import { runValidationPipeline } from './services/validation';
+import { runValidationPipeline, setDynamicAvoidWords } from './services/validation';
 import { calculateTrustScore, generateAutoFixes, applyAutoFixes } from './services/trust';
 import { storageTrustSettings, storageProjectDefaults, DEFAULT_PROJECT_DEFAULTS } from './services/trustStorage';
 import { useChatPersistence } from './hooks';
@@ -466,6 +466,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       // Ignore storage errors (e.g., private browsing)
     }
   }, [chatMode]);
+
+  // Inject Convex avoid words into validation agent
+  // This enables admin-added avoid words to be used during validation
+  useEffect(() => {
+    if (convexKnowledge?.avoidWords && featureFlags.knowledgeBase) {
+      // Convert Convex avoid words to format expected by validation agent
+      const dynamicWords = convexKnowledge.avoidWords.map(item => ({
+        content: item.content,
+        category: item.category || 'dynamic',
+        severity: item.metadata?.severity || 'warning',
+      }));
+      setDynamicAvoidWords(dynamicWords);
+    }
+  }, [convexKnowledge?.avoidWords]);
 
   // Cleanup on unmount
   useEffect(() => {

@@ -29,3 +29,9 @@ export {
   runQuickValidation,
   getViolationSummary,
 } from './validationPipeline';
+
+// Dynamic avoid words support (for Convex integration)
+export {
+  setDynamicAvoidWords,
+  clearDynamicAvoidWords,
+} from './agents/avoidWordsAgent';

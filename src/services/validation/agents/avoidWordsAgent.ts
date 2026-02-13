@@ -4,7 +4,7 @@
  * Validates content against the comprehensive avoid words library.
  * Uses word-boundary matching to avoid false positives.
  * 
- * This agent covers ~283 words across 7 categories:
+ * This agent covers ~350 words across 10 categories:
  * - Complex words (jargon, unnecessary complexity)
  * - Robotic words (automated-sounding, impersonal)
  * - Fear-based words (urgency pressure, FOMO triggers)
@@ -12,6 +12,11 @@
  * - Technical words (dev jargon, system terms)
  * - Shame-inducing words (blame, judgment)
  * - Elitist words (tech elitism, exclusionary)
+ * - Marketing jargon (buzzwords)
+ * - American spellings (should use British)
+ * - Incorrect formats (currency, numbers)
+ * 
+ * Now supports dynamic avoid words from Convex knowledge base.
  * 
  * Note: Deduplication of violations (when the same word is caught by both
  * this agent and a regex agent like style_consistency) is handled at the
@@ -21,6 +26,74 @@
 import { scanForAvoidWords } from '../../guidelines/avoidWords';
 import { SIMPLE_ALTERNATIVES, GENDER_NEUTRAL_ALTERNATIVES } from '../../guidelines/vocabulary';
 import type { ValidationAgent, ValidationViolation } from '../types';
+
+/**
+ * Dynamic avoid words injected from Convex (set at runtime)
+ * This allows admin-added rules to be used in validation
+ */
+let dynamicAvoidWords: Array<{ word: string; category: string; severity: 'error' | 'warning' | 'info' }> = [];
+
+/**
+ * Set dynamic avoid words from Convex knowledge base
+ * Called from App.tsx before validation runs
+ */
+export function setDynamicAvoidWords(
+  words: Array<{ content: string; category: string; severity?: string }>
+): void {
+  dynamicAvoidWords = words.map(w => ({
+    word: w.content,
+    category: w.category || 'dynamic',
+    severity: (w.severity as 'error' | 'warning' | 'info') || 'warning',
+  }));
+  console.log(`[AvoidWordsAgent] Loaded ${dynamicAvoidWords.length} dynamic avoid words from Convex`);
+}
+
+/**
+ * Clear dynamic avoid words (for testing/cleanup)
+ */
+export function clearDynamicAvoidWords(): void {
+  dynamicAvoidWords = [];
+}
+
+/**
+ * Scan content for dynamic avoid words (from Convex)
+ */
+function scanForDynamicAvoidWords(text: string): Array<{
+  word: string;
+  category: string;
+  severity: 'error' | 'warning' | 'info';
+  position: { start: number; end: number };
+}> {
+  if (dynamicAvoidWords.length === 0) return [];
+  
+  const results: Array<{
+    word: string;
+    category: string;
+    severity: 'error' | 'warning' | 'info';
+    position: { start: number; end: number };
+  }> = [];
+  
+  for (const avoidWord of dynamicAvoidWords) {
+    // Use word boundary regex to avoid false positives
+    const escapedWord = avoidWord.word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+    
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      results.push({
+        word: match[0],
+        category: avoidWord.category,
+        severity: avoidWord.severity,
+        position: {
+          start: match.index,
+          end: match.index + match[0].length,
+        },
+      });
+    }
+  }
+  
+  return results;
+}
 
 /**
  * Category-specific suggestions for replacement
@@ -146,21 +219,59 @@ export const avoidWordsAgent: ValidationAgent = {
   patterns: [], // We use scanForAvoidWords instead of PatternRule[]
 
   runPatternValidation(content: string): ValidationViolation[] {
-    const detected = scanForAvoidWords(content);
+    // Scan for static avoid words (from code defaults)
+    const staticDetected = scanForAvoidWords(content);
     
-    return detected.map(item => ({
-      severity: item.severity,
-      rule: `Avoid "${item.word}" (${item.category})`,
-      text: item.word,
-      suggestion: getSuggestion(item.word, item.category),
-      category: item.category.toLowerCase().replace(/\s+/g, '_'),
-      position: {
-        start: item.position.start,
-        end: item.position.end,
-      },
-      autoFixable: hasKnownAlternative(item.word),
-      agentId: 'avoid_words' as const,
-    }));
+    // Scan for dynamic avoid words (from Convex)
+    const dynamicDetected = scanForDynamicAvoidWords(content);
+    
+    // Combine results, avoiding duplicates based on position
+    const seenPositions = new Set<string>();
+    const allViolations: ValidationViolation[] = [];
+    
+    // Process static detections first
+    for (const item of staticDetected) {
+      const posKey = `${item.position.start}-${item.position.end}`;
+      if (!seenPositions.has(posKey)) {
+        seenPositions.add(posKey);
+        allViolations.push({
+          severity: item.severity,
+          rule: `Avoid "${item.word}" (${item.category})`,
+          text: item.word,
+          suggestion: getSuggestion(item.word, item.category),
+          category: item.category.toLowerCase().replace(/\s+/g, '_'),
+          position: {
+            start: item.position.start,
+            end: item.position.end,
+          },
+          autoFixable: hasKnownAlternative(item.word),
+          agentId: 'avoid_words' as const,
+        });
+      }
+    }
+    
+    // Process dynamic detections (from Convex)
+    for (const item of dynamicDetected) {
+      const posKey = `${item.position.start}-${item.position.end}`;
+      if (!seenPositions.has(posKey)) {
+        seenPositions.add(posKey);
+        allViolations.push({
+          severity: item.severity,
+          rule: `Avoid "${item.word}" (${item.category} - dynamic)`,
+          text: item.word,
+          suggestion: getSuggestion(item.word, item.category),
+          category: item.category.toLowerCase().replace(/\s+/g, '_'),
+          position: {
+            start: item.position.start,
+            end: item.position.end,
+          },
+          autoFixable: hasKnownAlternative(item.word),
+          agentId: 'avoid_words' as const,
+        });
+      }
+    }
+    
+    return allViolations;
   },
 
   calculateScore(violations: ValidationViolation[]): number {
@@ -177,3 +288,6 @@ export const avoidWordsAgent: ValidationAgent = {
 };
 
 export default avoidWordsAgent;
+
+// Export functions for external use
+export { setDynamicAvoidWords, clearDynamicAvoidWords };
