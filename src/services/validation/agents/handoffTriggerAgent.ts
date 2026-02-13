@@ -324,17 +324,17 @@ export function detectHandoffTriggers(
   
   // Determine handoff type
   let handoffType: HandoffResult['handoffType'] = 'none';
-  let userMessage: string | undefined;
+  let responseMessage: string | undefined;
   
   if (primaryTrigger.priority === 'critical' || primaryTrigger.reason === 'explicit_request') {
     handoffType = 'immediate';
-    userMessage = 'I\'m connecting you with a human agent who can better assist you.';
+    responseMessage = 'I\'m connecting you with a human agent who can better assist you.';
   } else if (primaryTrigger.priority === 'high') {
     handoffType = 'offered';
-    userMessage = 'Would you like me to connect you with a human agent who can help with this?';
+    responseMessage = 'Would you like me to connect you with a human agent who can help with this?';
   } else if (primaryTrigger.confidence >= 0.7) {
     handoffType = 'suggested';
-    userMessage = 'If you\'d like to speak with a human agent, I can connect you.';
+    responseMessage = 'If you\'d like to speak with a human agent, I can connect you.';
   }
   
   return {
@@ -342,7 +342,7 @@ export function detectHandoffTriggers(
     triggers,
     primaryTrigger,
     handoffType,
-    userMessage,
+    userMessage: responseMessage,
   };
 }
 
