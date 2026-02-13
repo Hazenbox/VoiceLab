@@ -3,7 +3,7 @@ import { useThemeColors } from '../../theme/useColors';
 import { DSIcon } from '../../components/DSIcon';
 
 // ── Types ────────────────────────────────────────────────────────
-export type AdminSection = 'dashboard' | 'learning' | 'knowledge' | 'usage' | 'users' | 'config';
+export type AdminSection = 'dashboard' | 'learning' | 'knowledge' | 'tokens' | 'usage' | 'users' | 'config';
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -16,6 +16,7 @@ const NAV_ITEMS: { id: AdminSection; label: string; iconName: string }[] = [
   { id: 'dashboard', label: 'dashboard', iconName: 'IcHome' },
   { id: 'learning', label: 'learning center', iconName: 'IcLightbulb' },
   { id: 'knowledge', label: 'knowledge base', iconName: 'IcLibrary' },
+  { id: 'tokens', label: 'tokens v2', iconName: 'IcCode' },
   { id: 'usage', label: 'usage analytics', iconName: 'IcAnalytics' },
 ];
 

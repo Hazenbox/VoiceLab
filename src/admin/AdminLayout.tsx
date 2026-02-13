@@ -15,6 +15,7 @@ import { getApiBaseUrl } from '../config/providers';
 import { KnowledgeItemEditor, DeleteConfirmModal } from './components/KnowledgeCRUD';
 import { CorrectionApprovalList } from './components/CorrectionApproval';
 import { CategorySection, SearchFilterBar, type KnowledgeItem } from './components/CategorySection';
+import { TokensDisplay } from './components/TokensDisplay';
 import type { Id } from '../../convex/_generated/dataModel';
 
 // ── Admin Auth Gate ──────────────────────────────────────────────
@@ -1779,6 +1780,7 @@ export default function AdminLayout() {
       case 'dashboard': return <AdminDashboard />;
       case 'learning': return <AdminLearningCenter />;
       case 'knowledge': return <AdminKnowledge />;
+      case 'tokens': return <TokensDisplay />;
       case 'usage': return <AdminUsageAnalytics />;
       case 'users': return <AdminUsers />;
       case 'config': return <AdminConfig />;
