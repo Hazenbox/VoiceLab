@@ -26,8 +26,20 @@ export {
   StateManager,
   createStateManager,
   analyzeMessageForTransition,
+  // Turn count adaptation (Phase D)
+  getTurnCountAdaptation,
+  getTurnCountGuidanceText,
+  // Transition tracking (Phase D)
+  getConversationTransition,
+  getTransitionGuidance,
+  // Resolution status inference (Phase D)
+  inferResolutionStatus,
+  getResolutionStatusGuidance,
+  analyzeConversationState,
   type StateSuggestions,
   type StateManagerConfig,
+  type TransitionDescriptor,
+  type ResolutionStatus as ManagerResolutionStatus,
 } from './stateManager';
 
 // Turn Counter (wiring previously unexported)

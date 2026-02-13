@@ -551,3 +551,274 @@ export function analyzeMessageForTransition(message: string): {
     hasSafetyConcern: /emergency|urgent|help me|danger|unsafe|threat/i.test(lower),
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TURN COUNT ADAPTATION (Phase D)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Turn count adaptation guidance per Tokens v2 specification
+ * 
+ * | Turn Range | What It Signals | How the LLM Should Adapt |
+ * |------------|-----------------|--------------------------|
+ * | 1–2        | Early interaction | Normal exploratory flow |
+ * | 3–5        | Developing interaction | Increase clarity and structure |
+ * | 6–8        | Possible friction | Simplify. Summarise. Tighten steps |
+ * | 9+         | High friction/fatigue | Offer summarised reset or escalation |
+ */
+export function getTurnCountAdaptation(turnCount: number): {
+  guidance: string;
+  responseStyle: 'exploratory' | 'structured' | 'simplified' | 'escalation_ready';
+  maxResponseLength: 'full' | 'medium' | 'brief' | 'minimal';
+  shouldSummarize: boolean;
+  shouldOfferEscalation: boolean;
+  shouldReduceCognitiveLoad: boolean;
+} {
+  if (turnCount <= 2) {
+    return {
+      guidance: 'Normal exploratory flow. User is just starting. Be welcoming and open.',
+      responseStyle: 'exploratory',
+      maxResponseLength: 'full',
+      shouldSummarize: false,
+      shouldOfferEscalation: false,
+      shouldReduceCognitiveLoad: false,
+    };
+  } else if (turnCount <= 5) {
+    return {
+      guidance: 'Developing interaction. Increase clarity and structure. Avoid redundancy.',
+      responseStyle: 'structured',
+      maxResponseLength: 'medium',
+      shouldSummarize: false,
+      shouldOfferEscalation: false,
+      shouldReduceCognitiveLoad: false,
+    };
+  } else if (turnCount <= 8) {
+    return {
+      guidance: 'Possible friction detected. Simplify language. Summarise key points. Tighten steps.',
+      responseStyle: 'simplified',
+      maxResponseLength: 'brief',
+      shouldSummarize: true,
+      shouldOfferEscalation: true,
+      shouldReduceCognitiveLoad: true,
+    };
+  } else {
+    return {
+      guidance: 'High friction or fatigue likely. Offer summarised reset or escalation. Reduce cognitive load significantly.',
+      responseStyle: 'escalation_ready',
+      maxResponseLength: 'minimal',
+      shouldSummarize: true,
+      shouldOfferEscalation: true,
+      shouldReduceCognitiveLoad: true,
+    };
+  }
+}
+
+/**
+ * Get turn count guidance as a string for prompt injection
+ */
+export function getTurnCountGuidanceText(turnCount: number): string {
+  const adaptation = getTurnCountAdaptation(turnCount);
+  
+  let text = `## Turn Count Adaptation (Turn ${turnCount})\n\n`;
+  text += `${adaptation.guidance}\n\n`;
+  text += `Style: ${adaptation.responseStyle}\n`;
+  text += `Response Length: ${adaptation.maxResponseLength}\n`;
+  
+  if (adaptation.shouldSummarize) {
+    text += `- SUMMARIZE key points from previous turns\n`;
+  }
+  if (adaptation.shouldOfferEscalation) {
+    text += `- Offer escalation to human support if appropriate\n`;
+  }
+  if (adaptation.shouldReduceCognitiveLoad) {
+    text += `- REDUCE cognitive load: fewer options, simpler language\n`;
+  }
+  
+  return text;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONVERSATION TRANSITION TRACKING (Phase D)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Transition descriptor format
+ */
+export type TransitionDescriptor = `${ConversationState}_to_${ConversationState}`;
+
+/**
+ * Get transition string from two states
+ */
+export function getConversationTransition(
+  previousState: ConversationState,
+  currentState: ConversationState
+): TransitionDescriptor {
+  return `${previousState}_to_${currentState}` as TransitionDescriptor;
+}
+
+/**
+ * Transition guidance per Tokens v2 specification
+ */
+const TRANSITION_GUIDANCE: Record<string, string> = {
+  // Opening transitions
+  'opening_to_information_gathering': 'Moving from greeting to classification. Immediately determine intent and route.',
+  'opening_to_processing': 'User provided enough info to start processing. Skip info gathering.',
+  
+  // Information gathering transitions
+  'information_gathering_to_processing': 'Required info received. Execute without repeating old context.',
+  'information_gathering_to_resolution': 'Intent clear. Proceed confidently with solution.',
+  'information_gathering_to_escalation': 'Escalation requested. Explain handoff calmly.',
+  
+  // Processing transitions
+  'processing_to_resolution': 'Solution found. Deliver structured answer.',
+  'processing_to_error': 'Processing failed. Apologize and offer alternatives.',
+  
+  // Resolution transitions
+  'resolution_to_confirmation': 'Solution delivered. Confirm expected result or satisfaction.',
+  'resolution_to_error': 'Solution did not work. Refine logically.',
+  
+  // Confirmation transitions
+  'confirmation_to_resolution': 'Not resolved. Provide refined solution.',
+  'confirmation_to_closing': 'Resolved. Finalize interaction cleanly.',
+  'confirmation_to_escalation': 'User needs more help. Escalate gracefully.',
+  
+  // Closing transitions
+  'closing_to_information_gathering': 'User has follow-up. Re-engage helpfully.',
+  
+  // Escalation transitions
+  'escalation_to_closing': 'Handoff complete. Close gracefully.',
+  
+  // Error transitions
+  'error_to_information_gathering': 'Need more info after error. Ask precisely.',
+  'error_to_resolution': 'Found alternative solution. Deliver it.',
+  'error_to_escalation': 'Cannot resolve. Hand off to human.',
+};
+
+/**
+ * Get guidance for a specific transition
+ */
+export function getTransitionGuidance(
+  previousState: ConversationState,
+  currentState: ConversationState
+): string {
+  const transitionKey = `${previousState}_to_${currentState}`;
+  return TRANSITION_GUIDANCE[transitionKey] || 
+    `Transitioned from ${previousState} to ${currentState}. Adapt response accordingly.`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RESOLUTION STATUS INFERENCE (Phase D)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Resolution status per Tokens v2 specification
+ */
+export type ResolutionStatus = 
+  | 'not_started'
+  | 'in_progress'
+  | 'blocked_missing_info'
+  | 'resolved'
+  | 'escalated'
+  | 'abandoned';
+
+/**
+ * Infer resolution status from conversation context
+ */
+export function inferResolutionStatus(
+  state: ConversationState,
+  turnCount: number,
+  hasError: boolean,
+  isResolved: boolean,
+  isEscalated: boolean,
+  userAbandoned: boolean
+): ResolutionStatus {
+  if (userAbandoned) {
+    return 'abandoned';
+  }
+  
+  if (isEscalated) {
+    return 'escalated';
+  }
+  
+  if (isResolved || state === 'closing') {
+    return 'resolved';
+  }
+  
+  if (state === 'information_gathering' && turnCount > 3) {
+    return 'blocked_missing_info';
+  }
+  
+  if (state === 'opening' || turnCount <= 1) {
+    return 'not_started';
+  }
+  
+  return 'in_progress';
+}
+
+/**
+ * Get resolution status guidance
+ */
+export function getResolutionStatusGuidance(status: ResolutionStatus): string {
+  const guidance: Record<ResolutionStatus, string> = {
+    not_started: 'Move quickly toward triage or act. Identify intent promptly.',
+    in_progress: 'Stay structured. Avoid introducing new paths. Focus on resolution.',
+    blocked_missing_info: 'Ask precise clarification. Get the minimum info needed to proceed.',
+    resolved: 'Confirm clearly and move to close. Avoid extending unnecessarily.',
+    escalated: 'Explain next steps calmly. Provide expectations. Maintain trust.',
+    abandoned: 'Do not force re-engagement. Offer simple reopening path if user returns.',
+  };
+  
+  return guidance[status];
+}
+
+/**
+ * Combined conversation state analysis
+ * Returns all tokens related to conversation control
+ */
+export function analyzeConversationState(
+  manager: StateManager
+): {
+  state: ConversationState;
+  previousState: ConversationState | undefined;
+  transition: TransitionDescriptor | undefined;
+  transitionGuidance: string;
+  turnCount: number;
+  turnAdaptation: ReturnType<typeof getTurnCountAdaptation>;
+  resolutionStatus: ResolutionStatus;
+  resolutionGuidance: string;
+} {
+  const context = manager.getContext();
+  const state = context.state;
+  const previousState = context.previousState;
+  const turnCount = context.turnCount;
+  
+  // Determine transition
+  const transition = previousState ? getConversationTransition(previousState, state) : undefined;
+  const transitionGuidance = previousState 
+    ? getTransitionGuidance(previousState, state) 
+    : 'Starting new conversation.';
+  
+  // Turn adaptation
+  const turnAdaptation = getTurnCountAdaptation(turnCount);
+  
+  // Resolution status
+  const resolutionStatus = inferResolutionStatus(
+    state,
+    turnCount,
+    context.errorCount > 0,
+    state === 'closing',
+    context.escalationOffered || false,
+    false // Would need external signal for abandoned
+  );
+  
+  return {
+    state,
+    previousState,
+    transition,
+    transitionGuidance,
+    turnCount,
+    turnAdaptation,
+    resolutionStatus,
+    resolutionGuidance: getResolutionStatusGuidance(resolutionStatus),
+  };
+}
