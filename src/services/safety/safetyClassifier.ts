@@ -56,6 +56,46 @@ export interface ClassifierConfig {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// SAFE COMPOUND PHRASES (to prevent false positives)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Safe compound phrases that contain concerning keywords but are NOT safety risks.
+ * These are checked BEFORE keyword matching to prevent false positives.
+ * 
+ * Example: "cutting-edge" contains "cutting" but is not self-harm.
+ */
+const SAFE_COMPOUND_PHRASES = [
+  // "cutting" in non-harmful contexts
+  'cutting-edge', 'cutting edge', 'cutting costs', 'cutting down on',
+  'cutting back', 'budget cuts', 'tax cuts', 'price cuts', 'cutting corners',
+  'cut to the chase', 'cut above', 'clear cut', 'final cut', 'director\'s cut',
+  // "hurt" in non-harmful contexts  
+  'hurt feelings', 'hurt the business', 'hurt sales', 'hurt performance',
+  // "harm" in non-harmful contexts
+  'no harm', 'without harm', 'harm reduction', 'do no harm',
+  // "kill" in non-harmful contexts
+  'kill time', 'kill the process', 'kill the app', 'kill two birds',
+  'killing it', 'time to kill',
+] as const;
+
+/**
+ * Check if text contains any safe compound phrases that should exclude keyword matching
+ */
+function containsSafeCompoundPhrase(text: string, keyword: string): boolean {
+  const lowerText = text.toLowerCase();
+  const lowerKeyword = keyword.toLowerCase();
+  
+  // Only check safe phrases that contain the keyword
+  for (const phrase of SAFE_COMPOUND_PHRASES) {
+    if (phrase.toLowerCase().includes(lowerKeyword) && lowerText.includes(phrase.toLowerCase())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // EXTENDED PATTERN LIBRARY
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -70,7 +110,9 @@ const EXTENDED_PATTERNS: Record<SafetyDomain, {
 }> = {
   // ── Critical Level ─────────────────────────────────────────────────
   self_harm: {
-    keywords: ['cut myself', 'hurt myself', 'self harm', 'self-harm', 'cutting'],
+    // Note: "cutting" alone removed - too many false positives with "cutting-edge"
+    // Instead, we rely on more specific phrases like "cut myself"
+    keywords: ['cut myself', 'hurt myself', 'self harm', 'self-harm'],
     phrases: ['want to hurt', 'harm myself', 'punish myself', 'pain myself'],
     regexPatterns: [
       /\b(i|im|i'm)\s+(want|going|trying)\s+to\s+(hurt|harm|cut)\s+(myself|me)\b/i,
@@ -363,10 +405,14 @@ function detectDomains(
     let phraseMatches = 0;
     let regexMatches = 0;
     
-    // Check keywords
+    // Check keywords (with safe compound phrase exclusion)
     const allKeywords = [...patterns.keywords, ...additionalKeywords];
     for (const keyword of allKeywords) {
       if (normalizedText.includes(keyword.toLowerCase())) {
+        // Skip if this keyword is part of a safe compound phrase
+        if (containsSafeCompoundPhrase(text, keyword)) {
+          continue;
+        }
         keywordMatches++;
         matchedPatterns.push(`keyword: ${keyword}`);
       }
@@ -522,9 +568,13 @@ export function hasCriticalSafetyConcern(text: string): boolean {
   for (const domain of criticalDomains) {
     const patterns = EXTENDED_PATTERNS[domain];
     
-    // Quick keyword check
+    // Quick keyword check (with safe compound phrase exclusion)
     for (const keyword of patterns.keywords) {
       if (normalizedText.includes(keyword.toLowerCase())) {
+        // Skip if this keyword is part of a safe compound phrase
+        if (containsSafeCompoundPhrase(text, keyword)) {
+          continue;
+        }
         return true;
       }
     }

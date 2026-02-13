@@ -162,6 +162,31 @@ export const SHAME_INDUCING_WORDS = [
 // =============================================================================
 
 /**
+ * Marketing Jargon & Buzzwords (from vocabulary.ts SIMPLE_ALTERNATIVES)
+ * These should be replaced with simpler alternatives
+ * 
+ * Note: These terms overlap with vocabulary.ts to ensure detection by avoidWordsAgent.
+ * Having them here enables scanForAvoidWords() to flag them, which then allows
+ * the auto-fix preview system to suggest replacements from vocabulary.ts.
+ */
+export const MARKETING_JARGON_WORDS = [
+  // Tech buzzwords (from SIMPLE_ALTERNATIVES)
+  'cutting-edge', 'state-of-the-art', 'world-class', 'best-in-class',
+  'seamless', 'frictionless', 'robust', 'scalable',
+  
+  // Business jargon (from SIMPLE_ALTERNATIVES)
+  'utilize', 'leverage', 'synergy', 'paradigm', 'bandwidth',
+  'circle back', 'deep dive', 'ping', 'loop in',
+  'dashboard', 'onboard', 'optimize', 'streamline',
+  
+  // Gender-specific terms (from GENDER_NEUTRAL_ALTERNATIVES)
+  // These need replacement with gender-neutral alternatives
+  'chairman', 'chairwoman', 'businessman', 'businesswoman',
+  'fireman', 'policeman', 'mailman', 'stewardess',
+  'mankind', 'manpower', 'man-made', 'housewife',
+] as const;
+
+/**
  * Elitist Words (Training 1.pdf lines 1792-1827)
  * These exclude users based on tech-savviness or lifestyle
  */
@@ -231,6 +256,7 @@ export const ALL_WORDS_TO_AVOID = [
   ...TECHNICAL_WORDS,
   ...SHAME_INDUCING_WORDS,
   ...ELITIST_WORDS,
+  ...MARKETING_JARGON_WORDS,
 ] as const;
 
 /**
@@ -293,6 +319,13 @@ export const WORD_CATEGORIES: WordCategory[] = [
     description: 'Words that exclude based on tech-savviness or lifestyle',
     severity: 'warning',
     words: ELITIST_WORDS,
+  },
+  {
+    id: 'marketing_jargon',
+    name: 'Marketing Jargon',
+    description: 'Buzzwords and jargon that should be replaced with simpler alternatives',
+    severity: 'warning',
+    words: MARKETING_JARGON_WORDS,
   },
 ];
 

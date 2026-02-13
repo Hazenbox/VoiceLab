@@ -580,6 +580,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               ecosystem,
               channel: contentChannel,
               persona: featureFlags.persona ? (userProfile?.role || 'unknown') : 'unknown',
+              timestamp: Date.now(),
             });
           }
           
@@ -918,6 +919,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         try {
           const validationResult = await runValidationPipeline(result.content, finalContext);
           trustScore = calculateTrustScore(validationResult, trustSettings);
+          
+          // Debug logging for auto-fix pipeline diagnosis
+          console.log('[Validation] Pipeline completed:', {
+            totalViolations: validationResult.allViolations.length,
+            autoFixableCount: trustScore.autoFixableCount,
+            violationSample: validationResult.allViolations.slice(0, 5).map(v => ({
+              term: v.term,
+              type: v.type,
+              autoFixable: v.autoFixable,
+              severity: v.severity,
+            })),
+            contentSnippet: result.content.substring(0, 100) + '...',
+          });
+          
           validationSummary = {
             passedCount: validationResult.agentResults.filter(r => r.passed).length,
             warningCount: validationResult.agentResults
@@ -970,12 +985,23 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         // =================================================================
         let autoFixPreview: import('./types').AutoFixPreview | undefined;
         
+        console.log('[AutoFix] Checking for auto-fixable violations:', {
+          hasTrustScore: !!trustScore,
+          autoFixableCount: trustScore?.autoFixableCount ?? 'N/A',
+        });
+        
         if (trustScore && trustScore.autoFixableCount > 0) {
           try {
             // Gather all auto-fixable violations
             const autoFixableViolations = trustScore.validationResults
               .flatMap(r => r.violations)
               .filter(v => v.autoFixable);
+            
+            console.log('[AutoFix] Auto-fixable violations found:', autoFixableViolations.map(v => ({
+              term: v.term,
+              type: v.type,
+              suggestion: v.suggestion,
+            })));
             
             if (autoFixableViolations.length > 0) {
               // Extract Convex dynamic rules (admin-managed auto-fix rules)
@@ -985,10 +1011,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 to: rule.to,
               }));
               
+              console.log('[AutoFix] Dynamic replacements from Convex:', dynamicReplacements?.length ?? 0);
+              
               // Generate and apply fixes to create preview
               // Pass Convex rules so admin-managed rules also work for auto-fix
               const fixes = generateAutoFixes(autoFixableViolations, dynamicReplacements);
+              console.log('[AutoFix] Generated fixes:', fixes);
+              
               const fixResult = applyAutoFixes(result.content, fixes);
+              console.log('[AutoFix] Applied fixes:', {
+                totalGenerated: fixes.length,
+                appliedCount: fixResult.appliedFixes.length,
+                originalLength: result.content.length,
+                fixedLength: fixResult.fixedContent.length,
+              });
               
               // Only show preview if fixes were actually applied
               if (fixResult.appliedFixes.length > 0) {
@@ -999,11 +1035,17 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   isPending: true,
                 };
                 console.log(`[AutoFix] Generated preview with ${fixResult.appliedFixes.length} fixes (${dynamicReplacements?.length || 0} Convex rules)`);
+              } else {
+                console.log('[AutoFix] No fixes were actually applied to content');
               }
+            } else {
+              console.log('[AutoFix] No auto-fixable violations after filtering');
             }
           } catch (autoFixError) {
             console.warn('[AutoFix] Failed to generate preview:', autoFixError);
           }
+        } else {
+          console.log('[AutoFix] Skipping - no auto-fixable count:', trustScore?.autoFixableCount ?? 'no trustScore');
         }
 
         // Create AI response with trust data, intent tag, and auto-fix preview
