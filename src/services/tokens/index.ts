@@ -31,3 +31,20 @@ export {
   getDirectiveSummary,
   type LoadedDirectives,
 } from './selectiveLoader';
+
+// Token Estimation
+export {
+  estimateTokens,
+  estimateConversationTokens,
+  estimateRequestTokens,
+  getContextLimit,
+  calculateAvailableTokens,
+  calculateMessagesToKeep,
+  truncateConversationHistory,
+  suggestOptimalConfig,
+  TOKEN_LIMITS,
+  ESTIMATION_CONFIG,
+  type TokenEstimate,
+  type EstimationInput,
+  type ModelType,
+} from './tokenEstimator';
