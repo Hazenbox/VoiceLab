@@ -1007,9 +1007,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             if (autoFixableViolations.length > 0) {
               // Extract Convex dynamic rules (admin-managed auto-fix rules)
               // These are merged with static vocabulary rules in generateAutoFixes
+              // Note: Convex knowledgeItems have content/metadata.suggestion, not from/to
               const dynamicReplacements = convexKnowledge?.autoFixRules?.map(rule => ({
-                from: rule.from,
-                to: rule.to,
+                from: rule.content,
+                to: rule.metadata?.suggestion,
               }));
               
               console.log('[AutoFix] Dynamic replacements from Convex:', dynamicReplacements?.length ?? 0);
@@ -1622,9 +1623,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       }
       
       // Extract Convex dynamic rules (admin-managed auto-fix rules)
+      // Note: Convex knowledgeItems have content/metadata.suggestion, not from/to
       const dynamicReplacements = convexKnowledge?.autoFixRules?.map(rule => ({
-        from: rule.from,
-        to: rule.to,
+        from: rule.content,
+        to: rule.metadata?.suggestion,
       }));
       
       // Generate fixes using the auto-fix engine (with Convex rules)
