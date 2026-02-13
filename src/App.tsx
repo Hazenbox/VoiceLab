@@ -684,7 +684,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           
           // =====================================================================
           // RAG: Enrich with semantically relevant knowledge (wiring orphaned code)
-          // Now includes: Query Expansion + Semantic Search + Result Ranking
+          // Now includes: Query Expansion + Parallel Type-Specific Searches + Result Ranking
+          // Priority types: avoid_word, preferred_word, auto_fix (for pre-generation injection)
           // =====================================================================
           try {
             // Step 1: Query Expansion (wiring orphaned queryExpander)
@@ -704,53 +705,97 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               }
             }
             
-            // Step 2: Semantic Search
-            const { result: semanticResults, timedOut } = await withTimeout(
+            // Step 2: Parallel Semantic Searches for Priority Types
+            // Search for avoid_word, preferred_word, auto_fix separately to ensure coverage
+            const searchPromises = [
+              // General search (all types)
               runSemanticSearch({
                 query: searchQuery,
-                limit: 15, // Fetch more for ranking
+                limit: 20,
                 filterActiveOnly: true,
               }) as Promise<SemanticSearchResult[]>,
+              // Priority: avoid_word - words to avoid during generation
+              runSemanticSearch({
+                query: searchQuery,
+                limit: 30, // Higher limit for avoid words
+                filterType: 'avoid_word',
+                filterActiveOnly: true,
+              }) as Promise<SemanticSearchResult[]>,
+              // Priority: preferred_word - words to use during generation
+              runSemanticSearch({
+                query: searchQuery,
+                limit: 20,
+                filterType: 'preferred_word',
+                filterActiveOnly: true,
+              }) as Promise<SemanticSearchResult[]>,
+              // Priority: auto_fix - replacement rules for avoid words
+              runSemanticSearch({
+                query: searchQuery,
+                limit: 20,
+                filterType: 'auto_fix',
+                filterActiveOnly: true,
+              }) as Promise<SemanticSearchResult[]>,
+            ];
+            
+            const { result: searchResultsArray, timedOut } = await withTimeout(
+              Promise.all(searchPromises),
               TIMEOUTS.SEMANTIC_SEARCH_MS,
-              [] as SemanticSearchResult[],
+              [[], [], [], []] as SemanticSearchResult[][],
               'RAG semantic search'
             );
             
             if (timedOut) {
               console.warn('[RAG] Semantic search timed out, continuing without RAG enrichment');
-            } else if (semanticResults && semanticResults.length > 0) {
-              // Step 3: Result Ranking (wiring orphaned resultRanker)
-              let finalResults: SemanticSearchResult[] = semanticResults;
+            } else {
+              // Merge and deduplicate results
+              const [generalResults, avoidResults, preferredResults, autoFixResults] = searchResultsArray;
+              const seenIds = new Set<string>();
+              const mergedResults: SemanticSearchResult[] = [];
               
-              if (featureFlags.ragResultRanking) {
-                const rankedResults = rankResults(
-                  semanticResults,
-                  {
-                    ecosystem: effectiveEcosystem,
-                    channel: effectiveChannel,
-                    persona: featureFlags.persona ? userProfile?.role : undefined,
-                    query: message,
-                  },
-                  10 // Top 10 after ranking
-                );
-                
-                // Convert back to SemanticSearchResult (rankResults adds extra fields)
-                finalResults = rankedResults;
-                console.log(`[RAG] Ranked ${semanticResults.length} results → top ${finalResults.length}`);
-                
-                // Log top result for debugging
-                if (rankedResults.length > 0) {
-                  const top = rankedResults[0];
-                  console.log(`[RAG] Top result: "${top.content.substring(0, 50)}..." (score: ${top.rankScore.toFixed(3)}, type: ${top.type})`);
+              // Add results in priority order (avoid_word and auto_fix first for pre-generation)
+              for (const result of [...avoidResults, ...autoFixResults, ...preferredResults, ...generalResults]) {
+                if (!seenIds.has(result._id)) {
+                  seenIds.add(result._id);
+                  mergedResults.push(result);
                 }
               }
               
-              promptKnowledge = enrichWithSemanticResults(
-                promptKnowledge,
-                finalResults,
-                0.3 // minimum similarity score threshold
-              );
-              console.log(`[RAG] Enriched prompt with ${finalResults.length} semantic results`);
+              console.log(`[RAG] Merged results: ${avoidResults.length} avoid, ${preferredResults.length} preferred, ${autoFixResults.length} auto_fix, ${generalResults.length} general → ${mergedResults.length} unique`);
+              
+              if (mergedResults.length > 0) {
+                // Step 3: Result Ranking (wiring orphaned resultRanker)
+                let finalResults: SemanticSearchResult[] = mergedResults;
+                
+                if (featureFlags.ragResultRanking) {
+                  const rankedResults = rankResults(
+                    mergedResults,
+                    {
+                      ecosystem: effectiveEcosystem,
+                      channel: effectiveChannel,
+                      persona: featureFlags.persona ? userProfile?.role : undefined,
+                      query: message,
+                    },
+                    50 // Keep more results after ranking for comprehensive injection
+                  );
+                  
+                  // Convert back to SemanticSearchResult (rankResults adds extra fields)
+                  finalResults = rankedResults;
+                  console.log(`[RAG] Ranked ${mergedResults.length} results → top ${finalResults.length}`);
+                  
+                  // Log top result for debugging
+                  if (rankedResults.length > 0) {
+                    const top = rankedResults[0];
+                    console.log(`[RAG] Top result: "${top.content.substring(0, 50)}..." (score: ${top.rankScore.toFixed(3)}, type: ${top.type})`);
+                  }
+                }
+                
+                promptKnowledge = enrichWithSemanticResults(
+                  promptKnowledge,
+                  finalResults,
+                  0.3 // minimum similarity score threshold
+                );
+                console.log(`[RAG] Enriched prompt with ${finalResults.length} semantic results`);
+              }
             }
           } catch (ragError) {
             // Graceful degradation - continue without RAG if it fails
