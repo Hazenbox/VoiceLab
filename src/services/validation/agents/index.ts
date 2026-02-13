@@ -1,47 +1,65 @@
 /**
- * Validation Agents Index
+ * Validation Agents Module
+ * 
+ * Post-generation validation agents for Constitutional AI compliance.
+ * 
+ * @module services/validation/agents
  */
 
-import type { ValidationAgent, ValidationAgentId } from '../types';
-import {
-  ALL_AGENTS,
-  genderNeutralityAgent,
-  inclusivityAgent,
-  culturalSensitivityAgent,
-  accessibilityAgent,
-  complianceAgent,
-  styleConsistencyAgent,
-  brandAlignmentAgent,
-  readabilityAgent,
-} from './allAgents';
-import { avoidWordsAgent } from './avoidWordsAgent';
-
+// Voice Traits Agent
 export {
-  genderNeutralityAgent,
-  inclusivityAgent,
-  culturalSensitivityAgent,
-  accessibilityAgent,
-  complianceAgent,
-  styleConsistencyAgent,
-  brandAlignmentAgent,
-  readabilityAgent,
-  avoidWordsAgent,
-};
+  validateVoiceTraits,
+  hasTraitViolations,
+  getTraitSuggestions,
+  type VoiceTraitValidation,
+  type VoiceTraitsResult,
+} from './voiceTraitsAgent';
 
-export const VALIDATION_AGENTS = ALL_AGENTS;
+// Emotion Response Agent
+export {
+  validateEmotionResponse,
+  respectsEmotionalContext,
+  getEmotionSuggestions,
+  type EmotionValidation,
+} from './emotionResponseAgent';
 
-export function getValidationAgent(id: ValidationAgentId): ValidationAgent {
-  const agent = VALIDATION_AGENTS[id];
-  if (!agent) throw new Error(`Unknown validation agent: ${id}`);
-  return agent;
-}
+// Pattern Block Agent
+export {
+  validatePatternBlocks,
+  hasBasicStructure,
+  getPatternTemplate,
+  suggestBlocks,
+  type PatternBlockValidation,
+  type PatternValidationResult,
+} from './patternBlockAgent';
 
-export function getAllValidationAgents(): ValidationAgent[] {
-  return Object.values(VALIDATION_AGENTS);
-}
+// Handoff Trigger Agent
+export {
+  detectHandoffTriggers,
+  mightNeedHandoff,
+  getHandoffMessage,
+  type HandoffTrigger,
+  type HandoffResult,
+  type HandoffReason,
+} from './handoffTriggerAgent';
 
-export function getEnabledAgents(enabledIds: ValidationAgentId[]): ValidationAgent[] {
-  return enabledIds
-    .map(id => VALIDATION_AGENTS[id])
-    .filter((agent): agent is ValidationAgent => agent !== undefined);
-}
+// Consolidated Agents
+export {
+  validateSafetyPrivacy,
+  validateInclusivity,
+  validateBrandStyle,
+  validateCommerce,
+  runConsolidatedValidation,
+  type AgentValidation,
+  type ConsolidatedValidation,
+} from './consolidatedAgents';
+
+// Self-Check Agent
+export {
+  runSelfCheck,
+  hasCriticalFailures,
+  getSelfCheckSummary,
+  type SelfCheckQuestion,
+  type SelfCheckResult,
+  type SelfCheckContext,
+} from './selfCheckAgent';
