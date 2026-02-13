@@ -20,6 +20,15 @@ import { getTimingGuidance } from '../context/timingEngine';
 import { getTriggerEventGuidance } from '../context/contextEngine';
 import { buildPersonaPromptSection, type PersonaRole } from '../persona';
 import { type RetrievedKnowledge, buildKnowledgePromptSection, buildSemanticPromptSection, getCodeDefaults } from '../knowledge';
+// Vocabulary imports for static high-priority injection
+import {
+  SIMPLE_ALTERNATIVES,
+  GENDER_NEUTRAL_ALTERNATIVES,
+  CARE_CONNECTION_WORDS,
+  ACTION_PROGRESS_WORDS,
+  CLARITY_SAFETY_WORDS,
+  COMMUNITY_FIRST_WORDS,
+} from '../guidelines/vocabulary';
 
 // =============================================================================
 // BRAND GUARDRAILS (From Training 1.pdf - The 10 Official Jio Guidelines)
@@ -489,6 +498,62 @@ ${isMarketing ? `1. **Subject Line**: Compelling, benefit-focused (40-60 charact
 }
 
 // =============================================================================
+// STATIC HIGH-PRIORITY VOCABULARY SECTION
+// =============================================================================
+
+/**
+ * Build a static high-priority section with the most critical avoid words
+ * and preferred vocabulary. This is always included regardless of RAG results.
+ */
+function buildStaticVocabularySection(): string {
+  // Critical word replacements (always include these)
+  const criticalReplacements = [
+    ...Object.entries(SIMPLE_ALTERNATIVES).slice(0, 25),
+    ...Object.entries(GENDER_NEUTRAL_ALTERNATIVES).slice(0, 15),
+  ];
+
+  // Grouped preferred vocabulary
+  const preferredByCategory = {
+    'Care & Connection': CARE_CONNECTION_WORDS.slice(0, 15),
+    'Action & Progress': ACTION_PROGRESS_WORDS.slice(0, 15),
+    'Clarity & Safety': CLARITY_SAFETY_WORDS.slice(0, 15),
+    'Community First': COMMUNITY_FIRST_WORDS.slice(0, 10),
+  };
+
+  return `## MANDATORY: Word Avoidance & Replacement Rules
+
+**YOU MUST FOLLOW THESE RULES DURING CONTENT GENERATION.**
+
+### Words to NEVER Use (Use the Alternative Instead)
+
+${criticalReplacements.map(([avoid, use]) => `- "${avoid}" → use "${use}"`).join('\n')}
+
+### Preferred Vocabulary by Context
+
+**Use these words to create warm, human, Jio-aligned content:**
+
+${Object.entries(preferredByCategory).map(([category, words]) => 
+  `**${category}**: ${words.join(', ')}`
+).join('\n\n')}
+
+### Spelling Rules (British English)
+
+- Use "-ise" not "-ize" (organise, recognise, optimise)
+- Use "-our" not "-or" (colour, favour, honour)
+- Use "-re" not "-er" (centre, theatre, metre)
+- Use "₹" not "Rs." or "INR" for currency
+
+### Format Rules
+
+- Use Indian number format: 1,00,000 (not 100,000)
+- Use 12-hour time: 3:30 PM (not 15:30)
+- No Oxford comma: "speed, value and reliability"
+- Use sentence case: "Get started today" (not "Get Started Today")
+
+`;
+}
+
+// =============================================================================
 // PROMPT BUILDER
 // =============================================================================
 
@@ -548,6 +613,9 @@ export function buildSystemPrompt(
   const timingGuidance = getTimingGuidance(context.timing);
   const productContext = buildProductContextPrompt(context);
   
+  // Static vocabulary section (always included - high priority)
+  const staticVocabularySection = buildStaticVocabularySection();
+  
   // Persona section (Phase 1) -- only if a persona role is set
   const personaSection = context.persona
     ? buildPersonaPromptSection(context.persona as PersonaRole)
@@ -584,6 +652,8 @@ Goal: ${context.goal}
 ${productContext}
 
 ${guardrails}
+
+${staticVocabularySection}
 
 ${buildEmailOverrideSection(context.channel)}${personaSection ? `${personaSection}\n\n` : ''}${channelFormatting}
 
