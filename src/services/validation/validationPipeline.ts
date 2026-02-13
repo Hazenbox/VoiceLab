@@ -34,14 +34,6 @@ function deduplicateViolations(violations: ValidationViolation[]): ValidationVio
   
   const severityRank: Record<string, number> = { error: 3, warning: 2, info: 1 };
   
-  // DEBUG: Log all incoming violations with their positions
-  console.log('[Dedup] Input violations:', violations.map(v => ({
-    text: v.text?.substring(0, 30),
-    pos: v.position ? `${v.position.start}-${v.position.end}` : 'NO_POS',
-    autoFixable: v.autoFixable,
-    agent: v.agentId
-  })));
-  
   // Sort by position start, then by whether it has autoFixable (prioritize autoFixable)
   const sorted = [...violations].sort((a, b) => {
     const aStart = a.position?.start ?? -1;  // Use -1 for missing positions
@@ -58,7 +50,6 @@ function deduplicateViolations(violations: ValidationViolation[]): ValidationVio
   for (const v of sorted) {
     // Skip violations without valid positions (can't deduplicate properly)
     if (!v.position || v.position.start === undefined || v.position.end === undefined) {
-      console.log('[Dedup] Adding (no position):', v.text?.substring(0, 30));
       result.push(v);
       continue;
     }
@@ -68,17 +59,26 @@ function deduplicateViolations(violations: ValidationViolation[]): ValidationVio
     const overlappingIndex = result.findIndex(existing => {
       if (!existing.position || existing.position.start === undefined) return false;
       
+      const existingLength = existing.position.end - existing.position.start;
+      const newLength = v.position!.end - v.position!.start;
+      
+      // SKIP document-level violations (spanning > 100 chars) - they shouldn't absorb word-level ones
+      // A "Readability" violation spanning the whole document shouldn't merge with "circle back" at pos 225
+      if (existingLength > 100 && newLength < 50) {
+        return false;  // Don't merge word-level violations into document-level ones
+      }
+      if (newLength > 100 && existingLength < 50) {
+        return false;  // Don't merge document-level violations into word-level ones
+      }
+      
       // Check for EXACT position overlap (same start AND end) - same span from different agents
       if (existing.position.start === v.position!.start && 
           existing.position.end === v.position!.end) {
-        console.log('[Dedup] EXACT match:', { existing: existing.text, new: v.text, pos: `${v.position!.start}-${v.position!.end}` });
         return true;
       }
       
       // Check for significant overlap (> 80% of the smaller span)
       // This handles cases where agents detect slightly different spans for the same word
-      const existingLength = existing.position.end - existing.position.start;
-      const newLength = v.position!.end - v.position!.start;
       const minLength = Math.min(existingLength, newLength);
       
       const overlapStart = Math.max(existing.position.start, v.position!.start);
@@ -87,14 +87,6 @@ function deduplicateViolations(violations: ValidationViolation[]): ValidationVio
       
       // Only consider it overlapping if they share > 80% of the smaller term
       const isOverlap = overlapLength > minLength * 0.8;
-      
-      if (isOverlap) {
-        console.log('[Dedup] OVERLAP match:', { 
-          existing: existing.text, existingPos: `${existing.position.start}-${existing.position.end}`,
-          new: v.text, newPos: `${v.position!.start}-${v.position!.end}`,
-          overlapPct: Math.round(overlapLength / minLength * 100)
-        });
-      }
       
       return isOverlap;
     });
