@@ -315,6 +315,280 @@ export function isPositiveEmotion(id: NavarasaType): boolean {
   return ['shringara', 'hasya', 'vira', 'adbhuta'].includes(id);
 }
 
+// =============================================================================
+// EMOTION INTENSITY DETECTION (Phase C)
+// =============================================================================
+
+/**
+ * Intensifier patterns that increase emotion strength
+ */
+const INTENSIFIERS = [
+  // Strong intensifiers (+2-3)
+  { pattern: /very\s+very/i, boost: 3 },
+  { pattern: /extremely/i, boost: 3 },
+  { pattern: /absolutely/i, boost: 3 },
+  { pattern: /completely/i, boost: 2 },
+  { pattern: /totally/i, boost: 2 },
+  { pattern: /incredibly/i, boost: 3 },
+  { pattern: /unbelievably/i, boost: 3 },
+  
+  // Moderate intensifiers (+1-2)
+  { pattern: /very/i, boost: 2 },
+  { pattern: /really/i, boost: 2 },
+  { pattern: /so\s+/i, boost: 2 },
+  { pattern: /quite/i, boost: 1 },
+  { pattern: /pretty\s+/i, boost: 1 },
+  
+  // Punctuation intensifiers
+  { pattern: /!!+/g, boost: 2 },
+  { pattern: /\?\?+/g, boost: 1 },
+  { pattern: /[A-Z]{3,}/g, boost: 2 }, // ALL CAPS
+  
+  // Negative intensifiers (strong emotion)
+  { pattern: /worst/i, boost: 3 },
+  { pattern: /hate/i, boost: 3 },
+  { pattern: /never\s+again/i, boost: 3 },
+  { pattern: /scam/i, boost: 3 },
+  { pattern: /fraud/i, boost: 3 },
+  { pattern: /terrible/i, boost: 2 },
+  { pattern: /awful/i, boost: 2 },
+  { pattern: /horrible/i, boost: 2 },
+  { pattern: /disaster/i, boost: 2 },
+  
+  // Positive intensifiers
+  { pattern: /amazing/i, boost: 2 },
+  { pattern: /awesome/i, boost: 2 },
+  { pattern: /fantastic/i, boost: 2 },
+  { pattern: /wonderful/i, boost: 2 },
+  { pattern: /brilliant/i, boost: 2 },
+  { pattern: /love\s+it/i, boost: 2 },
+  { pattern: /best\s+ever/i, boost: 3 },
+];
+
+/**
+ * Dampeners that reduce emotion strength
+ */
+const DAMPENERS = [
+  { pattern: /a\s+bit/i, reduce: 2 },
+  { pattern: /slightly/i, reduce: 2 },
+  { pattern: /somewhat/i, reduce: 2 },
+  { pattern: /kind\s+of/i, reduce: 1 },
+  { pattern: /sort\s+of/i, reduce: 1 },
+  { pattern: /maybe/i, reduce: 1 },
+  { pattern: /perhaps/i, reduce: 1 },
+  { pattern: /not\s+sure/i, reduce: 1 },
+];
+
+/**
+ * Detect emotion intensity from text on a 1-10 scale
+ * 
+ * Base intensity is 5 (neutral). Intensifiers add, dampeners subtract.
+ * Range: 1 (very mild) to 10 (extreme)
+ * 
+ * @param text The user message text
+ * @param rasa The detected Navarasa emotion
+ * @returns Intensity score from 1-10
+ */
+export function detectEmotionIntensity(text: string, rasa: NavarasaType): number {
+  let intensity = 5; // Base intensity
+  
+  // Check for intensifiers
+  for (const { pattern, boost } of INTENSIFIERS) {
+    const matches = text.match(pattern);
+    if (matches) {
+      // If global regex, count matches
+      const matchCount = matches.length || 1;
+      intensity += boost * Math.min(matchCount, 2); // Cap at 2x effect
+    }
+  }
+  
+  // Check for dampeners
+  for (const { pattern, reduce } of DAMPENERS) {
+    if (pattern.test(text)) {
+      intensity -= reduce;
+    }
+  }
+  
+  // Emotion-specific modifiers
+  // Negative emotions (raudra, bhayanaka, bibhatsa, karuna) tend to be expressed more strongly
+  if (isNegativeEmotion(rasa)) {
+    // Check for multiple emotional signals as indicator of strong feeling
+    const emotion = getEmotion(rasa);
+    const signalCount = emotion.signals.filter(s => 
+      text.toLowerCase().includes(s.toLowerCase())
+    ).length;
+    
+    if (signalCount >= 3) intensity += 1;
+    if (signalCount >= 5) intensity += 1;
+  }
+  
+  // Message length can indicate strong emotion (very long or very short)
+  const words = text.split(/\s+/).length;
+  if (words > 100) intensity += 1; // Long rant
+  if (words <= 3 && words >= 1) {
+    // Very short could be dismissive or urgent
+    if (text.includes('!')) intensity += 1;
+  }
+  
+  // Clamp to 1-10 range
+  return Math.max(1, Math.min(10, Math.round(intensity)));
+}
+
+/**
+ * Convert numeric intensity to categorical
+ */
+export function intensityToCategory(intensity: number): 'low' | 'moderate' | 'high' | 'extreme' {
+  if (intensity <= 3) return 'low';
+  if (intensity <= 6) return 'moderate';
+  if (intensity <= 8) return 'high';
+  return 'extreme';
+}
+
+// =============================================================================
+// EMOTION TARGET RESOLUTION (Phase C)
+// =============================================================================
+
+/**
+ * Target emotion type (expanded from NavarasaType)
+ */
+export type EmotionTargetType = 
+  | NavarasaType 
+  | 'karuna_resolved' 
+  | 'relieved';
+
+/**
+ * Emotion movement mapping - defines what emotional state to guide toward
+ * 
+ * Based on Tokens v2 specification:
+ * - raudra (anger) → shanta (peace)
+ * - bhayanaka (fear) → shanta (peace)
+ * - karuna (sadness) → karuna_resolved (supported)
+ * - bibhatsa (disgust) → relieved (practical calm)
+ * - adbhuta (wonder) → adbhuta (sustain curiosity)
+ * - shanta → shanta (maintain peace)
+ * - hasya → hasya (sustain joy)
+ * - shringara → shringara (sustain delight)
+ * - vira → vira (sustain confidence)
+ */
+const EMOTION_TARGET_MAP: Record<NavarasaType, EmotionTargetType> = {
+  raudra: 'shanta',       // Anger → Peace
+  bhayanaka: 'shanta',    // Fear → Peace
+  karuna: 'karuna_resolved', // Sadness → Supported and steadied
+  bibhatsa: 'relieved',   // Disgust → Practical calm
+  adbhuta: 'adbhuta',     // Wonder → Sustain wonder
+  shanta: 'shanta',       // Peace → Maintain peace
+  hasya: 'hasya',         // Joy → Sustain joy
+  shringara: 'shringara', // Delight → Sustain delight
+  vira: 'vira',           // Pride → Sustain confidence
+};
+
+/**
+ * High-intensity override targets
+ * When emotion intensity is very high (>= 8), we always aim for stability first
+ */
+const HIGH_INTENSITY_OVERRIDE: Record<string, EmotionTargetType> = {
+  raudra: 'shanta',
+  bhayanaka: 'shanta',
+  karuna: 'shanta',
+  bibhatsa: 'shanta',
+};
+
+/**
+ * Resolve the target emotional state based on current emotion and intensity
+ * 
+ * Rules:
+ * 1. Very high intensity (>= 8) for negative emotions → force shanta (stability first)
+ * 2. Otherwise, follow the standard emotion movement map
+ * 
+ * @param currentRasa The detected current Navarasa emotion
+ * @param intensity Emotion intensity (1-10 or categorical)
+ * @returns Target emotion to guide user toward
+ */
+export function resolveEmotionTarget(
+  currentRasa: NavarasaType, 
+  intensity: number | 'low' | 'moderate' | 'high' | 'extreme'
+): EmotionTargetType {
+  // Convert categorical to numeric if needed
+  let numericIntensity: number;
+  if (typeof intensity === 'string') {
+    numericIntensity = intensity === 'low' ? 2 : 
+                       intensity === 'moderate' ? 5 : 
+                       intensity === 'high' ? 7 : 9;
+  } else {
+    numericIntensity = intensity;
+  }
+  
+  // High intensity negative emotions → force shanta
+  if (numericIntensity >= 8 && currentRasa in HIGH_INTENSITY_OVERRIDE) {
+    return HIGH_INTENSITY_OVERRIDE[currentRasa];
+  }
+  
+  // Standard emotion movement
+  return EMOTION_TARGET_MAP[currentRasa] || 'shanta';
+}
+
+/**
+ * Get guidance text for emotional movement
+ */
+export function getEmotionMovementGuidance(
+  currentRasa: NavarasaType,
+  targetEmotion: EmotionTargetType,
+  intensity: number
+): string {
+  const current = getEmotion(currentRasa);
+  
+  // Same emotion = sustain
+  if (currentRasa === targetEmotion) {
+    return `Sustain the ${current.name.toLowerCase()} state. Match their energy and be present.`;
+  }
+  
+  // Negative → Positive transition
+  if (isNegativeEmotion(currentRasa)) {
+    const intensityDesc = intensity >= 7 ? 'Strong' : intensity >= 4 ? 'Moderate' : 'Mild';
+    
+    return `${intensityDesc} ${current.name.toLowerCase()} detected. ` +
+      `Guide gently toward ${targetEmotion === 'shanta' ? 'calm and stability' : 
+        targetEmotion === 'karuna_resolved' ? 'feeling supported and steadied' : 
+        targetEmotion === 'relieved' ? 'practical calm and resolution' : 
+        targetEmotion}. ` +
+      `${intensity >= 7 ? 'Prioritize emotional acknowledgment before problem-solving. ' : ''}` +
+      `Never force emotional jumps. Progress gradually.`;
+  }
+  
+  // Positive emotions
+  return `${current.name} detected. ${targetEmotion === currentRasa ? 
+    'Sustain this positive energy.' : 
+    `Guide toward ${targetEmotion}.`}`;
+}
+
+/**
+ * Detect emotion with intensity and target in one call
+ * Convenience function that combines detection, intensity, and target resolution
+ */
+export function analyzeEmotion(text: string): {
+  rasa: NavarasaType;
+  intensity: number;
+  intensityCategory: 'low' | 'moderate' | 'high' | 'extreme';
+  target: EmotionTargetType;
+  isNegative: boolean;
+  isPositive: boolean;
+  guidance: string;
+} {
+  const rasa = detectEmotion(text);
+  const intensity = detectEmotionIntensity(text, rasa);
+  const target = resolveEmotionTarget(rasa, intensity);
+  
+  return {
+    rasa,
+    intensity,
+    intensityCategory: intensityToCategory(intensity),
+    target,
+    isNegative: isNegativeEmotion(rasa),
+    isPositive: isPositiveEmotion(rasa),
+    guidance: getEmotionMovementGuidance(rasa, target, intensity),
+  };
+}
+
 export default {
   NAVARASA_EMOTIONS,
   detectEmotion,
@@ -323,4 +597,9 @@ export default {
   getEmotionOptions,
   isNegativeEmotion,
   isPositiveEmotion,
+  detectEmotionIntensity,
+  intensityToCategory,
+  resolveEmotionTarget,
+  getEmotionMovementGuidance,
+  analyzeEmotion,
 };
