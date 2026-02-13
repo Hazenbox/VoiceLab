@@ -191,6 +191,12 @@ export async function runValidationPipeline(
     const violations = agent.runPatternValidation(content);
     const score = agent.calculateScore(violations);
     
+    // Debug: log violations from brand_alignment and avoid_words agents
+    if (violations.length > 0 && (agent.id === 'brand_alignment' || agent.id === 'avoid_words')) {
+      console.log(`[ValidationPipeline] ${agent.id} found ${violations.length} violations:`, 
+        violations.map(v => ({ text: v.text, autoFixable: v.autoFixable })));
+    }
+    
     return {
       agentId: agent.id,
       agentName: agent.name,
@@ -213,6 +219,12 @@ export async function runValidationPipeline(
   const allViolations = deduplicateViolations([...rawViolations, ...channelViolations]);
   const errorCount = allViolations.filter(v => v.severity === 'error').length;
   const autoFixableCount = allViolations.filter(v => v.autoFixable).length;
+  
+  // Debug: log final autoFixableCount
+  console.log('[ValidationPipeline] Raw violations:', rawViolations.length, 
+    '| After dedup:', allViolations.length,
+    '| autoFixable:', autoFixableCount,
+    '| autoFixableViolations:', allViolations.filter(v => v.autoFixable).map(v => v.text));
   
   // Calculate weighted overall score
   const overallScore = calculateOverallScore(agentResults);
