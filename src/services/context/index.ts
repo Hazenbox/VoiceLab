@@ -37,3 +37,16 @@ export {
   getContextSummary,
   validateContext,
 } from './contextEngine';
+
+// Context Manager (Token Overflow Prevention)
+export {
+  ContextManager,
+  getContextManager,
+  processContext,
+  createMessageTruncator,
+  CONTEXT_MANAGER_CONFIG,
+  type Message,
+  type ContextManagerInput,
+  type ContextManagerResult,
+  type TruncationEvent,
+} from './contextManager';
