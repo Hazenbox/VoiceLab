@@ -11,12 +11,19 @@
  *   Run multiple times if needed -- it processes 50 items per call.
  * 
  * Seeds:
- * - Avoid words (7 categories, ~283 words)
- * - Preferred vocabulary (6 categories, ~311 words)
- * - Gender-neutral & simple alternatives (~43 pairs)
+ * - Avoid words (10 categories, ~350 words)
+ *   - complex, robotic, fear_based, bureaucratic, technical
+ *   - shame_inducing, elitist, marketing_jargon, american_spelling, incorrect_format
+ * - Preferred vocabulary (6 categories, ~350 words)
+ *   - care_connection, action_progress, clarity_safety
+ *   - fixing_resolution, community_first, learning_discovery
+ * - Auto-fix rules (~80 pairs)
+ *   - Gender-neutral alternatives
+ *   - Simple alternatives (jargon → plain language)
+ *   - British spelling alternatives
+ *   - Format corrections
  * - Products/ecosystems (14 definitions)
  * - Festivals (11 definitions)
- * - Auto-fix rules (17 replacements)
  */
 
 import { mutation, query } from "./_generated/server";
@@ -189,6 +196,44 @@ export const seedAll = mutation({
           "premium living", "luxury lifestyle", "aspirational",
         ],
       },
+      // Marketing jargon - buzzwords that should be replaced with simpler alternatives
+      {
+        category: "marketing_jargon",
+        severity: "warning",
+        words: [
+          "cutting-edge", "state-of-the-art", "world-class", "best-in-class",
+          "seamless", "frictionless", "robust", "scalable",
+          "synergy", "paradigm", "bandwidth",
+          "circle back", "deep dive", "ping", "loop in",
+          "dashboard", "onboard", "optimize", "streamline",
+          "avail", "availing", "availed",
+        ],
+      },
+      // American spellings - should use British spellings
+      {
+        category: "american_spelling",
+        severity: "info",
+        words: [
+          "organize", "realize", "recognize", "customize", "optimize",
+          "analyze", "categorize", "prioritize", "synchronize",
+          "color", "favor", "flavor", "honor", "humor",
+          "labor", "neighbor", "behavior",
+          "center", "theater", "meter", "fiber",
+          "defense", "offense", "license", "pretense",
+          "canceled", "traveled", "modeling", "jewelry",
+          "catalog", "dialog", "program",
+        ],
+      },
+      // Incorrect formats - currency and number formats
+      {
+        category: "incorrect_format",
+        severity: "warning",
+        words: [
+          "Rs.", "Rs", "INR", "Rupees", "rupees",
+          "100,000", "1,000,000",
+          "15:30", "23:00",
+        ],
+      },
     ];
 
     for (const cat of avoidCategories) {
@@ -276,6 +321,22 @@ export const seedAll = mutation({
           "seva", "saath", "apna", "desh", "parivaar", "samaj",
         ],
       },
+      // Learning & Discovery words
+      {
+        category: "learning_discovery",
+        words: [
+          "learn", "study", "understand", "master", "practice", "train",
+          "develop", "grow", "improve", "progress",
+          "discover", "explore", "find", "uncover", "reveal", "see",
+          "notice", "observe", "experience", "witness",
+          "know", "wisdom", "insight", "understanding", "awareness", "skill",
+          "expertise", "ability", "capability", "competence",
+          "curious", "wonder", "question", "ask", "seek", "search",
+          "look for", "investigate", "examine", "review",
+          "expand", "broaden", "deepen", "strengthen", "enhance",
+          "enrich", "elevate", "advance", "evolve",
+        ],
+      },
     ];
 
     for (const cat of vocabCategories) {
@@ -332,6 +393,47 @@ export const seedAll = mutation({
       { from: "state-of-the-art", to: "modern", altType: "simplification" },
       { from: "world-class", to: "excellent", altType: "simplification" },
       { from: "best-in-class", to: "high quality", altType: "simplification" },
+      { from: "ping", to: "message", altType: "simplification" },
+      { from: "loop in", to: "include", altType: "simplification" },
+      { from: "dashboard", to: "account", altType: "simplification" },
+      { from: "onboard", to: "get started", altType: "simplification" },
+      { from: "scalable", to: "can grow", altType: "simplification" },
+      // American to British spellings
+      { from: "organize", to: "organise", altType: "british_spelling" },
+      { from: "realize", to: "realise", altType: "british_spelling" },
+      { from: "recognize", to: "recognise", altType: "british_spelling" },
+      { from: "customize", to: "customise", altType: "british_spelling" },
+      { from: "optimize", to: "optimise", altType: "british_spelling" },
+      { from: "analyze", to: "analyse", altType: "british_spelling" },
+      { from: "categorize", to: "categorise", altType: "british_spelling" },
+      { from: "prioritize", to: "prioritise", altType: "british_spelling" },
+      { from: "synchronize", to: "synchronise", altType: "british_spelling" },
+      { from: "color", to: "colour", altType: "british_spelling" },
+      { from: "favor", to: "favour", altType: "british_spelling" },
+      { from: "flavor", to: "flavour", altType: "british_spelling" },
+      { from: "honor", to: "honour", altType: "british_spelling" },
+      { from: "humor", to: "humour", altType: "british_spelling" },
+      { from: "labor", to: "labour", altType: "british_spelling" },
+      { from: "neighbor", to: "neighbour", altType: "british_spelling" },
+      { from: "behavior", to: "behaviour", altType: "british_spelling" },
+      { from: "center", to: "centre", altType: "british_spelling" },
+      { from: "theater", to: "theatre", altType: "british_spelling" },
+      { from: "meter", to: "metre", altType: "british_spelling" },
+      { from: "fiber", to: "fibre", altType: "british_spelling" },
+      { from: "defense", to: "defence", altType: "british_spelling" },
+      { from: "offense", to: "offence", altType: "british_spelling" },
+      { from: "license", to: "licence", altType: "british_spelling" },
+      { from: "canceled", to: "cancelled", altType: "british_spelling" },
+      { from: "traveled", to: "travelled", altType: "british_spelling" },
+      { from: "modeling", to: "modelling", altType: "british_spelling" },
+      { from: "jewelry", to: "jewellery", altType: "british_spelling" },
+      { from: "catalog", to: "catalogue", altType: "british_spelling" },
+      { from: "dialog", to: "dialogue", altType: "british_spelling" },
+      { from: "program", to: "programme", altType: "british_spelling" },
+      // Incorrect format alternatives
+      { from: "Rs.", to: "₹", altType: "format_correction" },
+      { from: "Rs", to: "₹", altType: "format_correction" },
+      { from: "INR", to: "₹", altType: "format_correction" },
     ];
 
     for (const alt of alternatives) {
