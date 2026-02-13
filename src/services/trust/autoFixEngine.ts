@@ -2,10 +2,14 @@
  * Auto-Fix Engine
  * 
  * Automatically suggests and applies fixes for content violations.
+ * 
+ * UNIFIED SOURCE: Imports vocabulary alternatives from vocabulary.ts
+ * to ensure all terms work with the auto-fix preview feature.
  */
 
 import type { AutoFix, Violation } from '../../types';
 import { runQuickValidation } from '../validation/validationPipeline';
+import { SIMPLE_ALTERNATIVES, GENDER_NEUTRAL_ALTERNATIVES } from '../guidelines/vocabulary';
 
 /**
  * Auto-fix result
@@ -20,7 +24,30 @@ export interface AutoFixResult {
 }
 
 /**
+ * Build vocabulary-based replacements from single source of truth
+ * 
+ * Imports SIMPLE_ALTERNATIVES (24 terms) and GENDER_NEUTRAL_ALTERNATIVES (17 terms)
+ * from vocabulary.ts to ensure the auto-fix engine can generate fixes for all
+ * vocabulary terms, enabling the side-by-side preview.
+ */
+const VOCABULARY_REPLACEMENTS: Record<string, { replacement: string; confidence: number }> = {};
+
+// Add SIMPLE_ALTERNATIVES with 0.90 confidence (e.g., utilize -> use)
+for (const [from, to] of Object.entries(SIMPLE_ALTERNATIVES)) {
+  VOCABULARY_REPLACEMENTS[from.toLowerCase()] = { replacement: to, confidence: 0.90 };
+}
+
+// Add GENDER_NEUTRAL_ALTERNATIVES with 0.95 confidence (higher priority)
+for (const [from, to] of Object.entries(GENDER_NEUTRAL_ALTERNATIVES)) {
+  VOCABULARY_REPLACEMENTS[from.toLowerCase()] = { replacement: to, confidence: 0.95 };
+}
+
+/**
  * Common replacements - High-confidence word substitutions
+ * 
+ * MERGED FROM:
+ * 1. VOCABULARY_REPLACEMENTS (from vocabulary.ts) - SINGLE SOURCE OF TRUTH
+ * 2. Manual overrides below for specific confidence scores or additional terms
  * 
  * Rules:
  * - Only include replacements with confidence >= 0.80
@@ -28,36 +55,32 @@ export interface AutoFixResult {
  * - All keys should be lowercase (matching is case-insensitive)
  */
 const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> = {
-  // === Gender Neutrality ===
-  'chairman': { replacement: 'chairperson', confidence: 0.95 },
-  'chairwoman': { replacement: 'chairperson', confidence: 0.95 },
-  'businessman': { replacement: 'businessperson', confidence: 0.95 },
-  'businesswoman': { replacement: 'businessperson', confidence: 0.95 },
+  // === Import all vocabulary alternatives (SINGLE SOURCE OF TRUTH) ===
+  ...VOCABULARY_REPLACEMENTS,
+  
+  // === Manual overrides with specific confidence scores ===
+  // (These override vocabulary.ts values where we need higher/lower confidence)
+  
+  // Gender-neutral - higher confidence for professional terms
   'fireman': { replacement: 'firefighter', confidence: 0.98 },
   'policeman': { replacement: 'police officer', confidence: 0.98 },
   'mailman': { replacement: 'mail carrier', confidence: 0.98 },
-  'mankind': { replacement: 'humankind', confidence: 0.90 },
-  'manpower': { replacement: 'workforce', confidence: 0.90 },
-  'dear sir': { replacement: 'Hello', confidence: 0.95 },
-  'dear madam': { replacement: 'Hello', confidence: 0.95 },
-  'dear sir/madam': { replacement: 'Hello', confidence: 0.95 },
   
-  // === Disability-Inclusive Language ===
+  // === Additional terms NOT in vocabulary.ts ===
+  
+  // Disability-Inclusive Language
   'wheelchair-bound': { replacement: 'wheelchair user', confidence: 0.95 },
   'wheelchair bound': { replacement: 'wheelchair user', confidence: 0.95 },
   'the disabled': { replacement: 'people with disabilities', confidence: 0.90 },
   'handicapped': { replacement: 'person with a disability', confidence: 0.90 },
   
-  // === Jargon / Complex Words (Avoid Words) ===
-  'utilize': { replacement: 'use', confidence: 0.95 },
+  // Jargon variants
   'utilise': { replacement: 'use', confidence: 0.95 },
-  'facilitate': { replacement: 'help', confidence: 0.90 },
-  'leverage': { replacement: 'use', confidence: 0.85 },
-  'synergy': { replacement: 'working together', confidence: 0.85 },
-  'paradigm': { replacement: 'approach', confidence: 0.85 },
   'avail': { replacement: 'get', confidence: 0.90 },
   'availing': { replacement: 'getting', confidence: 0.90 },
   'availed': { replacement: 'got', confidence: 0.90 },
+  
+  // Wordy phrases
   'in order to': { replacement: 'to', confidence: 0.98 },
   'at this point in time': { replacement: 'now', confidence: 0.98 },
   'due to the fact that': { replacement: 'because', confidence: 0.98 },
@@ -67,20 +90,20 @@ const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> 
   'pursuant to': { replacement: 'following', confidence: 0.90 },
   'in accordance with': { replacement: 'following', confidence: 0.90 },
   
-  // === Accessibility (Link Text) ===
+  // Accessibility (Link Text)
   'click here': { replacement: 'view details', confidence: 0.85 },
   'tap here': { replacement: 'view details', confidence: 0.85 },
   
-  // === Brand Capitalization ===
+  // Brand Capitalization
   'jio': { replacement: 'Jio', confidence: 0.99 },
   'JIO': { replacement: 'Jio', confidence: 0.99 },
   
-  // === Currency (Indian Format) ===
+  // Currency (Indian Format)
   'Rs.': { replacement: '₹', confidence: 0.98 },
   'Rs ': { replacement: '₹', confidence: 0.98 },
   'INR ': { replacement: '₹', confidence: 0.95 },
   
-  // === British Spellings ===
+  // British Spellings
   'color': { replacement: 'colour', confidence: 0.90 },
   'favorite': { replacement: 'favourite', confidence: 0.90 },
   'organize': { replacement: 'organise', confidence: 0.90 },

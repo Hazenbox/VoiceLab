@@ -19,6 +19,7 @@
  */
 
 import { scanForAvoidWords } from '../../guidelines/avoidWords';
+import { SIMPLE_ALTERNATIVES, GENDER_NEUTRAL_ALTERNATIVES } from '../../guidelines/vocabulary';
 import type { ValidationAgent, ValidationViolation } from '../types';
 
 /**
@@ -37,20 +38,23 @@ const CATEGORY_SUGGESTIONS: Record<string, string> = {
 /**
  * Specific word replacements for common avoid words
  * These are high-confidence, safe replacements
+ * 
+ * MERGED FROM:
+ * 1. SIMPLE_ALTERNATIVES from vocabulary.ts (24 terms)
+ * 2. GENDER_NEUTRAL_ALTERNATIVES from vocabulary.ts (17 terms)
+ * 3. Agent-specific alternatives below (for terms not in vocabulary)
  */
 const WORD_ALTERNATIVES: Record<string, string> = {
-  // Complex words
+  // === Import all alternatives from vocabulary.ts (SINGLE SOURCE OF TRUTH) ===
+  ...SIMPLE_ALTERNATIVES,
+  ...GENDER_NEUTRAL_ALTERNATIVES,
+  
+  // === Agent-specific alternatives (not in vocabulary.ts) ===
+  
+  // Complex words (additional)
   'avail': 'get, claim, or use',
   'availing': 'getting, claiming, or using',
   'availed': 'got, claimed, or used',
-  'utilize': 'use',
-  'leverage': 'use, or make the most of',
-  'synergy': 'work together, or combine',
-  'paradigm': 'approach, or model',
-  'bandwidth': 'time, capacity, or internet speed',
-  'facilitate': 'help, or enable',
-  'deep dive': 'look closely at, or explore',
-  'circle back': 'follow up, or check again',
   'touch base': 'connect, or check in',
   'move the needle': 'make progress, or improve',
   'low-hanging fruit': 'easy wins, or quick improvements',
