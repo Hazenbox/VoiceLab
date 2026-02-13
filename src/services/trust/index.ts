@@ -14,6 +14,7 @@ export {
 
 export type {
   AutoFixResult,
+  DynamicReplacement,
 } from './autoFixEngine';
 
 export {

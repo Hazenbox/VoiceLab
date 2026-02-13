@@ -117,16 +117,44 @@ const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> 
 };
 
 /**
- * Generate auto-fixes for violations
+ * Dynamic replacement rule from Convex (admin-managed)
  */
-export function generateAutoFixes(violations: Violation[]): AutoFix[] {
+export interface DynamicReplacement {
+  from: string;
+  to: string;
+}
+
+/**
+ * Generate auto-fixes for violations
+ * 
+ * @param violations - Array of violations to generate fixes for
+ * @param dynamicReplacements - Optional array of admin-managed rules from Convex
+ *                              These are merged with static REPLACEMENTS (Convex rules take priority)
+ */
+export function generateAutoFixes(
+  violations: Violation[],
+  dynamicReplacements?: DynamicReplacement[]
+): AutoFix[] {
   const fixes: AutoFix[] = [];
+  
+  // Build merged replacements: Convex dynamic rules override static ones
+  const mergedReplacements: Record<string, { replacement: string; confidence: number }> = { ...REPLACEMENTS };
+  
+  if (dynamicReplacements && dynamicReplacements.length > 0) {
+    for (const rule of dynamicReplacements) {
+      // Convex admin rules get 0.92 confidence (higher than vocabulary but lower than brand rules)
+      mergedReplacements[rule.from.toLowerCase()] = { 
+        replacement: rule.to, 
+        confidence: 0.92 
+      };
+    }
+  }
   
   for (const violation of violations) {
     if (!violation.autoFixable) continue;
     
     const text = violation.text.toLowerCase();
-    const directFix = REPLACEMENTS[text];
+    const directFix = mergedReplacements[text];
     
     if (directFix) {
       fixes.push({

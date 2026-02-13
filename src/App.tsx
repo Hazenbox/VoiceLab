@@ -978,8 +978,16 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               .filter(v => v.autoFixable);
             
             if (autoFixableViolations.length > 0) {
+              // Extract Convex dynamic rules (admin-managed auto-fix rules)
+              // These are merged with static vocabulary rules in generateAutoFixes
+              const dynamicReplacements = convexKnowledge?.autoFixRules?.map(rule => ({
+                from: rule.from,
+                to: rule.to,
+              }));
+              
               // Generate and apply fixes to create preview
-              const fixes = generateAutoFixes(autoFixableViolations);
+              // Pass Convex rules so admin-managed rules also work for auto-fix
+              const fixes = generateAutoFixes(autoFixableViolations, dynamicReplacements);
               const fixResult = applyAutoFixes(result.content, fixes);
               
               // Only show preview if fixes were actually applied
@@ -990,7 +998,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   appliedFixes: fixResult.appliedFixes,
                   isPending: true,
                 };
-                console.log(`[AutoFix] Generated preview with ${fixResult.appliedFixes.length} fixes`);
+                console.log(`[AutoFix] Generated preview with ${fixResult.appliedFixes.length} fixes (${dynamicReplacements?.length || 0} Convex rules)`);
               }
             }
           } catch (autoFixError) {
@@ -1570,8 +1578,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         return;
       }
       
-      // Generate fixes using the auto-fix engine
-      const fixes = generateAutoFixes(violations);
+      // Extract Convex dynamic rules (admin-managed auto-fix rules)
+      const dynamicReplacements = convexKnowledge?.autoFixRules?.map(rule => ({
+        from: rule.from,
+        to: rule.to,
+      }));
+      
+      // Generate fixes using the auto-fix engine (with Convex rules)
+      const fixes = generateAutoFixes(violations, dynamicReplacements);
       
       // Apply fixes to the content
       const result = applyAutoFixes(message.content, fixes);
