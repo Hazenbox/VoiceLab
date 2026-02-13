@@ -55,22 +55,18 @@ function deduplicateViolations(violations: ValidationViolation[]): ValidationVio
     }
     
     // Check if any existing result overlaps this position (exact or near-exact match)
+    // Only merge violations at the SAME POSITION - different positions = different violations
     const overlappingIndex = result.findIndex(existing => {
       if (!existing.position || existing.position.start === undefined) return false;
       
-      // EXACT TEXT MATCH is a duplicate - same word from different agents
-      if (existing.text?.toLowerCase() === v.text?.toLowerCase()) {
-        return true;
-      }
-      
-      // Check for EXACT position overlap (same start AND end) - same span
+      // Check for EXACT position overlap (same start AND end) - same span from different agents
       if (existing.position.start === v.position!.start && 
           existing.position.end === v.position!.end) {
         return true;
       }
       
       // Check for significant overlap (> 80% of the smaller span)
-      // Made stricter to avoid merging different words
+      // This handles cases where agents detect slightly different spans for the same word
       const existingLength = existing.position.end - existing.position.start;
       const newLength = v.position!.end - v.position!.start;
       const minLength = Math.min(existingLength, newLength);
@@ -81,14 +77,6 @@ function deduplicateViolations(violations: ValidationViolation[]): ValidationVio
       
       // Only consider it overlapping if they share > 80% of the smaller term
       const isOverlap = overlapLength > minLength * 0.8;
-      
-      if (isOverlap) {
-        console.log('[Dedup] Merging:', { 
-          existing: existing.text, existingPos: existing.position,
-          new: v.text, newPos: v.position,
-          overlapPct: Math.round(overlapLength / minLength * 100)
-        });
-      }
       
       return isOverlap;
     });
