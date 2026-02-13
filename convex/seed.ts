@@ -534,3 +534,21 @@ export const checkSeedStatus = query({
     return { total: all.length, byType, isCapped: all.length >= 10000 };
   },
 });
+
+// ── Clear All Knowledge Items ────────────────────────────────────
+// Use this to clear the database before re-seeding with updated data
+// WARNING: This deletes ALL knowledge items (avoid words, preferred words, etc.)
+// User data (users, sessions, analytics) is NOT affected.
+export const clearAll = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const items = await ctx.db.query("knowledgeItems").collect();
+    let deleted = 0;
+    for (const item of items) {
+      await ctx.db.delete(item._id);
+      deleted++;
+    }
+    console.log(`Deleted ${deleted} knowledge items.`);
+    return { status: "cleared", deleted };
+  },
+});
