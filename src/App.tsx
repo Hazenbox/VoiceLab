@@ -917,8 +917,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         let validationSummary: { passedCount: number; warningCount: number; errorCount: number; autoFixesApplied: number } | undefined;
 
         try {
+          console.log('[App] Starting validation pipeline...');
           const validationResult = await runValidationPipeline(result.content, finalContext);
+          console.log('[App] Validation pipeline returned, calculating trust score...');
           trustScore = calculateTrustScore(validationResult, trustSettings);
+          console.log('[App] Trust score calculated:', { autoFixableCount: trustScore.autoFixableCount });
           
           // Debug logging for auto-fix pipeline diagnosis
           const allViolationsForDebug = validationResult.agentResults.flatMap(r => r.violations);
