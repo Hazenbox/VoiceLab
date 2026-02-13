@@ -54,6 +54,7 @@ export interface JoySelection {
  */
 export interface JoyContext {
   emotion: string;
+  emotionIntensity?: number | string;
   intent: string;
   topic: string;
   ecosystem: string;
@@ -61,6 +62,12 @@ export interface JoyContext {
   turnNumber: number;
   isMilestone?: boolean;
   milestoneType?: string;
+  // Phase F additions per Tokens v2
+  safetyDomain?: string;
+  riskLevel?: string;
+  isComplaint?: boolean;
+  isEscalated?: boolean;
+  contextEvent?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -245,32 +252,86 @@ function determinePlacement(type: JoyType, context: JoyContext): JoyPlacement {
 
 /**
  * Check if joy should be included
+ * Per Tokens v2 specification (Section 14.2)
+ * 
+ * Small joy MUST:
+ * - Be relevant
+ * - Be subtle
+ * - NEVER override seriousness
+ * - NEVER appear during complaint escalation
+ * - NEVER appear in safety-sensitive scenarios
  */
 function shouldIncludeJoy(context: JoyContext): boolean {
-  // Don't add joy to angry/frustrated emotions
-  const noJoyEmotions = ['raudra', 'bhayanak'];
+  // ══════════════════════════════════════════════════════════════════════
+  // BLOCKING RULES (Phase F) - These ALWAYS block joy
+  // ══════════════════════════════════════════════════════════════════════
+  
+  // BLOCK: High risk scenarios
+  if (context.riskLevel === 'high' || context.riskLevel === 'critical') {
+    return false;
+  }
+  
+  // BLOCK: Safety-sensitive domains
+  const safetySensitiveDomains = [
+    'health_general', 'health_emergency', 'mental_health',
+    'self_harm', 'suicide_risk', 'violence',
+    'fraud_scam', 'cybersecurity', 'legal_sensitive'
+  ];
+  if (context.safetyDomain && safetySensitiveDomains.includes(context.safetyDomain)) {
+    return false;
+  }
+  
+  // BLOCK: Complaint escalation
+  if (context.isComplaint && context.resolutionStatus !== 'resolved') {
+    return false;
+  }
+  
+  // BLOCK: Already escalated
+  if (context.isEscalated) {
+    return false;
+  }
+  
+  // BLOCK: High emotion intensity (7+)
+  const intensityNum = typeof context.emotionIntensity === 'number' 
+    ? context.emotionIntensity 
+    : context.emotionIntensity === 'high' ? 7 : context.emotionIntensity === 'extreme' ? 9 : 5;
+  if (intensityNum >= 7) {
+    return false;
+  }
+  
+  // BLOCK: Angry/frustrated emotions
+  const noJoyEmotions = ['raudra', 'bhayanak', 'bibhatsa'];
   if (noJoyEmotions.includes(context.emotion)) {
     return false;
   }
   
-  // Don't add playful joy to complaints
-  if (context.intent === 'complaint' && context.resolutionStatus !== 'resolved') {
-    return false;
+  // ══════════════════════════════════════════════════════════════════════
+  // ALLOW RULES
+  // ══════════════════════════════════════════════════════════════════════
+  
+  // ALLOW: Festival context - festival_warmth joy
+  if (context.contextEvent === 'festival') {
+    return true;
   }
   
-  // Early turns - maybe empathetic joy only
-  if (context.turnNumber <= 1) {
-    return context.emotion === 'karun'; // Only if they're sad
+  // ALLOW: Cricket match context - cricket_reference joy
+  if (context.contextEvent === 'cricket_match') {
+    return true;
   }
   
-  // Milestones always get joy
+  // ALLOW: Milestones always get joy
   if (context.isMilestone) {
     return true;
   }
   
-  // Resolution gets joy
+  // ALLOW: Resolution gets joy
   if (context.resolutionStatus === 'resolved') {
     return true;
+  }
+  
+  // Early turns - maybe empathetic joy only
+  if (context.turnNumber <= 1) {
+    return context.emotion === 'karuna' || context.emotion === 'karun';
   }
   
   // Random chance for other cases (30%)

@@ -48,11 +48,18 @@ export interface SignatureSelection {
 export interface SignatureContext {
   resolutionStatus: string;
   emotion: string;
+  emotionIntensity?: number | string;
   intent: string;
   turnNumber: number;
   isLastTurn: boolean;
   wasEscalated: boolean;
   userSatisfaction?: 'satisfied' | 'unsatisfied' | 'unknown';
+  // Phase F additions per Tokens v2
+  channel?: string;
+  safetyDomain?: string;
+  riskLevel?: string;
+  isComplaint?: boolean;
+  isHealthContext?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -159,49 +166,74 @@ function shouldIncludeSignature(context: SignatureContext): boolean {
 
 /**
  * Select signature type based on context
+ * Per Tokens v2 specification (Section 14.1)
+ * 
+ * | Signature | When to Use |
+ * |-----------|-------------|
+ * | youre_all_set | Task completed |
+ * | thank_you | General interaction closure |
+ * | with_love | Celebration / internal / delight contexts |
+ * | take_care | Health or sensitive contexts |
+ * | reach_out_anytime | Support contexts |
+ * | none | Transactional SMS/brief responses |
  */
 function selectSignatureType(context: SignatureContext): SignatureType {
-  // Escalated - be professional
+  // RULE: SMS channel = none (brief responses)
+  if (context.channel === 'sms' || context.channel === 'push_notification') {
+    return 'none';
+  }
+  
+  // RULE: Health contexts = take_care
+  if (context.isHealthContext || 
+      context.safetyDomain === 'health_general' ||
+      context.safetyDomain === 'health_emergency' ||
+      context.safetyDomain === 'mental_health') {
+    return 'take_care';
+  }
+  
+  // RULE: High risk = reach_out_anytime (reassuring availability)
+  if (context.riskLevel === 'high' || context.riskLevel === 'critical') {
+    return 'reach_out_anytime';
+  }
+  
+  // RULE: Complaint = reach_out_anytime (don't seem dismissive)
+  if (context.isComplaint) {
+    return 'reach_out_anytime';
+  }
+  
+  // RULE: Escalated - be professional
   if (context.wasEscalated) {
     return 'reach_out_anytime';
   }
   
-  // Resolved successfully
+  // RULE: Resolved successfully = youre_all_set
   if (context.resolutionStatus === 'resolved') {
     // Check user satisfaction
-    if (context.userSatisfaction === 'satisfied') {
-      return 'youre_all_set';
-    }
     if (context.userSatisfaction === 'unsatisfied') {
       return 'reach_out_anytime';
     }
     return 'youre_all_set';
   }
   
-  // High emotion - warm closing
-  const warmEmotions = ['karun', 'bhayanak'];
+  // RULE: High emotion (sad/fearful) - warm closing
+  const warmEmotions = ['karuna', 'karun', 'bhayanaka', 'bhayanak'];
   if (warmEmotions.includes(context.emotion)) {
     return 'take_care';
   }
   
-  // Positive emotion
-  const positiveEmotions = ['hasya', 'shant', 'adbhut'];
+  // RULE: Positive emotion = with_love
+  const positiveEmotions = ['hasya', 'shringara', 'adbhuta', 'shant', 'adbhut'];
   if (positiveEmotions.includes(context.emotion)) {
     return 'with_love';
   }
   
-  // Complaint context
-  if (context.intent === 'complaint') {
-    return 'thank_you';
-  }
-  
-  // Farewell
+  // RULE: Farewell intent
   if (context.intent === 'farewell') {
     return 'take_care';
   }
   
-  // Default
-  return 'reach_out_anytime';
+  // Default for ongoing conversations
+  return 'thank_you';
 }
 
 /**
