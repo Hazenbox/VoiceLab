@@ -177,36 +177,57 @@ export function getCodeDefaults(ecosystem?: string, channel?: string): Retrieved
 /**
  * Build the knowledge-based prompt section for injection.
  * This is added to the system prompt alongside existing brand guardrails.
+ * 
+ * Limits (increased for better pre-generation coverage):
+ * - Avoid words: 150 (was 50)
+ * - Preferred words: 80 (was 30)
+ * - Auto-fix rules: 50 (was 15)
  */
 export function buildKnowledgePromptSection(knowledge: RetrievedKnowledge): string {
   const sections: string[] = [];
 
-  // Avoid words (cap at 50 for prompt length)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CRITICAL: Words to AVOID (150 limit - high priority for pre-generation)
+  // ═══════════════════════════════════════════════════════════════════════════
   if (knowledge.avoidWords.length > 0) {
-    const sample = knowledge.avoidWords.slice(0, 50);
-    sections.push(`## Words & Phrases to Avoid (${knowledge.avoidWords.length} total)
+    const sample = knowledge.avoidWords.slice(0, 150);
+    sections.push(`## CRITICAL: Words You MUST NOT Use (${knowledge.avoidWords.length} total)
 
-Avoid these words/phrases. They make content feel cold, complex, or pressuring:
+**STRICTLY FORBIDDEN**: The following words/phrases are NOT allowed in Jio content.
+They make content feel cold, complex, robotic, or pressuring.
+Do NOT use any of these words under ANY circumstances:
+
 ${sample.map((w) => `- "${w}"`).join('\n')}
-${knowledge.avoidWords.length > 50 ? `\n...and ${knowledge.avoidWords.length - 50} more. Check with the content guidelines.` : ''}`);
+${knowledge.avoidWords.length > 150 ? `\n...and ${knowledge.avoidWords.length - 150} more forbidden words.` : ''}
+
+**IMPORTANT**: If you find yourself about to use any word from this list, STOP and use a simpler, warmer alternative instead.`);
   }
 
-  // Preferred words (cap at 30)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Preferred Vocabulary (80 limit - words to USE during generation)
+  // ═══════════════════════════════════════════════════════════════════════════
   if (knowledge.preferredWords.length > 0) {
-    const sample = knowledge.preferredWords.slice(0, 30);
-    sections.push(`## Preferred Vocabulary
+    const sample = knowledge.preferredWords.slice(0, 80);
+    sections.push(`## Preferred Vocabulary (USE THESE WORDS)
 
-Use these words when appropriate -- they align with Jio's warm, caring brand voice:
-${sample.join(', ')}`);
+When writing content, **prefer** these words that align with Jio's warm, caring brand voice:
+${sample.join(', ')}
+
+These words create warmth, clarity, and connection. Use them naturally in your content.`);
   }
 
-  // Auto-fix suggestions
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Auto-fix Rules (50 limit - replacement mappings)
+  // ═══════════════════════════════════════════════════════════════════════════
   if (knowledge.autoFixRules.length > 0) {
-    const sample = knowledge.autoFixRules.slice(0, 15);
-    sections.push(`## Preferred Alternatives
+    const sample = knowledge.autoFixRules.slice(0, 50);
+    sections.push(`## Word Replacements (MANDATORY)
 
-When you use the word on the left, prefer the word on the right:
-${sample.map((r) => `- "${r.from}" → "${r.to}"`).join('\n')}`);
+When you would use a word on the LEFT, you MUST use the word on the RIGHT instead:
+
+${sample.map((r) => `- "${r.from}" → "${r.to}"`).join('\n')}
+
+These replacements are mandatory. Always use the preferred alternative.`);
   }
 
   // Approved examples
