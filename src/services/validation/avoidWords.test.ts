@@ -86,12 +86,14 @@ describe('scanForAvoidWords', () => {
       expect(fearWords.some(w => w.severity === 'error')).toBe(true);
     });
 
-    it('should mark complex jargon as warnings', () => {
+    it('should mark all avoid words as errors (strict mode)', () => {
+      // All avoid word categories should now be errors (not warnings)
+      // This ensures full brand compliance
       const results = scanForAvoidWords('We will leverage synergy to move the needle');
       const complexWords = results.filter(r => r.category === 'Complex Words');
       
       expect(complexWords.length).toBeGreaterThan(0);
-      expect(complexWords.some(w => w.severity === 'warning')).toBe(true);
+      expect(complexWords.every(w => w.severity === 'error')).toBe(true);
     });
   });
 });

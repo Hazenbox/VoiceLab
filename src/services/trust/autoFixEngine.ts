@@ -80,7 +80,7 @@ const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> 
   'availing': { replacement: 'getting', confidence: 0.90 },
   'availed': { replacement: 'got', confidence: 0.90 },
   
-  // Wordy phrases
+  // Wordy phrases - Complex Words category
   'in order to': { replacement: 'to', confidence: 0.98 },
   'at this point in time': { replacement: 'now', confidence: 0.98 },
   'due to the fact that': { replacement: 'because', confidence: 0.98 },
@@ -89,6 +89,40 @@ const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> 
   'with regard to': { replacement: 'about', confidence: 0.90 },
   'pursuant to': { replacement: 'following', confidence: 0.90 },
   'in accordance with': { replacement: 'following', confidence: 0.90 },
+  'as a matter of fact': { replacement: 'actually', confidence: 0.95 },
+  'it should be noted that': { replacement: 'note that', confidence: 0.95 },
+  'in lieu of': { replacement: 'instead of', confidence: 0.95 },
+  'with respect to': { replacement: 'about', confidence: 0.90 },
+  'pertaining to': { replacement: 'about', confidence: 0.90 },
+  'notwithstanding': { replacement: 'despite', confidence: 0.90 },
+  
+  // Marketing jargon - Simplification category
+  'best-in-class': { replacement: 'excellent', confidence: 0.95 },
+  'world-class': { replacement: 'excellent', confidence: 0.95 },
+  'state-of-the-art': { replacement: 'modern', confidence: 0.95 },
+  'cutting-edge': { replacement: 'advanced', confidence: 0.95 },
+  'synergy': { replacement: 'working together', confidence: 0.90 },
+  'paradigm': { replacement: 'approach', confidence: 0.90 },
+  'bandwidth': { replacement: 'capacity', confidence: 0.85 },
+  'deep dive': { replacement: 'detailed look', confidence: 0.90 },
+  'circle back': { replacement: 'follow up', confidence: 0.90 },
+  'touch base': { replacement: 'connect', confidence: 0.90 },
+  'move the needle': { replacement: 'make progress', confidence: 0.90 },
+  'low-hanging fruit': { replacement: 'easy wins', confidence: 0.90 },
+  'seamless': { replacement: 'smooth', confidence: 0.90 },
+  'frictionless': { replacement: 'easy', confidence: 0.90 },
+  'robust': { replacement: 'strong', confidence: 0.85 },
+  'scalable': { replacement: 'flexible', confidence: 0.85 },
+  
+  // Robotic phrases
+  'please note': { replacement: '', confidence: 0.85 },  // Often redundant, remove
+  'be advised': { replacement: '', confidence: 0.85 },   // Often redundant, remove
+  'kindly': { replacement: 'please', confidence: 0.95 },
+  'hereby': { replacement: '', confidence: 0.90 },       // Usually redundant
+  'furthermore': { replacement: 'also', confidence: 0.90 },
+  'moreover': { replacement: 'also', confidence: 0.90 },
+  'henceforth': { replacement: 'from now on', confidence: 0.95 },
+  'aforementioned': { replacement: 'mentioned', confidence: 0.95 },
   
   // Accessibility (Link Text)
   'click here': { replacement: 'view details', confidence: 0.85 },

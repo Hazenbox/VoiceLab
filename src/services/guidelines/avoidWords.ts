@@ -275,14 +275,14 @@ export const WORD_CATEGORIES: WordCategory[] = [
     id: 'complex',
     name: 'Complex Words',
     description: 'Words that make content harder to understand',
-    severity: 'warning',
+    severity: 'error',  // All avoid words must be fixed
     words: COMPLEX_WORDS,
   },
   {
     id: 'robotic',
     name: 'Robotic Words',
     description: 'Words that sound impersonal and cold',
-    severity: 'warning',
+    severity: 'error',  // All avoid words must be fixed
     words: ROBOTIC_WORDS,
   },
   {
@@ -296,14 +296,14 @@ export const WORD_CATEGORIES: WordCategory[] = [
     id: 'bureaucratic',
     name: 'Bureaucratic Words',
     description: 'Words that sound official and unapproachable',
-    severity: 'warning',
+    severity: 'error',  // All avoid words must be fixed
     words: BUREAUCRATIC_WORDS,
   },
   {
     id: 'technical',
     name: 'Technical Words',
     description: 'Words that alienate non-technical users',
-    severity: 'info',
+    severity: 'error',  // All avoid words must be fixed
     words: TECHNICAL_WORDS,
   },
   {
@@ -317,14 +317,14 @@ export const WORD_CATEGORIES: WordCategory[] = [
     id: 'elitist',
     name: 'Elitist Words',
     description: 'Words that exclude based on tech-savviness or lifestyle',
-    severity: 'warning',
+    severity: 'error',  // All avoid words must be fixed
     words: ELITIST_WORDS,
   },
   {
     id: 'marketing_jargon',
     name: 'Marketing Jargon',
     description: 'Buzzwords and jargon that should be replaced with simpler alternatives',
-    severity: 'warning',
+    severity: 'error',  // All avoid words must be fixed
     words: MARKETING_JARGON_WORDS,
   },
 ];
