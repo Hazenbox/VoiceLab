@@ -21,6 +21,7 @@ import type * as maintenance from "../maintenance.js";
 import type * as migrations from "../migrations.js";
 import type * as seed from "../seed.js";
 import type * as sessions from "../sessions.js";
+import type * as userProfiles from "../userProfiles.js";
 import type * as users from "../users.js";
 
 import type {
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   seed: typeof seed;
   sessions: typeof sessions;
+  userProfiles: typeof userProfiles;
   users: typeof users;
 }>;
 
