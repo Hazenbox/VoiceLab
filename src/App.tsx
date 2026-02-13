@@ -97,6 +97,31 @@ import {
 // Conversational Mode: Intent Classification + Base Persona
 import { classifyIntent } from './services/intent';
 import { buildConversationalPrompt, buildJioInquiryPrompt } from './services/prompt/basePersona';
+// Safety Gate & Constitutional AI (wiring orphaned code)
+import { 
+  checkSafetyGate, 
+  type SafetyGateResult 
+} from './services/safety';
+import { 
+  prepareConstitutionalContext, 
+  validateConstitutionalResponse,
+  getConstitutionalWrapper,
+  type ConstitutionalContext,
+  type GenerationRequest 
+} from './services/generation/constitutionalWrapper';
+// RAG enhancements (wiring orphaned code)
+import {
+  expandQueryFull,
+  rankResults,
+  type ExpandedQuery,
+  type RankedResult,
+} from './services/rag';
+// Profile Learning (wiring orphaned code)
+import {
+  buildProfileLearningSection,
+  getPersonalizationSummary,
+  type UserLearningProfile,
+} from './services/learning';
 import type { 
   FeedbackPayload, 
   SendMessageOptions, 
@@ -139,7 +164,7 @@ async function withTimeout<T>(
 
 // Timeout configuration for various operations
 const TIMEOUTS = {
-  SEMANTIC_SEARCH_MS: 150, // RAG should not block UX
+  SEMANTIC_SEARCH_MS: 2000, // RAG timeout - HuggingFace API needs 300-2000ms (especially cold starts)
 } as const;
 
 // Storage key for chat mode persistence
@@ -402,6 +427,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     featureFlags.learning ? { ecosystem, channel: contentChannel, limit: 20 } : 'skip'
   );
   
+  // Fetch user learning profile from Convex (gated by learning flag)
+  // Returns aggregated preferences, avoid patterns, and style preferences
+  const convexUserLearningProfile = useQuery(
+    featureFlags.learning && userProfile?.deviceId ? api.userProfiles.getProfileByDeviceId : undefined,
+    featureFlags.learning && userProfile?.deviceId ? { deviceId: userProfile.deviceId } : 'skip'
+  );
+  
+  // Fetch high-quality training examples for few-shot prompting (wiring orphaned code)
+  // Returns verified examples with high quality scores
+  const convexTrainingExamples = useQuery(
+    featureFlags.learning ? api.seedTrainingExamples.getHighQuality : undefined,
+    featureFlags.learning ? { minScore: 4, limit: 5 } : 'skip'
+  );
+  
   // Semantic search action for RAG (called on-demand during message generation)
   const runSemanticSearch = useAction(api.embeddings.semanticSearch);
 
@@ -509,6 +548,67 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           })
         : null; // null = legacy mode, always content_generation pipeline
 
+      // =====================================================================
+      // Safety Gate: Pre-generation safety check (wiring orphaned code)
+      // Checks for critical safety concerns BEFORE calling LLM
+      // =====================================================================
+      let safetyGateResult: SafetyGateResult | null = null;
+      if (featureFlags.safetyGate) {
+        safetyGateResult = checkSafetyGate(message, {
+          ecosystem,
+          channel: contentChannel,
+        });
+        
+        // Handle emergency responses immediately
+        if (safetyGateResult.routing === 'emergency_response' && safetyGateResult.emergencyResponse) {
+          console.log('[SafetyGate] Emergency response triggered for:', safetyGateResult.classification.domain);
+          
+          // Create AI response with emergency message
+          const emergencyMessage = {
+            ...createTextMessage('assistant', safetyGateResult.emergencyResponse.message, chatMode, userMessageId),
+            messageIntent: 'safety_response' as const,
+            safetyRouting: safetyGateResult.routing,
+          };
+          
+          addMessage(emergencyMessage);
+          
+          // Log safety event
+          const syncService = getSyncService();
+          if (syncService) {
+            syncService.logAnalyticsEvent({
+              eventType: 'safety_gate_emergency',
+              ecosystem,
+              channel: contentChannel,
+              persona: featureFlags.persona ? (userProfile?.role || 'unknown') : 'unknown',
+            });
+          }
+          
+          return { success: true, message: 'Emergency response provided' };
+        }
+        
+        // Block and log if required
+        if (safetyGateResult.routing === 'block_and_log') {
+          console.warn('[SafetyGate] Request blocked:', safetyGateResult.classification.domain);
+          
+          const blockedMessage = {
+            ...createTextMessage('assistant', 
+              "I'm sorry, but I'm not able to help with that request. Please let me know if there's something else I can assist you with.", 
+              chatMode, userMessageId),
+            messageIntent: 'safety_response' as const,
+            safetyRouting: safetyGateResult.routing,
+          };
+          
+          addMessage(blockedMessage);
+          
+          return { success: true, message: 'Request blocked for safety' };
+        }
+        
+        // Log proceed_modified for monitoring
+        if (safetyGateResult.routing === 'proceed_modified') {
+          console.log('[SafetyGate] Proceeding with modifications:', safetyGateResult.modifications);
+        }
+      }
+
       const isContentGeneration = !intentClassification || intentClassification.intent === 'content_generation';
 
       if (isContentGeneration) {
@@ -581,13 +681,33 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             }
           }
           
-          // RAG: Enrich with semantically relevant knowledge (always enabled)
-          // Uses timeout to prevent blocking UX - graceful degradation if slow
+          // =====================================================================
+          // RAG: Enrich with semantically relevant knowledge (wiring orphaned code)
+          // Now includes: Query Expansion + Semantic Search + Result Ranking
+          // =====================================================================
           try {
+            // Step 1: Query Expansion (wiring orphaned queryExpander)
+            let searchQuery = message;
+            let queryExpansion: ExpandedQuery | null = null;
+            
+            if (featureFlags.ragQueryExpansion) {
+              queryExpansion = expandQueryFull(message, {
+                channel: effectiveChannel,
+                ecosystem: effectiveEcosystem,
+                maxExpansions: 3,
+              });
+              
+              if (queryExpansion.wasExpanded) {
+                searchQuery = queryExpansion.expanded;
+                console.log(`[RAG] Query expanded: "${message}" → "${searchQuery}" (added: ${queryExpansion.addedTerms.join(', ')})`);
+              }
+            }
+            
+            // Step 2: Semantic Search
             const { result: semanticResults, timedOut } = await withTimeout(
               runSemanticSearch({
-                query: message,
-                limit: 10,
+                query: searchQuery,
+                limit: 15, // Fetch more for ranking
                 filterActiveOnly: true,
               }) as Promise<SemanticSearchResult[]>,
               TIMEOUTS.SEMANTIC_SEARCH_MS,
@@ -598,16 +718,87 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             if (timedOut) {
               console.warn('[RAG] Semantic search timed out, continuing without RAG enrichment');
             } else if (semanticResults && semanticResults.length > 0) {
+              // Step 3: Result Ranking (wiring orphaned resultRanker)
+              let finalResults: SemanticSearchResult[] = semanticResults;
+              
+              if (featureFlags.ragResultRanking) {
+                const rankedResults = rankResults(
+                  semanticResults,
+                  {
+                    ecosystem: effectiveEcosystem,
+                    channel: effectiveChannel,
+                    persona: featureFlags.persona ? userProfile?.role : undefined,
+                    query: message,
+                  },
+                  10 // Top 10 after ranking
+                );
+                
+                // Convert back to SemanticSearchResult (rankResults adds extra fields)
+                finalResults = rankedResults;
+                console.log(`[RAG] Ranked ${semanticResults.length} results → top ${finalResults.length}`);
+                
+                // Log top result for debugging
+                if (rankedResults.length > 0) {
+                  const top = rankedResults[0];
+                  console.log(`[RAG] Top result: "${top.content.substring(0, 50)}..." (score: ${top.rankScore.toFixed(3)}, type: ${top.type})`);
+                }
+              }
+              
               promptKnowledge = enrichWithSemanticResults(
                 promptKnowledge,
-                semanticResults,
+                finalResults,
                 0.3 // minimum similarity score threshold
               );
-              console.log(`[RAG] Enriched prompt with ${semanticResults.length} semantic results`);
+              console.log(`[RAG] Enriched prompt with ${finalResults.length} semantic results`);
             }
           } catch (ragError) {
             // Graceful degradation - continue without RAG if it fails
             console.error('[RAG] Semantic search failed, continuing without RAG enrichment:', ragError);
+          }
+        }
+
+        // =====================================================================
+        // Constitutional AI: Prepare context (wiring orphaned code)
+        // This integrates token classification, directives, and state machine
+        // =====================================================================
+        let constitutionalContext: ConstitutionalContext | null = null;
+        let constitutionalSystemInjection = '';
+        
+        if (featureFlags.constitutionalWrapper) {
+          try {
+            const constitutionalRequest: GenerationRequest = {
+              userMessage: message,
+              ecosystem: effectiveEcosystem,
+              channel: effectiveChannel,
+              userProfile: userProfile?.role as 'new_user' | 'regular' | 'premium' | 'enterprise' | 'senior' | 'youth' | 'unknown' | undefined,
+              conversationHistory: chatMessages
+                .filter(m => m.type === 'text')
+                .slice(-10)
+                .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+            };
+            
+            constitutionalContext = prepareConstitutionalContext(constitutionalRequest);
+            
+            // Check if constitutional context blocks the request
+            if (!constitutionalContext.shouldProceed && constitutionalContext.prebuiltResponse) {
+              console.log('[Constitutional] Using pre-built response:', constitutionalContext.safetyResult.routing);
+              
+              const prebuiltMessage = {
+                ...createTextMessage('assistant', constitutionalContext.prebuiltResponse, chatMode, userMessageId),
+                messageIntent: 'content_generation' as const,
+                safetyRouting: constitutionalContext.safetyResult.routing,
+              };
+              
+              addMessage(prebuiltMessage);
+              return { success: true, message: 'Pre-built response used' };
+            }
+            
+            // Get the system prompt injection from constitutional context
+            constitutionalSystemInjection = constitutionalContext.systemPromptInjection;
+            console.log(`[Constitutional] Prepared context in ${constitutionalContext.metadata.processingTimeMs.toFixed(1)}ms`);
+          } catch (constitutionalError) {
+            // Graceful degradation - continue without constitutional context
+            console.warn('[Constitutional] Context preparation failed, continuing without:', constitutionalError);
           }
         }
 
@@ -617,6 +808,79 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           message,
           promptKnowledge ? { knowledge: promptKnowledge } : {}
         );
+        
+        // =====================================================================
+        // Profile Learning: Add personalization section (wiring orphaned code)
+        // Injects user's correction history and style preferences into prompt
+        // =====================================================================
+        let profileLearningSection = '';
+        if (featureFlags.learning) {
+          // Convert Convex profile to UserLearningProfile format (may be undefined)
+          const learningProfile: UserLearningProfile | null = convexUserLearningProfile ? {
+            userId: convexUserLearningProfile.userId,
+            deviceId: convexUserLearningProfile.deviceId,
+            avoidPatterns: convexUserLearningProfile.avoidPatterns ?? [],
+            preferredWarmth: convexUserLearningProfile.preferredWarmth,
+            preferredDetail: convexUserLearningProfile.preferredDetail,
+            preferredLanguage: convexUserLearningProfile.preferredLanguage,
+            traitPreferences: convexUserLearningProfile.traitPreferences ?? [],
+            correctionCount: convexUserLearningProfile.correctionCount ?? 0,
+            lastCorrectionAt: convexUserLearningProfile.lastCorrectionAt,
+          } : null;
+          
+          // Convert Convex corrections to CorrectionEntry format
+          const correctionEntries: CorrectionEntry[] = (convexCorrections ?? [])
+            .filter(c => c.editedContent || c.comment)
+            .map(c => ({
+              original: c.originalContent,
+              edited: c.editedContent || '',
+              context: c.comment || `${c.feedbackType} feedback`,
+              timestamp: c.timestamp,
+              feedbackType: c.feedbackType,
+            }));
+          
+          profileLearningSection = buildProfileLearningSection(learningProfile, correctionEntries);
+          
+          if (profileLearningSection) {
+            const summary = getPersonalizationSummary(learningProfile, correctionEntries);
+            console.log(`[ProfileLearning] Injecting personalization: ${summary.topWeightedCount} corrections, ${summary.avoidPatternCount} avoid patterns`);
+          }
+        }
+        
+        // Combine system prompt with constitutional injection and profile learning
+        let enhancedSystemPrompt = systemPrompt;
+        
+        if (constitutionalSystemInjection) {
+          enhancedSystemPrompt = `${constitutionalSystemInjection}\n\n---\n\n${enhancedSystemPrompt}`;
+        }
+        
+        if (profileLearningSection) {
+          enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${profileLearningSection}`;
+        }
+        
+        // =====================================================================
+        // Training Examples: Add few-shot examples (wiring orphaned code)
+        // Injects high-quality verified examples for few-shot prompting
+        // =====================================================================
+        if (featureFlags.learning && convexTrainingExamples && convexTrainingExamples.length > 0) {
+          const examplesSection = [
+            '# high-quality examples',
+            'use these verified examples as a reference for style and format:',
+            '',
+            ...convexTrainingExamples.map((ex, i) => {
+              const lines = [
+                `## example ${i + 1}`,
+                `input: "${ex.input}"`,
+                `output: "${ex.content}"`,
+              ];
+              if (ex.context) lines.push(`context: ${ex.context}`);
+              return lines.join('\n');
+            }),
+          ].join('\n\n');
+          
+          enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${examplesSection}`;
+          console.log(`[TrainingExamples] Injected ${convexTrainingExamples.length} few-shot examples`);
+        }
 
         // Build messages with system prompt and history
         const contextMessages = chatMessages
@@ -624,7 +888,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           .slice(-20);
         
         const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-          { role: 'system', content: systemPrompt },
+          { role: 'system', content: enhancedSystemPrompt },
           ...contextMessages.map(m => ({
             role: m.role as 'user' | 'assistant',
             content: m.content,
@@ -666,6 +930,39 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           };
         } catch (validationError) {
           console.warn('Content validation failed:', validationError);
+        }
+        
+        // =====================================================================
+        // Constitutional AI: Validate response (wiring orphaned code)
+        // Checks for forbidden phrases, emotion appropriateness, safety compliance
+        // =====================================================================
+        if (featureFlags.constitutionalWrapper && constitutionalContext) {
+          try {
+            const constitutionalValidation = validateConstitutionalResponse(
+              result.content,
+              constitutionalContext
+            );
+            
+            // Log constitutional validation results
+            if (!constitutionalValidation.passed) {
+              console.warn(
+                '[Constitutional] Response validation issues:',
+                constitutionalValidation.checks.filter(c => !c.passed).map(c => c.message)
+              );
+              
+              // Add suggestions to validation summary if applicable
+              if (constitutionalValidation.suggestions.length > 0) {
+                console.info('[Constitutional] Suggestions:', constitutionalValidation.suggestions);
+              }
+            } else {
+              console.log('[Constitutional] Response passed validation');
+            }
+            
+            // Note: We don't block/regenerate here - just log for monitoring
+            // In future, could trigger auto-regeneration if shouldRegenerate is true
+          } catch (constitutionalValidationError) {
+            console.warn('[Constitutional] Response validation failed:', constitutionalValidationError);
+          }
         }
 
         // Create AI response with trust data and intent tag
@@ -763,11 +1060,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         let conversationalTrustScore: TrustScore | undefined;
         if (featureFlags.validateConversational) {
           try {
+            // Use detected ecosystem/channel if available, otherwise fall back to UI selection
+            const effectiveEcosystem = intentClassification?.detectedEcosystem?.ecosystem || ecosystem;
+            const effectiveChannel = intentClassification?.detectedChannel?.channel || contentChannel;
+            
             // Build minimal context for validation (no full generation context)
             const minimalContext = buildGenerationContext({
-              ecosystem: finalContext.ecosystem,
-              channel: finalContext.channel,
-              persona: finalContext.persona,
+              ecosystem: effectiveEcosystem,
+              channel: effectiveChannel,
+              persona: featureFlags.persona ? userProfile?.role : undefined,
               originalInput: message,
               userMessageId,
               messageHistory: contextMessages.slice(-5),
@@ -779,8 +1080,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               minimalContext
             );
 
-            // Calculate trust score
-            conversationalTrustScore = calculateTrustScore(validationResults, minimalContext);
+            // Calculate trust score with proper trustSettings (not minimalContext)
+            conversationalTrustScore = calculateTrustScore(validationResults, trustSettings);
 
             // Log if score is concerning (but don't block - conversational is lower risk)
             if (conversationalTrustScore.overall < 60) {
@@ -839,6 +1140,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       if ((err as Error).name === 'AbortError' || (err as Error).message?.includes('cancelled')) {
         console.log('Chat request cancelled');
         return null;
+      }
+      
+      // Wire StateManager: Handle system error (wiring orphaned code)
+      if (featureFlags.conversationState) {
+        try {
+          const wrapper = getConstitutionalWrapper();
+          const stateManager = wrapper.getStateManager('default');
+          if (stateManager) {
+            stateManager.handleSystemEvent('error');
+            console.log('[StateManager] Recorded system error');
+          }
+        } catch (stateErr) {
+          console.warn('[StateManager] Failed to handle error event:', stateErr);
+        }
       }
       
       // v2: Track error in analytics
@@ -1022,6 +1337,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       userFeedback: 'like' as const,
     }));
     
+    // Wire StateManager: Record positive satisfaction (wiring orphaned code)
+    if (featureFlags.conversationState) {
+      try {
+        const wrapper = getConstitutionalWrapper();
+        const stateManager = wrapper.getStateManager('default');
+        if (stateManager) {
+          stateManager.recordSatisfaction('positive');
+          console.log('[StateManager] Recorded positive satisfaction');
+        }
+      } catch (err) {
+        console.warn('[StateManager] Failed to record satisfaction:', err);
+      }
+    }
+    
     // Log to learning system (reuse existing feedback handler)
     handleMessageFeedback({
       messageId,
@@ -1052,6 +1381,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     
     const message = chatMessages.find(m => m.id === dislikeModalMessageId);
     if (!message) return;
+    
+    // Wire StateManager: Record negative satisfaction (wiring orphaned code)
+    if (featureFlags.conversationState) {
+      try {
+        const wrapper = getConstitutionalWrapper();
+        const stateManager = wrapper.getStateManager('default');
+        if (stateManager) {
+          stateManager.recordSatisfaction('negative');
+          console.log('[StateManager] Recorded negative satisfaction');
+        }
+      } catch (err) {
+        console.warn('[StateManager] Failed to record satisfaction:', err);
+      }
+    }
     
     // Store feedback with structured reasons
     handleMessageFeedback({

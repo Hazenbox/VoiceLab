@@ -22,3 +22,12 @@ export {
   type WeightedCorrection,
   type CorrectionGroup,
 } from './correctionWeighting';
+
+// Profile Learning (wiring previously unexported)
+export {
+  buildProfileLearningSection,
+  getPersonalizationSummary,
+  DEFAULT_CONFIG as PROFILE_LEARNING_CONFIG,
+  type UserLearningProfile,
+  type ProfileLearningConfig,
+} from './profileLearning';

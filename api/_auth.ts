@@ -74,14 +74,22 @@ export function handleApiAuth(
   }
   
   const serverApiKey = process.env.INTERNAL_API_KEY;
+  const isProduction = process.env.VERCEL_ENV === 'production';
   
-  // If no API key configured, allow requests (development mode / gradual rollout)
-  // In production, INTERNAL_API_KEY should always be set
+  // SECURITY FIX: Fail closed in production when API key is not configured
+  // In production, INTERNAL_API_KEY MUST be set - reject all requests if missing
   if (!serverApiKey) {
-    // Log warning in production
-    if (process.env.VERCEL_ENV === 'production') {
-      console.warn('[API Auth] INTERNAL_API_KEY not configured - authentication disabled');
+    if (isProduction) {
+      console.error('[API Auth] CRITICAL: INTERNAL_API_KEY not configured in production - rejecting request');
+      res.status(503).json({
+        error: 'Service Unavailable',
+        message: 'Server configuration error. Please contact support.',
+      });
+      return false;
     }
+    
+    // Development/preview: Allow requests but log warning
+    console.warn('[API Auth] INTERNAL_API_KEY not configured - authentication disabled (non-production)');
     return true;
   }
   

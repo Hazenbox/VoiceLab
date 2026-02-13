@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors } from '../theme/useColors';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
@@ -12,6 +12,9 @@ import { ChartContainer, HorizontalBarChart, VerticalBars, StatBreakdown, Sentim
 import { KPI_DESCRIPTIONS } from './constants/kpiDescriptions';
 import { formatDuration, formatRelativeTime } from './utils/formatters';
 import { getApiBaseUrl } from '../config/providers';
+import { KnowledgeItemEditor, DeleteConfirmModal } from './components/KnowledgeCRUD';
+import { CorrectionApprovalList } from './components/CorrectionApproval';
+import type { Id } from '../../convex/_generated/dataModel';
 
 // ── Admin Auth Gate ──────────────────────────────────────────────
 const SESSION_TOKEN_KEY = 'voicelab_admin_token';
@@ -797,7 +800,7 @@ function AdminLearningCenter() {
       )}
 
       {/* Full Feedback Table */}
-      <AdminCard className="p-4">
+      <AdminCard className="p-4 mb-5">
         <CardLabel>
           {filter === 'all' ? 'all feedback' : `${filter.replace('_', ' ')} feedback`} 
           {' '}({filtered.length} items)
@@ -839,17 +842,35 @@ function AdminLearningCenter() {
           </span>
         )}
       </AdminCard>
+
+      {/* Correction Approval Section */}
+      <AdminCard className="p-4">
+        <CardLabel>correction approval queue</CardLabel>
+        <p className="text-xs mb-4" style={{ color: theme.text.low }}>
+          review and approve/reject user feedback to control what the system learns from.
+        </p>
+        <CorrectionApprovalList />
+      </AdminCard>
     </>
   );
 }
 
 // ── Knowledge Base ───────────────────────────────────────────────
-// Updated for POC: High-priority rules first, total counter, RAG status
+// Updated for POC: High-priority rules first, total counter, RAG status, CRUD UI
 function AdminKnowledge() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [displayLimit, setDisplayLimit] = useState(30);
+  
+  // CRUD state
+  const [showEditor, setShowEditor] = useState(false);
+  const [editingItem, setEditingItem] = useState<{ _id: Id<"knowledgeItems">; type: string; category: string; content: string; metadata: Record<string, string | undefined>; tags: string[]; isActive: boolean } | undefined>(undefined);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: Id<"knowledgeItems">; content: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Mutations for CRUD
+  const softDeleteItem = useMutation(api.knowledge.softDelete);
   
   // Direct Convex queries - no localStorage fallback
   const knowledgeCounts = useQuery(api.knowledge.countByType);
@@ -915,9 +936,43 @@ function AdminKnowledge() {
     setDisplayLimit(30); // Reset display limit when switching types
   };
   
+  // CRUD handlers
+  const handleAddNew = () => {
+    setEditingItem(undefined);
+    setShowEditor(true);
+  };
+  
+  const handleEdit = (item: typeof editingItem) => {
+    setEditingItem(item);
+    setShowEditor(true);
+  };
+  
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await softDeleteItem({ id: deleteTarget.id });
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error('Failed to delete:', err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+  
   // Get total count for selected type from knowledgeCounts
   const getTotalCount = (type: string): number => {
     return knowledgeCounts?.[type]?.active || 0;
+  };
+
+  // Get items for selected type from Convex (with full data for CRUD)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getFullItemsForType = (type: string): any[] => {
+    if (knowledgeItems && knowledgeItems.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return knowledgeItems.filter((item: any) => item.type === type && item.isActive);
+    }
+    return [];
   };
 
   // Get items for selected type from Convex
@@ -1282,7 +1337,7 @@ function AdminKnowledge() {
       {!isOnline && <OfflineBanner />}
       <SectionHeader title="knowledge base" subtitle="brand rules, vocabulary, and content guidelines" />
 
-      {/* Total Rules Counter with RAG Status */}
+      {/* Total Rules Counter with RAG Status + Add Button */}
       <AdminCard className="p-4 mb-5">
         <div className="flex items-center justify-between">
           <div>
@@ -1293,16 +1348,32 @@ function AdminKnowledge() {
               active rules enforcing Jio brand guidelines
             </span>
           </div>
-          <div className="text-right">
-            <span className="block text-xs" style={{ color: theme.text.low }}>
-              semantic search enabled (RAG)
-            </span>
-            <span className="text-xs px-2 py-0.5 rounded-full" style={{ 
-              backgroundColor: 'rgba(34,197,94,0.12)', 
-              color: '#22c55e' 
-            }}>
-              vector index active
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <span className="block text-xs" style={{ color: theme.text.low }}>
+                semantic search enabled (RAG)
+              </span>
+              <span className="text-xs px-2 py-0.5 rounded-full" style={{ 
+                backgroundColor: 'rgba(34,197,94,0.12)', 
+                color: '#22c55e' 
+              }}>
+                vector index active
+              </span>
+            </div>
+            {selectedType && (
+              <button
+                onClick={handleAddNew}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-90"
+                style={{
+                  backgroundColor: theme.accent,
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                + add {selectedType.replace('_', ' ')}
+              </button>
+            )}
           </div>
         </div>
       </AdminCard>
@@ -1331,12 +1402,30 @@ function AdminKnowledge() {
             how to manage knowledge
           </span>
           <ul className="space-y-1 pl-4" style={{ fontSize: '12px', color: theme.text.medium, listStyleType: 'disc' }}>
+            <li><strong>add items:</strong> select a category above, then click "+ add" to create new rules</li>
             <li><strong>seed data:</strong> run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run seed:seedAll</code></li>
             <li><strong>embeddings:</strong> run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run embeddings:backfillEmbeddings</code></li>
             <li><strong>vocab rules</strong> are managed here -- no code deploy needed</li>
-            <li><strong>regex rules</strong> require a code deploy to <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>allAgents.ts</code></li>
           </ul>
         </AdminCard>
+      )}
+
+      {/* CRUD Modals */}
+      {showEditor && selectedType && (
+        <KnowledgeItemEditor
+          selectedType={selectedType}
+          onClose={() => { setShowEditor(false); setEditingItem(undefined); }}
+          existingItem={editingItem}
+        />
+      )}
+      
+      {deleteTarget && (
+        <DeleteConfirmModal
+          itemContent={deleteTarget.content}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+          isDeleting={isDeleting}
+        />
       )}
     </>
   );

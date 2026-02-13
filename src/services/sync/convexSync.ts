@@ -34,6 +34,26 @@ const RETRY_CONFIG: RetryOptions = {
   },
 };
 
+// ── Circuit Breaker Configuration ─────────────────────────────────
+// Prevents repeated failures from overwhelming the system
+const CIRCUIT_BREAKER_CONFIG = {
+  /** Number of failures before opening the circuit */
+  failureThreshold: 5,
+  /** Time to wait before attempting to close the circuit (ms) */
+  resetTimeoutMs: 60000, // 1 minute cooldown
+  /** Number of successes needed to fully close the circuit */
+  successThreshold: 2,
+} as const;
+
+/** Circuit breaker state */
+interface CircuitBreakerState {
+  state: 'closed' | 'open' | 'half-open';
+  failureCount: number;
+  successCount: number;
+  lastFailureTime: number | null;
+  openedAt: number | null;
+}
+
 // ── Types ────────────────────────────────────────────────────────
 
 export interface AnalyticsEvent {
@@ -157,6 +177,15 @@ export class ConvexSyncService {
   // Store bound handlers so we can remove them in destroy()
   private handleOnline: (() => void) | null = null;
   private handleOffline: (() => void) | null = null;
+  
+  // Circuit breaker state (wiring orphaned pattern)
+  private circuitBreaker: CircuitBreakerState = {
+    state: 'closed',
+    failureCount: 0,
+    successCount: 0,
+    lastFailureTime: null,
+    openedAt: null,
+  };
 
   constructor() {
     this.convexUserId = getCachedConvexUserId();
@@ -192,16 +221,112 @@ export class ConvexSyncService {
   }
 
   private get isAvailable(): boolean {
-    return this.mutationFn !== null && this.isOnline;
+    return this.mutationFn !== null && this.isOnline && !this.isCircuitOpen();
+  }
+
+  // ── Circuit Breaker Methods ─────────────────────────────────────
+  
+  /**
+   * Check if circuit breaker is open (blocking requests)
+   */
+  private isCircuitOpen(): boolean {
+    const cb = this.circuitBreaker;
+    
+    if (cb.state === 'closed') return false;
+    
+    if (cb.state === 'open') {
+      // Check if enough time has passed to try half-open
+      const now = Date.now();
+      if (cb.openedAt && now - cb.openedAt >= CIRCUIT_BREAKER_CONFIG.resetTimeoutMs) {
+        // Transition to half-open: allow a single request through
+        this.circuitBreaker.state = 'half-open';
+        this.circuitBreaker.successCount = 0;
+        console.log('[ConvexSync] Circuit breaker transitioning to half-open');
+        return false;
+      }
+      return true; // Still in cooldown
+    }
+    
+    // half-open: allow requests through (single test)
+    return false;
+  }
+  
+  /**
+   * Record a successful operation (may close the circuit)
+   */
+  private recordSuccess(): void {
+    const cb = this.circuitBreaker;
+    
+    if (cb.state === 'half-open') {
+      cb.successCount++;
+      if (cb.successCount >= CIRCUIT_BREAKER_CONFIG.successThreshold) {
+        // Fully close the circuit
+        cb.state = 'closed';
+        cb.failureCount = 0;
+        cb.successCount = 0;
+        cb.lastFailureTime = null;
+        cb.openedAt = null;
+        console.log('[ConvexSync] Circuit breaker closed after successful requests');
+      }
+    } else if (cb.state === 'closed') {
+      // Reset failure count on success (sliding window approach)
+      cb.failureCount = Math.max(0, cb.failureCount - 1);
+    }
+  }
+  
+  /**
+   * Record a failed operation (may open the circuit)
+   */
+  private recordFailure(): void {
+    const cb = this.circuitBreaker;
+    const now = Date.now();
+    
+    cb.failureCount++;
+    cb.lastFailureTime = now;
+    
+    if (cb.state === 'half-open') {
+      // Immediately re-open on any failure in half-open state
+      cb.state = 'open';
+      cb.openedAt = now;
+      console.warn('[ConvexSync] Circuit breaker re-opened after half-open failure');
+    } else if (cb.state === 'closed' && cb.failureCount >= CIRCUIT_BREAKER_CONFIG.failureThreshold) {
+      // Open the circuit
+      cb.state = 'open';
+      cb.openedAt = now;
+      console.warn(`[ConvexSync] Circuit breaker opened after ${cb.failureCount} failures. Cooldown: ${CIRCUIT_BREAKER_CONFIG.resetTimeoutMs}ms`);
+    }
+  }
+  
+  /**
+   * Get circuit breaker status (for monitoring/debugging)
+   */
+  getCircuitBreakerStatus(): CircuitBreakerState & { timeUntilRetry?: number } {
+    const cb = this.circuitBreaker;
+    const result = { ...cb };
+    
+    if (cb.state === 'open' && cb.openedAt) {
+      const timeUntilRetry = Math.max(0, CIRCUIT_BREAKER_CONFIG.resetTimeoutMs - (Date.now() - cb.openedAt));
+      return { ...result, timeUntilRetry };
+    }
+    
+    return result;
   }
 
   // ── Safe mutation call with retry ────────────────────────────
 
   // Returns { ok: true, value } on success, { ok: false } on failure.
   // Uses exponential backoff for transient failures.
+  // Now integrates with circuit breaker.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async safeMutation(name: string, args: Record<string, any>): Promise<{ ok: true; value: any } | { ok: false }> {
     if (!this.mutationFn) return { ok: false };
+    
+    // Check circuit breaker before attempting
+    if (this.isCircuitOpen()) {
+      const status = this.getCircuitBreakerStatus();
+      console.log(`[ConvexSync] Circuit open, skipping ${name}. Retry in ${status.timeUntilRetry}ms`);
+      return { ok: false };
+    }
     
     try {
       const result = await withRetry(
@@ -213,8 +338,13 @@ export class ConvexSyncService {
           },
         }
       );
+      
+      // Success - record for circuit breaker
+      this.recordSuccess();
       return { ok: true, value: result };
     } catch (error) {
+      // Failure - record for circuit breaker
+      this.recordFailure();
       console.warn('[ConvexSync] Mutation failed after retries:', name, error);
       return { ok: false };
     }
@@ -224,10 +354,19 @@ export class ConvexSyncService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async safeMutationNoRetry(name: string, args: Record<string, any>): Promise<{ ok: true; value: any } | { ok: false }> {
     if (!this.mutationFn) return { ok: false };
+    
+    // Check circuit breaker before attempting
+    if (this.isCircuitOpen()) {
+      console.log(`[ConvexSync] Circuit open, skipping ${name}`);
+      return { ok: false };
+    }
+    
     try {
       const result = await this.mutationFn(name, args);
+      this.recordSuccess();
       return { ok: true, value: result };
     } catch (error) {
+      this.recordFailure();
       console.warn('[ConvexSync] Mutation failed:', name, error);
       return { ok: false };
     }

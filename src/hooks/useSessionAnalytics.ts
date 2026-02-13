@@ -177,19 +177,56 @@ export function useSessionAnalytics(config: SessionAnalyticsConfig): void {
 
   // ==========================================================================
   // Page Unload Handler
+  // Supports both beforeunload (desktop) and pagehide (mobile)
+  // pagehide is more reliable on mobile browsers (iOS Safari, Android Chrome)
   // ==========================================================================
   
   useEffect(() => {
     if (!featureFlags.sessionAnalytics) return;
     
-    const handleBeforeUnload = () => {
+    // Track if we've already ended the session to prevent double-ending
+    let sessionEnded = false;
+    
+    const endSessionOnce = (reason: string) => {
+      if (sessionEnded) return;
+      sessionEnded = true;
+      
       const sessionManager = getSessionManager();
-      sessionManager.endSession('browser_closed');
+      sessionManager.endSession(reason);
+    };
+    
+    // beforeunload: Works on desktop browsers
+    const handleBeforeUnload = () => {
+      endSessionOnce('browser_closed');
+    };
+    
+    // pagehide: Works on mobile browsers (wiring for mobile support)
+    // This is the modern replacement for beforeunload on mobile
+    // The 'persisted' property indicates if the page might be restored from bfcache
+    const handlePageHide = (event: PageTransitionEvent) => {
+      // If persisted is true, the page might be restored (bfcache)
+      // We still end the session but with a different reason
+      const reason = event.persisted ? 'page_hidden_bfcache' : 'page_hidden';
+      endSessionOnce(reason);
+    };
+    
+    // visibilitychange: Additional safety net for tab switching
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Don't end session immediately on visibility change
+        // Just log for debugging - the pagehide/beforeunload will handle actual end
+        console.log('[SessionAnalytics] Tab became hidden');
+      }
     };
     
     window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 }
