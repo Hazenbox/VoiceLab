@@ -20,6 +20,18 @@ export {
 
 // Mid-term Memory (cross-session, 7-day)
 export {
-  type MidTermMemoryEntry,
-  type MidTermMemoryStore,
+  createEmptyMemory,
+  updateMemory,
+  extractMemoryContext,
+  formatMemoryForPrompt,
+  getContinuationGreeting,
+  getMemoryInsights,
+  MEMORY_CONFIG,
+  type MidTermMemory,
+  type JourneyMemory,
+  type IntentFrequency,
+  type TopicFrequency,
+  type EcosystemFrequency,
+  type ResolutionMemory,
+  type MemoryContext,
 } from './midTermMemory';

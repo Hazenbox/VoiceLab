@@ -70,6 +70,21 @@ import {
 import { getAutoConfig, type PersonaRole } from './services/persona';
 // Feature Flags
 import { featureFlags } from './services/featureFlags';
+// Memory Services (Phase F)
+import {
+  initSessionMemory,
+  updateSessionMemory,
+  formatSessionMemoryForPrompt,
+  hasActiveSession,
+  extractPrimaryEntity,
+  createEmptyMemory,
+  updateMemory,
+  extractMemoryContext,
+  formatMemoryForPrompt,
+  getContinuationGreeting,
+  type MidTermMemory,
+  type MemoryContext,
+} from './services/memory';
 // Analytics Services (v2) - hooks now handle most session management
 import { 
   getResponseTimer,
@@ -309,6 +324,38 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const [showTrustPanel, setShowTrustPanel] = useState(false);
   const [selectedMessageForTrust, setSelectedMessageForTrust] = useState<string | null>(null);
   const [isAutoFixing, setIsAutoFixing] = useState(false);
+  
+  // Mid-term memory state (Phase F)
+  const [midTermMemory, setMidTermMemory] = useState<MidTermMemory | null>(() => {
+    // Load mid-term memory from localStorage on mount
+    try {
+      const stored = localStorage.getItem('jio_voice_midterm_memory');
+      if (stored) {
+        return JSON.parse(stored) as MidTermMemory;
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+    return null;
+  });
+  
+  // Persist mid-term memory to localStorage
+  useEffect(() => {
+    if (midTermMemory) {
+      try {
+        localStorage.setItem('jio_voice_midterm_memory', JSON.stringify(midTermMemory));
+      } catch {
+        // Ignore localStorage errors
+      }
+    }
+  }, [midTermMemory]);
+  
+  // Initialize session memory on mount
+  useEffect(() => {
+    if (!hasActiveSession()) {
+      initSessionMemory();
+    }
+  }, []);
   
   // Chat generation settings
   const [temperature, setTemperature] = useState(0.7);
@@ -927,6 +974,51 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         }
         
         // =====================================================================
+        // Memory Context: Add session and mid-term memory (Phase F)
+        // Injects recent interaction context for continuity
+        // =====================================================================
+        if (featureFlags.learning) {
+          // Session memory (current session)
+          const sessionMemoryBlock = formatSessionMemoryForPrompt();
+          if (sessionMemoryBlock) {
+            enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${sessionMemoryBlock}`;
+          }
+          
+          // Mid-term memory (7-day window)
+          if (midTermMemory) {
+            const memoryContext = extractMemoryContext(
+              midTermMemory,
+              classifiedIntent || undefined,
+              effectiveEcosystem
+            );
+            
+            const midTermMemoryBlock = formatMemoryForPrompt(memoryContext);
+            if (midTermMemoryBlock) {
+              enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${midTermMemoryBlock}`;
+            }
+            
+            // Get continuation greeting if returning user
+            const continuationGreeting = getContinuationGreeting(memoryContext);
+            if (continuationGreeting) {
+              console.log(`[Memory] Continuation greeting: "${continuationGreeting}"`);
+            }
+            
+            // Log memory context
+            if (memoryContext.hasRecentInteraction) {
+              console.log(`[Memory] User returning after ${memoryContext.daysSinceLastInteraction} days, top intents: ${memoryContext.topIntents.join(', ')}`);
+            }
+          }
+          
+          // Update session memory with current turn
+          const entity = extractPrimaryEntity(message);
+          updateSessionMemory({
+            intent: classifiedIntent || undefined,
+            entity: entity || undefined,
+            incrementTurn: true,
+          });
+        }
+        
+        // =====================================================================
         // Training Examples: Add few-shot examples (wiring orphaned code)
         // Injects high-quality verified examples for few-shot prompting
         // =====================================================================
@@ -1160,6 +1252,29 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           wasRegeneration: isRegeneration,
         });
         
+        // Update mid-term memory with this interaction (Phase F)
+        if (featureFlags.learning) {
+          const userId = userProfile?.userId || getDeviceId();
+          const deviceId = getDeviceId();
+          
+          const updatedMemory = updateMemory(
+            midTermMemory || createEmptyMemory(userId, deviceId),
+            {
+              intent: classifiedIntent || 'content_generation',
+              topic: effectiveEcosystem,
+              ecosystem: effectiveEcosystem,
+              channel: contentChannel,
+              language: 'en',
+              resolutionStatus: 'resolved',
+              turnCount: chatMessages.filter(m => m.role === 'user').length,
+              wasEscalated: false,
+            }
+          );
+          
+          setMidTermMemory(updatedMemory);
+          console.log('[Memory] Updated mid-term memory for content generation');
+        }
+        
         return {
           userMessageId,
           aiMessageId: aiMessage.id,
@@ -1320,6 +1435,32 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             const sessionManager = getSessionManager();
             sessionManager.trackAssistantMessage(responseTimeMs ?? undefined);
           }
+        }
+        
+        // Update mid-term memory with this interaction (Phase F)
+        if (featureFlags.learning) {
+          const userId = userProfile?.userId || getDeviceId();
+          const deviceId = getDeviceId();
+          
+          // Use detected ecosystem or fallback to UI selection
+          const memoryEcosystem = intentClassification?.detectedEcosystem?.ecosystem || ecosystem;
+          
+          const updatedMemory = updateMemory(
+            midTermMemory || createEmptyMemory(userId, deviceId),
+            {
+              intent: intentClassification.intent,
+              topic: intentClassification.intent === 'jio_inquiry' ? 'jio_support' : 'general_chat',
+              ecosystem: memoryEcosystem,
+              channel: contentChannel,
+              language: 'en',
+              resolutionStatus: 'ongoing',
+              turnCount: chatMessages.filter(m => m.role === 'user').length,
+              wasEscalated: false,
+            }
+          );
+          
+          setMidTermMemory(updatedMemory);
+          console.log('[Memory] Updated mid-term memory for conversational');
         }
         
         return {
