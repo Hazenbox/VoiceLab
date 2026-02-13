@@ -288,6 +288,3 @@ export const avoidWordsAgent: ValidationAgent = {
 };
 
 export default avoidWordsAgent;
-
-// Export functions for external use
-export { setDynamicAvoidWords, clearDynamicAvoidWords };
