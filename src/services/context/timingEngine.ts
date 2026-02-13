@@ -354,10 +354,19 @@ ${dayGuide?.guidance}
   if (festival) {
     guidance += `
 
-FESTIVAL: ${festival.name}
-Tone: ${festival.tone}
-${festival.inclusive ? 'This is a pan-India celebration.' : 'This is a regional celebration - be mindful of audience.'}
-Greeting suggestion: "${festival.greeting}"
+## FESTIVAL CONTEXT: ${festival.name}
+
+**Current Festival**: ${festival.name}
+**Recommended Tone**: ${festival.tone}
+**Celebration Type**: ${festival.inclusive ? 'Pan-India celebration - appropriate for all audiences' : 'Regional celebration - be mindful of audience background'}
+
+**Content Guidelines for ${festival.name}:**
+- You MAY include the greeting: "${festival.greeting}" if appropriate for the content type
+- Adjust tone to be ${festival.tone}
+- ${festival.inclusive 
+    ? 'This is widely celebrated across India - feel free to reference it naturally' 
+    : 'This is a regional festival - only reference if the user/audience context suggests relevance'}
+- Consider adding festive warmth to the message while maintaining brand voice
 `;
   }
 
