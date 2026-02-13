@@ -350,9 +350,6 @@ export function previewAutoFixes(
   };
 }
 
-// Export functions for external use
-export { setDynamicAutoFixRules, clearDynamicAutoFixRules };
-
 export default {
   generateAutoFixes,
   applyAutoFixes,
