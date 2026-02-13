@@ -410,7 +410,14 @@ export const TrustContextPanel = memo(function TrustContextPanel({
   const [activeTab, setActiveTab] = useState<'score' | 'context' | 'violations'>('score');
   
   const explanation = trustScore ? getScoreExplanation(trustScore) : null;
-  const allViolations = trustScore?.validationResults.flatMap(vr => vr.violations) || [];
+  
+  // Get all violations, but filter out auto-fixed avoid words since they've been automatically corrected
+  // These violations were in the original content but have been auto-fixed in the displayed content
+  const allViolations = useMemo(() => {
+    const violations = trustScore?.validationResults.flatMap(vr => vr.violations) || [];
+    // Filter out auto-fixable avoid_words violations since they're automatically fixed
+    return violations.filter(v => !(v.agentId === 'avoid_words' && v.autoFixable));
+  }, [trustScore]);
   
   // Compute compliance justification for trust building
   const complianceJustification = useMemo(() => {

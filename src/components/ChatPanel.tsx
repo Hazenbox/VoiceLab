@@ -365,8 +365,9 @@ export const ChatPanel = memo(function ChatPanel({
     }
     
     // Text message - Assistant
-    // Check if this message has a pending auto-fix preview
-    const hasAutoFixPreview = message.autoFixPreview?.isPending;
+    // Check if this message has an auto-fix preview (pending or auto-accepted)
+    const hasAutoFixPreview = message.autoFixPreview && message.autoFixPreview.appliedFixes.length > 0;
+    const isAutoFixPending = message.autoFixPreview?.isPending;
     
     if (hasAutoFixPreview && message.autoFixPreview) {
       // Side-by-side auto-fix preview layout
@@ -411,7 +412,7 @@ export const ChatPanel = memo(function ChatPanel({
             >
               <MessageContent content={message.autoFixPreview.fixedContent} role="assistant" />
               
-              {/* Tag + Accept button row */}
+              {/* Tag row - show accept button only if pending, otherwise show auto-fixed indicator */}
               <div className="flex items-center justify-between gap-2 mt-2">
                 <span 
                   className="text-[10px] px-2 py-0.5 rounded-full"
@@ -420,18 +421,33 @@ export const ChatPanel = memo(function ChatPanel({
                     color: '#00A859',
                   }}
                 >
-                  recommended based on jio rules
+                  {isAutoFixPending ? 'recommended based on jio rules' : 'auto-fixed based on jio rules'}
                 </span>
-                <button
-                  onClick={() => onAcceptAutoFix?.(message.id)}
-                  className="text-xs px-3 py-1 rounded-full transition-colors hover:opacity-90"
-                  style={{
-                    backgroundColor: '#00A859',
-                    color: '#ffffff',
-                  }}
-                >
-                  accept
-                </button>
+                {isAutoFixPending ? (
+                  <button
+                    onClick={() => onAcceptAutoFix?.(message.id)}
+                    className="text-xs px-3 py-1 rounded-full transition-colors hover:opacity-90"
+                    style={{
+                      backgroundColor: '#00A859',
+                      color: '#ffffff',
+                    }}
+                  >
+                    accept
+                  </button>
+                ) : (
+                  <span 
+                    className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1"
+                    style={{ 
+                      backgroundColor: 'rgba(0, 168, 89, 0.15)',
+                      color: '#00A859',
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/>
+                    </svg>
+                    applied
+                  </span>
+                )}
               </div>
               
               {/* Trust Badge for recommended version */}

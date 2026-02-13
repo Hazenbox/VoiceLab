@@ -1083,13 +1083,19 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               
               // Only show preview if fixes were actually applied
               if (fixResult.appliedFixes.length > 0) {
+                // Auto-accept all fixes - no manual intervention needed
                 autoFixPreview = {
                   originalContent: result.content,
                   fixedContent: fixResult.fixedContent,
                   appliedFixes: fixResult.appliedFixes,
-                  isPending: true,
+                  isPending: false,  // Auto-accepted, not pending
                 };
-                console.log(`[AutoFix] Generated preview with ${fixResult.appliedFixes.length} fixes (${dynamicReplacements?.length || 0} Convex rules)`);
+                
+                // Recalculate trust score on fixed content so badge shows 100%
+                const fixedValidationResult = await runValidationPipeline(fixResult.fixedContent, finalContext);
+                trustScore = calculateTrustScore(fixedValidationResult, trustSettings);
+                
+                console.log(`[AutoFix] Auto-applied ${fixResult.appliedFixes.length} fixes (${dynamicReplacements?.length || 0} Convex rules). New trust score: ${trustScore?.overall ?? 'N/A'}`);
               } else {
                 console.log('[AutoFix] No fixes were actually applied to content');
               }
@@ -1103,9 +1109,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           console.log('[AutoFix] Skipping - no auto-fixable count:', trustScore?.autoFixableCount ?? 'no trustScore');
         }
 
+        // Determine which content to use - fixed content if auto-fix was applied
+        const finalContent = autoFixPreview?.fixedContent ?? result.content;
+
         // Create AI response with trust data, intent tag, and auto-fix preview
         const aiMessage = {
-          ...createTextMessage('assistant', result.content, chatMode, userMessageId),
+          ...createTextMessage('assistant', finalContent, chatMode, userMessageId),
           messageIntent: 'content_generation' as const,
           trustScore,
           generationContext: finalContext,
@@ -1264,12 +1273,19 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               
               // Only show preview if fixes were actually applied
               if (fixResult.appliedFixes.length > 0) {
+                // Auto-accept all fixes - no manual intervention needed
                 conversationalAutoFixPreview = {
                   originalContent: result.content,
                   fixedContent: fixResult.fixedContent,
                   appliedFixes: fixResult.appliedFixes,
-                  isPending: true,
+                  isPending: false,  // Auto-accepted, not pending
                 };
+                
+                // Recalculate trust score on fixed content so badge shows 100%
+                const fixedValidationResult = await runValidationPipeline(fixResult.fixedContent, undefined);
+                conversationalTrustScore = calculateTrustScore(fixedValidationResult, trustSettings);
+                
+                console.log(`[AutoFix Conversational] Auto-applied ${fixResult.appliedFixes.length} fixes. New trust score: ${conversationalTrustScore?.overall ?? 'N/A'}`);
               }
             }
           } catch (autoFixError) {
@@ -1277,9 +1293,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           }
         }
 
+        // Determine which content to use - fixed content if auto-fix was applied
+        const finalConversationalContent = conversationalAutoFixPreview?.fixedContent ?? result.content;
+
         // Create AI response -- now WITH optional trustScore and autoFixPreview
         const aiMessage = {
-          ...createTextMessage('assistant', result.content, chatMode, userMessageId),
+          ...createTextMessage('assistant', finalConversationalContent, chatMode, userMessageId),
           messageIntent: intentClassification.intent,
           ...(conversationalTrustScore && { trustScore: conversationalTrustScore }),
           ...(conversationalAutoFixPreview && { autoFixPreview: conversationalAutoFixPreview }),
