@@ -7,7 +7,8 @@
  * @module services/tokens/tokenSerializer
  */
 
-import { ActiveTokens, TOKEN_GROUPS } from './tokenTypes';
+import type { ActiveTokens } from './tokenTypes';
+import { TOKEN_GROUPS } from './tokenTypes';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
