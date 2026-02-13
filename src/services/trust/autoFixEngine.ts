@@ -141,10 +141,10 @@ export function generateAutoFixes(
   const mergedReplacements: Record<string, { replacement: string; confidence: number }> = { ...REPLACEMENTS };
   
   if (dynamicReplacements && dynamicReplacements.length > 0) {
+    let validCount = 0;
     for (const rule of dynamicReplacements) {
       // Skip rules with missing from/to values
       if (!rule.from || !rule.to) {
-        console.warn('[AutoFix] Skipping invalid Convex rule:', rule);
         continue;
       }
       // Convex admin rules get 0.92 confidence (higher than vocabulary but lower than brand rules)
@@ -152,6 +152,10 @@ export function generateAutoFixes(
         replacement: rule.to, 
         confidence: 0.92 
       };
+      validCount++;
+    }
+    if (validCount > 0) {
+      console.log(`[AutoFix] Loaded ${validCount} Convex dynamic rules`);
     }
   }
   
@@ -166,9 +170,6 @@ export function generateAutoFixes(
     
     const text = violation.text.toLowerCase();
     const directFix = mergedReplacements[text];
-    
-    // Debug: log lookup attempts
-    console.log('[AutoFix] Looking up:', { text, found: !!directFix, suggestion: violation.suggestion?.substring(0, 50) });
     
     if (directFix) {
       fixes.push({
