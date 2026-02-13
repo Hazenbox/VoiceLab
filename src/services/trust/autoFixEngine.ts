@@ -125,28 +125,50 @@ export interface DynamicReplacement {
 }
 
 /**
- * Generate auto-fixes for violations
- * 
- * @param violations - Array of violations to generate fixes for
- * @param dynamicReplacements - Optional array of admin-managed rules from Convex
- *                              These are merged with static REPLACEMENTS (Convex rules take priority)
+ * Cached dynamic replacements from Convex (set at runtime)
+ * This allows auto-fix rules to be used without passing them on every call
  */
-export function generateAutoFixes(
-  violations: Violation[],
+let cachedDynamicReplacements: DynamicReplacement[] = [];
+
+/**
+ * Set dynamic auto-fix rules from Convex knowledge base
+ * Called from App.tsx when Convex knowledge is available
+ */
+export function setDynamicAutoFixRules(
+  rules: Array<{ content: string; metadata?: { suggestion?: string } }>
+): void {
+  cachedDynamicReplacements = rules
+    .filter(rule => rule.content && rule.metadata?.suggestion)
+    .map(rule => ({
+      from: rule.content,
+      to: rule.metadata!.suggestion!,
+    }));
+  console.log(`[AutoFix] Cached ${cachedDynamicReplacements.length} dynamic rules from Convex`);
+}
+
+/**
+ * Clear cached dynamic rules (for testing/cleanup)
+ */
+export function clearDynamicAutoFixRules(): void {
+  cachedDynamicReplacements = [];
+}
+
+/**
+ * Get the merged replacements (static + dynamic)
+ * Used internally by generateAutoFixes
+ */
+function getMergedReplacements(
   dynamicReplacements?: DynamicReplacement[]
-): AutoFix[] {
-  const fixes: AutoFix[] = [];
-  
-  // Build merged replacements: Convex dynamic rules override static ones
+): Record<string, { replacement: string; confidence: number }> {
   const mergedReplacements: Record<string, { replacement: string; confidence: number }> = { ...REPLACEMENTS };
   
-  if (dynamicReplacements && dynamicReplacements.length > 0) {
+  // Use provided dynamic replacements, or fall back to cached ones
+  const dynamicToUse = dynamicReplacements ?? cachedDynamicReplacements;
+  
+  if (dynamicToUse.length > 0) {
     let validCount = 0;
-    for (const rule of dynamicReplacements) {
-      // Skip rules with missing from/to values
-      if (!rule.from || !rule.to) {
-        continue;
-      }
+    for (const rule of dynamicToUse) {
+      if (!rule.from || !rule.to) continue;
       // Convex admin rules get 0.92 confidence (higher than vocabulary but lower than brand rules)
       mergedReplacements[rule.from.toLowerCase()] = { 
         replacement: rule.to, 
@@ -155,9 +177,29 @@ export function generateAutoFixes(
       validCount++;
     }
     if (validCount > 0) {
-      console.log(`[AutoFix] Loaded ${validCount} Convex dynamic rules`);
+      console.log(`[AutoFix] Using ${validCount} dynamic rules`);
     }
   }
+  
+  return mergedReplacements;
+}
+
+/**
+ * Generate auto-fixes for violations
+ * 
+ * @param violations - Array of violations to generate fixes for
+ * @param dynamicReplacements - Optional array of admin-managed rules from Convex
+ *                              These are merged with static REPLACEMENTS (Convex rules take priority)
+ *                              If not provided, uses cached dynamic rules from setDynamicAutoFixRules()
+ */
+export function generateAutoFixes(
+  violations: Violation[],
+  dynamicReplacements?: DynamicReplacement[]
+): AutoFix[] {
+  const fixes: AutoFix[] = [];
+  
+  // Get merged replacements (static + dynamic)
+  const mergedReplacements = getMergedReplacements(dynamicReplacements);
   
   for (const violation of violations) {
     if (!violation.autoFixable) continue;
@@ -308,8 +350,13 @@ export function previewAutoFixes(
   };
 }
 
+// Export functions for external use
+export { setDynamicAutoFixRules, clearDynamicAutoFixRules };
+
 export default {
   generateAutoFixes,
   applyAutoFixes,
   previewAutoFixes,
+  setDynamicAutoFixRules,
+  clearDynamicAutoFixRules,
 };

@@ -37,7 +37,7 @@ import type { TTSProviderType } from './components';
 import { buildPrompt } from './services/prompt';
 import { buildGenerationContext } from './services/context';
 import { runValidationPipeline, setDynamicAvoidWords } from './services/validation';
-import { calculateTrustScore, generateAutoFixes, applyAutoFixes } from './services/trust';
+import { calculateTrustScore, generateAutoFixes, applyAutoFixes, setDynamicAutoFixRules } from './services/trust';
 import { storageTrustSettings, storageProjectDefaults, DEFAULT_PROJECT_DEFAULTS } from './services/trustStorage';
 import { useChatPersistence } from './hooks';
 import { audioBufferManager } from './services/audioBufferManager';
@@ -480,6 +480,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       setDynamicAvoidWords(dynamicWords);
     }
   }, [convexKnowledge?.avoidWords]);
+
+  // Inject Convex auto-fix rules into auto-fix engine
+  // This enables admin-added replacements to be used during auto-fix
+  useEffect(() => {
+    if (convexKnowledge?.autoFixRules && featureFlags.knowledgeBase) {
+      setDynamicAutoFixRules(convexKnowledge.autoFixRules);
+    }
+  }, [convexKnowledge?.autoFixRules]);
 
   // Cleanup on unmount
   useEffect(() => {

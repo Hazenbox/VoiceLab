@@ -21,6 +21,8 @@ export {
   generateAutoFixes,
   applyAutoFixes,
   previewAutoFixes,
+  setDynamicAutoFixRules,
+  clearDynamicAutoFixRules,
 } from './autoFixEngine';
 
 export type {
