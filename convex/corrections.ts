@@ -164,6 +164,34 @@ export const countByFeedbackType = query({
   },
 });
 
+// ── P0-FIX: Get rejected correction IDs for local cache sync ─────
+// Returns list of rejected correction IDs to purge from local learning cache
+export const getRejectedIds = query({
+  args: {
+    since: v.optional(v.number()), // Only get rejections after this timestamp
+  },
+  handler: async (ctx, args) => {
+    // Default to last 30 days if not specified
+    const since = args.since ?? Date.now() - 30 * 24 * 60 * 60 * 1000;
+    
+    const rejectedCorrections = await ctx.db
+      .query("corrections")
+      .withIndex("by_adminStatus", (q) => q.eq("adminStatus", "rejected"))
+      .take(500); // Reasonable limit
+    
+    // Filter by timestamp and return IDs + originalContent for matching
+    return rejectedCorrections
+      .filter((c) => c.timestamp >= since)
+      .map((c) => ({
+        id: c._id,
+        originalContent: c.originalContent.slice(0, 100), // Truncate for matching
+        ecosystem: c.ecosystem,
+        channel: c.channel,
+        timestamp: c.timestamp,
+      }));
+  },
+});
+
 // ── Get learning statistics (admin dashboard) ────────────────────
 // Returns unique patterns count, edit counts, avoid reasons for POC demo
 export const getLearningStats = query({

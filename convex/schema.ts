@@ -206,4 +206,185 @@ export default defineSchema({
     .index("by_token", ["token"])
     .index("by_deviceId", ["deviceId"])
     .index("by_expiresAt", ["expiresAt"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // P0: CONSTITUTIONAL AI TABLES (Batch 2)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Directive Overrides ─────────────────────────────────────────────
+  // Runtime overrides for constitutional directives per ecosystem/channel.
+  // Allows admin to customize rules without code changes.
+  directiveOverrides: defineTable({
+    directiveType: v.string(), // voice_trait | safety_rule | pattern_block | emotion_rule
+    directiveKey: v.string(), // e.g., "direct", "suicide_risk", "acknowledge"
+    ecosystem: v.optional(v.string()), // null = global override
+    channel: v.optional(v.string()), // null = all channels in ecosystem
+    overrideAction: v.string(), // enable | disable | modify
+    overrideValue: v.optional(v.string()), // JSON for modifications
+    priority: v.number(), // Higher = applied later (can override earlier)
+    reason: v.optional(v.string()), // Why this override exists
+    isActive: v.boolean(),
+    createdBy: v.string(), // deviceId of admin
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    expiresAt: v.optional(v.number()), // Optional auto-expiry
+  })
+    .index("by_directiveType", ["directiveType"])
+    .index("by_ecosystem", ["ecosystem"])
+    .index("by_ecosystem_channel", ["ecosystem", "channel"])
+    .index("by_directiveType_key", ["directiveType", "directiveKey"])
+    .index("by_isActive", ["isActive"]),
+
+  // ── Conversation States ─────────────────────────────────────────────
+  // Persists conversation state machine state for multi-turn flows.
+  // Enables resumption of complex workflows across sessions.
+  conversationStates: defineTable({
+    sessionId: v.id("conversationSessions"),
+    userId: v.id("users"),
+    deviceId: v.string(),
+    
+    // State machine data
+    currentState: v.string(), // e.g., "greeting", "clarifying", "resolving", "escalated"
+    previousState: v.optional(v.string()),
+    stateHistory: v.array(v.object({
+      state: v.string(),
+      enteredAt: v.number(),
+      exitedAt: v.optional(v.number()),
+      trigger: v.optional(v.string()),
+    })),
+    
+    // Context accumulation
+    collectedInfo: v.optional(v.string()), // JSON - info gathered during conversation
+    pendingClarifications: v.optional(v.array(v.string())),
+    resolvedIntents: v.optional(v.array(v.string())),
+    
+    // Emotional tracking
+    detectedEmotion: v.optional(v.string()), // Current navarasa emotion
+    emotionHistory: v.optional(v.array(v.object({
+      emotion: v.string(),
+      confidence: v.number(),
+      timestamp: v.number(),
+    }))),
+    targetEmotion: v.optional(v.string()),
+    
+    // Safety tracking
+    safetyDomain: v.optional(v.string()),
+    safetyLevel: v.optional(v.string()),
+    escalationReason: v.optional(v.string()),
+    
+    // Timestamps
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    expiresAt: v.number(), // Auto-cleanup old states
+  })
+    .index("by_sessionId", ["sessionId"])
+    .index("by_userId", ["userId"])
+    .index("by_deviceId", ["deviceId"])
+    .index("by_currentState", ["currentState"])
+    .index("by_expiresAt", ["expiresAt"]),
+
+  // ── Training Examples ───────────────────────────────────────────────
+  // Curated examples for few-shot prompting and model fine-tuning.
+  // Admin-approved good/bad examples from corrections or manual curation.
+  trainingExamples: defineTable({
+    exampleType: v.string(), // good_example | bad_example | correction_pair
+    
+    // Content
+    inputContext: v.string(), // User message or context that triggered this
+    outputContent: v.string(), // The response content (good or bad)
+    correctedContent: v.optional(v.string()), // For correction_pair: the corrected version
+    
+    // Classification
+    ecosystem: v.string(),
+    channel: v.string(),
+    persona: v.optional(v.string()),
+    intent: v.optional(v.string()),
+    emotion: v.optional(v.string()),
+    
+    // Quality signals
+    qualityScore: v.number(), // 1-5 rating
+    violationTypes: v.optional(v.array(v.string())), // For bad examples
+    exemplaryTraits: v.optional(v.array(v.string())), // For good examples
+    
+    // Source tracking
+    sourceType: v.string(), // admin_curated | user_correction | auto_promoted
+    sourceCorrectionId: v.optional(v.id("corrections")), // If from correction
+    curatedBy: v.optional(v.string()), // Admin deviceId if manually curated
+    
+    // Usage tracking
+    usageCount: v.number(), // Times used in prompts
+    lastUsedAt: v.optional(v.number()),
+    
+    // Status
+    isActive: v.boolean(),
+    isVerified: v.boolean(), // Admin has verified quality
+    tags: v.array(v.string()),
+    
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    embedding: v.optional(v.array(v.float64())), // For semantic retrieval
+  })
+    .index("by_exampleType", ["exampleType"])
+    .index("by_ecosystem_channel", ["ecosystem", "channel"])
+    .index("by_qualityScore", ["qualityScore"])
+    .index("by_isActive", ["isActive"])
+    .index("by_isVerified", ["isVerified"])
+    .index("by_sourceType", ["sourceType"])
+    .vectorIndex("by_example_embedding", {
+      vectorField: "embedding",
+      dimensions: 384,
+      filterFields: ["exampleType", "ecosystem", "channel", "isActive"],
+    }),
+
+  // ── User Learning Profiles ──────────────────────────────────────────
+  // Aggregated learning preferences per user across sessions.
+  // Enables personalization without storing PII.
+  userLearningProfiles: defineTable({
+    userId: v.id("users"),
+    deviceId: v.string(),
+    
+    // Preference patterns (aggregated from corrections)
+    preferredVoiceTraits: v.optional(v.array(v.object({
+      trait: v.string(),
+      preference: v.number(), // -1 to 1 (dislike to prefer)
+      sampleSize: v.number(),
+    }))),
+    
+    // Style preferences
+    preferredWarmth: v.optional(v.number()), // 1-4 scale average
+    preferredDetail: v.optional(v.number()), // 1-3 scale average
+    preferredLanguage: v.optional(v.string()),
+    
+    // Behavioral patterns
+    commonIntents: v.optional(v.array(v.object({
+      intent: v.string(),
+      frequency: v.number(),
+    }))),
+    commonEcosystems: v.optional(v.array(v.object({
+      ecosystem: v.string(),
+      frequency: v.number(),
+    }))),
+    
+    // Correction patterns
+    correctionFrequency: v.number(), // Corrections per 100 interactions
+    topCorrectionReasons: v.optional(v.array(v.string())),
+    avoidPatterns: v.optional(v.array(v.string())), // Learned from thumbs down
+    
+    // Engagement signals
+    averageSessionLength: v.optional(v.number()), // In messages
+    regenerationRate: v.optional(v.number()), // Regenerations per 100 messages
+    copyRate: v.optional(v.number()), // Copies per 100 messages
+    
+    // Computed at aggregation time
+    totalInteractions: v.number(),
+    totalCorrections: v.number(),
+    lastAggregatedAt: v.number(),
+    
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_deviceId", ["deviceId"])
+    .index("by_correctionFrequency", ["correctionFrequency"])
+    .index("by_lastAggregatedAt", ["lastAggregatedAt"]),
 });

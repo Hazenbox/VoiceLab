@@ -10,6 +10,7 @@ const STORE_NAME = 'events';
 const DB_VERSION = 1;
 const FALLBACK_STORAGE_KEY = 'voicelab_sync_queue_fallback';
 const MAX_RETRY_ATTEMPTS = 5;
+const EVENT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // P1-FIX: 7 days expiry
 
 export interface QueuedEvent {
   id?: number;  // auto-increment key from IndexedDB
@@ -18,6 +19,24 @@ export interface QueuedEvent {
   data: Record<string, any>;
   timestamp: number;
   attempts?: number;  // retry counter
+  idempotencyKey?: string;  // P0-FIX: Unique key for deduplication
+}
+
+/**
+ * P0-FIX: Generate a unique idempotency key for an event
+ * This prevents duplicate events on queue replay
+ */
+export function generateIdempotencyKey(event: Omit<QueuedEvent, 'id' | 'idempotencyKey'>): string {
+  // Create a hash-like key from type, timestamp, and stringified data
+  const dataStr = JSON.stringify(event.data);
+  // Simple hash function for browser environments
+  let hash = 0;
+  for (let i = 0; i < dataStr.length; i++) {
+    const char = dataStr.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return `${event.type}-${event.timestamp}-${Math.abs(hash).toString(36)}`;
 }
 
 let dbInstance: IDBDatabase | null = null;
@@ -73,11 +92,33 @@ async function openDatabase(): Promise<IDBDatabase> {
 }
 
 /**
+ * P0-FIX: Check if an event with the given idempotency key already exists
+ */
+export async function hasIdempotencyKey(key: string): Promise<boolean> {
+  const queue = await getQueue();
+  return queue.some(event => event.idempotencyKey === key);
+}
+
+/**
  * Add event to queue
+ * P0-FIX: Now includes idempotency key generation and duplicate detection
  */
 export async function addToQueue(event: Omit<QueuedEvent, 'id'>): Promise<void> {
-  // Initialize attempts counter
-  const eventWithAttempts = { ...event, attempts: event.attempts ?? 0 };
+  // P0-FIX: Generate idempotency key if not provided
+  const idempotencyKey = event.idempotencyKey ?? generateIdempotencyKey(event);
+  
+  // P0-FIX: Check for duplicates before adding
+  if (await hasIdempotencyKey(idempotencyKey)) {
+    console.log('[QueueStorage] Duplicate event detected, skipping:', idempotencyKey);
+    return;
+  }
+  
+  // Initialize attempts counter and add idempotency key
+  const eventWithMeta = { 
+    ...event, 
+    attempts: event.attempts ?? 0,
+    idempotencyKey,
+  };
   
   // Try IndexedDB first
   if (!useLocalStorageFallback) {
@@ -87,7 +128,7 @@ export async function addToQueue(event: Omit<QueuedEvent, 'id'>): Promise<void> 
       const store = transaction.objectStore(STORE_NAME);
       
       return new Promise((resolve, reject) => {
-        const request = store.add(eventWithAttempts);
+        const request = store.add(eventWithMeta);
         
         request.onsuccess = () => resolve();
         request.onerror = () => {
@@ -105,7 +146,7 @@ export async function addToQueue(event: Omit<QueuedEvent, 'id'>): Promise<void> 
   try {
     const stored = localStorage.getItem(FALLBACK_STORAGE_KEY);
     const queue: QueuedEvent[] = stored ? JSON.parse(stored) : [];
-    queue.push({ ...eventWithAttempts, id: Date.now() + Math.random() });
+    queue.push({ ...eventWithMeta, id: Date.now() + Math.random() });
     localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(queue));
   } catch (error) {
     console.error('[QueueStorage] Failed to add to localStorage:', error);
@@ -113,9 +154,12 @@ export async function addToQueue(event: Omit<QueuedEvent, 'id'>): Promise<void> 
 }
 
 /**
- * Get all events from queue
+ * Get all events from queue (excluding expired events)
+ * P1-FIX: Filters out events older than 7 days
  */
 export async function getQueue(): Promise<QueuedEvent[]> {
+  const expiryThreshold = Date.now() - EVENT_EXPIRY_MS;
+  
   // Try IndexedDB first
   if (!useLocalStorageFallback) {
     try {
@@ -126,7 +170,12 @@ export async function getQueue(): Promise<QueuedEvent[]> {
       return new Promise((resolve, reject) => {
         const request = store.getAll();
         
-        request.onsuccess = () => resolve(request.result || []);
+        request.onsuccess = () => {
+          // P1-FIX: Filter out expired events
+          const allEvents = request.result || [];
+          const validEvents = allEvents.filter(event => event.timestamp >= expiryThreshold);
+          resolve(validEvents);
+        };
         request.onerror = () => {
           console.warn('[QueueStorage] Failed to get from IndexedDB:', request.error);
           reject(request.error);
@@ -141,7 +190,9 @@ export async function getQueue(): Promise<QueuedEvent[]> {
   // Fallback to localStorage
   try {
     const stored = localStorage.getItem(FALLBACK_STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    const allEvents: QueuedEvent[] = stored ? JSON.parse(stored) : [];
+    // P1-FIX: Filter out expired events
+    return allEvents.filter(event => event.timestamp >= expiryThreshold);
   } catch (error) {
     console.error('[QueueStorage] Failed to get from localStorage:', error);
     return [];
@@ -292,4 +343,38 @@ export async function clearQueue(): Promise<void> {
 export async function getQueueSize(): Promise<number> {
   const queue = await getQueue();
   return queue.length;
+}
+
+/**
+ * P1-FIX: Remove expired events from queue (older than 7 days)
+ * Should be called periodically to prevent queue bloat
+ */
+export async function removeExpiredEvents(): Promise<number> {
+  const now = Date.now();
+  const expiryThreshold = now - EVENT_EXPIRY_MS;
+  
+  const queue = await getQueue();
+  const expiredEvents = queue.filter(event => event.timestamp < expiryThreshold);
+  
+  if (expiredEvents.length === 0) {
+    return 0;
+  }
+  
+  console.log(`[QueueStorage] Removing ${expiredEvents.length} expired events (older than 7 days)`);
+  
+  for (const event of expiredEvents) {
+    if (event.id) {
+      await removeFromQueue(event.id);
+    }
+  }
+  
+  return expiredEvents.length;
+}
+
+/**
+ * P1-FIX: Check if an event is expired
+ */
+export function isEventExpired(event: QueuedEvent): boolean {
+  const now = Date.now();
+  return event.timestamp < (now - EVENT_EXPIRY_MS);
 }

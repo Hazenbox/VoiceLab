@@ -182,7 +182,92 @@ export function mergeLearnedCorrections(
 // ── Local Learning Cache ─────────────────────────────────────────
 
 const LOCAL_CORRECTIONS_KEY = 'voicelab_corrections_cache';
+const LOCAL_REJECTED_IDS_KEY = 'voicelab_rejected_corrections'; // P0-FIX: Track rejected IDs
+const LOCAL_REJECTION_SYNC_KEY = 'voicelab_rejection_sync_ts'; // P0-FIX: Last sync timestamp
 const MAX_LOCAL_CORRECTIONS = 100;
+
+/**
+ * P0-FIX: Rejected correction info from admin sync
+ */
+export interface RejectedCorrectionInfo {
+  id: string;
+  originalContent: string; // Truncated for matching
+  ecosystem: string;
+  channel: string;
+  timestamp: number;
+}
+
+/**
+ * P0-FIX: Store rejected correction IDs from admin sync
+ * These will be filtered out during learning retrieval
+ */
+export function storeRejectedCorrections(rejectedInfos: RejectedCorrectionInfo[]): void {
+  try {
+    const stored = localStorage.getItem(LOCAL_REJECTED_IDS_KEY);
+    const existing: RejectedCorrectionInfo[] = stored ? JSON.parse(stored) : [];
+    
+    // Merge new rejections (deduplicate by id)
+    const existingIds = new Set(existing.map(r => r.id));
+    const newRejections = rejectedInfos.filter(r => !existingIds.has(r.id));
+    
+    const merged = [...existing, ...newRejections].slice(-500); // Keep last 500
+    localStorage.setItem(LOCAL_REJECTED_IDS_KEY, JSON.stringify(merged));
+    
+    // Update sync timestamp
+    localStorage.setItem(LOCAL_REJECTION_SYNC_KEY, String(Date.now()));
+    
+    console.log(`[LearningEngine] Stored ${newRejections.length} new rejections, total: ${merged.length}`);
+  } catch (e) {
+    console.warn('[LearningEngine] Failed to store rejected corrections:', e);
+  }
+}
+
+/**
+ * P0-FIX: Get rejected correction fingerprints for filtering
+ * Returns truncated originalContent strings for matching
+ */
+export function getRejectedFingerprints(ecosystem?: string, channel?: string): Set<string> {
+  try {
+    const stored = localStorage.getItem(LOCAL_REJECTED_IDS_KEY);
+    if (!stored) return new Set();
+    
+    const rejections: RejectedCorrectionInfo[] = JSON.parse(stored);
+    
+    // Filter by context if provided
+    const relevant = rejections.filter(r => {
+      if (ecosystem && r.ecosystem !== ecosystem) return false;
+      if (channel && r.channel !== channel) return false;
+      return true;
+    });
+    
+    // Return set of truncated originalContent for matching
+    return new Set(relevant.map(r => r.originalContent));
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * P0-FIX: Get last rejection sync timestamp
+ */
+export function getLastRejectionSyncTimestamp(): number {
+  try {
+    const ts = localStorage.getItem(LOCAL_REJECTION_SYNC_KEY);
+    return ts ? parseInt(ts, 10) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * P0-FIX: Clear rejected corrections cache
+ */
+export function clearRejectedCorrections(): void {
+  try {
+    localStorage.removeItem(LOCAL_REJECTED_IDS_KEY);
+    localStorage.removeItem(LOCAL_REJECTION_SYNC_KEY);
+  } catch { /* ignore */ }
+}
 
 /**
  * Store a correction locally for immediate learning availability.
@@ -201,6 +286,7 @@ export function storeLocalCorrection(correction: CorrectionEntry): void {
 
 /**
  * Get locally stored corrections.
+ * P0-FIX: Now filters out admin-rejected corrections
  */
 export function getLocalCorrections(
   ecosystem?: string,
@@ -210,10 +296,23 @@ export function getLocalCorrections(
     const stored = localStorage.getItem(LOCAL_CORRECTIONS_KEY);
     if (!stored) return [];
     const corrections: CorrectionEntry[] = JSON.parse(stored);
+    
+    // P0-FIX: Get rejected fingerprints to filter out
+    const rejectedFingerprints = getRejectedFingerprints(ecosystem, channel);
+    
     return corrections.filter((c) => {
       // Guard against old entries missing ecosystem/channel fields
       if (ecosystem && (!c.ecosystem || c.ecosystem !== ecosystem)) return false;
       if (channel && (!c.channel || c.channel !== channel)) return false;
+      
+      // P0-FIX: Filter out rejected corrections by matching truncated content
+      if (rejectedFingerprints.size > 0) {
+        const fingerprint = c.originalContent.slice(0, 100);
+        if (rejectedFingerprints.has(fingerprint)) {
+          return false; // Skip rejected correction
+        }
+      }
+      
       return true;
     });
   } catch (error) {

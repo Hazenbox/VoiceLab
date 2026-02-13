@@ -68,6 +68,7 @@ export interface CorrectionEvent {
   persona: string;
   trustScore?: number;
   generationContext?: string;
+  idempotencyKey?: string;  // P0-FIX: For deduplication
 }
 
 // v2: Session tracking types
@@ -150,6 +151,8 @@ export class ConvexSyncService {
   private eventBuffer: AnalyticsEvent[] = [];
   private bufferFlushMs = 5000;
   private isFlushingBuffer = false; // Prevent concurrent flush operations
+  private isFlushingQueue = false; // P0-FIX: Prevent concurrent queue flush
+  private processedIdempotencyKeys: Set<string> = new Set(); // P0-FIX: Track processed keys to prevent duplicates
   // Store bound handlers so we can remove them in destroy()
   private handleOnline: (() => void) | null = null;
   private handleOffline: (() => void) | null = null;
@@ -554,6 +557,12 @@ export class ConvexSyncService {
   // ── Flush Queued Events ──────────────────────────────────────
 
   async flushQueue(): Promise<void> {
+    // P0-FIX: Prevent concurrent queue flush operations
+    if (this.isFlushingQueue) {
+      console.log('[ConvexSync] Queue flush already in progress, skipping');
+      return;
+    }
+    
     // CRITICAL: Only require isAvailable and deviceId initially
     // convexUserId may be established by processing user_sync events
     if (!this.isAvailable || !this.deviceId) {
@@ -564,6 +573,7 @@ export class ConvexSyncService {
     const queue = await queueStorage.getQueue();
     if (queue.length === 0) return;
 
+    this.isFlushingQueue = true;
     console.log(`[ConvexSync] Flushing ${queue.length} queued events`);
 
     // Group events by type for batch flush
@@ -642,17 +652,26 @@ export class ConvexSyncService {
         }
       }
 
-      // Replay correction events (individual)
+      // Replay correction events (individual) with P0-FIX deduplication
       for (const event of correctionEvents) {
+        // P0-FIX: Skip if already processed (deduplication)
+        if (event.idempotencyKey && this.processedIdempotencyKeys.has(event.idempotencyKey)) {
+          console.log('[ConvexSync] Skipping duplicate correction:', event.idempotencyKey);
+          if (event.id) await queueStorage.removeFromQueue(event.id);
+          continue;
+        }
+        
         const result = await this.safeMutation('corrections:create', {
           ...event.data,
           userId: this.convexUserId,
           deviceId: this.deviceId!,
+          idempotencyKey: event.idempotencyKey, // P0-FIX: Pass to server for server-side dedup
         });
 
         if (result.ok) {
-          // Success - remove from queue
+          // Success - remove from queue and track processed key
           if (event.id) await queueStorage.removeFromQueue(event.id);
+          if (event.idempotencyKey) this.processedIdempotencyKeys.add(event.idempotencyKey);
         } else {
           // Failure - increment attempts
           if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
@@ -718,6 +737,15 @@ export class ConvexSyncService {
 
     const remainingSize = await queueStorage.getQueueSize();
     console.log(`[ConvexSync] Flush complete. ${remainingSize} events remain in queue`);
+    
+    // P0-FIX: Reset flushing flag
+    this.isFlushingQueue = false;
+    
+    // P0-FIX: Periodically clear processed keys to prevent memory bloat (keep last 1000)
+    if (this.processedIdempotencyKeys.size > 1000) {
+      const keysArray = Array.from(this.processedIdempotencyKeys);
+      this.processedIdempotencyKeys = new Set(keysArray.slice(-500));
+    }
   }
 
   // ── Cleanup ──────────────────────────────────────────────────
