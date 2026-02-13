@@ -258,6 +258,43 @@ export const generateEmbedding = action({
   },
 });
 
+// ── Generate Embedding for Raw Text (Phase G) ────────────────────
+
+/**
+ * Generate embedding from raw text (for semantic search queries)
+ * Used by training examples semantic search
+ */
+export const generateEmbeddingFromText = action({
+  args: {
+    text: v.string(),
+  },
+  handler: async (ctx, args): Promise<{
+    embedding: number[] | null;
+    success: boolean;
+    dimensions: number;
+    model: string;
+  }> => {
+    const apiKey = process.env.HUGGINGFACE_API_KEY;
+    if (!apiKey) {
+      console.error("HUGGINGFACE_API_KEY environment variable is not set");
+      return { embedding: null, success: false, dimensions: 0, model: HF_MODEL };
+    }
+
+    try {
+      const embedding = await getHuggingFaceEmbedding(args.text, apiKey);
+      return { 
+        embedding, 
+        success: true, 
+        dimensions: embedding.length, 
+        model: HF_MODEL 
+      };
+    } catch (error) {
+      console.error("[EmbeddingFromText] Failed:", error);
+      return { embedding: null, success: false, dimensions: 0, model: HF_MODEL };
+    }
+  },
+});
+
 // ── Backfill Embeddings for All Items Missing Them ───────────────
 
 export const backfillEmbeddings = action({

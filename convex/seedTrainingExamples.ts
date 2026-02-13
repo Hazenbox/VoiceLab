@@ -7,8 +7,10 @@
  * @module convex/seedTrainingExamples
  */
 
-import { mutation, query } from "./_generated/server";
+import { mutation, query, action } from "./_generated/server";
 import { v } from "convex/values";
+import { api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SEED DATA (matches schema.ts trainingExamples table)
@@ -583,5 +585,188 @@ export const promoteCorrection = mutation({
     });
 
     return { success: true };
+  },
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SEMANTIC SEARCH (Phase G)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Search training examples semantically by embedding similarity
+ * Retrieves contextually relevant examples for few-shot prompting
+ */
+export const semanticSearch = action({
+  args: {
+    query: v.string(),
+    ecosystem: v.optional(v.string()),
+    channel: v.optional(v.string()),
+    exampleType: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args): Promise<Array<{
+    _id: string;
+    inputContext: string;
+    outputContent: string;
+    correctedContent?: string;
+    exampleType: string;
+    ecosystem: string;
+    channel: string;
+    intent?: string;
+    emotion?: string;
+    qualityScore: number;
+    exemplaryTraits?: string[];
+    score: number;
+  }>> => {
+    const limit = args.limit ?? 5;
+    
+    // Generate embedding for the query
+    const embeddingResult = await ctx.runAction(api.embeddings.generateEmbeddingFromText, {
+      text: args.query,
+    });
+    
+    if (!embeddingResult.success || !embeddingResult.embedding) {
+      console.error('[SemanticSearch] Failed to generate embedding for query');
+      return [];
+    }
+    
+    // Perform vector search
+    // NOTE: Convex vectorSearch filter doesn't support q.and() for combining multiple conditions
+    // We use a single primary filter and post-filter in JavaScript for additional conditions
+    let results: { _id: Id<"trainingExamples">; _score: number }[];
+    
+    if (args.exampleType) {
+      // Filter by exampleType at DB level
+      results = await ctx.vectorSearch("trainingExamples", "by_example_embedding", {
+        vector: embeddingResult.embedding,
+        limit: limit * 3, // Get more to allow for post-filtering
+        filter: (q) => q.eq("exampleType", args.exampleType!),
+      });
+    } else if (args.ecosystem) {
+      // Filter by ecosystem at DB level
+      results = await ctx.vectorSearch("trainingExamples", "by_example_embedding", {
+        vector: embeddingResult.embedding,
+        limit: limit * 3,
+        filter: (q) => q.eq("ecosystem", args.ecosystem!),
+      });
+    } else {
+      // Filter by isActive at DB level (default)
+      results = await ctx.vectorSearch("trainingExamples", "by_example_embedding", {
+        vector: embeddingResult.embedding,
+        limit: limit * 3,
+        filter: (q) => q.eq("isActive", true),
+      });
+    }
+    
+    // Fetch full documents and format results
+    const examples = await Promise.all(
+      results.slice(0, limit).map(async (result) => {
+        const doc = await ctx.runQuery(api.seedTrainingExamples.getById, { 
+          id: result._id 
+        });
+        
+        if (!doc) return null;
+        
+        return {
+          _id: result._id,
+          inputContext: doc.inputContext,
+          outputContent: doc.outputContent,
+          correctedContent: doc.correctedContent,
+          exampleType: doc.exampleType,
+          ecosystem: doc.ecosystem,
+          channel: doc.channel,
+          intent: doc.intent,
+          emotion: doc.emotion,
+          qualityScore: doc.qualityScore,
+          exemplaryTraits: doc.exemplaryTraits,
+          score: result._score,
+        };
+      })
+    );
+    
+    return examples.filter((e): e is NonNullable<typeof e> => e !== null);
+  },
+});
+
+/**
+ * Get a training example by ID (helper for semantic search)
+ */
+export const getById = query({
+  args: {
+    id: v.id("trainingExamples"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
+/**
+ * Ensure embeddings exist for all training examples
+ */
+export const ensureEmbeddings = action({
+  args: {},
+  handler: async (ctx): Promise<{ processed: number; errors: number }> => {
+    // Get all examples without embeddings
+    const examples = await ctx.runQuery(api.seedTrainingExamples.getWithoutEmbeddings);
+    
+    let processed = 0;
+    let errors = 0;
+    
+    for (const example of examples) {
+      try {
+        // Generate embedding from input + output content
+        const textToEmbed = `${example.inputContext}\n\n${example.outputContent}`;
+        
+        const embeddingResult = await ctx.runAction(api.embeddings.generateEmbeddingFromText, {
+          text: textToEmbed,
+        });
+        
+        if (embeddingResult.success && embeddingResult.embedding) {
+          await ctx.runMutation(api.seedTrainingExamples.updateEmbedding, {
+            id: example._id,
+            embedding: embeddingResult.embedding,
+          });
+          processed++;
+        } else {
+          errors++;
+        }
+      } catch (e) {
+        console.error(`[EnsureEmbeddings] Failed for ${example._id}:`, e);
+        errors++;
+      }
+    }
+    
+    return { processed, errors };
+  },
+});
+
+/**
+ * Get training examples without embeddings
+ */
+export const getWithoutEmbeddings = query({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db
+      .query("trainingExamples")
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
+    
+    return all.filter((ex) => !ex.embedding || ex.embedding.length === 0);
+  },
+});
+
+/**
+ * Update embedding for a training example
+ */
+export const updateEmbedding = mutation({
+  args: {
+    id: v.id("trainingExamples"),
+    embedding: v.array(v.float64()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      embedding: args.embedding,
+      updatedAt: Date.now(),
+    });
   },
 });
