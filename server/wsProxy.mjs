@@ -25,8 +25,6 @@ dotenv.config({ path: join(__dirname, '..', '.env.local'), override: true });
 // Server-side API keys (no VITE_ prefix for security)
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY;
 const INWORLD_API_KEY = process.env.INWORLD_API_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
 const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
@@ -42,21 +40,12 @@ const DASHSCOPE_LLM_HTTP_ENDPOINT = 'https://dashscope-intl.aliyuncs.com/api/v1/
 // Inworld AI endpoint
 const INWORLD_API_BASE = 'https://api.inworld.ai';
 
-// OpenAI endpoint
-const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
-
-// Claude endpoint
-const CLAUDE_API_ENDPOINT = 'https://api.anthropic.com/v1/messages';
-
 // HuggingFace endpoint (using router.huggingface.co as per HF API update)
 const HUGGINGFACE_API_BASE = 'https://router.huggingface.co';
 
 // Warn about missing API keys but don't exit - some providers may still work
 if (!DASHSCOPE_API_KEY) {
   console.warn('Warning: DASHSCOPE_API_KEY is not set - DashScope endpoints will not work');
-}
-if (!OPENAI_API_KEY) {
-  console.warn('Warning: OPENAI_API_KEY is not set - OpenAI endpoints will not work');
 }
 if (!HUGGINGFACE_API_KEY) {
   console.warn('Warning: HUGGINGFACE_API_KEY is not set - HuggingFace endpoints will not work');
@@ -234,177 +223,6 @@ async function handleInworldProxy(req, res) {
     
     proxyReq.on('error', (error) => {
       console.error('[Proxy] Inworld request error:', error.message);
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Proxy request failed', details: error.message }));
-    });
-    
-    proxyReq.write(postData);
-    proxyReq.end();
-  });
-}
-
-/**
- * HTTP Proxy Handler for OpenAI requests
- */
-async function handleOpenAIProxy(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-  
-  if (req.method !== 'POST') {
-    res.writeHead(405, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Method not allowed' }));
-    return;
-  }
-  
-  if (!OPENAI_API_KEY) {
-    res.writeHead(503, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'OpenAI API key not configured' }));
-    return;
-  }
-  
-  // Read request body
-  let body = '';
-  req.on('data', chunk => {
-    body += chunk.toString();
-  });
-  
-  req.on('end', () => {
-    console.log('[Proxy] OpenAI request received');
-    
-    // Parse request body
-    let requestData;
-    try {
-      requestData = JSON.parse(body);
-      console.log('[Proxy] OpenAI Request model:', requestData.model);
-    } catch (error) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Invalid JSON' }));
-      return;
-    }
-    
-    const postData = JSON.stringify(requestData);
-    
-    // Prepare request options
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Length': Buffer.byteLength(postData),
-      },
-    };
-    
-    console.log('[Proxy] Forwarding to OpenAI API');
-    
-    // Forward request to OpenAI
-    const proxyReq = https.request(OPENAI_API_ENDPOINT, options, (proxyRes) => {
-      console.log('[Proxy] OpenAI response status:', proxyRes.statusCode);
-      
-      // Set response headers
-      res.setHeader('Content-Type', 'application/json');
-      res.writeHead(proxyRes.statusCode);
-      
-      // Pipe the response back to the client
-      proxyRes.pipe(res);
-    });
-    
-    proxyReq.on('error', (error) => {
-      console.error('[Proxy] OpenAI request error:', error.message);
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Proxy request failed', details: error.message }));
-    });
-    
-    proxyReq.write(postData);
-    proxyReq.end();
-  });
-}
-
-/**
- * HTTP Proxy Handler for Claude requests
- */
-async function handleClaudeProxy(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    res.writeHead(204);
-    res.end();
-    return;
-  }
-  
-  if (req.method !== 'POST') {
-    res.writeHead(405, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Method not allowed' }));
-    return;
-  }
-  
-  if (!CLAUDE_API_KEY) {
-    res.writeHead(503, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Claude API key not configured' }));
-    return;
-  }
-  
-  // Read request body
-  let body = '';
-  req.on('data', chunk => {
-    body += chunk.toString();
-  });
-  
-  req.on('end', () => {
-    console.log('[Proxy] Claude request received');
-    
-    // Parse request body
-    let requestData;
-    try {
-      requestData = JSON.parse(body);
-      console.log('[Proxy] Claude Request model:', requestData.model);
-    } catch (error) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Invalid JSON' }));
-      return;
-    }
-    
-    const postData = JSON.stringify(requestData);
-    
-    // Prepare request options
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'Content-Length': Buffer.byteLength(postData),
-      },
-    };
-    
-    console.log('[Proxy] Forwarding to Claude API');
-    
-    // Forward request to Claude
-    const proxyReq = https.request(CLAUDE_API_ENDPOINT, options, (proxyRes) => {
-      console.log('[Proxy] Claude response status:', proxyRes.statusCode);
-      
-      // Set response headers
-      res.setHeader('Content-Type', 'application/json');
-      res.writeHead(proxyRes.statusCode);
-      
-      // Pipe the response back to the client
-      proxyRes.pipe(res);
-    });
-    
-    proxyReq.on('error', (error) => {
-      console.error('[Proxy] Claude request error:', error.message);
       res.writeHead(502, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Proxy request failed', details: error.message }));
     });
@@ -631,18 +449,6 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  // OpenAI proxy endpoint
-  if (req.url === '/api/openai') {
-    handleOpenAIProxy(req, res);
-    return;
-  }
-  
-  // Claude proxy endpoint
-  if (req.url === '/api/claude') {
-    handleClaudeProxy(req, res);
-    return;
-  }
-  
   // HuggingFace proxy endpoint
   if (req.url === '/api/huggingface') {
     handleHuggingFaceProxy(req, res);
@@ -760,13 +566,11 @@ server.listen(PROXY_PORT, () => {
 ║  LLM Providers:                                                    ║
 ║    Qwen/DashScope: http://localhost:${PROXY_PORT}/api/llm                 ║
 ║    Inworld:        http://localhost:${PROXY_PORT}/api/inworld/...         ║
-║    OpenAI:         http://localhost:${PROXY_PORT}/api/openai              ║
-║    Claude:         http://localhost:${PROXY_PORT}/api/claude              ║
 ║    HuggingFace:    http://localhost:${PROXY_PORT}/api/huggingface         ║
 ║  ─────────────────────────────────────────────────────────────────║
 ║  Health Check:  http://localhost:${PROXY_PORT}/health                     ║
 ╠═══════════════════════════════════════════════════════════════════╣
-║  API Keys: DashScope=${DASHSCOPE_API_KEY ? '✓' : '✗'} OpenAI=${OPENAI_API_KEY ? '✓' : '✗'} Claude=${CLAUDE_API_KEY ? '✓' : '✗'} HF=${HUGGINGFACE_API_KEY ? '✓' : '✗'} Gemini=${GEMINI_API_KEY ? '✓' : '✗'}  ║
+║  API Keys: DashScope=${DASHSCOPE_API_KEY ? '✓' : '✗'} HF=${HUGGINGFACE_API_KEY ? '✓' : '✗'} Gemini=${GEMINI_API_KEY ? '✓' : '✗'} ElevenLabs=${ELEVENLABS_API_KEY ? '✓' : '✗'}  ║
 ╚═══════════════════════════════════════════════════════════════════╝
   `);
 });
