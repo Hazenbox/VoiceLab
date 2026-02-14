@@ -15,15 +15,18 @@
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import type { ChatMessage, ChatMode, FeedbackPayload } from '../types';
 import { getDisplayContent } from '../types';
-import { useThemeColors } from '../theme';
+import { useThemeColors, SEMANTIC_COLORS } from '../theme';
 import { MessageContent } from './MessageContent';
 import { AudioBubble } from './AudioBubble';
 import { TrustBadge } from './ContentTrust';
 import { AssistantMessageActions, UserMessageActions } from './MessageActions';
 import { VersionNavigator } from './VersionNavigator';
 import { DislikeFeedbackModal } from './DislikeFeedbackModal';
-import { Button } from '@marcelinodzn/ds-react';
+import { Button, Chip } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
+
+/** Send button brand purple */
+const SEND_BUTTON_COLOR = '#3900AD';
 
 // =============================================================================
 // Streaming Text Hook - ChatGPT-like word-by-word animation
@@ -500,24 +503,21 @@ export const ChatPanel = memo(function ChatPanel({
                 autoFocus
               />
               <div className="flex justify-end gap-2">
-                <button
-                  onClick={onCancelEdit}
-                  className="text-xs px-3 py-1 rounded-full hover:opacity-80"
-                  style={{ color: theme.text.low }}
+                <Button
+                  appearance="ghost"
+                  size="S"
+                  onPress={onCancelEdit}
                 >
                   cancel
-                </button>
-                <button
-                  onClick={() => onSubmitEdit?.(message.id, editValue || '')}
-                  disabled={!editValue?.trim() || editValue === displayContent}
-                  className="text-xs px-3 py-1 rounded-full disabled:opacity-40"
-                  style={{
-                    backgroundColor: theme.accent,
-                    color: '#fff',
-                  }}
+                </Button>
+                <Button
+                  appearance="primary"
+                  size="S"
+                  onPress={() => onSubmitEdit?.(message.id, editValue || '')}
+                  isDisabled={!editValue?.trim() || editValue === displayContent}
                 >
                   submit
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -599,46 +599,29 @@ export const ChatPanel = memo(function ChatPanel({
               style={{
                 backgroundColor: theme.background.ghost,
                 color: theme.text.high,
-                borderLeft: '3px solid #00A859',
+                borderLeft: `3px solid ${SEMANTIC_COLORS.positive}`,
               }}
             >
               <MessageContent content={message.autoFixPreview.fixedContent} role="assistant" />
               
               {/* Tag row - show accept button only if pending, otherwise show auto-fixed indicator */}
               <div className="flex items-center justify-between gap-2 mt-2">
-                <span 
-                  className="text-[10px] px-2 py-0.5 rounded-full"
-                  style={{ 
-                    backgroundColor: 'rgba(0, 168, 89, 0.1)',
-                    color: '#00A859',
-                  }}
-                >
+                <Chip size="S" appearance="positive">
                   {isAutoFixPending ? 'recommended based on jio rules' : 'auto-fixed based on jio rules'}
-                </span>
+                </Chip>
                 {isAutoFixPending ? (
-                  <button
-                    onClick={() => onAcceptAutoFix?.(message.id)}
-                    className="text-xs px-3 py-1 rounded-full transition-colors hover:opacity-90"
-                    style={{
-                      backgroundColor: '#00A859',
-                      color: '#ffffff',
-                    }}
+                  <Button
+                    appearance="primary"
+                    size="S"
+                    onPress={() => onAcceptAutoFix?.(message.id)}
                   >
                     accept
-                  </button>
+                  </Button>
                 ) : (
-                  <span 
-                    className="text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1"
-                    style={{ 
-                      backgroundColor: 'rgba(0, 168, 89, 0.15)',
-                      color: '#00A859',
-                    }}
-                  >
-                    <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/>
-                    </svg>
+                  <Chip size="S" appearance="positive">
+                    <DSIcon name="IcCheck" size="XS" attention="high" />
                     applied
-                  </span>
+                  </Chip>
                 )}
               </div>
               
@@ -798,7 +781,7 @@ export const ChatPanel = memo(function ChatPanel({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: '#3900AD',
+              backgroundColor: SEND_BUTTON_COLOR,
               color: '#ffffff',
             }}
           >
@@ -953,25 +936,17 @@ export const ChatPanel = memo(function ChatPanel({
             {/* Stop Generation Button - shown while streaming */}
             {isLoading && streamingAIResponse && onStopGeneration && (
               <div className="px-4 py-2 flex justify-center">
-                <button
-                  onClick={onStopGeneration}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-md border transition-colors hover:bg-opacity-10"
-                  style={{ 
-                    borderColor: theme.stroke.medium,
-                    color: theme.text.medium,
-                    backgroundColor: 'transparent',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.stroke.low;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
+                <Button
+                  appearance="secondary"
+                  size="S"
+                  onPress={onStopGeneration}
                   aria-label="Stop generating"
                 >
-                  <DSIcon name="IcStop" size="XS" attention="medium" />
-                  <span className="text-sm">stop generating</span>
-                </button>
+                  <div className="flex items-center gap-2">
+                    <DSIcon name="IcStop" size="XS" attention="medium" />
+                    <span>stop generating</span>
+                  </div>
+                </Button>
               </div>
             )}
 
