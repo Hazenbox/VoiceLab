@@ -5,14 +5,18 @@
  * Opens when user clicks dislike button on an assistant message.
  * 
  * Features:
- * - Platform-relevant reason chips (clickable to toggle)
- * - Optional free-text comment field
- * - Submit and close buttons
+ * - DS Chip for reason selection
+ * - DS TextArea for comment
+ * - DS Button for actions
+ * - DS Title/Label for typography
  * - Backdrop overlay with click-to-close
+ * 
+ * Note: DS Dialog not yet available in package; using custom modal container.
  */
 
 import { memo, useState, useCallback, useEffect } from 'react';
 import { useThemeColors } from '../theme';
+import { Button, Chip, TextArea, Title, Label, Divider } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
 // ============================================================================
@@ -122,115 +126,79 @@ export const DislikeFeedbackModal = memo(function DislikeFeedbackModal({
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div
-          className="px-6 py-4 border-b"
-          style={{ borderColor: theme.stroke.low }}
-        >
+        <div className="px-6 py-4">
           <div className="flex items-center justify-between">
-            <h2
-              className="text-lg font-semibold"
-              style={{ color: theme.text.high }}
-            >
+            <Title size="S" as="h2" weight="high" color="high">
               provide additional feedback
-            </h2>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+            </Title>
+            <Button
+              appearance="ghost"
+              size="S"
+              onPress={onClose}
               aria-label="close"
             >
               <DSIcon name="IcClose" size="S" attention="medium" />
-            </button>
+            </Button>
           </div>
         </div>
+        <Divider />
         
         {/* Body */}
         <div className="px-6 py-4 space-y-4">
           {/* Reason Chips */}
           <div>
-            <p
-              className="text-sm font-medium mb-2"
-              style={{ color: theme.text.medium }}
-            >
-              what was the issue? (select all that apply)
-            </p>
+            <div className="mb-2">
+              <Label size="S" weight="medium" attention="medium" as="p">
+                what was the issue? (select all that apply)
+              </Label>
+            </div>
             <div className="flex flex-wrap gap-2">
               {REASON_OPTIONS.map(option => {
                 const isSelected = selectedReasons.includes(option.id);
                 return (
-                  <button
+                  <Chip
                     key={option.id}
+                    size="S"
+                    appearance={isSelected ? 'primary' : 'neutral'}
                     onClick={() => handleReasonToggle(option.id)}
-                    className="px-3 py-1.5 rounded-full text-sm font-medium transition-all"
-                    style={{
-                      backgroundColor: isSelected ? '#f97316' : theme.background.subtle,
-                      color: isSelected ? '#ffffff' : theme.text.medium,
-                      border: `1px solid ${isSelected ? '#f97316' : theme.stroke.low}`,
-                    }}
                   >
                     {option.label}
-                  </button>
+                  </Chip>
                 );
               })}
             </div>
           </div>
           
-          {/* Optional Comment */}
+          {/* Optional Comment -- DS TextArea */}
           <div>
-            <label
-              htmlFor="feedback-comment"
-              className="block text-sm font-medium mb-2"
-              style={{ color: theme.text.medium }}
-            >
-              additional details (optional)
-            </label>
-            <textarea
-              id="feedback-comment"
+            <TextArea
+              label="additional details (optional)"
               value={comment}
-              onChange={e => setComment(e.target.value)}
+              onChange={(val: string) => setComment(val)}
               placeholder="tell us more about what went wrong..."
               rows={3}
-              className="w-full px-3 py-2 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-orange-500"
-              style={{
-                backgroundColor: theme.background.subtle,
-                color: theme.text.high,
-                border: `1px solid ${theme.stroke.low}`,
-              }}
             />
           </div>
         </div>
         
         {/* Footer */}
-        <div
-          className="px-6 py-4 border-t flex items-center justify-end gap-3"
-          style={{ borderColor: theme.stroke.low }}
-        >
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            style={{
-              color: theme.text.medium,
-              backgroundColor: 'transparent',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = theme.background.subtle;
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
+        <Divider />
+        <div className="px-6 py-4 flex items-center justify-end gap-3">
+          <Button
+            appearance="ghost"
+            size="S"
+            onPress={onClose}
           >
             skip
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={selectedReasons.length === 0 && comment.trim() === ''}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: '#f97316',
-              color: '#ffffff',
-            }}
+          </Button>
+          <Button
+            appearance="primary"
+            size="S"
+            onPress={handleSubmit}
+            isDisabled={selectedReasons.length === 0 && comment.trim() === ''}
           >
             submit feedback
-          </button>
+          </Button>
         </div>
       </div>
     </div>
