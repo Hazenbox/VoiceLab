@@ -148,6 +148,12 @@ interface ProjectMenuProps {
   direction?: 'up' | 'down';
 }
 
+const ProjectMenu = memo(function ProjectMenu({
+  options,
+  onSelect,
+  isOpen,
+  onToggle,
+  direction = 'down',
 }: ProjectMenuProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
