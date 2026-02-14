@@ -1,6 +1,11 @@
 import React from 'react';
 import { useThemeColors } from '../theme';
+import { Label, Text } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
+
+/** Slider track colors -- keep in sync with LabeledSlider */
+const TRACK_ACTIVE_LIGHT = '#fa7d19';
+const TRACK_ACTIVE_DARK = '#ea580c';
 
 interface SliderProps {
   label: string;
@@ -55,20 +60,17 @@ export const Slider: React.FC<SliderProps> = ({
   const displayValue = formatValue ? formatValue(value) : value.toString();
   
   // Surface-Minimal: Match LabeledSlider colors
-  const inactiveBg = theme.isLight ? '#F5F5F5' : '#262626';
-  const activeBg = theme.isLight ? '#fa7d19' : '#ea580c';
+  const inactiveBg = theme.background.bold;
+  const activeBg = theme.isLight ? TRACK_ACTIVE_LIGHT : TRACK_ACTIVE_DARK;
 
   return (
     <div className="space-y-2">
       {/* Label and Value */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 relative">
-          <label
-            className="text-xs font-normal"
-            style={{ color: theme.text.medium }}
-          >
+          <Label size="XS" weight="medium" attention="medium" as="label">
             {label}
-          </label>
+          </Label>
           {tooltip && (
             <>
               <div
@@ -95,12 +97,9 @@ export const Slider: React.FC<SliderProps> = ({
             </>
           )}
         </div>
-        <span
-          className="text-xs font-mono font-normal"
-          style={{ color: theme.text.medium }}
-        >
-          {displayValue}
-        </span>
+        <Text variant="caption" weight="regular">
+          <span style={{ fontFamily: "'Geist Mono', monospace" }}>{displayValue}</span>
+        </Text>
       </div>
       
       {/* Slider Track - Match LabeledSlider style */}

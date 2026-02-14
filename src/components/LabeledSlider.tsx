@@ -1,6 +1,11 @@
 import React from 'react';
 import { useThemeColors } from '../theme';
+import { Label } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
+
+/** Slider track colors -- keep in sync with Slider */
+const TRACK_ACTIVE_LIGHT = '#fa7d19';
+const TRACK_ACTIVE_DARK = '#ea580c';
 
 interface LabeledSliderProps {
   label: string;
@@ -46,21 +51,18 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
     return '320px';                        // Very long text
   };
   
-  // Surface-Minimal: Always use #F5F5F5 for light mode, #262626 for dark mode
-  const inactiveBg = theme.isLight ? '#F5F5F5' : '#262626';
+  // Surface-Minimal: Use theme background.bold for inactive track
+  const inactiveBg = theme.background.bold;
   
-  // Active color: Use bright orange in light mode, darker orange in dark mode (matches radio)
-  const activeBg = theme.isLight ? '#fa7d19' : '#ea580c';
+  // Active color: bright orange in light mode, darker orange in dark mode
+  const activeBg = theme.isLight ? TRACK_ACTIVE_LIGHT : TRACK_ACTIVE_DARK;
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5 relative">
-        <label 
-          className="block text-xs font-normal"
-          style={{ color: theme.text.medium }}
-        >
+        <Label size="XS" weight="medium" attention="medium" as="label">
           {label}
-        </label>
+        </Label>
         {tooltip && (
           <>
             <div
