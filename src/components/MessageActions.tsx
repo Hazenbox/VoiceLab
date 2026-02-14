@@ -87,39 +87,6 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   const showLike = !feedbackGiven || feedbackGiven === 'like';
   const showDislike = !feedbackGiven || feedbackGiven === 'dislike';
   
-  // Icon colors: brand accent when active, gray otherwise
-  const likeIconColor = feedbackGiven === 'like' ? BRAND_ACCENT : theme.text.low;
-  const dislikeIconColor = feedbackGiven === 'dislike' ? BRAND_ACCENT : theme.text.low;
-  
-  // Icon components with dynamic color styling
-  const CopyIcon = () => (
-    <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCopyDocument" size="S" attention="low" />
-    </span>
-  );
-  
-  const CopyDoneIcon = () => (
-    <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCheck" size="S" attention="low" />
-    </span>
-  );
-  
-  const LikeIcon = () => (
-    <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex' }}>
-      <DSIcon name="IcDislike" size="S" style={{ color: likeIconColor }} />
-    </span>
-  );
-  
-  const DislikeIcon = () => (
-    <DSIcon name="IcDislike" size="S" style={{ color: dislikeIconColor }} />
-  );
-  
-  const RefreshIcon = () => (
-    <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcRefresh" size="S" attention="low" />
-    </span>
-  );
-  
   const handleCopy = useCallback(() => {
     copyToClipboard(content);
     // v2: Track copy action
@@ -163,7 +130,10 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   return (
     <div className="flex items-center gap-1">
       <ActionButton
-        icon={isCopied ? <CopyDoneIcon /> : <CopyIcon />}
+        icon={isCopied 
+          ? <DSIcon name="IcCheck" size="S" attention="low" appearance="neutral" />
+          : <DSIcon name="IcCopyDocument" size="S" attention="low" appearance="neutral" />
+        }
         label={isCopied ? "copied" : "copy"}
         onClick={handleCopy}
         disabled={disabled}
@@ -171,7 +141,11 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
       />
       {showLike && (
         <ActionButton
-          icon={<LikeIcon />}
+          icon={
+            <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex' }}>
+              <DSIcon name="IcDislike" size="S" attention="low" appearance="neutral" />
+            </span>
+          }
           label="good response"
           onClick={handleLike}
           disabled={disabled}
@@ -180,7 +154,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
       )}
       {showDislike && (
         <ActionButton
-          icon={<DislikeIcon />}
+          icon={<DSIcon name="IcDislike" size="S" attention="low" appearance="neutral" />}
           label="bad response"
           onClick={handleDislike}
           disabled={disabled}
@@ -188,7 +162,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         />
       )}
       <ActionButton
-        icon={<RefreshIcon />}
+        icon={<DSIcon name="IcRefresh" size="S" attention="low" appearance="neutral" />}
         label="try again"
         onClick={handleTryAgain}
         disabled={disabled}
