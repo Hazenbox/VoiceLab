@@ -176,7 +176,7 @@ const ProjectMenu = memo(function ProjectMenu({
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        <Icon size="XS" attention="low" asset={<LazyIcon name="IcMoreHorizontal" />} />
+        <Icon size="S" attention="low" asset={<LazyIcon name="IcMoreHorizontal" />} />
       </Button>
 
       {/* Dropdown Menu */}
