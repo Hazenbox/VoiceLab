@@ -12,7 +12,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { CodeBlock, InlineCode } from './CodeBlock';
 import { useThemeColors } from '../theme';
-import { Title, Divider } from '@marcelinodzn/ds-react';
+import { Title, Display, Divider } from '@marcelinodzn/ds-react';
 import type { Components } from 'react-markdown';
 import type { ThemeColors } from '../theme';
 
@@ -53,20 +53,20 @@ function createMarkdownComponents(theme: ThemeColors): Components {
       );
     },
 
-    // Headings -- DS Title for h1-h3, custom for h4-h6 (no Title size < S)
+    // Headings -- DS Display for h1, Title for h2-h3, custom for h4-h6
     h1: ({ children }) => (
       <div className="mt-8 mb-3">
-        <Title size="L" as="h1" weight="high" color="high">{children}</Title>
+        <Display size="M" as="h1" weight="high" color="high">{children}</Display>
       </div>
     ),
     h2: ({ children }) => (
       <div className="mt-6 mb-3">
-        <Title size="M" as="h2" weight="high" color="high">{children}</Title>
+        <Title size="L" as="h2" weight="high" color="high">{children}</Title>
       </div>
     ),
     h3: ({ children }) => (
       <div className="mt-4 mb-2">
-        <Title size="S" as="h3" weight="high" color="high">{children}</Title>
+        <Title size="M" as="h3" weight="high" color="high">{children}</Title>
       </div>
     ),
     h4: ({ children }) => (
