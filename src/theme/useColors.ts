@@ -245,3 +245,18 @@ export function getStatusColor(status: string, fallback = LOCAL_COLORS.informati
  * Re-export LOCAL_COLORS for direct use when semantic tokens are needed
  */
 export const SEMANTIC_COLORS = LOCAL_COLORS;
+
+/**
+ * Selected item colors for dropdowns, selects, and list items.
+ * Consistent orange-tinted selection indicator across all selects.
+ */
+export const SELECTION_COLORS = {
+  light: {
+    background: '#fff7ed',
+    text: '#c2410c',
+  },
+  dark: {
+    background: '#431407',
+    text: '#fdba74',
+  },
+} as const;

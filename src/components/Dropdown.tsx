@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { useThemeColors } from '../theme';
+import { useThemeColors, SELECTION_COLORS } from '../theme';
 import { DSIcon } from './DSIcon';
 
 // =============================================================================
@@ -211,12 +211,12 @@ export const Dropdown = memo(function Dropdown({
                 style={{
                   width: 'calc(100% - 8px)',
                   backgroundColor: isSelected 
-                    ? (theme.isLight ? '#fff7ed' : '#431407')
+                    ? (theme.isLight ? SELECTION_COLORS.light.background : SELECTION_COLORS.dark.background)
                     : isFocused 
                       ? theme.stroke.low 
                       : 'transparent',
                   color: isSelected 
-                    ? (theme.isLight ? '#c2410c' : '#fdba74')
+                    ? (theme.isLight ? SELECTION_COLORS.light.text : SELECTION_COLORS.dark.text)
                     : theme.text.high,
                 }}
                 role="option"

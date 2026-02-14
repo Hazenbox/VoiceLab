@@ -15,4 +15,5 @@ export {
   type BackgroundEmphasis,
   type ThemeColors,
   type StatusKey,
+  SELECTION_COLORS,
 } from './useColors';

@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback, useMemo, memo } from 'react';
-import { useThemeColors } from '../theme';
+import { useThemeColors, SELECTION_COLORS } from '../theme';
 import { DropdownSectionHeader } from './DropdownSectionHeader';
 import { DSIcon } from './DSIcon';
 
@@ -291,7 +291,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
               dropdownDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'
             }`}
             style={{
-              backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
+              backgroundColor: theme.background.ghost,
               border: `1px solid ${theme.stroke.low}`,
               maxWidth: 'calc(100vw - 32px)',
             }}
@@ -325,7 +325,7 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                     placeholder="Search..."
                     className="w-full pl-7 pr-2 py-1 text-xs rounded focus:outline-none focus:ring-1 focus:ring-orange-500"
                     style={{
-                      backgroundColor: theme.isLight ? '#f5f5f5' : '#2a2a2a',
+                      backgroundColor: theme.background.bold,
                       color: theme.text.high,
                     }}
                     onClick={(e) => e.stopPropagation()}
@@ -392,13 +392,13 @@ export const SearchableDropdown = memo(function SearchableDropdown({
                           style={{
                             width: 'calc(100% - 8px)',
                             backgroundColor: isSelected
-                              ? (theme.isLight ? '#fff7ed' : '#431407')
+                              ? (theme.isLight ? SELECTION_COLORS.light.background : SELECTION_COLORS.dark.background)
                               : isFocused && !option.disabled
                                 ? theme.stroke.low
                                 : 'transparent',
                             color: !option.disabled
                               ? (isSelected 
-                                  ? (theme.isLight ? '#c2410c' : '#fdba74')
+                                  ? (theme.isLight ? SELECTION_COLORS.light.text : SELECTION_COLORS.dark.text)
                                   : theme.text.high)
                               : theme.text.low,
                             cursor: option.disabled ? 'not-allowed' : 'pointer',

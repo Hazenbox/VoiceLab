@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useThemeColors } from '../theme';
+import { useThemeColors, SELECTION_COLORS } from '../theme';
 import { DSIcon } from './DSIcon';
 
 interface Option {
@@ -108,8 +108,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                 }}
                 className="w-full px-2.5 py-1.5 text-sm text-left transition-colors duration-150 hover:opacity-80"
                 style={{
-                  backgroundColor: option.value === value ? (theme.isLight ? '#fff7ed' : '#431407') : 'transparent',
-                  color: option.value === value ? (theme.isLight ? '#c2410c' : '#fdba74') : theme.text.high,
+                  backgroundColor: option.value === value ? (theme.isLight ? SELECTION_COLORS.light.background : SELECTION_COLORS.dark.background) : 'transparent',
+                  color: option.value === value ? (theme.isLight ? SELECTION_COLORS.light.text : SELECTION_COLORS.dark.text) : theme.text.high,
                 }}
               >
                 {option.label}

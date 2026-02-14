@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import Fuse from 'fuse.js';
+import { useThemeColors, SELECTION_COLORS } from '../theme';
+import { Label } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
 // ── Types ────────────────────────────────────────────────────────
@@ -28,6 +30,8 @@ export default function SearchableCombobox({
   value,
   onChange,
 }: SearchableComboboxProps) {
+  const theme = useThemeColors();
+  const sel = theme.isLight ? SELECTION_COLORS.light : SELECTION_COLORS.dark;
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -134,18 +138,12 @@ export default function SearchableCombobox({
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative', marginBottom: '1rem' }}>
-      {/* Label */}
-      <label
-        style={{
-          display: 'block',
-          color: '#1a1a1a',
-          fontSize: '0.8125rem',
-          fontWeight: 600,
-          marginBottom: '0.375rem',
-        }}
-      >
-        {label}
-      </label>
+      {/* Label -- DS Label */}
+      <div style={{ marginBottom: '0.375rem' }}>
+        <Label size="XS" weight="high" attention="high" as="label">
+          {label}
+        </Label>
+      </div>
 
       {/* Input Field */}
       <div style={{ position: 'relative' }}>
@@ -171,9 +169,9 @@ export default function SearchableCombobox({
             width: '100%',
             padding: '0.625rem 2.5rem 0.625rem 0.75rem',
             borderRadius: '8px',
-            border: '1px solid #e0e0e0',
-            background: '#f9f9f9',
-            color: '#1a1a1a',
+            border: `1px solid ${theme.stroke.medium}`,
+            background: theme.background.subtle,
+            color: theme.text.high,
             fontSize: '0.8125rem',
             outline: 'none',
             boxSizing: 'border-box',
@@ -190,7 +188,7 @@ export default function SearchableCombobox({
             transform: `translateY(-50%) rotate(${isOpen ? '180deg' : '0deg'})`,
             transition: 'transform 0.2s ease',
             pointerEvents: 'none',
-            color: '#666',
+            color: theme.text.low,
           }}
         >
           <DSIcon name="IcChevronDown" size="XS" attention="low" />
@@ -207,20 +205,20 @@ export default function SearchableCombobox({
             top: 'calc(100% + 0.25rem)',
             left: 0,
             right: 0,
-            background: '#ffffff',
+            background: theme.background.ghost,
             borderRadius: '8px',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             maxHeight: '280px',
             overflowY: 'auto',
             zIndex: 1000,
-            border: '1px solid #e0e0e0',
+            border: `1px solid ${theme.stroke.low}`,
           }}
         >
           {filteredOptions.length === 0 ? (
             <div
               style={{
                 padding: '0.75rem',
-                color: '#666',
+                color: theme.text.low,
                 fontSize: '0.8125rem',
                 textAlign: 'center',
               }}
@@ -241,11 +239,11 @@ export default function SearchableCombobox({
                   cursor: 'pointer',
                   background:
                     index === highlightedIndex
-                      ? '#f5f5f5'
+                      ? theme.background.bold
                       : value === option.id
-                      ? '#0066ff10'
+                      ? sel.background
                       : 'transparent',
-                  borderLeft: value === option.id ? '3px solid #0066ff' : '3px solid transparent',
+                  borderLeft: value === option.id ? `3px solid ${sel.text}` : '3px solid transparent',
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -259,7 +257,7 @@ export default function SearchableCombobox({
                 >
                   <span
                     style={{
-                      color: value === option.id ? '#0066ff' : '#1a1a1a',
+                      color: value === option.id ? sel.text : theme.text.high,
                       fontSize: '0.8125rem',
                       fontWeight: value === option.id ? 600 : 400,
                     }}
@@ -268,10 +266,10 @@ export default function SearchableCombobox({
                   </span>
                   {option.description && (
                     <>
-                      <span style={{ color: '#ccc', fontSize: '0.75rem' }}>•</span>
+                      <span style={{ color: theme.stroke.medium, fontSize: '0.75rem' }}>•</span>
                       <span
                         style={{
-                          color: '#666',
+                          color: theme.text.low,
                           fontSize: '0.75rem',
                         }}
                       >
