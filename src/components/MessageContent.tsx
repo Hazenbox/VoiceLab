@@ -55,17 +55,17 @@ function createMarkdownComponents(theme: ThemeColors): Components {
 
     // Headings -- DS Display for h1, Title for h2-h3, custom for h4-h6
     h1: ({ children }) => (
-      <div className="mt-8 mb-3">
+      <div className="mt-8 mb-3" style={{ lineHeight: '1.2' }}>
         <Display size="M" as="h1" weight="high" color="high">{children}</Display>
       </div>
     ),
     h2: ({ children }) => (
-      <div className="mt-6 mb-3">
+      <div className="mt-6 mb-3" style={{ lineHeight: '1.2' }}>
         <Title size="L" as="h2" weight="high" color="high">{children}</Title>
       </div>
     ),
     h3: ({ children }) => (
-      <div className="mt-4 mb-2">
+      <div className="mt-4 mb-2" style={{ lineHeight: '1.3' }}>
         <Title size="M" as="h3" weight="high" color="high">{children}</Title>
       </div>
     ),
@@ -98,7 +98,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     p: ({ children }) => (
       <p 
         className="text-sm mb-3"
-        style={{ color: theme.text.high, letterSpacing: '-0.12px', lineHeight: '22px' }}
+        style={{ color: theme.text.high, letterSpacing: '-0.12px', lineHeight: '24px' }}
       >
         {children}
       </p>
@@ -216,7 +216,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
 
     // Horizontal rule -- DS Divider
     hr: () => (
-      <div className="my-4">
+      <div className="my-6">
         <Divider />
       </div>
     ),
