@@ -602,7 +602,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               className="absolute z-50 w-[219px] rounded-lg overflow-hidden p-1 right-0 bottom-full mb-1"
               style={{
                 backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
-                border: `1px solid ${theme.stroke.low}`,
+                border: `1px solid ${theme.stroke.medium}`,
               }}
               role="menu"
               aria-orientation="vertical"
