@@ -80,7 +80,7 @@ const SidebarNavItem = memo(function SidebarNavItem({
       onMouseLeave={() => setIsHovered(false)}
     >
       {icon}
-      <Text variant="body" weight="regular">
+      <Text size="S" weight="low">
         {label}
       </Text>
       {badge}
@@ -162,19 +162,20 @@ const ProjectMenu = memo(function ProjectMenu({
   return (
     <div ref={containerRef} className="relative inline-block">
       {/* Trigger Button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
+      <Button
+        onPress={(e) => {
+          e?.stopPropagation?.();
           onToggle();
         }}
-        className="p-1 rounded transition-opacity hover:opacity-70 cursor-pointer"
-        style={{ color: theme.text.low }}
+        size="XS"
+        appearance="neutral"
+        attention="low"
         aria-label="Project options"
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
         <DSIcon name="IcMoreHorizontal" size="XS" attention="low" />
-      </button>
+      </Button>
 
       {/* Dropdown Menu */}
       {isOpen && (
@@ -274,7 +275,7 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
           className="flex-1 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset rounded py-1"
         >
           <div className="truncate">
-            <Text variant="body" weight="regular">
+            <Text size="S" weight="low">
               {projectName}
             </Text>
           </div>
@@ -518,11 +519,11 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             {/* Name and role */}
             <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
               <div className="truncate">
-                <Text variant="body" weight="semibold">
+                <Text size="S" weight="medium">
                   {userName}
                 </Text>
               </div>
-              <Text variant="caption" weight="regular">
+              <Text size="XS" weight="low">
                 {formatRole(userRole)}
               </Text>
             </div>
