@@ -203,6 +203,10 @@ import {
   type TokenEnforcementRule,
   type TokenEnforcementContext,
 } from './services/validation/tokenEnforcementAgent';
+import {
+  setCachedEnforcementRules,
+  getCachedEnforcementRules,
+} from './services/validation/tokenEnforcementCache';
 import type { 
   FeedbackPayload, 
   SendMessageOptions, 
@@ -616,6 +620,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       setDynamicAutoFixRules(convexKnowledge.autoFixRules);
     }
   }, [convexKnowledge?.autoFixRules]);
+
+  // Cache token enforcement rules when they load from Convex
+  // Critical for brand protection - must be cached to avoid race conditions
+  useEffect(() => {
+    if (convexTokenEnforcementRules && convexTokenEnforcementRules.length > 0) {
+      setCachedEnforcementRules(convexTokenEnforcementRules as TokenEnforcementRule[]);
+    }
+  }, [convexTokenEnforcementRules]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -1346,8 +1358,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         // =====================================================================
         // Token Enforcement: Post-generation validation against Convex rules
         // Critical for brand protection - blocks/fixes competitor mentions
+        // Uses cached rules to avoid race condition with Convex query
         // =====================================================================
-        if (convexTokenEnforcementRules && convexTokenEnforcementRules.length > 0) {
+        const cachedRules = getCachedEnforcementRules();
+        if (cachedRules.length > 0) {
           try {
             // Build active tokens for enforcement
             const activeTokens = {
@@ -1360,10 +1374,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               persona: featureFlags.persona ? userProfile?.role : undefined,
             };
             
-            // Create enforcement agent with Convex rules
+            // Create enforcement agent with cached Convex rules
             const enforcementContext: TokenEnforcementContext = {
               activeTokens,
-              rules: convexTokenEnforcementRules as TokenEnforcementRule[],
+              rules: cachedRules,
             };
             
             const enforcementAgent = createTokenEnforcementAgent(enforcementContext);
@@ -1803,8 +1817,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         // =====================================================================
         // Token Enforcement: Post-generation validation for CONVERSATIONAL path
         // Critical for brand protection - blocks/fixes competitor mentions
+        // Uses cached rules to avoid race condition with Convex query
         // =====================================================================
-        if (convexTokenEnforcementRules && convexTokenEnforcementRules.length > 0) {
+        const conversationalCachedRules = getCachedEnforcementRules();
+        if (conversationalCachedRules.length > 0) {
           try {
             const effectiveEcosystem = intentClassification?.detectedEcosystem?.ecosystem || ecosystem;
             const effectiveChannel = intentClassification?.detectedChannel?.channel || contentChannel;
@@ -1820,17 +1836,17 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               persona: featureFlags.persona ? userProfile?.role : undefined,
             };
             
-            // Create enforcement agent with Convex rules
+            // Create enforcement agent with cached Convex rules
             const enforcementContext: TokenEnforcementContext = {
               activeTokens,
-              rules: convexTokenEnforcementRules as TokenEnforcementRule[],
+              rules: conversationalCachedRules,
             };
             
             const enforcementAgent = createTokenEnforcementAgent(enforcementContext);
             const enforcementResult = await enforcementAgent.validate(conversationalFinishedContent);
             
             console.log('[TokenEnforcement] Conversational path - checking response against', 
-              convexTokenEnforcementRules.length, 'rules');
+              conversationalCachedRules.length, 'cached rules');
             
             if (!enforcementResult.passed) {
               console.warn('[TokenEnforcement] Conversational violations detected:', 
@@ -1873,10 +1889,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             console.warn('[TokenEnforcement] Conversational validation failed:', enforcementError);
           }
         } else {
-          console.log('[TokenEnforcement] No enforcement rules loaded from Convex. Rules state:', {
-            rulesValue: convexTokenEnforcementRules,
-            rulesLength: convexTokenEnforcementRules?.length,
-            isArray: Array.isArray(convexTokenEnforcementRules),
+          console.log('[TokenEnforcement] No cached enforcement rules available. Convex query state:', {
+            queryValue: convexTokenEnforcementRules,
+            queryLoaded: convexTokenEnforcementRules !== undefined,
           });
         }
 
