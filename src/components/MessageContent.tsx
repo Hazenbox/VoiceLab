@@ -241,6 +241,20 @@ function createMarkdownComponents(theme: ThemeColors): Components {
 }
 
 /**
+ * Normalize markdown to fix common LLM output issues
+ * - Fixes numbered lists broken by single blank lines between items
+ */
+function normalizeMarkdown(content: string): string {
+  // Fix numbered lists with blank lines between items
+  // Pattern: "N. text\n\nN. text" -> "N. text\nN. text"
+  // This regex matches a numbered list item followed by blank line and another numbered item
+  return content.replace(
+    /(\d+\.\s+[^\n]+)\n\n(?=\d+\.\s)/g,
+    '$1\n'
+  );
+}
+
+/**
  * MessageContent renders markdown with custom theming.
  * Memoized to prevent re-renders when parent state changes but content is same.
  */
@@ -254,6 +268,12 @@ export const MessageContent = memo(function MessageContent({ content }: MessageC
     [theme]
   );
 
+  // Normalize markdown to fix common LLM output issues (e.g., broken numbered lists)
+  const normalizedContent = useMemo(
+    () => normalizeMarkdown(content),
+    [content]
+  );
+
   return (
     <div className="markdown-content">
       <ReactMarkdown
@@ -261,7 +281,7 @@ export const MessageContent = memo(function MessageContent({ content }: MessageC
         rehypePlugins={rehypePlugins}
         components={components}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </div>
   );

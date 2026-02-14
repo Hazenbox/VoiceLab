@@ -68,6 +68,8 @@ export interface JoyContext {
   isComplaint?: boolean;
   isEscalated?: boolean;
   contextEvent?: string;
+  // Context-aware reassuring: true when assistant has clear problem understanding + solution
+  hasSolutionContext?: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -76,10 +78,14 @@ export interface JoyContext {
 
 /**
  * Joy templates by type
+ * For 'reassuring' type: generic/byDomain are used when solution is unclear,
+ * confident/confidentByDomain are used when hasSolutionContext is true
  */
 export const JOY_TEMPLATES: Record<JoyType, {
   generic: string[];
+  confident?: string[];
   byDomain: Record<string, string[]>;
+  confidentByDomain?: Record<string, string[]>;
 }> = {
   celebratory: {
     generic: [
@@ -127,13 +133,34 @@ export const JOY_TEMPLATES: Record<JoyType, {
     },
   },
   reassuring: {
+    // Generic phrases - used when problem/solution is unclear (default)
     generic: [
+      "let's look into this together",
+      "let me help you with this",
+      "i'll do my best to help",
+      "let's see what we can do",
+    ],
+    // Confident phrases - only used when hasSolutionContext is true
+    confident: [
       "don't worry, we'll sort this out",
       "you're in good hands",
       "we've got your back",
       "this is totally fixable",
     ],
+    // Domain-specific generic phrases (uncertain)
     byDomain: {
+      payment: [
+        "let me check on this transaction for you",
+      ],
+      data: [
+        "let me look into your data usage",
+      ],
+      account: [
+        "let me check your account details",
+      ],
+    },
+    // Domain-specific confident phrases - only when hasSolutionContext is true
+    confidentByDomain: {
       payment: [
         "your money is safe - let's track it down",
       ],
@@ -376,8 +403,9 @@ function selectJoyType(context: JoyContext): JoyType {
 
 /**
  * Get joy text for type and domain
+ * For 'reassuring' type, uses confident phrases only when hasSolutionContext is true
  */
-function getJoyText(type: JoyType, domain: string, milestoneType?: string): string {
+function getJoyText(type: JoyType, domain: string, milestoneType?: string, hasSolutionContext?: boolean): string {
   if (type === 'none') return '';
   
   // Check for milestone templates
@@ -388,7 +416,20 @@ function getJoyText(type: JoyType, domain: string, milestoneType?: string): stri
   
   const templates = JOY_TEMPLATES[type];
   
-  // Check domain-specific first
+  // For reassuring type with solution context, use confident phrases
+  if (type === 'reassuring' && hasSolutionContext) {
+    // Try confident domain-specific first
+    if (templates.confidentByDomain?.[domain]?.length) {
+      const domainTemplates = templates.confidentByDomain[domain];
+      return domainTemplates[Math.floor(Math.random() * domainTemplates.length)];
+    }
+    // Fall back to confident generic
+    if (templates.confident?.length) {
+      return templates.confident[Math.floor(Math.random() * templates.confident.length)];
+    }
+  }
+  
+  // Default: Check domain-specific first (generic/uncertain phrases)
   if (templates.byDomain[domain]?.length) {
     const domainTemplates = templates.byDomain[domain];
     return domainTemplates[Math.floor(Math.random() * domainTemplates.length)];
@@ -430,8 +471,8 @@ export function selectJoy(context: JoyContext): JoySelection {
     };
   }
   
-  // Get text
-  const text = getJoyText(type, context.topic, context.milestoneType);
+  // Get text (pass hasSolutionContext for context-aware reassuring phrases)
+  const text = getJoyText(type, context.topic, context.milestoneType, context.hasSolutionContext);
   
   if (!text) {
     return {
@@ -452,7 +493,7 @@ export function selectJoy(context: JoyContext): JoySelection {
       placement,
       domain: context.topic,
     },
-    reason: `${type} joy for ${context.topic} context`,
+    reason: `${type} joy for ${context.topic} context${context.hasSolutionContext ? ' (with solution)' : ''}`,
   };
 }
 

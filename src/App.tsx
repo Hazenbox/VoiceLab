@@ -1301,13 +1301,19 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         
         try {
           // Build joy context from current state
+          // Determine if we have solution context (response contains actionable steps)
+          const resolutionStatus = constitutionalContext?.stateContext?.resolutionStatus || 'in_progress';
+          const hasSolutionContext = 
+            resolutionStatus === 'resolved' || 
+            /(?:step\s*\d|follow these|here's how|to fix this|you can|try this)/i.test(finishedContent);
+          
           const joyContext: JoyContext = {
             emotion: constitutionalContext?.tokens?.userEmotion || 'shanta',
             emotionIntensity: constitutionalContext?.tokens?.emotionIntensity || 'moderate',
             intent: classifiedIntent || 'general',
             topic: effectiveEcosystem,
             ecosystem: effectiveEcosystem,
-            resolutionStatus: constitutionalContext?.stateContext?.resolutionStatus || 'in_progress',
+            resolutionStatus,
             turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
             isMilestone: false,
             safetyDomain: constitutionalContext?.safetyResult?.domain,
@@ -1315,6 +1321,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             isComplaint: classifiedIntent === 'complaint',
             isEscalated: constitutionalContext?.stateContext?.wasEscalated || false,
             contextEvent: undefined, // Could be 'festival' or 'cricket_match' based on context
+            hasSolutionContext,
           };
           
           // Select and inject small joy if appropriate
@@ -1771,6 +1778,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         
         try {
           // Build lightweight context for finishing layer
+          // Determine if response has clear solution/actionable steps
+          const conversationalHasSolution = 
+            /(?:step\s*\d|follow these|here's how|to fix this|you can|try this)/i.test(conversationalFinishedContent);
+          
           const conversationalJoyContext: JoyContext = {
             emotion: 'shanta', // Default for conversational
             intent: intentClassification.intent,
@@ -1783,6 +1794,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             riskLevel: 'low',
             isComplaint: intentClassification.intent === 'complaint',
             isEscalated: false,
+            hasSolutionContext: conversationalHasSolution,
           };
           
           // Select and inject small joy if appropriate
