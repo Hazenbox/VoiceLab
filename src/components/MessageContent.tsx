@@ -244,72 +244,69 @@ function createMarkdownComponents(theme: ThemeColors): Components {
 /**
  * Normalize markdown to fix common LLM output issues
  * - Fixes numbered lists broken by blank lines (including nested bullets)
- * - Handles: "1. Title\n- bullet\n\n1. Title" -> continuous list
- * - Renumbers lists where LLMs output "1. 1. 1." instead of "1. 2. 3."
+ * - Handles: "1. Title\n - bullet\n\n2. Title" -> continuous list with nested bullets
  * - Indents bullets under numbered items to create proper nested lists
  */
 function normalizeMarkdown(content: string): string {
   // Step 1: Normalize multiple blank lines to single blank line
   let normalized = content.replace(/\n{3,}/g, '\n\n');
   
-  // Step 2: Fix numbered lists with nested content
-  // Pattern: After a numbered item (and optional nested bullets/content),
-  // if there's a blank line followed by another numbered item, remove the blank line
-  normalized = normalized.replace(
-    /(\n(?:[-*]\s+[^\n]+\n)*)\n(?=\d+\.\s)/g,
-    '$1'
-  );
-  
-  // Also handle case where numbered item has no children but blank line before next
-  normalized = normalized.replace(
-    /(\d+\.\s+[^\n]+)\n\n(?=\d+\.\s)/g,
-    '$1\n'
-  );
-  
-  // Step 3: Fix sequential numbering AND indent bullets under numbered items
-  // This ensures react-markdown parses bullets as nested lists, not separate lists
+  // Step 2: Process line by line to:
+  // - Remove blank lines between numbered list items (keeps list continuous)
+  // - Ensure bullets under numbered items are properly indented (3+ spaces)
   const lines = normalized.split('\n');
-  let listCounter = 0;
+  const resultLines: string[] = [];
   let inNumberedList = false;
+  let pendingBlankLines: string[] = [];
   
-  const fixedLines = lines.map((line) => {
-    // Check if line starts with a number followed by ". " (numbered list item)
-    const numberedMatch = line.match(/^(\d+)\.\s(.*)$/);
-    // Check if line is a bullet (not already indented)
-    const bulletMatch = line.match(/^[-*]\s/);
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmedLine = line.trim();
+    
+    // Check if this is a numbered list item (e.g., "1. ", "2. ", etc.)
+    const numberedMatch = trimmedLine.match(/^(\d+)\.\s+(.*)$/);
+    // Check if this is a bullet item (with optional leading whitespace)
+    const bulletMatch = trimmedLine.match(/^[-*]\s+(.*)$/);
     
     if (numberedMatch) {
       // This is a numbered list item
-      if (!inNumberedList) {
-        // Starting a new list
-        inNumberedList = true;
-        listCounter = 1;
-      } else {
-        // Continue existing list
-        listCounter++;
-      }
-      // Replace the number with the correct sequential number
-      return `${listCounter}. ${numberedMatch[2]}`;
+      inNumberedList = true;
+      
+      // If there were pending blank lines and we're continuing a list,
+      // DON'T add them - this keeps the list continuous
+      pendingBlankLines = [];
+      
+      resultLines.push(line);
     } else if (bulletMatch && inNumberedList) {
-      // Indent bullet to make it a nested list under the numbered item
-      // This prevents react-markdown from creating separate <ol> elements
-      return '   ' + line;
-    } else if (line.trim() === '') {
-      // Empty line - keep tracking but don't reset yet
-      return line;
+      // This is a bullet under a numbered item
+      // Ensure it has proper indentation (3 spaces) for nesting
+      pendingBlankLines = []; // Don't add blank lines before bullets in a list
+      resultLines.push('   - ' + bulletMatch[1]);
+    } else if (trimmedLine === '') {
+      // Blank line - queue it, we'll decide later whether to keep it
+      pendingBlankLines.push(line);
     } else {
-      // Check if this line breaks the numbered list
-      // Non-indented, non-list content resets the list
-      const isIndentedContent = line.match(/^\s+/);
-      if (!isIndentedContent && !line.match(/^[-*]\s/)) {
+      // Non-list content
+      // Check if this looks like content that should end the list
+      const looksLikeListContent = line.match(/^\s+[-*]\s/) || line.match(/^\s{2,}/);
+      
+      if (!looksLikeListContent) {
+        // This is regular content, not part of the list
         inNumberedList = false;
-        listCounter = 0;
       }
-      return line;
+      
+      // Add any pending blank lines
+      resultLines.push(...pendingBlankLines);
+      pendingBlankLines = [];
+      
+      resultLines.push(line);
     }
-  });
+  }
   
-  return fixedLines.join('\n');
+  // Add any remaining pending blank lines
+  resultLines.push(...pendingBlankLines);
+  
+  return resultLines.join('\n');
 }
 
 /**
@@ -328,7 +325,15 @@ export const MessageContent = memo(function MessageContent({ content }: MessageC
 
   // Normalize markdown to fix common LLM output issues (e.g., broken numbered lists)
   const normalizedContent = useMemo(
-    () => normalizeMarkdown(content),
+    () => {
+      const result = normalizeMarkdown(content);
+      // Debug: Log to see what's happening
+      if (content.includes('1.') && content.includes('Insufficient')) {
+        console.log('[MessageContent] INPUT:', JSON.stringify(content.substring(0, 500)));
+        console.log('[MessageContent] OUTPUT:', JSON.stringify(result.substring(0, 500)));
+      }
+      return result;
+    },
     [content]
   );
 
