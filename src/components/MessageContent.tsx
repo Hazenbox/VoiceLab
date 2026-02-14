@@ -12,8 +12,15 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { CodeBlock, InlineCode } from './CodeBlock';
 import { useThemeColors } from '../theme';
+import { Title, Divider } from '@marcelinodzn/ds-react';
 import type { Components } from 'react-markdown';
 import type { ThemeColors } from '../theme';
+
+/**
+ * Brand accent color for interactive elements in markdown.
+ * Matches Jio brand orange. Keep in sync with design tokens.
+ */
+const BRAND_ACCENT = '#f97316';
 
 interface MessageContentProps {
   content: string;
@@ -46,30 +53,21 @@ function createMarkdownComponents(theme: ThemeColors): Components {
       );
     },
 
-    // Headings
+    // Headings -- DS Title for h1-h3, custom for h4-h6 (no Title size < S)
     h1: ({ children }) => (
-      <h1 
-        className="text-xl font-bold mt-4 mb-2"
-        style={{ color: theme.text.high }}
-      >
-        {children}
-      </h1>
+      <div className="mt-4 mb-2">
+        <Title size="L" as="h1" weight="high" color="high">{children}</Title>
+      </div>
     ),
     h2: ({ children }) => (
-      <h2 
-        className="text-lg font-bold mt-3 mb-2"
-        style={{ color: theme.text.high }}
-      >
-        {children}
-      </h2>
+      <div className="mt-3 mb-2">
+        <Title size="M" as="h2" weight="high" color="high">{children}</Title>
+      </div>
     ),
     h3: ({ children }) => (
-      <h3 
-        className="text-base font-semibold mt-3 mb-1.5"
-        style={{ color: theme.text.high }}
-      >
-        {children}
-      </h3>
+      <div className="mt-3 mb-1.5">
+        <Title size="S" as="h3" weight="high" color="high">{children}</Title>
+      </div>
     ),
     h4: ({ children }) => (
       <h4 
@@ -130,16 +128,14 @@ function createMarkdownComponents(theme: ThemeColors): Components {
       </li>
     ),
 
-    // Links
+    // Links -- tokenized brand accent
     a: ({ href, children }) => (
       <a
         href={href}
         target="_blank"
         rel="noopener noreferrer"
         className="underline hover:no-underline transition-colors"
-        style={{ 
-          color: '#f97316',
-        }}
+        style={{ color: BRAND_ACCENT }}
       >
         {children}
       </a>
@@ -157,13 +153,13 @@ function createMarkdownComponents(theme: ThemeColors): Components {
       </em>
     ),
 
-    // Blockquotes
+    // Blockquotes -- tokenized accent + theme-aware background
     blockquote: ({ children }) => (
       <blockquote
         className="border-l-4 pl-3 py-1 my-2 italic"
         style={{
-          borderColor: '#f97316',
-          backgroundColor: theme.isLight ? '#fef3c7' : '#451a03',
+          borderColor: BRAND_ACCENT,
+          backgroundColor: theme.background.bold,
         }}
       >
         {children}
@@ -186,7 +182,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     thead: ({ children }) => (
       <thead 
         style={{ 
-          backgroundColor: theme.isLight ? '#f5f5f5' : '#27272a',
+          backgroundColor: theme.background.bold,
           color: theme.text.high,
         }}
       >
@@ -218,12 +214,11 @@ function createMarkdownComponents(theme: ThemeColors): Components {
       </td>
     ),
 
-    // Horizontal rule
+    // Horizontal rule -- DS Divider
     hr: () => (
-      <hr 
-        className="my-3"
-        style={{ borderColor: theme.stroke.low }}
-      />
+      <div className="my-3">
+        <Divider />
+      </div>
     ),
 
     // Task lists (GFM)
@@ -234,7 +229,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
           checked={checked}
           disabled
           className="mr-2 align-middle"
-          style={{ accentColor: '#f97316' }}
+          style={{ accentColor: BRAND_ACCENT }}
         />
       ) : null
     ),
