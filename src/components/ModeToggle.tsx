@@ -11,7 +11,9 @@
  */
 
 import React, { useCallback, useRef, useEffect, memo } from 'react';
-import { useThemeColors } from '../theme/useColors';
+import { useThemeColors } from '../theme';
+// TODO: Replace custom tablist with DS SegmentedControl when visual testing is available
+// import { SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
 import type { ChatMode } from '../types';
 import { DSIcon } from './DSIcon';
 

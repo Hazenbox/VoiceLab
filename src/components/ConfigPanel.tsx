@@ -6,7 +6,7 @@ import { LabeledSlider } from './LabeledSlider';
 import { VIBE_OPTIONS } from '../constants';
 import { useThemeColors } from '../theme';
 // Design system context removed - now using single Jio DS
-import { TextArea } from '@marcelinodzn/ds-react';
+import { TextArea, Label } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
 interface ConfigPanelProps {
@@ -96,12 +96,9 @@ export const ConfigPanel = memo(function ConfigPanel({
 
         {/* Tone Definition */}
         <div className="space-y-1.5">
-          <label 
-            className="block text-xs font-medium"
-            style={{ color: theme.text.medium }}
-          >
-            Tone Definition
-          </label>
+          <Label size="XS" weight="medium" attention="medium" as="label">
+            tone definition
+          </Label>
           <div className="scaled-textarea-wrapper">
             <TextArea
               value={config.persona.tone}
@@ -125,12 +122,9 @@ export const ConfigPanel = memo(function ConfigPanel({
 
         {/* Greeting */}
         <div className="space-y-1.5">
-          <label 
-            className="block text-xs font-medium"
-            style={{ color: theme.text.medium }}
-          >
-            Greeting
-          </label>
+          <Label size="XS" weight="medium" attention="medium" as="label">
+            greeting
+          </Label>
           <div className="scaled-textarea-wrapper">
             <TextArea
               value={config.greeting}

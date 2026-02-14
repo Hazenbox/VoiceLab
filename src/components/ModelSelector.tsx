@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { getAvailableLLMProviders, type LLMProviderType } from '../services/providers/llm';
 import { getOrchestratorInstance } from '../services/llm/orchestrator';
-import { useThemeColors } from '../theme';
+import { useThemeColors, SELECTION_COLORS } from '../theme';
 import { DropdownSectionHeader } from './DropdownSectionHeader';
 import { DSIcon } from './DSIcon';
 
@@ -295,7 +295,7 @@ export function ModelSelector({
           <div 
             className="absolute bottom-full left-0 mb-1 z-[100] rounded-lg overflow-hidden py-2" 
             style={{
-              backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
+              backgroundColor: theme.background.ghost,
               border: `1px solid ${theme.stroke.low}`,
               minWidth: ttsProviders.length > 0 ? '340px' : '180px',
             }}
@@ -324,14 +324,14 @@ export function ModelSelector({
                         style={{
                           width: 'calc(100% - 8px)',
                           backgroundColor: isSelected 
-                            ? (theme.isLight ? '#fff7ed' : '#431407')
+                            ? (theme.isLight ? SELECTION_COLORS.light.background : SELECTION_COLORS.dark.background)
                             : isFocused && provider.isConfigured
                               ? theme.stroke.low
                               : 'transparent',
                           color: !provider.isConfigured
                             ? theme.text.low
                             : isSelected 
-                              ? (theme.isLight ? '#c2410c' : '#fdba74')
+                              ? (theme.isLight ? SELECTION_COLORS.light.text : SELECTION_COLORS.dark.text)
                               : theme.text.high,
                           cursor: provider.isConfigured ? 'pointer' : 'not-allowed',
                         }}
@@ -395,14 +395,14 @@ export function ModelSelector({
                         style={{
                           width: 'calc(100% - 8px)',
                           backgroundColor: isSelected 
-                            ? (theme.isLight ? '#fff7ed' : '#431407')
+                            ? (theme.isLight ? SELECTION_COLORS.light.background : SELECTION_COLORS.dark.background)
                             : isFocused && provider.isConfigured
                               ? theme.stroke.low
                               : 'transparent',
                           color: !provider.isConfigured
                             ? theme.text.low
                             : isSelected 
-                              ? (theme.isLight ? '#c2410c' : '#fdba74')
+                              ? (theme.isLight ? SELECTION_COLORS.light.text : SELECTION_COLORS.dark.text)
                               : theme.text.high,
                           cursor: provider.isConfigured ? 'pointer' : 'not-allowed',
                         }}
@@ -442,14 +442,14 @@ export function ModelSelector({
                     style={{
                       width: 'calc(100% - 8px)',
                       backgroundColor: isSelected 
-                        ? (theme.isLight ? '#fff7ed' : '#431407')
+                        ? (theme.isLight ? SELECTION_COLORS.light.background : SELECTION_COLORS.dark.background)
                         : isFocused && provider.isConfigured
                           ? theme.stroke.low
                           : 'transparent',
                       color: !provider.isConfigured
                         ? theme.text.low
                         : isSelected 
-                          ? (theme.isLight ? '#c2410c' : '#fdba74')
+                          ? (theme.isLight ? SELECTION_COLORS.light.text : SELECTION_COLORS.dark.text)
                           : theme.text.high,
                       cursor: provider.isConfigured ? 'pointer' : 'not-allowed',
                     }}
