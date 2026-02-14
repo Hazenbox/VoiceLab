@@ -30,14 +30,61 @@ import { DSIcon } from './DSIcon';
 // =============================================================================
 
 /**
+ * Builds streaming units from text, processing line-by-line first then word-by-word.
+ * This preserves markdown structure (numbered lists, bullets, code blocks).
+ * 
+ * Returns array of { text: string, isInstant: boolean } units.
+ * - Regular words: isInstant = false (35ms delay)
+ * - Newlines/empty lines: isInstant = true (0ms delay)
+ * - Code block lines: isInstant = false but streamed as whole lines
+ */
+function buildStreamingUnits(text: string): Array<{ text: string; isInstant: boolean }> {
+  const units: Array<{ text: string; isInstant: boolean }> = [];
+  const lines = text.split('\n');
+  let inCodeBlock = false;
+  
+  lines.forEach((line, lineIndex) => {
+    const trimmedLine = line.trim();
+    
+    // Track code block state (``` toggles in/out)
+    if (trimmedLine.startsWith('```')) {
+      inCodeBlock = !inCodeBlock;
+      // Code fence line - stream as single unit
+      units.push({ text: line, isInstant: false });
+    } else if (inCodeBlock) {
+      // Inside code block - stream entire line as single unit
+      units.push({ text: line, isInstant: false });
+    } else if (trimmedLine === '') {
+      // Empty line - no content unit needed, just the newline below
+    } else {
+      // Regular line - split into words (preserving spaces between words)
+      const words = line.split(/(\s+)/).filter(w => w);
+      words.forEach(word => {
+        units.push({ text: word, isInstant: false });
+      });
+    }
+    
+    // Add newline after each line except the last
+    if (lineIndex < lines.length - 1) {
+      units.push({ text: '\n', isInstant: true }); // Newlines are instant
+    }
+  });
+  
+  return units;
+}
+
+/**
  * Custom hook for ChatGPT-like word-by-word streaming animation.
- * Reveals text progressively with ~35ms delay between words.
+ * Processes line-by-line first, then word-by-word within each line.
+ * This preserves markdown structure (numbered lists, bullets, code blocks).
  */
 const useStreamingText = (fullText: string, isStreaming: boolean) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
   const lastFullTextRef = useRef('');
-  const displayedIndexRef = useRef(0);
+  const unitsRef = useRef<Array<{ text: string; isInstant: boolean }>>([]);
+  const currentIndexRef = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   useEffect(() => {
     // If not streaming, show full text immediately
@@ -45,7 +92,8 @@ const useStreamingText = (fullText: string, isStreaming: boolean) => {
       setDisplayedText(fullText);
       setIsComplete(true);
       lastFullTextRef.current = fullText;
-      displayedIndexRef.current = fullText.length;
+      unitsRef.current = [];
+      currentIndexRef.current = 0;
       return;
     }
     
@@ -54,47 +102,63 @@ const useStreamingText = (fullText: string, isStreaming: boolean) => {
       setDisplayedText('');
       setIsComplete(false);
       lastFullTextRef.current = '';
-      displayedIndexRef.current = 0;
+      unitsRef.current = [];
+      currentIndexRef.current = 0;
       return;
     }
     
     // Check if this is new streaming content (fullText changed)
-    // We only animate new words, not the whole text
     const isNewContent = fullText !== lastFullTextRef.current;
     
     if (isNewContent) {
       lastFullTextRef.current = fullText;
       
-      // If the new text is longer, we need to animate the new portion
-      // Split by words while preserving whitespace
-      const words = fullText.split(/(\s+)/);
-      const currentWords = displayedText.split(/(\s+)/);
-      
-      // Start from where we left off
-      let startIndex = currentWords.length;
+      // Build streaming units (line-by-line, then word-by-word)
+      const newUnits = buildStreamingUnits(fullText);
       
       // If completely new content (reset), start from 0
       if (!displayedText || !fullText.startsWith(displayedText.substring(0, Math.min(displayedText.length, 10)))) {
-        startIndex = 0;
+        unitsRef.current = newUnits;
+        currentIndexRef.current = 0;
         setDisplayedText('');
-        displayedIndexRef.current = 0;
+      } else {
+        // Continue from where we were - update units but keep index
+        unitsRef.current = newUnits;
       }
       
-      // Animate remaining words
-      let currentIndex = startIndex;
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       
-      const interval = setInterval(() => {
-        if (currentIndex < words.length) {
-          setDisplayedText(words.slice(0, currentIndex + 1).join(''));
-          displayedIndexRef.current = currentIndex + 1;
-          currentIndex++;
+      // Animate units with appropriate delays
+      const animateNext = () => {
+        if (currentIndexRef.current < unitsRef.current.length) {
+          const unit = unitsRef.current[currentIndexRef.current];
+          setDisplayedText(
+            unitsRef.current
+              .slice(0, currentIndexRef.current + 1)
+              .map(u => u.text)
+              .join('')
+          );
+          currentIndexRef.current++;
+          
+          // Use 0ms for instant units (newlines), 35ms for regular words
+          const delay = unit.isInstant ? 0 : 35;
+          timeoutRef.current = setTimeout(animateNext, delay);
         } else {
           setIsComplete(true);
-          clearInterval(interval);
         }
-      }, 35); // ~35ms per word for ChatGPT-like feel
+      };
       
-      return () => clearInterval(interval);
+      // Start animation
+      animateNext();
+      
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      };
     }
   }, [fullText, isStreaming, displayedText]);
   
@@ -103,8 +167,19 @@ const useStreamingText = (fullText: string, isStreaming: boolean) => {
     if (isStreaming && !fullText) {
       setDisplayedText('');
       setIsComplete(false);
+      unitsRef.current = [];
+      currentIndexRef.current = 0;
     }
   }, [isStreaming, fullText]);
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
   
   return { displayedText, isComplete };
 };
