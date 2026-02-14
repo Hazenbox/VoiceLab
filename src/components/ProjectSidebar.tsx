@@ -500,7 +500,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         {/* How it Works Nav Item */}
         {onNavigateToHowItWorks && (
           <SidebarNavItem
-            icon={<DSIcon name="IcLightbulb" size="XS" attention="high" />}
+            icon={<DSIcon name="IcLightbulb" size="S" attention="high" />}
             label="How it Works"
             onClick={onNavigateToHowItWorks}
             isActive={isHowItWorksActive}
