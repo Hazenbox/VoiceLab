@@ -2,9 +2,16 @@ import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useThemeColors } from '../theme';
 import type { ColorMode } from '../types';
-import type { DropdownOption } from './Dropdown';
-import { Button } from '@marcelinodzn/ds-react';
+import { Button, Avatar, Text, Label, Divider, Input } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
+
+// ── Local Types ──────────────────────────────────────────────────
+// Previously imported from ./Dropdown -- inlined here for independence
+interface MenuOption {
+  value: string;
+  label: string;
+  icon?: React.ReactNode;
+}
 
 // ── Helper Functions ─────────────────────────────────────────────
 
@@ -73,12 +80,9 @@ const SidebarNavItem = memo(function SidebarNavItem({
       onMouseLeave={() => setIsHovered(false)}
     >
       {icon}
-      <span 
-        className="text-xs font-normal"
-        style={{ color: theme.text.high, fontSize: '13px' }}
-      >
+      <Text variant="body" weight="regular">
         {label}
-      </span>
+      </Text>
       {badge}
     </button>
   );
@@ -89,7 +93,7 @@ const SidebarNavItem = memo(function SidebarNavItem({
  * Reuses Dropdown component's menu styling
  */
 interface ProjectMenuProps {
-  options: DropdownOption[];
+  options: MenuOption[];
   onSelect: (value: string) => void;
   isOpen: boolean;
   onToggle: () => void;
@@ -230,7 +234,7 @@ interface SidebarProjectItemProps {
   projectName: string;
   isActive: boolean;
   onClick: () => void;
-  menuOptions: DropdownOption[];
+  menuOptions: MenuOption[];
   onMenuAction: (action: string) => void;
 }
 
@@ -269,11 +273,10 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
           }}
           className="flex-1 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset rounded py-1"
         >
-          <div 
-            className="text-xs font-normal truncate"
-            style={{ color: theme.text.high, fontSize: '13px' }}
-          >
-            {projectName}
+          <div className="truncate">
+            <Text variant="body" weight="regular">
+              {projectName}
+            </Text>
           </div>
         </button>
         
@@ -356,7 +359,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   }, []);
 
   // User menu options
-  const userMenuOptions: DropdownOption[] = [
+  const userMenuOptions: MenuOption[] = [
     {
       value: 'edit-profile',
       label: 'Edit Profile',
@@ -430,15 +433,10 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           </div>
 
           {/* Recent title */}
-          <div 
-            className="px-2 py-1.5 text-xs font-medium"
-            style={{ 
-              color: 'var(--color-zinc-500)',
-              fontSize: '12px',
-              letterSpacing: '-0.2px',
-            }}
-          >
-            Recent
+          <div className="px-2 py-1.5">
+            <Label size="XS" weight="medium" attention="low" as="span">
+              recent
+            </Label>
           </div>
 
           <div className="space-y-0.5" role="listbox" aria-label="Projects list">
@@ -450,21 +448,19 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                 {renamingProject === project.id ? (
                   // Rename input mode - match 32px height of normal items
                   <div 
-                    className="w-full px-2 flex items-center rounded-lg"
+                    className="w-full flex items-center rounded-lg"
                     style={{ backgroundColor: theme.stroke.low, height: '32px' }}
                   >
-                    <input
+                    <Input
                       ref={renameInputRef}
-                      type="text"
                       value={renameValue}
-                      onChange={(e) => setRenameValue(e.target.value)}
-                      onKeyDown={(e) => {
+                      onChange={(val: string) => setRenameValue(val)}
+                      onKeyDown={(e: React.KeyboardEvent) => {
                         if (e.key === 'Enter') handleRenameSubmit(project.id);
                         if (e.key === 'Escape') handleRenameCancel();
                       }}
                       onBlur={() => handleRenameSubmit(project.id)}
-                      className="flex-1 text-xs font-normal bg-transparent outline-none"
-                      style={{ color: theme.text.high }}
+                      aria-label="Rename project"
                     />
                   </div>
                 ) : (
@@ -496,10 +492,8 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       </div>
 
       {/* Bottom Navigation */}
-      <div 
-        className="p-2.5 space-y-0.5"
-        style={{ borderTop: `1px solid ${theme.stroke.low}` }}
-      >
+      <Divider />
+      <div className="p-2.5 space-y-0.5">
         {/* How it Works Nav Item */}
         {onNavigateToHowItWorks && (
           <SidebarNavItem
@@ -514,54 +508,23 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 
       {/* User Profile Menu - Bottommost */}
       {userName && onEditProfile && (
-        <div 
-          className="px-3 py-3 relative"
-          style={{
-            borderTop: `1px solid ${theme.stroke.low}`,
-          }}
-        >
+        <>
+        <Divider />
+        <div className="px-3 py-3 relative">
           <div className="flex items-center gap-3">
-            {/* Avatar with initials */}
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                background: theme.stroke.medium,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: theme.text.medium,
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                flexShrink: 0,
-              }}
-            >
-              {getInitials(userName)}
-            </div>
+            {/* Avatar with DS component */}
+            <Avatar name={userName} size="S" />
 
             {/* Name and role */}
             <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-              <div
-                className="truncate"
-                style={{
-                  color: theme.text.high,
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  lineHeight: 1.2,
-                }}
-              >
-                {userName}
+              <div className="truncate">
+                <Text variant="body" weight="semibold">
+                  {userName}
+                </Text>
               </div>
-              <div
-                style={{
-                  color: theme.text.medium,
-                  fontSize: '0.6875rem',
-                  lineHeight: 1.2,
-                }}
-              >
+              <Text variant="caption" weight="regular">
                 {formatRole(userRole)}
-              </div>
+              </Text>
             </div>
 
             {/* Menu trigger button */}
@@ -574,6 +537,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             />
           </div>
         </div>
+        </>
       )}
     </aside>
   );
