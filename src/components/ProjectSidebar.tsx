@@ -454,7 +454,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           {/* Recent title */}
           <div className="px-2 py-1.5">
             <Label size="XS" weight="medium" attention="low" as="span">
-              recent
+              Recents
             </Label>
           </div>
 
@@ -527,8 +527,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 
       {/* User Profile Menu - Bottommost */}
       {userName && onEditProfile && (
-        <>
-        <Divider />
         <div ref={userMenuContainerRef} className="px-2 py-1 relative">
           <button
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -607,7 +605,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             </div>
           )}
         </div>
-        </>
       )}
     </aside>
   );
