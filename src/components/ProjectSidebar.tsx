@@ -79,7 +79,7 @@ const SidebarItem = memo(function SidebarItem({
       className={`flex items-center gap-2 text-left transition-colors cursor-pointer ${
         isNav 
           ? 'w-full px-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset' 
-          : 'px-2 py-1.5 mx-1 rounded-md'
+          : 'px-2 py-1 mx-1 rounded-md'
       }`}
       style={{
         backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
@@ -94,9 +94,9 @@ const SidebarItem = memo(function SidebarItem({
       onMouseLeave={() => setIsHovered(false)}
     >
       {icon && (
-        <span className="flex-shrink-0 w-4 h-4">{icon}</span>
+        <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center">{icon}</span>
       )}
-      <Text size={isNav ? 'S' : 'XS'} weight="low">
+      <Text size="S" weight="low">
         {label}
       </Text>
       {badge}
@@ -235,7 +235,7 @@ const ProjectMenu = memo(function ProjectMenu({
       {isOpen && (
         <div
           ref={menuRef}
-          className="absolute z-50 min-w-[120px] rounded-lg overflow-hidden py-1 right-0"
+          className="absolute z-50 w-[219px] rounded-lg overflow-hidden py-1 right-0"
           style={{
             ...(direction === 'up'
               ? { bottom: 'calc(100% + 0.25rem)' }
@@ -608,7 +608,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           {/* Dropdown Menu */}
           {isUserMenuOpen && (
             <div
-              className="absolute z-50 min-w-[120px] rounded-lg overflow-hidden py-1 right-0 bottom-full mb-1"
+              className="absolute z-50 w-[219px] rounded-lg overflow-hidden py-1 right-0 bottom-full mb-1"
               style={{
                 backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
                 border: `1px solid ${theme.stroke.low}`,
