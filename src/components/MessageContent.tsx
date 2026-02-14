@@ -55,23 +55,23 @@ function createMarkdownComponents(theme: ThemeColors): Components {
 
     // Headings -- DS Title for h1-h3, custom for h4-h6 (no Title size < S)
     h1: ({ children }) => (
-      <div className="mt-4 mb-2">
+      <div className="mt-8 mb-3">
         <Title size="L" as="h1" weight="high" color="high">{children}</Title>
       </div>
     ),
     h2: ({ children }) => (
-      <div className="mt-3 mb-2">
+      <div className="mt-6 mb-3">
         <Title size="M" as="h2" weight="high" color="high">{children}</Title>
       </div>
     ),
     h3: ({ children }) => (
-      <div className="mt-3 mb-1.5">
+      <div className="mt-4 mb-2">
         <Title size="S" as="h3" weight="high" color="high">{children}</Title>
       </div>
     ),
     h4: ({ children }) => (
       <h4 
-        className="text-sm font-semibold mt-2 mb-1"
+        className="text-sm font-semibold mt-3 mb-1.5"
         style={{ color: theme.text.high }}
       >
         {children}
@@ -79,7 +79,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     ),
     h5: ({ children }) => (
       <h5 
-        className="text-sm font-medium mt-2 mb-1"
+        className="text-sm font-medium mt-3 mb-1.5"
         style={{ color: theme.text.medium }}
       >
         {children}
@@ -87,7 +87,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     ),
     h6: ({ children }) => (
       <h6 
-        className="text-xs font-medium mt-2 mb-1"
+        className="text-xs font-medium mt-3 mb-1.5"
         style={{ color: theme.text.medium }}
       >
         {children}
@@ -97,7 +97,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     // Paragraphs
     p: ({ children }) => (
       <p 
-        className="text-sm mb-2"
+        className="text-sm mb-3"
         style={{ color: theme.text.high, letterSpacing: '-0.12px', lineHeight: '22px' }}
       >
         {children}
@@ -108,7 +108,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     // Nested ul (inside li) gets reduced margins for proper hierarchy
     ul: ({ children }) => (
       <ul 
-        className="list-disc pl-5 mb-2 space-y-1 [li_>&]:mt-1 [li_>&]:mb-0"
+        className="list-disc pl-5 mb-3 space-y-1.5 [li_>&]:mt-1 [li_>&]:mb-0"
         style={{ color: theme.text.high }}
       >
         {children}
@@ -116,7 +116,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     ),
     ol: ({ children }) => (
       <ol 
-        className="list-decimal pl-5 mb-2 space-y-1"
+        className="list-decimal pl-5 mb-3 space-y-1.5"
         style={{ color: theme.text.high }}
       >
         {children}
@@ -156,7 +156,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     // Blockquotes -- tokenized accent + theme-aware background
     blockquote: ({ children }) => (
       <blockquote
-        className="border-l-4 pl-3 py-1 my-2 italic"
+        className="border-l-4 pl-3 py-1 my-3 italic"
         style={{
           borderColor: BRAND_ACCENT,
           backgroundColor: theme.background.bold,
@@ -216,7 +216,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
 
     // Horizontal rule -- DS Divider
     hr: () => (
-      <div className="my-3">
+      <div className="my-4">
         <Divider />
       </div>
     ),
