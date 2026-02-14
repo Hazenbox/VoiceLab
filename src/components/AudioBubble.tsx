@@ -10,7 +10,7 @@
  */
 
 import React, { useState, useRef, useCallback, useEffect, memo } from 'react';
-import { useThemeColors } from '../theme/useColors';
+import { useThemeColors, SEMANTIC_COLORS } from '../theme';
 import { audioBufferManager } from '../services/audioBufferManager';
 import { formatTime } from '../services/audioUtils';
 import { DSIcon } from './DSIcon';
@@ -393,7 +393,7 @@ export const AudioBubble = memo(function AudioBubble({
       {errorMessage && (
         <p
           className="text-xs px-3"
-          style={{ color: '#ef4444' }}
+          style={{ color: SEMANTIC_COLORS.negative }}
           role="alert"
         >
           {errorMessage}

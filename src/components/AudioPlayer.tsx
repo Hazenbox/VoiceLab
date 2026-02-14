@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { formatTime, getWaveformData } from '../services/audioUtils';
 import { useThemeColors } from '../theme';
+import { Button, Text } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
 interface AudioPlayerProps {
@@ -230,21 +231,15 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       <div 
         className="flex items-center justify-center rounded-lg"
         style={{ 
-          backgroundColor: theme.isLight ? '#f5f5f5' : '#18181b',
+          backgroundColor: theme.background.bold,
           border: `1px solid ${theme.stroke.low}`,
           minHeight: '64px',
           padding: '16px'
         }}
       >
-        <p 
-          style={{ 
-            color: theme.text.medium,
-            fontSize: '12px',
-            lineHeight: '16px'
-          }}
-        >
-          No audio generated yet
-        </p>
+        <Text variant="caption" weight="regular">
+          no audio generated yet
+        </Text>
       </div>
     );
   }
@@ -266,64 +261,37 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       {/* Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center" style={{ gap: '6px' }}>
-          {/* Play/Pause button */}
-          <button
-            onClick={togglePlayPause}
-            className="transition-colors"
-            style={{
-              padding: '6px',
-              borderRadius: '50%',
-              backgroundColor: theme.accent,
-              color: theme.local.white,
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+          {/* Play/Pause button -- DS Button primary */}
+          <Button
+            appearance="primary"
+            size="S"
+            onPress={togglePlayPause}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? (
               <DSIcon name="IcPause" size="XS" attention="high" />
             ) : (
               <DSIcon name="IcPlayArrow" size="XS" attention="high" />
             )}
-          </button>
+          </Button>
 
-          {/* Restart button */}
-          <button
-            onClick={restart}
-            className="transition-colors"
-            style={{ 
-              padding: '6px',
-              borderRadius: '8px',
-              backgroundColor: theme.background.subtle,
-              border: `1px solid ${theme.stroke.medium}`,
-              color: theme.text.high,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+          {/* Restart button -- DS Button secondary */}
+          <Button
+            appearance="secondary"
+            size="S"
+            onPress={restart}
+            aria-label="Restart"
           >
             <DSIcon name="IcRefresh" size="XS" attention="medium" />
-          </button>
+          </Button>
         </div>
 
         {/* Time display */}
-        <div 
-          style={{ 
-            color: theme.text.medium,
-            fontSize: '12px',
-            lineHeight: '16px',
-            fontFamily: "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
-          }}
-        >
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </div>
+        <Text variant="caption" weight="regular">
+          <span style={{ fontFamily: "'Geist Mono', ui-monospace, monospace" }}>
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </span>
+        </Text>
       </div>
     </div>
   );
