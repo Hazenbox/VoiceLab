@@ -1,5 +1,8 @@
 import { memo } from 'react';
-import { useThemeColors } from '../../theme/useColors';
+import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
+
+/** Default chart accent (brand orange) */
+const CHART_ACCENT = '#f97316';
 
 // Note: VerticalBarChart and LineChart are available from @marcelinodzn/ds-react
 // but may need specific styling. We'll create custom chart components that work
@@ -99,7 +102,7 @@ export const ChartContainer = memo(function ChartContainer({
  */
 export const HorizontalBarChart = memo(function HorizontalBarChart({
   data,
-  color = '#f97316',
+  color = CHART_ACCENT,
   maxValue,
   showValues = true,
 }: {
@@ -160,7 +163,7 @@ export const HorizontalBarChart = memo(function HorizontalBarChart({
  */
 export const VerticalBars = memo(function VerticalBars({
   data,
-  color = '#f97316',
+  color = CHART_ACCENT,
   height = 120,
   showLabels = true,
 }: {
@@ -229,7 +232,7 @@ export const ProgressBar = memo(function ProgressBar({
   label,
   value,
   max = 100,
-  color = '#f97316',
+  color = CHART_ACCENT,
   showPercentage = true,
 }: {
   label: string;
@@ -317,8 +320,8 @@ export const SentimentBar = memo(function SentimentBar({
     <div>
       {showCounts && (
         <div className="flex justify-between mb-2">
-          <span className="text-2xl font-bold" style={{ color: '#22c55e' }}>{likes}</span>
-          <span className="text-2xl font-bold" style={{ color: '#ef4444' }}>{dislikes}</span>
+          <span className="text-2xl font-bold" style={{ color: SEMANTIC_COLORS.positive }}>{likes}</span>
+          <span className="text-2xl font-bold" style={{ color: SEMANTIC_COLORS.negative }}>{dislikes}</span>
         </div>
       )}
       {showLabels && (
@@ -330,11 +333,11 @@ export const SentimentBar = memo(function SentimentBar({
       <div className="h-3 rounded-full overflow-hidden flex" style={{ backgroundColor: theme.stroke.low }}>
         <div 
           className="h-full transition-all duration-300"
-          style={{ width: `${likePercent}%`, backgroundColor: '#22c55e' }}
+          style={{ width: `${likePercent}%`, backgroundColor: SEMANTIC_COLORS.positive }}
         />
         <div 
           className="h-full transition-all duration-300"
-          style={{ width: `${100 - likePercent}%`, backgroundColor: '#ef4444' }}
+          style={{ width: `${100 - likePercent}%`, backgroundColor: SEMANTIC_COLORS.negative }}
         />
       </div>
       {total === 0 && (

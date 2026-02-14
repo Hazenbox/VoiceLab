@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import { useThemeColors } from '../../theme/useColors';
+import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import type { Id } from '../../../convex/_generated/dataModel';
 
 // ── Types ────────────────────────────────────────────────────────
@@ -438,7 +438,7 @@ export function KnowledgeItemEditor({
           </div>
 
           {error && (
-            <p className="text-sm mb-3" style={{ color: '#ef4444' }}>
+            <p className="text-sm mb-3" style={{ color: SEMANTIC_COLORS.negative }}>
               {error}
             </p>
           )}
@@ -540,7 +540,7 @@ export function DeleteConfirmModal({ itemContent, onConfirm, onCancel, isDeletin
             style={{
               height: '36px',
               fontSize: '13px',
-              backgroundColor: '#ef4444',
+              backgroundColor: SEMANTIC_COLORS.negative,
               color: '#fff',
               border: 'none',
               cursor: 'pointer',

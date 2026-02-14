@@ -1,6 +1,23 @@
 import { useState } from 'react';
-import { useThemeColors } from '../../theme/useColors';
+import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import type { Id } from '../../../convex/_generated/dataModel';
+
+/** Color palette for knowledge item categories */
+const CATEGORY_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
+  avoid_word:          { bg: `${SEMANTIC_COLORS.negative}1F`, text: SEMANTIC_COLORS.negative },
+  preferred_word:      { bg: `${SEMANTIC_COLORS.positive}1F`, text: SEMANTIC_COLORS.positive },
+  auto_fix:            { bg: `${SEMANTIC_COLORS.informative}1F`, text: SEMANTIC_COLORS.informative },
+  approved_example:    { bg: 'rgba(6, 182, 212, 0.12)', text: '#06b6d4' },
+  product_definition:  { bg: 'rgba(168, 85, 247, 0.12)', text: '#a855f7' },
+  festival:            { bg: `${SEMANTIC_COLORS.warning}1F`, text: SEMANTIC_COLORS.warning },
+};
+
+/** Color palette for severity badges */
+const SEVERITY_COLORS: Record<string, { bg: string; text: string; label: string }> = {
+  error:   { bg: `${SEMANTIC_COLORS.negative}26`, text: SEMANTIC_COLORS.negative, label: 'error' },
+  warning: { bg: `${SEMANTIC_COLORS.warning}26`, text: SEMANTIC_COLORS.warning, label: 'warning' },
+  info:    { bg: `${SEMANTIC_COLORS.informative}26`, text: SEMANTIC_COLORS.informative, label: 'info' },
+};
 
 // ── Types ────────────────────────────────────────────────────────
 export interface KnowledgeItem {
@@ -34,13 +51,7 @@ interface CategorySectionProps {
 
 // ── Severity Badge Component ─────────────────────────────────────
 function SeverityBadge({ severity, count }: { severity: string; count: number }) {
-  const colors: Record<string, { bg: string; text: string; label: string }> = {
-    error: { bg: 'rgba(239, 68, 68, 0.15)', text: '#ef4444', label: 'error' },
-    warning: { bg: 'rgba(245, 158, 11, 0.15)', text: '#f59e0b', label: 'warning' },
-    info: { bg: 'rgba(59, 130, 246, 0.15)', text: '#3b82f6', label: 'info' },
-  };
-  
-  const style = colors[severity] || colors.warning;
+  const style = SEVERITY_COLORS[severity] || SEVERITY_COLORS.warning;
   
   return (
     <span
@@ -90,20 +101,7 @@ export function CategorySection({
       }, {} as Record<string, number>)
     : null;
 
-  // Get color for item based on type
-  const getItemColor = () => {
-    switch (type) {
-      case 'avoid_word': return { bg: 'rgba(239, 68, 68, 0.12)', text: '#ef4444' };
-      case 'preferred_word': return { bg: 'rgba(34, 197, 94, 0.12)', text: '#22c55e' };
-      case 'auto_fix': return { bg: 'rgba(59, 130, 246, 0.12)', text: '#3b82f6' };
-      case 'approved_example': return { bg: 'rgba(6, 182, 212, 0.12)', text: '#06b6d4' };
-      case 'product_definition': return { bg: 'rgba(168, 85, 247, 0.12)', text: '#a855f7' };
-      case 'festival': return { bg: 'rgba(234, 179, 8, 0.12)', text: '#eab308' };
-      default: return { bg: theme.stroke.low, text: theme.text.high };
-    }
-  };
-
-  const itemColor = getItemColor();
+  const itemColor = CATEGORY_TYPE_COLORS[type] || { bg: theme.stroke.low, text: theme.text.high };
   const formattedCategory = category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
   return (

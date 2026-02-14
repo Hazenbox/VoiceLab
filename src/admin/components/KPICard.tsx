@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { useThemeColors } from '../../theme/useColors';
+import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 
 interface KPICardProps {
   label: string;
@@ -87,7 +87,7 @@ export const KPICard = memo(function KPICard({
       className={`rounded-lg p-3 relative transition-colors ${onClick ? 'cursor-pointer hover:opacity-90' : ''}`}
       style={{
         border: `1px solid ${isSelected ? theme.accent : theme.stroke.low}`,
-        backgroundColor: isSelected ? 'rgba(249, 115, 22, 0.08)' : 'transparent',
+        backgroundColor: isSelected ? `${theme.accent}14` : 'transparent',
       }}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
@@ -120,8 +120,8 @@ export const KPICard = memo(function KPICard({
           <span
             className="ml-auto text-xs px-1.5 py-0.5 rounded"
             style={{
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              color: '#10b981',
+              backgroundColor: `${SEMANTIC_COLORS.positive}1A`,
+              color: SEMANTIC_COLORS.positive,
               fontSize: '9px',
             }}
           >
@@ -157,7 +157,7 @@ export const KPICard = memo(function KPICard({
           <span
             className="text-xs font-medium"
             style={{
-              color: trend.isPositive ? '#10b981' : '#ef4444',
+              color: trend.isPositive ? SEMANTIC_COLORS.positive : SEMANTIC_COLORS.negative,
             }}
           >
             {trend.value}

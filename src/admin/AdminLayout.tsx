@@ -1,7 +1,12 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import { useThemeColors } from '../theme/useColors';
+import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
+
+/** Chart accent for branded chart bars */
+const CHART_ACCENT = '#f97316';
+/** Muted gray for disabled/fallback states */
+const MUTED_GRAY = '#6b7280';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { AdminSidebar, type AdminSection } from './components/AdminSidebar';
 import { AdminStatCard } from './components/AdminStatCard';
@@ -175,11 +180,11 @@ function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
               fontSize: '13px',
               backgroundColor: theme.background.ghost,
               color: theme.text.high,
-              border: `1px solid ${error ? '#ef4444' : theme.stroke.medium}`,
+              border: `1px solid ${error ? SEMANTIC_COLORS.negative : theme.stroke.medium}`,
             }}
           />
           {error && (
-            <span className="block mt-1" style={{ color: '#ef4444', fontSize: '12px' }}>
+            <span className="block mt-1" style={{ color: SEMANTIC_COLORS.negative, fontSize: '12px' }}>
               {error}
             </span>
           )}
@@ -204,14 +209,16 @@ function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
 }
 
 // ── Utility: Feedback badge ──────────────────────────────────────
+const FEEDBACK_COLORS: Record<string, { bg: string; fg: string }> = {
+  thumbs_up:   { bg: `${SEMANTIC_COLORS.positive}1F`, fg: SEMANTIC_COLORS.positive },
+  thumbs_down: { bg: `${SEMANTIC_COLORS.negative}1F`, fg: SEMANTIC_COLORS.negative },
+  edit:        { bg: `${SEMANTIC_COLORS.informative}1F`, fg: SEMANTIC_COLORS.informative },
+  comment:     { bg: `${SEMANTIC_COLORS.warning}1F`, fg: SEMANTIC_COLORS.warning },
+};
+const FEEDBACK_FALLBACK = { bg: `${MUTED_GRAY}1F`, fg: MUTED_GRAY };
+
 function FeedbackBadge({ type }: { type: string }) {
-  const colorMap: Record<string, { bg: string; fg: string }> = {
-    thumbs_up: { bg: 'rgba(34,197,94,0.12)', fg: '#22c55e' },
-    thumbs_down: { bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
-    edit: { bg: 'rgba(59,130,246,0.12)', fg: '#3b82f6' },
-    comment: { bg: 'rgba(245,158,11,0.12)', fg: '#f59e0b' },
-  };
-  const c = colorMap[type] || { bg: 'rgba(107,114,128,0.12)', fg: '#6b7280' };
+  const c = FEEDBACK_COLORS[type] || FEEDBACK_FALLBACK;
   return (
     <span
       className="inline-block rounded-full font-medium whitespace-nowrap"
@@ -297,9 +304,9 @@ function OfflineBanner() {
   return (
     <div 
       className="mb-4 px-4 py-2 rounded-lg flex items-center gap-2"
-      style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}
+      style={{ backgroundColor: `${SEMANTIC_COLORS.warning}1A`, border: `1px solid ${SEMANTIC_COLORS.warning}4D` }}
     >
-      <span style={{ color: '#f59e0b', fontSize: '13px' }}>
+      <span style={{ color: SEMANTIC_COLORS.warning, fontSize: '13px' }}>
         you are offline. showing cached data.
       </span>
     </div>
@@ -321,14 +328,14 @@ function QueryErrorDisplay({ error, queryName, onRetry }: {
     <div 
       className="p-4 rounded-lg mb-4"
       style={{ 
-        backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-        border: '1px solid rgba(239, 68, 68, 0.3)' 
+        backgroundColor: `${SEMANTIC_COLORS.negative}1A`, 
+        border: `1px solid ${SEMANTIC_COLORS.negative}4D` 
       }}
     >
       <div className="flex items-start gap-3">
-        <span style={{ color: '#ef4444', fontSize: '20px' }}>⚠</span>
+        <span style={{ color: SEMANTIC_COLORS.negative, fontSize: '20px' }}>⚠</span>
         <div className="flex-1">
-          <p className="font-medium" style={{ color: '#ef4444', fontSize: '14px' }}>
+          <p className="font-medium" style={{ color: SEMANTIC_COLORS.negative, fontSize: '14px' }}>
             failed to load {queryName}
           </p>
           <p className="mt-1" style={{ color: theme.text.low, fontSize: '12px' }}>
@@ -475,12 +482,12 @@ function AdminDashboard() {
               { 
                 label: 'regeneration rate', 
                 value: `${dashboardStats.regenerationRate}%`, 
-                color: dashboardStats.regenerationRate > 15 ? '#ef4444' : '#22c55e' 
+                color: dashboardStats.regenerationRate > 15 ? SEMANTIC_COLORS.negative : SEMANTIC_COLORS.positive 
               },
               { 
                 label: 'completion rate', 
                 value: `${completionRate}%`,
-                color: '#3b82f6' 
+                color: SEMANTIC_COLORS.informative 
               },
             ]}
           />
@@ -527,15 +534,15 @@ function AdminDashboard() {
                     className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
                     style={{
                       backgroundColor: session.status === 'active' 
-                        ? 'rgba(34,197,94,0.12)' 
+                        ? `${SEMANTIC_COLORS.positive}1F` 
                         : session.status === 'completed'
-                          ? 'rgba(59,130,246,0.12)'
-                          : 'rgba(245,158,11,0.12)',
+                          ? `${SEMANTIC_COLORS.informative}1F`
+                          : `${SEMANTIC_COLORS.warning}1F`,
                       color: session.status === 'active' 
-                        ? '#22c55e' 
+                        ? SEMANTIC_COLORS.positive 
                         : session.status === 'completed'
-                          ? '#3b82f6'
-                          : '#f59e0b',
+                          ? SEMANTIC_COLORS.informative
+                          : SEMANTIC_COLORS.warning,
                     }}
                   >
                     {session.status}
@@ -604,11 +611,11 @@ function CorrectionDiff({
       {expanded ? (
         <div className="space-y-2">
           <div>
-            <span className="block text-xs font-medium mb-1" style={{ color: '#ef4444' }}>
+            <span className="block text-xs font-medium mb-1" style={{ color: SEMANTIC_COLORS.negative }}>
               before (ai generated):
             </span>
             <p className="text-sm p-2 rounded" style={{ 
-              backgroundColor: 'rgba(239,68,68,0.08)', 
+              backgroundColor: `${SEMANTIC_COLORS.negative}14`, 
               color: theme.text.high,
               textDecoration: 'line-through',
               opacity: 0.7,
@@ -617,11 +624,11 @@ function CorrectionDiff({
             </p>
           </div>
           <div>
-            <span className="block text-xs font-medium mb-1" style={{ color: '#22c55e' }}>
+            <span className="block text-xs font-medium mb-1" style={{ color: SEMANTIC_COLORS.positive }}>
               after (user edited):
             </span>
             <p className="text-sm p-2 rounded" style={{ 
-              backgroundColor: 'rgba(34,197,94,0.08)', 
+              backgroundColor: `${SEMANTIC_COLORS.positive}14`, 
               color: theme.text.high,
             }}>
               {edited}
@@ -790,8 +797,8 @@ function AdminLearningCenter() {
                 className="inline-block rounded-md px-2 py-1"
                 style={{
                   fontSize: '12px',
-                  backgroundColor: 'rgba(239,68,68,0.12)',
-                  color: '#ef4444',
+                  backgroundColor: `${SEMANTIC_COLORS.negative}1F`,
+                  color: SEMANTIC_COLORS.negative,
                 }}
               >
                 {reason}
@@ -1302,8 +1309,8 @@ function AdminKnowledge() {
                 semantic search enabled (RAG)
               </span>
               <span className="text-xs px-2 py-0.5 rounded-full" style={{ 
-                backgroundColor: 'rgba(34,197,94,0.12)', 
-                color: '#22c55e' 
+                backgroundColor: `${SEMANTIC_COLORS.positive}1F`, 
+                color: SEMANTIC_COLORS.positive 
               }}>
                 vector index active
               </span>
@@ -1473,7 +1480,7 @@ function AdminUsageAnalytics() {
           empty={byEcosystem.length === 0}
           emptyMessage="no ecosystem data available"
         >
-          <HorizontalBarChart data={byEcosystem} color="#f97316" />
+          <HorizontalBarChart data={byEcosystem} color={CHART_ACCENT} />
         </ChartContainer>
 
         <ChartContainer
@@ -1482,7 +1489,7 @@ function AdminUsageAnalytics() {
           empty={byChannel.length === 0}
           emptyMessage="no channel data available"
         >
-          <HorizontalBarChart data={byChannel} color="#3b82f6" />
+          <HorizontalBarChart data={byChannel} color={SEMANTIC_COLORS.informative} />
         </ChartContainer>
       </div>
 
@@ -1506,8 +1513,8 @@ function AdminUsageAnalytics() {
               <AdminTableCell>{stat.count}</AdminTableCell>
               <AdminTableCell>
                 <span style={{
-                  color: (stat.avgTrustScore ?? 0) >= 90 ? '#22c55e' : 
-                         (stat.avgTrustScore ?? 0) >= 80 ? '#f59e0b' : '#ef4444',
+                  color: (stat.avgTrustScore ?? 0) >= 90 ? SEMANTIC_COLORS.positive : 
+                         (stat.avgTrustScore ?? 0) >= 80 ? SEMANTIC_COLORS.warning : SEMANTIC_COLORS.negative,
                   fontWeight: 500,
                 }}>
                   {stat.avgTrustScore ?? '—'}
@@ -1693,8 +1700,8 @@ function AdminConfig() {
                 style={{
                   fontSize: '11px',
                   padding: '1px 8px',
-                  backgroundColor: ff.value ? 'rgba(34,197,94,0.12)' : 'rgba(107,114,128,0.12)',
-                  color: ff.value ? '#22c55e' : '#6b7280',
+                  backgroundColor: ff.value ? `${SEMANTIC_COLORS.positive}1F` : `${MUTED_GRAY}1F`,
+                  color: ff.value ? SEMANTIC_COLORS.positive : MUTED_GRAY,
                 }}
               >
                 {ff.value ? 'Enabled' : 'Disabled'}

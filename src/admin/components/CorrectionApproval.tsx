@@ -1,10 +1,26 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import { useThemeColors } from '../../theme/useColors';
+import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import { AdminTable, AdminTableRow, AdminTableCell } from './AdminTable';
 import { formatRelativeTime } from '../utils/formatters';
 import type { Id } from '../../../convex/_generated/dataModel';
+
+/** Semantic color map for feedback types */
+const FEEDBACK_COLORS: Record<string, { bg: string; fg: string }> = {
+  thumbs_up:   { bg: `${SEMANTIC_COLORS.positive}1F`, fg: SEMANTIC_COLORS.positive },
+  thumbs_down: { bg: `${SEMANTIC_COLORS.negative}1F`, fg: SEMANTIC_COLORS.negative },
+  edit:        { bg: `${SEMANTIC_COLORS.informative}1F`, fg: SEMANTIC_COLORS.informative },
+  comment:     { bg: `${SEMANTIC_COLORS.warning}1F`, fg: SEMANTIC_COLORS.warning },
+};
+const FEEDBACK_FALLBACK = { bg: 'rgba(107,114,128,0.12)', fg: '#6b7280' };
+
+/** Semantic color map for admin statuses */
+const STATUS_MAP: Record<string, { bg: string; fg: string }> = {
+  approved: { bg: `${SEMANTIC_COLORS.positive}1F`, fg: SEMANTIC_COLORS.positive },
+  rejected: { bg: `${SEMANTIC_COLORS.negative}1F`, fg: SEMANTIC_COLORS.negative },
+  pending:  { bg: `${SEMANTIC_COLORS.warning}1F`, fg: SEMANTIC_COLORS.warning },
+};
 
 // ── Types ────────────────────────────────────────────────────────
 interface Correction {
@@ -22,13 +38,7 @@ interface Correction {
 
 // ── Feedback Type Badge ─────────────────────────────────────────
 function FeedbackBadge({ type }: { type: string }) {
-  const colorMap: Record<string, { bg: string; fg: string }> = {
-    thumbs_up: { bg: 'rgba(34,197,94,0.12)', fg: '#22c55e' },
-    thumbs_down: { bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
-    edit: { bg: 'rgba(59,130,246,0.12)', fg: '#3b82f6' },
-    comment: { bg: 'rgba(245,158,11,0.12)', fg: '#f59e0b' },
-  };
-  const c = colorMap[type] || { bg: 'rgba(107,114,128,0.12)', fg: '#6b7280' };
+  const c = FEEDBACK_COLORS[type] || FEEDBACK_FALLBACK;
   return (
     <span
       className="inline-block rounded-full font-medium whitespace-nowrap"
@@ -46,12 +56,7 @@ function FeedbackBadge({ type }: { type: string }) {
 
 // ── Status Badge ────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, { bg: string; fg: string }> = {
-    approved: { bg: 'rgba(34,197,94,0.12)', fg: '#22c55e' },
-    rejected: { bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
-    pending: { bg: 'rgba(245,158,11,0.12)', fg: '#f59e0b' },
-  };
-  const c = colorMap[status] || colorMap.pending;
+  const c = STATUS_MAP[status] || STATUS_MAP.pending;
   return (
     <span
       className="inline-block rounded-full font-medium whitespace-nowrap"
@@ -127,7 +132,7 @@ function CorrectionDetailModal({
           <div
             className="p-3 rounded-lg text-sm"
             style={{
-              backgroundColor: 'rgba(239,68,68,0.08)',
+              backgroundColor: `${SEMANTIC_COLORS.negative}14`,
               color: theme.text.high,
               border: `1px solid ${theme.stroke.low}`,
             }}
@@ -145,7 +150,7 @@ function CorrectionDetailModal({
             <div
               className="p-3 rounded-lg text-sm"
               style={{
-                backgroundColor: 'rgba(34,197,94,0.08)',
+                backgroundColor: `${SEMANTIC_COLORS.positive}14`,
                 color: theme.text.high,
                 border: `1px solid ${theme.stroke.low}`,
               }}
@@ -168,8 +173,8 @@ function CorrectionDetailModal({
                   className="inline-block rounded-md px-2 py-1"
                   style={{
                     fontSize: '12px',
-                    backgroundColor: 'rgba(239,68,68,0.12)',
-                    color: '#ef4444',
+                    backgroundColor: `${SEMANTIC_COLORS.negative}1F`,
+                    color: SEMANTIC_COLORS.negative,
                   }}
                 >
                   {reason}
@@ -237,7 +242,7 @@ function CorrectionDetailModal({
               style={{
                 height: '36px',
                 fontSize: '13px',
-                backgroundColor: '#ef4444',
+                backgroundColor: SEMANTIC_COLORS.negative,
                 color: '#fff',
                 border: 'none',
                 cursor: 'pointer',
@@ -256,7 +261,7 @@ function CorrectionDetailModal({
               style={{
                 height: '36px',
                 fontSize: '13px',
-                backgroundColor: '#22c55e',
+                backgroundColor: SEMANTIC_COLORS.positive,
                 color: '#fff',
                 border: 'none',
                 cursor: 'pointer',
