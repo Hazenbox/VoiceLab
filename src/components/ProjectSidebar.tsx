@@ -321,6 +321,8 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   
   // User menu state
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isUserProfileHovered, setIsUserProfileHovered] = useState(false);
+  const userMenuContainerRef = useRef<HTMLDivElement>(null);
   
   // Rename state
   const [renamingProject, setRenamingProject] = useState<string | null>(null);
@@ -334,6 +336,20 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       renameInputRef.current.select();
     }
   }, [renamingProject]);
+
+  // Close user menu on click outside
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuContainerRef.current && !userMenuContainerRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isUserMenuOpen]);
 
 
   const handleDeleteProject = useCallback((id: string) => {
@@ -513,37 +529,83 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       {userName && onEditProfile && (
         <>
         <Divider />
-        <div className="px-3 py-3 relative">
-          <div className="flex items-center gap-3">
-            {/* Avatar with DS component */}
-            <Avatar 
-              content="initials" 
-              initials={getInitials(userName)} 
-              size="L" 
-              attention="medium"
-            />
+        <div ref={userMenuContainerRef} className="px-2 py-1 relative">
+          <button
+            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+            onMouseEnter={() => setIsUserProfileHovered(true)}
+            onMouseLeave={() => setIsUserProfileHovered(false)}
+            className="w-full px-2 py-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+            style={{
+              backgroundColor: isUserProfileHovered ? theme.stroke.low : 'transparent',
+            }}
+            aria-label="User menu"
+            aria-haspopup="menu"
+            aria-expanded={isUserMenuOpen}
+          >
+            <div className="flex items-center gap-3">
+              {/* Avatar with DS component */}
+              <Avatar 
+                content="initials" 
+                initials={getInitials(userName)} 
+                size="L" 
+                attention="medium"
+              />
 
-            {/* Name and role */}
-            <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-              <div className="truncate">
-                <Text size="S" weight="medium">
-                  {userName}
+              {/* Name and role */}
+              <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
+                <div className="truncate">
+                  <Text size="S" weight="low">
+                    {userName}
+                  </Text>
+                </div>
+                <Text size="XS" weight="low" color="low">
+                  {formatRole(userRole)}
                 </Text>
               </div>
-              <Text size="XS" weight="low">
-                {formatRole(userRole)}
-              </Text>
             </div>
-
-            {/* Menu trigger button */}
-            <ProjectMenu
-              options={userMenuOptions}
-              onSelect={handleUserMenuAction}
-              isOpen={isUserMenuOpen}
-              onToggle={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              direction="up"
-            />
-          </div>
+          </button>
+          
+          {/* Dropdown Menu */}
+          {isUserMenuOpen && (
+            <div
+              className="absolute z-50 min-w-[120px] rounded-lg overflow-hidden py-1 right-0 bottom-full mb-1"
+              style={{
+                backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
+                border: `1px solid ${theme.stroke.low}`,
+              }}
+              role="menu"
+              aria-orientation="vertical"
+            >
+              {userMenuOptions.map((option, index) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUserMenuAction(option.value);
+                  }}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs transition-colors mx-1 rounded-md cursor-pointer"
+                  style={{
+                    width: 'calc(100% - 8px)',
+                    backgroundColor: 'transparent',
+                    color: theme.text.high,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = theme.stroke.low;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                  role="menuitem"
+                >
+                  {option.icon && (
+                    <span className="flex-shrink-0 w-4 h-4">{option.icon}</span>
+                  )}
+                  <span className="truncate">{option.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         </>
       )}
