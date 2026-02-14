@@ -325,15 +325,7 @@ export const MessageContent = memo(function MessageContent({ content }: MessageC
 
   // Normalize markdown to fix common LLM output issues (e.g., broken numbered lists)
   const normalizedContent = useMemo(
-    () => {
-      const result = normalizeMarkdown(content);
-      // Debug: Log to see what's happening
-      if (content.includes('1.') && content.includes('Insufficient')) {
-        console.log('[MessageContent] INPUT:', JSON.stringify(content.substring(0, 500)));
-        console.log('[MessageContent] OUTPUT:', JSON.stringify(result.substring(0, 500)));
-      }
-      return result;
-    },
+    () => normalizeMarkdown(content),
     [content]
   );
 
