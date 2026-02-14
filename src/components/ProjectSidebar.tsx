@@ -516,7 +516,12 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         <div className="px-3 py-3 relative">
           <div className="flex items-center gap-3">
             {/* Avatar with DS component */}
-            <Avatar name={userName} size="S" />
+            <Avatar 
+              content="initials" 
+              initials={getInitials(userName)} 
+              size="S" 
+              attention="medium"
+            />
 
             {/* Name and role */}
             <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
