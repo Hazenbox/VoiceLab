@@ -555,7 +555,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                     {userName}
                   </Text>
                 </div>
-                <Text size="XS" weight="low" color="low">
+                <Text size="XS" weight="low" color="low-tinted">
                   {formatRole(userRole)}
                 </Text>
               </div>
