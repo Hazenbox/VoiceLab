@@ -77,7 +77,7 @@ export const SidebarItem = memo(function SidebarItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-2 text-left transition-colors cursor-pointer w-full px-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+      className="flex items-center gap-2 text-left transition-colors cursor-pointer w-full px-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
       style={{
         backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
         height: '32px',
@@ -489,7 +489,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             onMouseEnter={() => setIsUserProfileHovered(true)}
             onMouseLeave={() => setIsUserProfileHovered(false)}
-            className="w-full px-2 py-2 rounded-lg transition-colors cursor-pointer focus:outline-none"
+            className="w-full px-2 py-2 rounded-xl transition-colors cursor-pointer focus:outline-none"
             style={{
               backgroundColor: (isUserProfileHovered || isUserMenuOpen) ? theme.stroke.low : 'transparent',
             }}
