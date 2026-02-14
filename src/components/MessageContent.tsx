@@ -242,16 +242,37 @@ function createMarkdownComponents(theme: ThemeColors): Components {
 
 /**
  * Normalize markdown to fix common LLM output issues
- * - Fixes numbered lists broken by single blank lines between items
+ * - Fixes numbered lists broken by blank lines (including nested bullets)
+ * - Handles: "1. Title\n- bullet\n\n1. Title" -> continuous list
  */
 function normalizeMarkdown(content: string): string {
-  // Fix numbered lists with blank lines between items
-  // Pattern: "N. text\n\nN. text" -> "N. text\nN. text"
-  // This regex matches a numbered list item followed by blank line and another numbered item
-  return content.replace(
+  // Step 1: Normalize multiple blank lines to single blank line
+  let normalized = content.replace(/\n{3,}/g, '\n\n');
+  
+  // Step 2: Fix numbered lists with nested content
+  // Pattern: After a numbered item (and optional nested bullets/content),
+  // if there's a blank line followed by another numbered item, remove the blank line
+  // This regex matches:
+  // - A line starting with "N. " (numbered item)
+  // - Followed by any content (including nested bullets with - or *)
+  // - Then a blank line
+  // - Then another numbered item
+  // We need to remove just the blank line before the next numbered item
+  
+  // Match: content ending with newline, blank line, then "N. "
+  // Replace blank line with single newline to keep list continuous
+  normalized = normalized.replace(
+    /(\n(?:[-*]\s+[^\n]+\n)*)\n(?=\d+\.\s)/g,
+    '$1'
+  );
+  
+  // Also handle case where numbered item has no children but blank line before next
+  normalized = normalized.replace(
     /(\d+\.\s+[^\n]+)\n\n(?=\d+\.\s)/g,
     '$1\n'
   );
+  
+  return normalized;
 }
 
 /**
