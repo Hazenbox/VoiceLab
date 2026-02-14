@@ -96,16 +96,25 @@ async function handleStreamingResponse(
             try {
               const chunk = JSON.parse(jsonStr);
               // Convert DashScope format to OpenAI-compatible format for client
-              const content = chunk?.output?.choices?.[0]?.message?.content || '';
-              const finishReason = chunk?.output?.choices?.[0]?.finish_reason;
+              // DashScope can return content in different places depending on result_format:
+              // - output.text (text format)
+              // - output.choices[0].message.content (message format)
+              const content = chunk?.output?.text ||
+                              chunk?.output?.choices?.[0]?.message?.content ||
+                              '';
+              const finishReason = chunk?.output?.choices?.[0]?.finish_reason ||
+                                   chunk?.output?.finish_reason;
               
-              const sseData = {
-                choices: [{
-                  delta: { content },
-                  finish_reason: finishReason || null,
-                }],
-              };
-              res.write(`data: ${JSON.stringify(sseData)}\n\n`);
+              // Only send chunks with actual content or finish reason
+              if (content || finishReason) {
+                const sseData = {
+                  choices: [{
+                    delta: { content },
+                    finish_reason: finishReason || null,
+                  }],
+                };
+                res.write(`data: ${JSON.stringify(sseData)}\n\n`);
+              }
             } catch {
               // If not valid JSON, forward as-is
               res.write(`data: ${jsonStr}\n\n`);
