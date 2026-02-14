@@ -42,8 +42,71 @@ interface ProjectSidebarProps {
 }
 
 /**
+ * Base Sidebar Item Component
+ * Supports both navigation and menu item variants
+ */
+interface SidebarItemProps {
+  variant: 'nav' | 'menu';
+  label: string;
+  icon?: React.ReactNode;
+  badge?: React.ReactNode;
+  isActive?: boolean;
+  onClick: () => void;
+  ariaLabel?: string;
+  ariaCurrent?: boolean | 'page';
+}
+
+const SidebarItem = memo(function SidebarItem({
+  variant,
+  label,
+  icon,
+  badge,
+  isActive = false,
+  onClick,
+  ariaLabel,
+  ariaCurrent,
+}: SidebarItemProps) {
+  const theme = useThemeColors();
+  const [isHovered, setIsHovered] = useState(false);
+
+  const isNav = variant === 'nav';
+  const isMenu = variant === 'menu';
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-2 text-left transition-colors cursor-pointer ${
+        isNav 
+          ? 'w-full px-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset' 
+          : 'px-2 py-1.5 mx-1 rounded-md'
+      }`}
+      style={{
+        backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
+        color: theme.text.high,
+        ...(isNav && { height: '32px' }),
+        ...(isMenu && { width: 'calc(100% - 8px)' }),
+      }}
+      aria-label={ariaLabel}
+      aria-current={ariaCurrent}
+      role={isMenu ? 'menuitem' : undefined}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {icon && (
+        <span className="flex-shrink-0 w-4 h-4">{icon}</span>
+      )}
+      <Text size={isNav ? 'S' : 'XS'} weight="low">
+        {label}
+      </Text>
+      {badge}
+    </button>
+  );
+});
+
+/**
  * Reusable Sidebar Navigation Item Component
- * Single source of truth for all sidebar navigation items
+ * Wrapper around SidebarItem with nav variant
  */
 interface SidebarNavItemProps {
   icon: React.ReactNode;
@@ -64,28 +127,17 @@ const SidebarNavItem = memo(function SidebarNavItem({
   ariaLabel,
   ariaCurrent,
 }: SidebarNavItemProps) {
-  const theme = useThemeColors();
-  const [isHovered, setIsHovered] = useState(false);
-
   return (
-    <button
+    <SidebarItem
+      variant="nav"
+      icon={icon}
+      label={label}
       onClick={onClick}
-      className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
-      style={{
-        backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
-        height: '32px',
-      }}
-      aria-label={ariaLabel}
-      aria-current={ariaCurrent}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {icon}
-      <Text size="S" weight="low">
-        {label}
-      </Text>
-      {badge}
-    </button>
+      isActive={isActive}
+      badge={badge}
+      ariaLabel={ariaLabel}
+      ariaCurrent={ariaCurrent}
+    />
   );
 });
 
@@ -195,34 +247,25 @@ const ProjectMenu = memo(function ProjectMenu({
           role="menu"
           aria-orientation="vertical"
         >
-          {options.map((option, index) => {
-            const isFocused = index === focusedIndex;
-            
-            return (
-              <button
-                key={option.value}
-                type="button"
+          {options.map((option, index) => (
+            <div
+              key={option.value}
+              onMouseEnter={() => setFocusedIndex(index)}
+            >
+              <SidebarItem
+                variant="menu"
+                label={option.label}
+                icon={option.icon}
+                isActive={index === focusedIndex}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelect(option.value);
                   onToggle();
                 }}
-                onMouseEnter={() => setFocusedIndex(index)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs transition-colors mx-1 rounded-md cursor-pointer"
-                style={{
-                  width: 'calc(100% - 8px)',
-                  backgroundColor: isFocused ? theme.stroke.low : 'transparent',
-                  color: theme.text.high,
-                }}
-                role="menuitem"
-              >
-                {option.icon && (
-                  <span className="flex-shrink-0 w-4 h-4">{option.icon}</span>
-                )}
-                <span className="truncate">{option.label}</span>
-              </button>
-            );
-          })}
+                ariaLabel={option.label}
+              />
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -573,33 +616,18 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               role="menu"
               aria-orientation="vertical"
             >
-              {userMenuOptions.map((option, index) => (
-                <button
+              {userMenuOptions.map((option) => (
+                <SidebarItem
                   key={option.value}
-                  type="button"
+                  variant="menu"
+                  label={option.label}
+                  icon={option.icon}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleUserMenuAction(option.value);
                   }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs transition-colors mx-1 rounded-md cursor-pointer"
-                  style={{
-                    width: 'calc(100% - 8px)',
-                    backgroundColor: 'transparent',
-                    color: theme.text.high,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.stroke.low;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                  role="menuitem"
-                >
-                  {option.icon && (
-                    <span className="flex-shrink-0 w-4 h-4">{option.icon}</span>
-                  )}
-                  <span className="truncate">{option.label}</span>
-                </button>
+                  ariaLabel={option.label}
+                />
               ))}
             </div>
           )}
