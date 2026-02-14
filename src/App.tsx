@@ -1340,7 +1340,86 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         }
         
         // Update result content with finished content for validation
-        const contentForValidation = finishedContent;
+        let contentForValidation = finishedContent;
+
+        // =====================================================================
+        // Token Enforcement: Post-generation validation against Convex rules
+        // Critical for brand protection - blocks/fixes competitor mentions
+        // =====================================================================
+        if (convexTokenEnforcementRules && convexTokenEnforcementRules.length > 0) {
+          try {
+            // Build active tokens for enforcement
+            const activeTokens = {
+              ecosystem: effectiveEcosystem,
+              channel: effectiveChannel,
+              'safety.domain': constitutionalContext?.safetyResult?.domain || 'general',
+              'safety.level': constitutionalContext?.tokens?.safetyLevel || 'none',
+              'emotion.rasa.user': constitutionalContext?.tokens?.userEmotion || 'shanta',
+              'emotion.intensity': constitutionalContext?.tokens?.emotionIntensity || 'moderate',
+              persona: featureFlags.persona ? userProfile?.role : undefined,
+            };
+            
+            // Create enforcement agent with Convex rules
+            const enforcementContext: TokenEnforcementContext = {
+              activeTokens,
+              rules: convexTokenEnforcementRules as TokenEnforcementRule[],
+            };
+            
+            const enforcementAgent = createTokenEnforcementAgent(enforcementContext);
+            const enforcementResult = await enforcementAgent.validate(contentForValidation);
+            
+            if (!enforcementResult.passed) {
+              console.warn('[TokenEnforcement] Response violations detected:', 
+                enforcementResult.violations.map(v => ({
+                  rule: v.rule,
+                  term: v.term,
+                  severity: v.severity,
+                  autoFixable: v.autoFixable,
+                }))
+              );
+              
+              // Apply auto-fixes for brand protection violations
+              const autoFixableViolations = enforcementResult.violations.filter(v => 
+                v.autoFixable && v.autoFixAction === 'remove'
+              );
+              
+              if (autoFixableViolations.length > 0) {
+                let fixedContent = contentForValidation;
+                
+                for (const violation of autoFixableViolations) {
+                  // Remove competitor mentions from the response
+                  const termRegex = new RegExp(`\\b${violation.term}\\b`, 'gi');
+                  fixedContent = fixedContent.replace(termRegex, '');
+                  
+                  // Clean up double spaces and awkward punctuation
+                  fixedContent = fixedContent
+                    .replace(/\s+/g, ' ')
+                    .replace(/\s+([.,!?])/g, '$1')
+                    .replace(/([.,!?])\s*([.,!?])/g, '$1')
+                    .trim();
+                }
+                
+                console.log(`[TokenEnforcement] Auto-fixed ${autoFixableViolations.length} brand violations`);
+                contentForValidation = fixedContent;
+              }
+              
+              // For severe violations that can't be auto-fixed, log for monitoring
+              const severeViolations = enforcementResult.violations.filter(v => 
+                v.severity === 'error' && !v.autoFixable
+              );
+              
+              if (severeViolations.length > 0) {
+                console.error('[TokenEnforcement] CRITICAL: Severe violations that need regeneration:', 
+                  severeViolations.map(v => v.term)
+                );
+              }
+            } else {
+              console.log('[TokenEnforcement] Response passed brand protection checks');
+            }
+          } catch (enforcementError) {
+            console.warn('[TokenEnforcement] Validation failed:', enforcementError);
+          }
+        }
 
         // Content Trust System: Validate and Score Content
         let trustScore: TrustScore | undefined;
