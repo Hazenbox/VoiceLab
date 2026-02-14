@@ -1278,18 +1278,48 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
         // Use the orchestrator for generation with retry and fallback
         const orchestrator = getOrchestratorInstance();
-        const result = await orchestrator.generate(
-          selectedLLMProvider,
-          {
-            messages,
-            maxTokens: maxTokens,
-            temperature: temperature,
-            stream: streamResponse,
-            signal: getChatAbortSignal(),
-          },
-          createLLMProvider,
-          ['intent:content_generation']
-        );
+        
+        let result: { content: string; usage: import('./services/providers/llm/types').LLMUsageMetrics };
+        
+        // Use streaming if enabled - shows text progressively as it generates
+        if (streamResponse) {
+          let accumulatedText = '';
+          try {
+            const streamResult = await orchestrator.generateStream(
+              selectedLLMProvider,
+              {
+                messages,
+                maxTokens: maxTokens,
+                temperature: temperature,
+                signal: getChatAbortSignal(),
+              },
+              createLLMProvider,
+              (chunk) => {
+                accumulatedText += chunk;
+                setStreamingAIResponse(accumulatedText);
+              }
+            );
+            result = streamResult;
+          } finally {
+            // Clear streaming state after completion (success or error)
+            setStreamingAIResponse('');
+          }
+        } else {
+          // Non-streaming: wait for complete response
+          const nonStreamResult = await orchestrator.generate(
+            selectedLLMProvider,
+            {
+              messages,
+              maxTokens: maxTokens,
+              temperature: temperature,
+              stream: false,
+              signal: getChatAbortSignal(),
+            },
+            createLLMProvider,
+            ['intent:content_generation']
+          );
+          result = nonStreamResult;
+        }
 
         // =====================================================================
         // Finishing Layer: Apply Small Joy & Signature (wiring orphaned code)
@@ -1758,18 +1788,48 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
         // Use the orchestrator for generation (same retry/fallback)
         const orchestrator = getOrchestratorInstance();
-        const result = await orchestrator.generate(
-          selectedLLMProvider,
-          {
-            messages,
-            maxTokens: maxTokens,
-            temperature: temperature,
-            stream: streamResponse,
-            signal: getChatAbortSignal(),
-          },
-          createLLMProvider,
-          [`intent:${intentClassification.intent}`]
-        );
+        
+        let result: { content: string; usage: import('./services/providers/llm/types').LLMUsageMetrics };
+        
+        // Use streaming if enabled - shows text progressively as it generates
+        if (streamResponse) {
+          let accumulatedText = '';
+          try {
+            const streamResult = await orchestrator.generateStream(
+              selectedLLMProvider,
+              {
+                messages,
+                maxTokens: maxTokens,
+                temperature: temperature,
+                signal: getChatAbortSignal(),
+              },
+              createLLMProvider,
+              (chunk) => {
+                accumulatedText += chunk;
+                setStreamingAIResponse(accumulatedText);
+              }
+            );
+            result = streamResult;
+          } finally {
+            // Clear streaming state after completion (success or error)
+            setStreamingAIResponse('');
+          }
+        } else {
+          // Non-streaming: wait for complete response
+          const nonStreamResult = await orchestrator.generate(
+            selectedLLMProvider,
+            {
+              messages,
+              maxTokens: maxTokens,
+              temperature: temperature,
+              stream: false,
+              signal: getChatAbortSignal(),
+            },
+            createLLMProvider,
+            [`intent:${intentClassification.intent}`]
+          );
+          result = nonStreamResult;
+        }
 
         // =====================================================================
         // Finishing Layer: Apply Small Joy & Signature (conversational path)
@@ -2212,6 +2272,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     setEditValue('');
     // Focus restoration handled by ChatPanel
   }, []);
+  
+  // Stop generation - cancels ongoing streaming request
+  const handleStopGeneration = useCallback(() => {
+    resetChatAbort();
+    setStreamingAIResponse('');
+    setIsChatLoading(false);
+    console.log('[Chat] Generation stopped by user');
+  }, [resetChatAbort]);
   
   // Submit edit - creates new version and regenerates AI response
   const handleSubmitEdit = useCallback(async (messageId: string, newContent: string) => {
@@ -3081,9 +3149,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   id={`${chatMode}-panel`}
                   onVoiceClick={() => handleModeChange(chatMode === 'voice' ? 'copy' : 'voice')}
                   voiceSupported={voiceSupported ?? true}
-                  // Voice streaming transcription props
+                  // Streaming transcription/response props
                   streamingUserTranscript={chatMode === 'voice' && appState === AppState.LISTENING ? transcript : undefined}
-                  streamingAIResponse={chatMode === 'voice' && appState === AppState.SPEAKING ? streamingAIResponse : undefined}
+                  streamingAIResponse={streamingAIResponse || undefined}
                   modelSelector={
                     <ModelSelector
                       value={chatMode === 'copy' ? selectedLLMProvider : selectedTalkLLMProvider}
@@ -3153,6 +3221,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   onSubmitEdit={handleSubmitEdit}
                   onCancelEdit={handleCancelEdit}
                   onVersionChange={handleVersionChange}
+                  // Stop generation handler
+                  onStopGeneration={handleStopGeneration}
                   // Dislike feedback modal
                   dislikeModalMessageId={dislikeModalMessageId}
                   onDislikeModalSubmit={handleDislikeModalSubmit}

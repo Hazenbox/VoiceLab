@@ -25,7 +25,7 @@ export interface QwenConfig {
 export class QwenTextProvider implements LLMProvider {
   readonly name = 'qwen-text';
   readonly displayName = 'Alibaba Qwen';
-  readonly supportsStreaming = false; // Via proxy doesn't support streaming
+  readonly supportsStreaming = true; // Streaming supported via /api/llm SSE endpoint
   readonly maxTokens = 128000;
   readonly costPer1kTokens = 0.001;
 
@@ -127,11 +127,101 @@ export class QwenTextProvider implements LLMProvider {
     onChunk: (text: string) => void,
     onUsage?: (usage: LLMUsageMetrics) => void
   ): Promise<string> {
-    // Qwen via proxy doesn't support streaming, fall back to regular generate
-    const result = await this.generate(options);
-    onChunk(result.content);
-    onUsage?.(result.usage);
-    return result.content;
+    const startTime = Date.now();
+    let fullText = '';
+    let totalTokens = 0;
+    const { signal, cleanup } = this.createTimeoutSignal(options.signal, 60000); // 60s for streaming
+
+    try {
+      const response = await fetch(`${this.config.proxyUrl}/api/llm`, {
+        method: 'POST',
+        headers: getApiHeaders(),
+        body: JSON.stringify({
+          model: this.config.model,
+          messages: options.messages.map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          maxTokens: options.maxTokens || 1000,
+          temperature: options.temperature ?? 0.7,
+          stream: true, // Enable streaming
+        }),
+        signal,
+      });
+
+      if (!response.ok) {
+        throw await this.handleError(response);
+      }
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Process complete lines from buffer
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+
+            const data = trimmedLine.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              // Parse OpenAI-compatible format from /api/llm
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                fullText += content;
+                totalTokens++;
+                onChunk(content);
+              }
+            } catch {
+              // Skip invalid JSON chunks
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      const latency = Date.now() - startTime;
+      const usage: LLMUsageMetrics = {
+        promptTokens: 0,
+        completionTokens: totalTokens,
+        totalTokens: totalTokens,
+        estimatedCost: this.calculateCost(0, totalTokens),
+        latencyMs: latency,
+        model: this.config.model,
+        provider: this.name,
+        timestamp: Date.now(),
+      };
+
+      onUsage?.(usage);
+      return fullText;
+
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        const isTimeout = (error as Error).message?.includes('timeout');
+        throw createLLMError(
+          isTimeout ? 'Stream timeout after 60s' : 'Stream cancelled',
+          ERROR_CODES.TIMEOUT,
+          this.name,
+          isTimeout // Timeout errors are retryable
+        );
+      }
+      throw error;
+    } finally {
+      cleanup();
+    }
   }
 
   async healthCheck(): Promise<boolean> {

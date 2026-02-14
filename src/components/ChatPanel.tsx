@@ -113,6 +113,10 @@ interface ChatPanelProps {
   // Auto-fix preview props
   /** Callback when user accepts the recommended auto-fixed content */
   onAcceptAutoFix?: (messageId: string) => void;
+  
+  // Stop generation
+  /** Callback when user clicks stop to cancel ongoing generation */
+  onStopGeneration?: () => void;
 }
 
 // =============================================================================
@@ -162,6 +166,8 @@ export const ChatPanel = memo(function ChatPanel({
   onDislikeModalClose,
   // Auto-fix preview
   onAcceptAutoFix,
+  // Stop generation
+  onStopGeneration,
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
@@ -728,8 +734,8 @@ export const ChatPanel = memo(function ChatPanel({
               </div>
             </div>
 
-            {/* Loading Indicator */}
-            {isLoading && (
+            {/* Loading Indicator - hidden once streaming text appears */}
+            {isLoading && !streamingAIResponse && (
               <div 
                 className="px-4 py-2"
                 role="status"
@@ -756,6 +762,31 @@ export const ChatPanel = memo(function ChatPanel({
                   </div>
                   <span>Generating...</span>
                 </div>
+              </div>
+            )}
+            
+            {/* Stop Generation Button - shown while streaming */}
+            {isLoading && streamingAIResponse && onStopGeneration && (
+              <div className="px-4 py-2 flex justify-center">
+                <button
+                  onClick={onStopGeneration}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-md border transition-colors hover:bg-opacity-10"
+                  style={{ 
+                    borderColor: theme.stroke.medium,
+                    color: theme.text.medium,
+                    backgroundColor: 'transparent',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = theme.stroke.low;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                  aria-label="Stop generating"
+                >
+                  <DSIcon name="IcStop" size="XS" attention="medium" />
+                  <span className="text-sm">stop generating</span>
+                </button>
               </div>
             )}
 
