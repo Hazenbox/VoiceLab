@@ -250,7 +250,9 @@ describe('Token Gate', () => {
       });
 
       it('should format allowed decision correctly', () => {
-        const decision = checkTokenGate(TOKEN_SCENARIOS.EMOTION_NEUTRAL);
+        // With brand protection gate always active for ecosystem tokens,
+        // a truly "allowed" decision requires no tokens at all
+        const decision = checkTokenGate({});
         const formatted = formatGateDecision(decision);
 
         expect(formatted).toContain('[ALLOWED]');
@@ -331,7 +333,8 @@ describe('Token Gate', () => {
     it('should have warning rules for compliance', () => {
       const complianceRules = DEFAULT_GATE_RULES.filter(r => r.category === 'compliance');
       expect(complianceRules.length).toBeGreaterThan(0);
-      expect(complianceRules.every(r => r.action === 'add_warning')).toBe(true);
+      // Compliance rules can be add_warning OR modify (brand protection)
+      expect(complianceRules.every(r => r.action === 'add_warning' || r.action === 'modify')).toBe(true);
     });
 
     it('should have priorities set correctly', () => {
