@@ -563,9 +563,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   
   // Fetch token enforcement rules from Convex
   // Used for post-generation validation and auto-fix
+  // NOTE: Always fetch regardless of feature flag - brand protection is critical
   const convexTokenEnforcementRules = useQuery(
-    featureFlags.constitutionalWrapper ? api.tokenEnforcement.getActive : undefined,
-    featureFlags.constitutionalWrapper ? {} : 'skip'
+    api.tokenEnforcement.getActive,
+    {}
   );
   
   // Semantic search action for RAG (called on-demand during message generation)
@@ -1872,7 +1873,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             console.warn('[TokenEnforcement] Conversational validation failed:', enforcementError);
           }
         } else {
-          console.log('[TokenEnforcement] No enforcement rules loaded from Convex');
+          console.log('[TokenEnforcement] No enforcement rules loaded from Convex. Rules state:', {
+            rulesValue: convexTokenEnforcementRules,
+            rulesLength: convexTokenEnforcementRules?.length,
+            isArray: Array.isArray(convexTokenEnforcementRules),
+          });
         }
 
         // P0-FIX: Run lightweight validation on conversational content
