@@ -9,6 +9,7 @@ import { useThemeColors, SEMANTIC_COLORS } from '../../theme';
 import type { TrustScore, TrustCertification } from '../../types';
 import { getCertificationBadge } from '../../services/trust';
 import { DSIcon } from '../DSIcon';
+import { DelayedTooltip } from '../DelayedTooltip';
 
 interface TrustBadgeProps {
   trustScore?: TrustScore;
@@ -86,20 +87,25 @@ export const TrustBadge = memo(function TrustBadge({
   };
 
   return (
-    <button
-      onClick={onClick}
-      className="rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
-      style={{
-        width: buttonSize,
-        height: buttonSize,
-        color: theme.text.low,
-      }}
-      title={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : undefined}
-      type="button"
-      aria-label={`Trust badge: ${badge.label}`}
+    <DelayedTooltip 
+      content={showTooltip ? `${badge.label}: ${badge.description} (Score: ${overall})` : ''}
+      delay={0}
+      disabled={!showTooltip}
     >
-      <ShieldIcon />
-    </button>
+      <button
+        onClick={onClick}
+        className="rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+        style={{
+          width: buttonSize,
+          height: buttonSize,
+          color: theme.text.low,
+        }}
+        type="button"
+        aria-label={`Trust badge: ${badge.label}`}
+      >
+        <ShieldIcon />
+      </button>
+    </DelayedTooltip>
   );
 });
 

@@ -709,37 +709,6 @@ export const ChatPanel = memo(function ChatPanel({
           backgroundColor: theme.stroke.low,
         }}
       >
-        {/* Mic/Stop button - pill shaped, on the left */}
-        {onVoiceClick && (
-          <Button
-            onPress={onVoiceClick}
-            isDisabled={!voiceSupported}
-            appearance="neutral"
-            attention="low"
-            single
-            aria-label={!voiceSupported 
-              ? "Voice chat not supported in this browser" 
-              : _mode === 'voice' 
-                ? "Stop voice chat and return to text" 
-                : "Switch to voice chat"}
-            title={!voiceSupported 
-              ? "Voice chat not supported in this browser" 
-              : _mode === 'voice'
-                ? "Stop voice chat"
-                : "Voice chat (speak with AI)"}
-            className="voice-button"
-            style={{
-              padding: '8px',
-            }}
-          >
-            {_mode === 'voice' ? (
-              <DSIcon name="IcStop" size="S" attention="high" />
-            ) : (
-              <DSIcon name="IcMic" size="S" attention="medium" />
-            )}
-          </Button>
-        )}
-
         {/* Multi-line textarea */}
         <textarea
           ref={inputRef}
@@ -762,6 +731,46 @@ export const ChatPanel = memo(function ChatPanel({
             fontSize: '14px',
           }}
         />
+
+        {/* Voice button - matches submit button size */}
+        {onVoiceClick && (
+          <div className="flex-shrink-0" style={{ width: '36px', height: '36px' }}>
+            <Button
+              onPress={onVoiceClick}
+              isDisabled={!voiceSupported}
+              appearance="neutral"
+              attention="low"
+              single
+              aria-label={!voiceSupported 
+                ? "Voice chat not supported in this browser" 
+                : _mode === 'voice' 
+                  ? "Stop voice chat and return to text" 
+                  : "Switch to voice chat"}
+              title={!voiceSupported 
+                ? "Voice chat not supported in this browser" 
+                : _mode === 'voice'
+                  ? "Stop voice chat"
+                  : "Voice chat (speak with AI)"}
+              className="voice-button"
+              style={{
+                width: '36px',
+                height: '36px',
+                minHeight: '36px',
+                padding: '0',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {_mode === 'voice' ? (
+                <DSIcon name="IcStop" size="S" attention="high" />
+              ) : (
+                <DSIcon name="IcMic" size="S" attention="medium" />
+              )}
+            </Button>
+          </div>
+        )}
 
         {/* Arrow send button - Jio DS Button (high attention style) */}
         <div className="flex-shrink-0" style={{ width: '36px', height: '36px' }}>
