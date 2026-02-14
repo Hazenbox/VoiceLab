@@ -511,7 +511,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       </div>
 
       {/* Bottom Navigation */}
-      <Divider />
+      <Divider attention="low" />
       <div className="p-2.5 space-y-0.5">
         {/* How it Works Nav Item */}
         {onNavigateToHowItWorks && (
