@@ -134,7 +134,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
           ? <DSIcon name="IcCheck" size="S" attention="low" appearance="neutral" />
           : <DSIcon name="IcCopyDocument" size="S" attention="low" appearance="neutral" />
         }
-        label={isCopied ? "copied" : "copy"}
+        label={isCopied ? "Copied" : "Copy"}
         onClick={handleCopy}
         disabled={disabled}
         isActive={isCopied}
@@ -146,7 +146,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
               <DSIcon name="IcDislike" size="S" attention="low" appearance="neutral" />
             </span>
           }
-          label="good response"
+          label="Good response"
           onClick={handleLike}
           disabled={disabled}
           isActive={feedbackGiven === 'like'}
@@ -155,7 +155,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
       {showDislike && (
         <ActionButton
           icon={<DSIcon name="IcDislike" size="S" attention="low" appearance="neutral" />}
-          label="bad response"
+          label="Bad response"
           onClick={handleDislike}
           disabled={disabled}
           isActive={feedbackGiven === 'dislike'}
@@ -163,7 +163,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
       )}
       <ActionButton
         icon={<DSIcon name="IcRefresh" size="S" attention="low" appearance="neutral" />}
-        label="try again"
+        label="Try again"
         onClick={handleTryAgain}
         disabled={disabled}
       />
