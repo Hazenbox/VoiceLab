@@ -1799,6 +1799,82 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           conversationalFinishedContent = result.content;
         }
 
+        // =====================================================================
+        // Token Enforcement: Post-generation validation for CONVERSATIONAL path
+        // Critical for brand protection - blocks/fixes competitor mentions
+        // =====================================================================
+        if (convexTokenEnforcementRules && convexTokenEnforcementRules.length > 0) {
+          try {
+            const effectiveEcosystem = intentClassification?.detectedEcosystem?.ecosystem || ecosystem;
+            const effectiveChannel = intentClassification?.detectedChannel?.channel || contentChannel;
+            
+            // Build active tokens for enforcement
+            const activeTokens = {
+              ecosystem: effectiveEcosystem,
+              channel: effectiveChannel,
+              'safety.domain': 'general',
+              'safety.level': 'none',
+              'emotion.rasa.user': 'shanta',
+              'emotion.intensity': 'moderate',
+              persona: featureFlags.persona ? userProfile?.role : undefined,
+            };
+            
+            // Create enforcement agent with Convex rules
+            const enforcementContext: TokenEnforcementContext = {
+              activeTokens,
+              rules: convexTokenEnforcementRules as TokenEnforcementRule[],
+            };
+            
+            const enforcementAgent = createTokenEnforcementAgent(enforcementContext);
+            const enforcementResult = await enforcementAgent.validate(conversationalFinishedContent);
+            
+            console.log('[TokenEnforcement] Conversational path - checking response against', 
+              convexTokenEnforcementRules.length, 'rules');
+            
+            if (!enforcementResult.passed) {
+              console.warn('[TokenEnforcement] Conversational violations detected:', 
+                enforcementResult.violations.map(v => ({
+                  rule: v.rule,
+                  term: v.term,
+                  severity: v.severity,
+                  autoFixable: v.autoFixable,
+                }))
+              );
+              
+              // Apply auto-fixes for brand protection violations
+              const autoFixableViolations = enforcementResult.violations.filter(v => 
+                v.autoFixable && v.autoFixAction === 'remove'
+              );
+              
+              if (autoFixableViolations.length > 0) {
+                let fixedContent = conversationalFinishedContent;
+                
+                for (const violation of autoFixableViolations) {
+                  // Remove competitor mentions from the response
+                  const termRegex = new RegExp(`\\b${violation.term}\\b`, 'gi');
+                  fixedContent = fixedContent.replace(termRegex, '');
+                  
+                  // Clean up double spaces and awkward punctuation
+                  fixedContent = fixedContent
+                    .replace(/\s+/g, ' ')
+                    .replace(/\s+([.,!?])/g, '$1')
+                    .replace(/([.,!?])\s*([.,!?])/g, '$1')
+                    .trim();
+                }
+                
+                console.log(`[TokenEnforcement] Conversational: Auto-fixed ${autoFixableViolations.length} brand violations`);
+                conversationalFinishedContent = fixedContent;
+              }
+            } else {
+              console.log('[TokenEnforcement] Conversational response passed brand protection checks');
+            }
+          } catch (enforcementError) {
+            console.warn('[TokenEnforcement] Conversational validation failed:', enforcementError);
+          }
+        } else {
+          console.log('[TokenEnforcement] No enforcement rules loaded from Convex');
+        }
+
         // P0-FIX: Run lightweight validation on conversational content
         // This catches safety issues that could slip through in chat mode
         let conversationalTrustScore: TrustScore | undefined;
