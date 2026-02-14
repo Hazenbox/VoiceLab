@@ -137,6 +137,72 @@ import {
   getPersonalizationSummary,
   type UserLearningProfile,
 } from './services/learning';
+// Finishing Layer - Small Joy & Signature (wiring orphaned code)
+import {
+  selectJoy,
+  injectJoy,
+  formatJoyForPrompt,
+  type JoyContext,
+  type JoySelection,
+} from './services/finishing/smallJoyEngine';
+import {
+  selectSignature,
+  appendSignature,
+  formatSignatureForPrompt,
+  type SignatureContext,
+  type SignatureSelection,
+} from './services/finishing/signatureSelector';
+// Nudge Controller (wiring orphaned code)
+import {
+  decideNudge,
+  formatNudgeForPrompt,
+  type NudgeContext,
+  type NudgeDecision,
+} from './services/nudge/nudgeController';
+// Privacy - Data Masking (wiring orphaned code)
+import {
+  maskSensitiveData,
+  containsSensitiveData,
+  maskForLogging,
+} from './services/privacy/dataMasking';
+// QA Scoring - 5-dimension quality assessment (wiring orphaned code)
+import {
+  scoreResponse as calculateQAScore,
+  meetsThreshold as qaScoreMeetsThreshold,
+  type QAScore,
+  type QAScoringContext,
+} from './services/qa/qaScoring';
+// Anti-Pattern Detector (wiring orphaned code)
+import {
+  detectAntiPatterns,
+  hasCriticalAntiPatterns,
+  type AntiPatternResult,
+} from './services/qa/antiPatternDetector';
+// Emotion Intensity Detector (wiring orphaned code)
+import {
+  detectEmotionIntensity,
+  requiresImmediateAttention as emotionRequiresAttention,
+  type IntensityResult,
+} from './services/emotion/emotionIntensity';
+// Domain Playbooks (wiring orphaned code)
+import {
+  getPlaybook,
+  detectDomain,
+  formatPlaybookForPrompt,
+  type DomainPlaybook,
+} from './services/playbooks/domainPlaybooks';
+// Token Gate - Pre-generation blocking (wiring orphaned code)
+import {
+  checkTokenGate,
+  formatGateDecision,
+  type GateDecision,
+} from './services/tokens/tokenGate';
+// Token Enforcement Agent (wiring orphaned code)
+import {
+  createTokenEnforcementAgent,
+  type TokenEnforcementRule,
+  type TokenEnforcementContext,
+} from './services/validation/tokenEnforcementAgent';
 import type { 
   FeedbackPayload, 
   SendMessageOptions, 
@@ -486,6 +552,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const convexTrainingExamples = useQuery(
     featureFlags.learning ? api.seedTrainingExamples.getHighQuality : undefined,
     featureFlags.learning ? { minScore: 4, limit: 5 } : 'skip'
+  );
+  
+  // Fetch directive overrides from Convex for constitutional AI
+  // Returns active overrides filtered by ecosystem and channel
+  const convexDirectiveOverrides = useQuery(
+    featureFlags.constitutionalWrapper ? api.seedDirectiveOverrides.getByContext : undefined,
+    featureFlags.constitutionalWrapper ? { ecosystem, channel: contentChannel } : 'skip'
+  );
+  
+  // Fetch token enforcement rules from Convex
+  // Used for post-generation validation and auto-fix
+  const convexTokenEnforcementRules = useQuery(
+    featureFlags.constitutionalWrapper ? api.tokenEnforcement.getActive : undefined,
+    featureFlags.constitutionalWrapper ? {} : 'skip'
   );
   
   // Semantic search action for RAG (called on-demand during message generation)
@@ -890,7 +970,23 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 .filter(m => m.type === 'text')
                 .slice(-10)
                 .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+              // Wire directive overrides from Convex
+              directiveOverrides: convexDirectiveOverrides?.map(o => ({
+                directiveType: o.directiveType,
+                directiveKey: o.directiveKey,
+                ecosystem: o.ecosystem,
+                channel: o.channel,
+                overrideAction: o.overrideAction,
+                overrideValue: o.overrideValue,
+                priority: o.priority,
+                reason: o.reason,
+                isActive: o.isActive,
+              })) || [],
             };
+            
+            if (convexDirectiveOverrides && convexDirectiveOverrides.length > 0) {
+              console.log(`[Constitutional] Applying ${convexDirectiveOverrides.length} directive overrides from Convex`);
+            }
             
             constitutionalContext = prepareConstitutionalContext(constitutionalRequest);
             
@@ -911,6 +1007,36 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             // Get the system prompt injection from constitutional context
             constitutionalSystemInjection = constitutionalContext.systemPromptInjection;
             console.log(`[Constitutional] Prepared context in ${constitutionalContext.metadata.processingTimeMs.toFixed(1)}ms`);
+            
+            // =====================================================================
+            // Token Gate: Pre-generation blocking based on token values
+            // Blocks dangerous requests or adds mandatory prompt modifications
+            // =====================================================================
+            if (constitutionalContext.tokens) {
+              const gateDecision = checkTokenGate(constitutionalContext.tokens);
+              console.log(`[TokenGate] ${formatGateDecision(gateDecision)}`);
+              
+              // If blocked, return pre-built response
+              if (!gateDecision.shouldProceed && gateDecision.prebuiltResponse) {
+                console.log('[TokenGate] Request blocked, using pre-built response');
+                
+                const blockedMessage = {
+                  ...createTextMessage('assistant', gateDecision.prebuiltResponse, chatMode, userMessageId),
+                  messageIntent: 'content_generation' as const,
+                  tokenGateBlocked: true,
+                  blockReason: gateDecision.reason,
+                };
+                
+                addMessage(blockedMessage);
+                return { success: true, message: 'Token gate blocked - pre-built response used' };
+              }
+              
+              // If modifications are needed, add them to constitutional injection
+              if (gateDecision.promptInjection) {
+                constitutionalSystemInjection = `${constitutionalSystemInjection}\n\n---\n\n${gateDecision.promptInjection}`;
+                console.log(`[TokenGate] Added prompt modifications for ${gateDecision.triggeringTokens.length} tokens`);
+              }
+            }
           } catch (constitutionalError) {
             // Graceful degradation - continue without constitutional context
             console.warn('[Constitutional] Context preparation failed, continuing without:', constitutionalError);
@@ -1019,6 +1145,86 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         }
         
         // =====================================================================
+        // Nudge Controller: Decide whether to include proactive suggestions
+        // Based on nudge.permission token and context sensitivity
+        // =====================================================================
+        let nudgeDecision: NudgeDecision | undefined;
+        try {
+          const nudgeContext: NudgeContext = {
+            permission: 'allowed', // Default, could come from user preferences
+            emotion: constitutionalContext?.tokens?.userEmotion || 'shanta',
+            intent: classifiedIntent || 'general',
+            resolutionStatus: constitutionalContext?.stateContext?.resolutionStatus || 'in_progress',
+            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
+            ecosystem: effectiveEcosystem,
+            userSegment: userProfile?.role,
+          };
+          
+          nudgeDecision = decideNudge(nudgeContext);
+          
+          if (nudgeDecision.shouldNudge && nudgeDecision.nudge) {
+            // Inject nudge guidance into prompt
+            const nudgePromptBlock = formatNudgeForPrompt(nudgeDecision);
+            enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${nudgePromptBlock}`;
+            console.log(`[Nudge] Including ${nudgeDecision.nudge.type} nudge: "${nudgeDecision.nudge.message.substring(0, 50)}..."`);
+          } else if (nudgeDecision.blockedBySensitivity) {
+            console.log('[Nudge] Blocked by sensitivity override');
+          }
+        } catch (nudgeError) {
+          console.warn('[Nudge] Decision failed:', nudgeError);
+        }
+        
+        // =====================================================================
+        // Domain Playbooks: Add domain-specific guidance for the ecosystem
+        // Provides vocabulary, response patterns, and tone guidance
+        // =====================================================================
+        try {
+          const detectedDomain = detectDomain(message, effectiveEcosystem);
+          const domainPlaybook = getPlaybook(detectedDomain);
+          
+          if (domainPlaybook) {
+            const playbookGuidance = formatPlaybookForPrompt(domainPlaybook, message);
+            enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${playbookGuidance}`;
+            console.log(`[Playbook] Applied ${detectedDomain} domain playbook`);
+          }
+        } catch (playbookError) {
+          console.warn('[Playbook] Failed to apply:', playbookError);
+        }
+        
+        // =====================================================================
+        // Emotion Intensity: Detect intensity and adjust response strategy
+        // =====================================================================
+        let emotionIntensityResult: IntensityResult | undefined;
+        try {
+          emotionIntensityResult = detectEmotionIntensity({
+            message,
+            emotion: constitutionalContext?.tokens?.userEmotion || 'shanta',
+            conversationHistory: chatMessages.slice(-5).map(m => ({ role: m.role, content: m.content })),
+            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
+          });
+          
+          if (emotionRequiresAttention(emotionIntensityResult)) {
+            console.warn(`[Emotion] High intensity detected (${emotionIntensityResult.intensity}), escalation may be needed`);
+          }
+          
+          // If high intensity, add strategy guidance to prompt
+          if (emotionIntensityResult.intensity === 'high' || emotionIntensityResult.intensity === 'extreme') {
+            const strategyBlock = [
+              '## emotion intensity alert',
+              `intensity: ${emotionIntensityResult.intensity}`,
+              `warmth level: ${emotionIntensityResult.strategy.warmthLevel}/4`,
+              emotionIntensityResult.strategy.leadWithEmpathy ? 'lead with empathy' : '',
+              emotionIntensityResult.strategy.offerEscalation ? 'offer escalation path' : '',
+              `suggested phrases: ${emotionIntensityResult.strategy.suggestedPhrases.slice(0, 2).join(', ')}`,
+            ].filter(Boolean).join('\n');
+            
+            enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${strategyBlock}`;
+          }
+        } catch (intensityError) {
+          console.warn('[Emotion] Intensity detection failed:', intensityError);
+        }
+        
+        // =====================================================================
         // Training Examples: Add few-shot examples (wiring orphaned code)
         // Injects high-quality verified examples for few-shot prompting
         // =====================================================================
@@ -1072,12 +1278,76 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           ['intent:content_generation']
         );
 
+        // =====================================================================
+        // Finishing Layer: Apply Small Joy & Signature (wiring orphaned code)
+        // Adds micro-uplifts and closing signatures based on context
+        // =====================================================================
+        let finishedContent = result.content;
+        let joySelection: JoySelection | undefined;
+        let signatureSelection: SignatureSelection | undefined;
+        
+        try {
+          // Build joy context from current state
+          const joyContext: JoyContext = {
+            emotion: constitutionalContext?.tokens?.userEmotion || 'shanta',
+            emotionIntensity: constitutionalContext?.tokens?.emotionIntensity || 'moderate',
+            intent: classifiedIntent || 'general',
+            topic: effectiveEcosystem,
+            ecosystem: effectiveEcosystem,
+            resolutionStatus: constitutionalContext?.stateContext?.resolutionStatus || 'in_progress',
+            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
+            isMilestone: false,
+            safetyDomain: constitutionalContext?.safetyResult?.domain,
+            riskLevel: constitutionalContext?.tokens?.risk,
+            isComplaint: classifiedIntent === 'complaint',
+            isEscalated: constitutionalContext?.stateContext?.wasEscalated || false,
+            contextEvent: undefined, // Could be 'festival' or 'cricket_match' based on context
+          };
+          
+          // Select and inject small joy if appropriate
+          joySelection = selectJoy(joyContext);
+          if (joySelection.shouldInclude && joySelection.element) {
+            finishedContent = injectJoy(finishedContent, joySelection);
+            console.log(`[Finishing] Added ${joySelection.element.type} joy at ${joySelection.element.placement}`);
+          }
+          
+          // Build signature context
+          const signatureContext: SignatureContext = {
+            resolutionStatus: constitutionalContext?.stateContext?.resolutionStatus || 'in_progress',
+            emotion: constitutionalContext?.tokens?.userEmotion || 'shanta',
+            emotionIntensity: constitutionalContext?.tokens?.emotionIntensity || 'moderate',
+            intent: classifiedIntent || 'general',
+            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
+            isLastTurn: false, // Would need external signal
+            wasEscalated: constitutionalContext?.stateContext?.wasEscalated || false,
+            channel: effectiveChannel,
+            safetyDomain: constitutionalContext?.safetyResult?.domain,
+            riskLevel: constitutionalContext?.tokens?.risk,
+            isComplaint: classifiedIntent === 'complaint',
+            isHealthContext: constitutionalContext?.safetyResult?.domain?.includes('health'),
+          };
+          
+          // Select and append signature if appropriate
+          signatureSelection = selectSignature(signatureContext);
+          if (signatureSelection.shouldInclude && signatureSelection.text) {
+            finishedContent = appendSignature(finishedContent, signatureSelection);
+            console.log(`[Finishing] Added ${signatureSelection.type} signature`);
+          }
+        } catch (finishingError) {
+          console.warn('[Finishing] Error applying finishing layer:', finishingError);
+          // Fall back to original content
+          finishedContent = result.content;
+        }
+        
+        // Update result content with finished content for validation
+        const contentForValidation = finishedContent;
+
         // Content Trust System: Validate and Score Content
         let trustScore: TrustScore | undefined;
         let validationSummary: { passedCount: number; warningCount: number; errorCount: number; autoFixesApplied: number } | undefined;
 
         try {
-          const validationResult = await runValidationPipeline(result.content, finalContext);
+          const validationResult = await runValidationPipeline(contentForValidation, finalContext);
           trustScore = calculateTrustScore(validationResult, trustSettings);
           
           validationSummary = {
@@ -1101,7 +1371,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         if (featureFlags.constitutionalWrapper && constitutionalContext) {
           try {
             const constitutionalValidation = validateConstitutionalResponse(
-              result.content,
+              contentForValidation,
               constitutionalContext
             );
             
@@ -1125,6 +1395,67 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           } catch (constitutionalValidationError) {
             console.warn('[Constitutional] Response validation failed:', constitutionalValidationError);
           }
+        }
+
+        // =====================================================================
+        // QA Scoring: 5-dimension quality assessment (wiring orphaned code)
+        // Dimensions: resolution, language, governance, experience, trust
+        // =====================================================================
+        let qaScore: QAScore | undefined;
+        try {
+          const qaScoringContext: QAScoringContext = {
+            response: contentForValidation,
+            userMessage: message,
+            intent: classifiedIntent || 'general',
+            emotion: constitutionalContext?.tokens?.userEmotion || 'neutral',
+            resolutionStatus: constitutionalContext?.stateContext?.resolutionStatus || 'in_progress',
+            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
+            wasEscalated: constitutionalContext?.stateContext?.wasEscalated || false,
+            previousResponses: chatMessages
+              .filter(m => m.role === 'assistant')
+              .slice(-3)
+              .map(m => m.content),
+          };
+          
+          qaScore = calculateQAScore(qaScoringContext);
+          
+          if (!qaScoreMeetsThreshold(qaScore, 65)) {
+            console.warn(
+              `[QA] Response scored below threshold (${qaScore.overallScore}):`,
+              qaScore.topIssues.slice(0, 3)
+            );
+          } else {
+            console.log(`[QA] Response passed quality check (${qaScore.overallScore})`);
+          }
+        } catch (qaError) {
+          console.warn('[QA] Scoring failed:', qaError);
+        }
+
+        // =====================================================================
+        // Anti-Pattern Detection: Structural, language, trust, emotional issues
+        // =====================================================================
+        let antiPatternResult: AntiPatternResult | undefined;
+        try {
+          antiPatternResult = detectAntiPatterns({
+            response: contentForValidation,
+            userEmotion: constitutionalContext?.tokens?.userEmotion,
+            intent: classifiedIntent,
+            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
+          });
+          
+          if (antiPatternResult.hasAntiPatterns) {
+            console.warn(
+              `[AntiPattern] Detected ${antiPatternResult.totalCount} issues:`,
+              antiPatternResult.patterns.slice(0, 3).map(p => p.name)
+            );
+            
+            // Critical patterns could trigger regeneration in future
+            if (hasCriticalAntiPatterns(contentForValidation)) {
+              console.error('[AntiPattern] CRITICAL patterns detected - consider regeneration');
+            }
+          }
+        } catch (antiPatternError) {
+          console.warn('[AntiPattern] Detection failed:', antiPatternError);
         }
 
         // =================================================================
@@ -1166,11 +1497,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               const fixes = generateAutoFixes(autoFixableViolations, dynamicReplacements);
               console.log('[AutoFix] Generated fixes:', fixes);
               
-              const fixResult = applyAutoFixes(result.content, fixes);
+              const fixResult = applyAutoFixes(contentForValidation, fixes);
               console.log('[AutoFix] Applied fixes:', {
                 totalGenerated: fixes.length,
                 appliedCount: fixResult.appliedFixes.length,
-                originalLength: result.content.length,
+                originalLength: contentForValidation.length,
                 fixedLength: fixResult.fixedContent.length,
               });
               
@@ -1178,7 +1509,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               if (fixResult.appliedFixes.length > 0) {
                 // Auto-accept all fixes - no manual intervention needed
                 autoFixPreview = {
-                  originalContent: result.content,
+                  originalContent: contentForValidation,
                   fixedContent: fixResult.fixedContent,
                   appliedFixes: fixResult.appliedFixes,
                   isPending: false,  // Auto-accepted, not pending
@@ -1203,11 +1534,30 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         }
 
         // Determine which content to use - fixed content if auto-fix was applied
-        const finalContent = autoFixPreview?.fixedContent ?? result.content;
+        const finalContent = autoFixPreview?.fixedContent ?? contentForValidation;
+
+        // =====================================================================
+        // Privacy: Mask any sensitive data in the response (wiring orphaned code)
+        // Protects PII, Aadhaar, PAN, credit cards, etc.
+        // =====================================================================
+        let privacyMaskedContent = finalContent;
+        try {
+          if (containsSensitiveData(finalContent)) {
+            const maskResult = maskSensitiveData(finalContent);
+            if (maskResult.wasModified) {
+              privacyMaskedContent = maskResult.maskedText;
+              console.log(`[Privacy] Masked ${maskResult.sensitiveDataFound.length} sensitive items:`, 
+                maskResult.sensitiveDataFound.map(d => d.type));
+            }
+          }
+        } catch (privacyError) {
+          console.warn('[Privacy] Error masking sensitive data:', privacyError);
+          privacyMaskedContent = finalContent;
+        }
 
         // Create AI response with trust data, intent tag, and auto-fix preview
         const aiMessage = {
-          ...createTextMessage('assistant', finalContent, chatMode, userMessageId),
+          ...createTextMessage('assistant', privacyMaskedContent, chatMode, userMessageId),
           messageIntent: 'content_generation' as const,
           trustScore,
           generationContext: finalContext,
@@ -1319,6 +1669,57 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           [`intent:${intentClassification.intent}`]
         );
 
+        // =====================================================================
+        // Finishing Layer: Apply Small Joy & Signature (conversational path)
+        // =====================================================================
+        let conversationalFinishedContent = result.content;
+        
+        try {
+          // Build lightweight context for finishing layer
+          const conversationalJoyContext: JoyContext = {
+            emotion: 'shanta', // Default for conversational
+            intent: intentClassification.intent,
+            topic: intentClassification.detectedEcosystem?.ecosystem || 'general',
+            ecosystem: intentClassification.detectedEcosystem?.ecosystem || 'general',
+            resolutionStatus: 'in_progress',
+            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
+            isMilestone: false,
+            safetyDomain: undefined,
+            riskLevel: 'low',
+            isComplaint: intentClassification.intent === 'complaint',
+            isEscalated: false,
+          };
+          
+          // Select and inject small joy if appropriate
+          const conversationalJoy = selectJoy(conversationalJoyContext);
+          if (conversationalJoy.shouldInclude && conversationalJoy.element) {
+            conversationalFinishedContent = injectJoy(conversationalFinishedContent, conversationalJoy);
+            console.log(`[Finishing] Conversational: Added ${conversationalJoy.element.type} joy`);
+          }
+          
+          // Build signature context for conversational
+          const conversationalSignatureContext: SignatureContext = {
+            resolutionStatus: 'in_progress',
+            emotion: 'shanta',
+            intent: intentClassification.intent,
+            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
+            isLastTurn: false,
+            wasEscalated: false,
+            channel: contentChannel,
+            isComplaint: intentClassification.intent === 'complaint',
+          };
+          
+          // Select and append signature if appropriate
+          const conversationalSignature = selectSignature(conversationalSignatureContext);
+          if (conversationalSignature.shouldInclude && conversationalSignature.text) {
+            conversationalFinishedContent = appendSignature(conversationalFinishedContent, conversationalSignature);
+            console.log(`[Finishing] Conversational: Added ${conversationalSignature.type} signature`);
+          }
+        } catch (finishingError) {
+          console.warn('[Finishing] Conversational error:', finishingError);
+          conversationalFinishedContent = result.content;
+        }
+
         // P0-FIX: Run lightweight validation on conversational content
         // This catches safety issues that could slip through in chat mode
         let conversationalTrustScore: TrustScore | undefined;
@@ -1340,7 +1741,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
             // Run validation pipeline
             const validationResults = await runValidationPipeline(
-              result.content,
+              conversationalFinishedContent,
               minimalContext
             );
 
@@ -1385,13 +1786,13 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               
               // Generate and apply fixes to create preview
               const fixes = generateAutoFixes(autoFixableViolations, dynamicReplacements);
-              const fixResult = applyAutoFixes(result.content, fixes);
+              const fixResult = applyAutoFixes(conversationalFinishedContent, fixes);
               
               // Only show preview if fixes were actually applied
               if (fixResult.appliedFixes.length > 0) {
                 // Auto-accept all fixes - no manual intervention needed
                 conversationalAutoFixPreview = {
-                  originalContent: result.content,
+                  originalContent: conversationalFinishedContent,
                   fixedContent: fixResult.fixedContent,
                   appliedFixes: fixResult.appliedFixes,
                   isPending: false,  // Auto-accepted, not pending
@@ -1410,11 +1811,28 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         }
 
         // Determine which content to use - fixed content if auto-fix was applied
-        const finalConversationalContent = conversationalAutoFixPreview?.fixedContent ?? result.content;
+        const finalConversationalContent = conversationalAutoFixPreview?.fixedContent ?? conversationalFinishedContent;
+
+        // =====================================================================
+        // Privacy: Mask any sensitive data in conversational response
+        // =====================================================================
+        let privacyMaskedConversational = finalConversationalContent;
+        try {
+          if (containsSensitiveData(finalConversationalContent)) {
+            const maskResult = maskSensitiveData(finalConversationalContent);
+            if (maskResult.wasModified) {
+              privacyMaskedConversational = maskResult.maskedText;
+              console.log(`[Privacy] Conversational: Masked ${maskResult.sensitiveDataFound.length} items`);
+            }
+          }
+        } catch (privacyError) {
+          console.warn('[Privacy] Conversational masking error:', privacyError);
+          privacyMaskedConversational = finalConversationalContent;
+        }
 
         // Create AI response -- now WITH optional trustScore and autoFixPreview
         const aiMessage = {
-          ...createTextMessage('assistant', finalConversationalContent, chatMode, userMessageId),
+          ...createTextMessage('assistant', privacyMaskedConversational, chatMode, userMessageId),
           messageIntent: intentClassification.intent,
           ...(conversationalTrustScore && { trustScore: conversationalTrustScore }),
           ...(conversationalAutoFixPreview && { autoFixPreview: conversationalAutoFixPreview }),

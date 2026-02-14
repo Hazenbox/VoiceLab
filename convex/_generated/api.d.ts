@@ -23,6 +23,7 @@ import type * as seed from "../seed.js";
 import type * as seedDirectiveOverrides from "../seedDirectiveOverrides.js";
 import type * as seedTrainingExamples from "../seedTrainingExamples.js";
 import type * as sessions from "../sessions.js";
+import type * as tokenEnforcement from "../tokenEnforcement.js";
 import type * as userProfiles from "../userProfiles.js";
 import type * as users from "../users.js";
 
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   seedDirectiveOverrides: typeof seedDirectiveOverrides;
   seedTrainingExamples: typeof seedTrainingExamples;
   sessions: typeof sessions;
+  tokenEnforcement: typeof tokenEnforcement;
   userProfiles: typeof userProfiles;
   users: typeof users;
 }>;

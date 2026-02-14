@@ -387,4 +387,42 @@ export default defineSchema({
     .index("by_deviceId", ["deviceId"])
     .index("by_correctionFrequency", ["correctionFrequency"])
     .index("by_lastAggregatedAt", ["lastAggregatedAt"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TOKEN ENFORCEMENT RULES
+  // Rules that enforce content compliance based on token values
+  // ═══════════════════════════════════════════════════════════════════════════
+  tokenEnforcementRules: defineTable({
+    // Token matching
+    tokenKey: v.string(),           // e.g., "nudge.permission", "safety.level", "channel.type"
+    tokenValue: v.string(),         // e.g., "blocked", "critical", "sms"
+    
+    // Rule definition
+    ruleType: v.string(),           // "must_contain" | "must_not_contain" | "pattern_required" | "pattern_forbidden" | "max_length" | "min_empathy"
+    patterns: v.array(v.string()),  // Regex patterns or keywords to check
+    
+    // Auto-fix configuration
+    autoFixAction: v.optional(v.string()), // "remove" | "replace" | "add_disclaimer" | "truncate" | "rephrase"
+    autoFixValue: v.optional(v.string()),  // Replacement text, disclaimer, or rephrase guidance
+    
+    // Rule metadata
+    severity: v.string(),           // "error" | "warning" | "info"
+    errorMessage: v.string(),       // Human-readable violation message
+    category: v.optional(v.string()), // "safety" | "nudge" | "channel" | "emotion" | "signature" | "brand"
+    
+    // Status
+    isActive: v.boolean(),
+    priority: v.number(),           // Higher = checked first (allows rule override)
+    
+    // Audit
+    createdBy: v.optional(v.string()), // deviceId of creator
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_token", ["tokenKey", "tokenValue"])
+    .index("by_tokenKey", ["tokenKey"])
+    .index("by_active", ["isActive"])
+    .index("by_priority", ["priority"])
+    .index("by_category", ["category"])
+    .index("by_ruleType", ["ruleType"]),
 });

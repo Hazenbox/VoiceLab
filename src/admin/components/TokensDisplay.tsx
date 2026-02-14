@@ -1,7 +1,7 @@
 /**
- * Tokens v2 Display Component
+ * Tokens Display Component
  * 
- * Displays all 50+ tokens from the Tokens v2 specification with:
+ * Displays all 50+ tokens from the Tokens specification with:
  * - Grouped by category (Routing, Safety, Nudge, User, Context, Emotion, etc.)
  * - Collapsible sections
  * - Search/filter functionality
@@ -1036,7 +1036,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
               className="text-xl font-semibold"
               style={{ color: theme.text.high }}
             >
-              tokens v2 specification
+              tokens specification
             </h1>
             <p
               className="text-sm mt-1"
