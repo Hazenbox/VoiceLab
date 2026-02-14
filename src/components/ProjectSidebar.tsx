@@ -171,6 +171,7 @@ const ProjectMenu = memo(function ProjectMenu({
         size="XS"
         appearance="neutral"
         attention="low"
+        single
         aria-label="Project options"
         aria-haspopup="menu"
         aria-expanded={isOpen}
