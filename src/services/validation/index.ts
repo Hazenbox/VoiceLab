@@ -35,3 +35,16 @@ export {
   setDynamicAvoidWords,
   clearDynamicAvoidWords,
 } from './agents/avoidWordsAgent';
+
+// Token Enforcement Agent (wiring orphaned code)
+export {
+  createTokenEnforcementAgent,
+  validateWithTokenRules,
+  getAutoFixActionsFromViolations,
+} from './tokenEnforcementAgent';
+
+export type {
+  TokenEnforcementRule,
+  ActiveTokens,
+  TokenEnforcementContext,
+} from './tokenEnforcementAgent';

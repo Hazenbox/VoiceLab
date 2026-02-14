@@ -118,3 +118,13 @@ export {
   type EstimationInput,
   type ModelType,
 } from './tokenEstimator';
+
+// Token Gate - Pre-generation blocking
+export {
+  checkTokenGate,
+  formatGateDecision,
+  hasBlockingTokens,
+  DEFAULT_GATE_RULES,
+  type GateDecision,
+  type GateRule,
+} from './tokenGate';
