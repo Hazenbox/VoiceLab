@@ -89,7 +89,7 @@ const SidebarItem = memo(function SidebarItem({
       onMouseLeave={() => setIsHovered(false)}
     >
       {icon && (
-        <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center">{icon}</span>
+        <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">{icon}</span>
       )}
       <Text size="S" weight="low">
         {label}
@@ -420,19 +420,24 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     {
       value: 'edit-profile',
       label: 'Edit Profile',
-      icon: <DSIcon name="IcUser" size="XS" attention="medium" />,
+      icon: <DSIcon name="IcUser" size="S" attention="medium" />,
     },
     ...(onNavigateToDesignSystem ? [{
       value: 'design-system',
       label: 'Design System',
-      icon: <DSIcon name="IcLayout" size="XS" attention="medium" />,
+      icon: <DSIcon name="IcLayout" size="S" attention="medium" />,
+    }] : []),
+    ...(onNavigateToHowItWorks ? [{
+      value: 'how-it-works',
+      label: 'How it Works',
+      icon: <DSIcon name="IcLightbulb" size="S" attention="high" />,
     }] : []),
     {
       value: 'toggle-theme',
       label: `${colorMode === 'Light' ? 'Dark' : 'Light'} Mode`,
       icon: colorMode === 'Light' 
-        ? <DSIcon name="IcNightClear" size="XS" attention="medium" />
-        : <DSIcon name="IcSunnyClear" size="XS" attention="medium" />,
+        ? <DSIcon name="IcNightClear" size="S" attention="medium" />
+        : <DSIcon name="IcSunnyClear" size="S" attention="medium" />,
     },
   ];
 
@@ -445,12 +450,15 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       case 'design-system':
         onNavigateToDesignSystem?.();
         break;
+      case 'how-it-works':
+        onNavigateToHowItWorks?.();
+        break;
       case 'toggle-theme':
         onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light');
         break;
     }
     setIsUserMenuOpen(false);
-  }, [onEditProfile, onNavigateToDesignSystem, onColorModeChange, colorMode]);
+  }, [onEditProfile, onNavigateToDesignSystem, onNavigateToHowItWorks, onColorModeChange, colorMode]);
 
   return (
     <aside 
@@ -551,17 +559,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       {/* Bottom Navigation */}
       <Divider attention="low" />
       <div className="p-2.5 space-y-0.5">
-        {/* How it Works Nav Item */}
-        {onNavigateToHowItWorks && (
-          <SidebarNavItem
-            icon={<DSIcon name="IcLightbulb" size="S" attention="high" />}
-            label="How it Works"
-            onClick={onNavigateToHowItWorks}
-            isActive={isHowItWorksActive}
-            ariaLabel="Learn how the system works"
-          />
-        )}
-
         {/* User Profile Menu */}
         {userName && onEditProfile && (
           <div ref={userMenuContainerRef} className="relative">
@@ -603,7 +600,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           {/* Dropdown Menu */}
           {isUserMenuOpen && (
             <div
-              className="absolute z-50 w-[219px] rounded-lg overflow-hidden py-1 right-0 bottom-full mb-1"
+              className="absolute z-50 w-[219px] rounded-lg overflow-hidden p-1 right-0 bottom-full mb-1"
               style={{
                 backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
                 border: `1px solid ${theme.stroke.low}`,
