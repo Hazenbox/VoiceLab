@@ -523,11 +523,10 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             ariaLabel="Learn how the system works"
           />
         )}
-      </div>
 
-      {/* User Profile Menu - Bottommost */}
-      {userName && onEditProfile && (
-        <div ref={userMenuContainerRef} className="px-2 py-1 relative">
+        {/* User Profile Menu */}
+        {userName && onEditProfile && (
+          <div ref={userMenuContainerRef} className="relative">
           <button
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             onMouseEnter={() => setIsUserProfileHovered(true)}
@@ -604,8 +603,9 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               ))}
             </div>
           )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </aside>
   );
 });
