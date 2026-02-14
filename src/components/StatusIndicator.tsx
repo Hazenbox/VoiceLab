@@ -1,37 +1,38 @@
 import React from 'react';
 import { AppState } from '../types';
 import { DSIcon } from './DSIcon';
+import { SEMANTIC_COLORS } from '../theme';
 
 interface StatusIndicatorProps {
   state: AppState;
 }
 
-// Status colors - using direct colors for semantic states
+// Status colors - using SEMANTIC_COLORS from DS tokens
 const stateStyles: Record<AppState, { label: string; textColor: string; bgColor: string }> = {
   [AppState.IDLE]: {
     label: 'Ready',
-    textColor: '#52525b', // zinc-600
-    bgColor: '#f4f4f5', // zinc-100
+    textColor: '#52525b',
+    bgColor: '#f4f4f5',
   },
   [AppState.CONNECTING]: {
     label: 'Connecting...',
-    textColor: '#2563eb', // blue-600
-    bgColor: '#dbeafe', // blue-100
+    textColor: SEMANTIC_COLORS.informative,
+    bgColor: `${SEMANTIC_COLORS.informative}1A`,
   },
   [AppState.LISTENING]: {
     label: 'Listening',
-    textColor: '#16a34a', // green-600
-    bgColor: '#dcfce7', // green-100
+    textColor: SEMANTIC_COLORS.positive,
+    bgColor: `${SEMANTIC_COLORS.positive}1A`,
   },
   [AppState.SPEAKING]: {
     label: 'Speaking',
-    textColor: '#ea580c', // orange-600
-    bgColor: '#ffedd5', // orange-100
+    textColor: SEMANTIC_COLORS.warning,
+    bgColor: `${SEMANTIC_COLORS.warning}1A`,
   },
   [AppState.ERROR]: {
     label: 'Error',
-    textColor: '#dc2626', // red-600
-    bgColor: '#fee2e2', // red-100
+    textColor: SEMANTIC_COLORS.negative,
+    bgColor: `${SEMANTIC_COLORS.negative}1A`,
   },
 };
 
@@ -73,13 +74,13 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({ state }) => {
           <span
             className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
             style={{
-              backgroundColor: state === AppState.LISTENING ? '#00A85980' : '#fb923c',
+              backgroundColor: state === AppState.LISTENING ? `${SEMANTIC_COLORS.positive}80` : `${SEMANTIC_COLORS.warning}80`,
             }}
           />
           <span
             className="relative inline-flex rounded-full h-1.5 w-1.5"
             style={{
-              backgroundColor: state === AppState.LISTENING ? '#00A859' : '#f97316',
+              backgroundColor: state === AppState.LISTENING ? SEMANTIC_COLORS.positive : SEMANTIC_COLORS.warning,
             }}
           />
         </span>

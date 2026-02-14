@@ -49,7 +49,7 @@ const ScoreIndicator: React.FC<{
       <span className="text-sm" style={{ color: theme.text.high }}>{label}</span>
       <div className="flex items-center gap-2">
         {violations > 0 && (
-          <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+          <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: `${SEMANTIC_COLORS.negative}1A`, color: SEMANTIC_COLORS.negative }}>
             {violations}
           </span>
         )}
@@ -61,7 +61,7 @@ const ScoreIndicator: React.FC<{
 
 const ViolationItem: React.FC<{ violation: Violation }> = ({ violation }) => {
   const theme = useThemeColors();
-  const severityColors = { error: '#f97316', warning: '#eab308', info: '#3b82f6' };
+  const severityColors = { error: SEMANTIC_COLORS.negative, warning: SEMANTIC_COLORS.warning, info: SEMANTIC_COLORS.informative };
   
   return (
     <div className="p-3 rounded-lg mb-2" style={{ backgroundColor: theme.stroke.low }}>
@@ -113,9 +113,9 @@ const DetectedProductBadge: React.FC<{
   }
   
   const confidenceColors = {
-    high: '#00A859',
-    medium: '#eab308',
-    low: '#f97316',
+    high: SEMANTIC_COLORS.positive,
+    medium: SEMANTIC_COLORS.warning,
+    low: SEMANTIC_COLORS.negative,
   };
   
   return (
@@ -138,8 +138,8 @@ const DetectedProductBadge: React.FC<{
         <span 
           className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1"
           style={{ 
-            backgroundColor: 'rgba(234, 179, 8, 0.15)',
-            color: '#eab308',
+            backgroundColor: `${SEMANTIC_COLORS.warning}26`,
+            color: SEMANTIC_COLORS.warning,
           }}
         >
           <DSIcon name="IcWarning" size="XS" attention="medium" />
@@ -304,7 +304,7 @@ const ValidationAgentItem: React.FC<{ validation: ValidationAgentSummary }> = ({
         <span 
           className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
           style={{ 
-            backgroundColor: isPerfect ? '#00A859' : '#eab308',
+            backgroundColor: isPerfect ? SEMANTIC_COLORS.positive : SEMANTIC_COLORS.warning,
             color: '#ffffff',
           }}
         >
@@ -475,7 +475,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                 {tab}
                 {tab === 'violations' && allViolations.length > 0 && (
                   <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px]"
-                    style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                    style={{ backgroundColor: `${SEMANTIC_COLORS.negative}1A`, color: SEMANTIC_COLORS.negative }}>
                     {allViolations.length}
                   </span>
                 )}

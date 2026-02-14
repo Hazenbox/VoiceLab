@@ -232,7 +232,7 @@ export const MessageFeedback = memo(function MessageFeedback({
           aria-label="Thumbs up"
           title="Good response"
           className="p-1.5 rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-40"
-          style={{ color: activeAction === 'thumbs_up' ? '#22c55e' : theme.text.low }}
+          style={{ color: activeAction === 'thumbs_up' ? SEMANTIC_COLORS.positive : theme.text.low }}
         >
           <ThumbsUpIcon filled={submitted === 'thumbs_up'} />
         </button>
