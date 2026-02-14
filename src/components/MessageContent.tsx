@@ -107,9 +107,10 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     ),
 
     // Lists - use list-outside with padding for proper sequential numbering
+    // Nested ul (inside li) gets reduced margins for proper hierarchy
     ul: ({ children }) => (
       <ul 
-        className="list-disc pl-5 mb-2 space-y-1"
+        className="list-disc pl-5 mb-2 space-y-1 [li_>&]:mt-1 [li_>&]:mb-0"
         style={{ color: theme.text.high }}
       >
         {children}
@@ -245,6 +246,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
  * - Fixes numbered lists broken by blank lines (including nested bullets)
  * - Handles: "1. Title\n- bullet\n\n1. Title" -> continuous list
  * - Renumbers lists where LLMs output "1. 1. 1." instead of "1. 2. 3."
+ * - Indents bullets under numbered items to create proper nested lists
  */
 function normalizeMarkdown(content: string): string {
   // Step 1: Normalize multiple blank lines to single blank line
@@ -264,8 +266,8 @@ function normalizeMarkdown(content: string): string {
     '$1\n'
   );
   
-  // Step 3: Fix sequential numbering - renumber lists where LLMs output "1. 1. 1."
-  // Split content into lines, track and renumber consecutive numbered list items
+  // Step 3: Fix sequential numbering AND indent bullets under numbered items
+  // This ensures react-markdown parses bullets as nested lists, not separate lists
   const lines = normalized.split('\n');
   let listCounter = 0;
   let inNumberedList = false;
@@ -273,6 +275,8 @@ function normalizeMarkdown(content: string): string {
   const fixedLines = lines.map((line) => {
     // Check if line starts with a number followed by ". " (numbered list item)
     const numberedMatch = line.match(/^(\d+)\.\s(.*)$/);
+    // Check if line is a bullet (not already indented)
+    const bulletMatch = line.match(/^[-*]\s/);
     
     if (numberedMatch) {
       // This is a numbered list item
@@ -286,12 +290,18 @@ function normalizeMarkdown(content: string): string {
       }
       // Replace the number with the correct sequential number
       return `${listCounter}. ${numberedMatch[2]}`;
+    } else if (bulletMatch && inNumberedList) {
+      // Indent bullet to make it a nested list under the numbered item
+      // This prevents react-markdown from creating separate <ol> elements
+      return '   ' + line;
+    } else if (line.trim() === '') {
+      // Empty line - keep tracking but don't reset yet
+      return line;
     } else {
       // Check if this line breaks the numbered list
-      // A blank line or a line that's not indented content breaks the list
-      const isNestedContent = line.match(/^(\s+[-*]\s|$|\s{2,})/);
-      if (!isNestedContent && line.trim() !== '' && !line.match(/^[-*]\s/)) {
-        // Non-list content that's not nested - reset the list
+      // Non-indented, non-list content resets the list
+      const isIndentedContent = line.match(/^\s+/);
+      if (!isIndentedContent && !line.match(/^[-*]\s/)) {
         inNumberedList = false;
         listCounter = 0;
       }
