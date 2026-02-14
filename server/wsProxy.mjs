@@ -53,6 +53,7 @@ if (!HUGGINGFACE_API_KEY) {
 
 /**
  * HTTP Proxy Handler for LLM requests
+ * Supports both streaming (SSE) and non-streaming responses
  */
 async function handleLLMProxy(req, res) {
   // Set CORS headers
@@ -92,12 +93,14 @@ async function handleLLMProxy(req, res) {
     let requestData;
     try {
       requestData = JSON.parse(body);
-      console.log('[Proxy] LLM Request model:', requestData.model);
+      console.log('[Proxy] LLM Request model:', requestData.model, 'stream:', requestData.stream);
     } catch (error) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Invalid JSON' }));
       return;
     }
+    
+    const isStreaming = requestData.stream === true;
     
     // Convert to DashScope format
     const dashscopeRequest = {
@@ -108,35 +111,141 @@ async function handleLLMProxy(req, res) {
       parameters: {
         max_tokens: requestData.maxTokens || 150,
         temperature: requestData.temperature || 0.7,
-        result_format: 'message'
+        result_format: 'message',
+        // Enable incremental output for streaming
+        ...(isStreaming && { incremental_output: true })
       }
     };
     
     const postData = JSON.stringify(dashscopeRequest);
     
     // Prepare request options
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${DASHSCOPE_API_KEY}`,
+      'Content-Length': Buffer.byteLength(postData),
+    };
+    
+    // Add SSE header for streaming
+    if (isStreaming) {
+      headers['X-DashScope-SSE'] = 'enable';
+    }
+    
     const options = {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DASHSCOPE_API_KEY}`,
-        'Content-Length': Buffer.byteLength(postData),
-      },
+      headers,
       rejectUnauthorized: false
     };
     
-    console.log('[Proxy] Forwarding to DashScope LLM endpoint');
+    console.log('[Proxy] Forwarding to DashScope LLM endpoint', isStreaming ? '(streaming)' : '(non-streaming)');
     
     // Forward request to DashScope
     const proxyReq = https.request(DASHSCOPE_LLM_HTTP_ENDPOINT, options, (proxyRes) => {
       console.log('[Proxy] DashScope LLM response status:', proxyRes.statusCode);
       
-      // Set response headers
-      res.setHeader('Content-Type', 'application/json');
-      res.writeHead(proxyRes.statusCode);
-      
-      // Pipe the response back to the client
-      proxyRes.pipe(res);
+      if (isStreaming) {
+        // Set SSE headers for streaming response
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no');
+        res.writeHead(proxyRes.statusCode);
+        
+        let buffer = '';
+        
+        proxyRes.on('data', (chunk) => {
+          buffer += chunk.toString();
+          
+          // Process complete lines from buffer
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+          
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            
+            // DashScope SSE format: "data: {...json...}"
+            if (trimmed.startsWith('data:')) {
+              const jsonStr = trimmed.slice(5).trim();
+              if (jsonStr === '[DONE]') {
+                res.write('data: [DONE]\n\n');
+                continue;
+              }
+              
+              try {
+                const chunk = JSON.parse(jsonStr);
+                // Convert DashScope format to OpenAI-compatible format for client
+                // DashScope can return content in different places depending on result_format:
+                // - output.text (text format)
+                // - output.choices[0].message.content (message format)
+                const content = chunk?.output?.text ||
+                                chunk?.output?.choices?.[0]?.message?.content ||
+                                '';
+                const finishReason = chunk?.output?.choices?.[0]?.finish_reason ||
+                                     chunk?.output?.finish_reason;
+                
+                // Only send chunks with actual content or finish reason
+                if (content || finishReason) {
+                  const sseData = {
+                    choices: [{
+                      delta: { content },
+                      finish_reason: finishReason || null,
+                    }],
+                  };
+                  res.write(`data: ${JSON.stringify(sseData)}\n\n`);
+                }
+              } catch {
+                // If not valid JSON, forward as-is
+                res.write(`data: ${jsonStr}\n\n`);
+              }
+            }
+          }
+        });
+        
+        proxyRes.on('end', () => {
+          // Process any remaining buffer
+          if (buffer.trim()) {
+            const trimmed = buffer.trim();
+            if (trimmed.startsWith('data:')) {
+              const jsonStr = trimmed.slice(5).trim();
+              if (jsonStr !== '[DONE]') {
+                try {
+                  const chunk = JSON.parse(jsonStr);
+                  const content = chunk?.output?.text ||
+                                  chunk?.output?.choices?.[0]?.message?.content ||
+                                  '';
+                  const finishReason = chunk?.output?.choices?.[0]?.finish_reason ||
+                                       chunk?.output?.finish_reason;
+                  if (content || finishReason) {
+                    const sseData = {
+                      choices: [{
+                        delta: { content },
+                        finish_reason: finishReason || null,
+                      }],
+                    };
+                    res.write(`data: ${JSON.stringify(sseData)}\n\n`);
+                  }
+                } catch {
+                  // Ignore parsing errors for final buffer
+                }
+              }
+            }
+          }
+          res.write('data: [DONE]\n\n');
+          res.end();
+        });
+        
+        proxyRes.on('error', (error) => {
+          console.error('[Proxy] Streaming response error:', error.message);
+          res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+          res.end();
+        });
+      } else {
+        // Non-streaming: pipe response directly
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(proxyRes.statusCode);
+        proxyRes.pipe(res);
+      }
     });
     
     proxyReq.on('error', (error) => {
