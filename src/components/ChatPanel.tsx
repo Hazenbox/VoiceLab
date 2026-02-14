@@ -26,6 +26,111 @@ import { Button } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
 // =============================================================================
+// Streaming Text Hook - ChatGPT-like word-by-word animation
+// =============================================================================
+
+/**
+ * Custom hook for ChatGPT-like word-by-word streaming animation.
+ * Reveals text progressively with ~35ms delay between words.
+ */
+const useStreamingText = (fullText: string, isStreaming: boolean) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [isComplete, setIsComplete] = useState(false);
+  const lastFullTextRef = useRef('');
+  const displayedIndexRef = useRef(0);
+  
+  useEffect(() => {
+    // If not streaming, show full text immediately
+    if (!isStreaming) {
+      setDisplayedText(fullText);
+      setIsComplete(true);
+      lastFullTextRef.current = fullText;
+      displayedIndexRef.current = fullText.length;
+      return;
+    }
+    
+    // If fullText is empty, reset state
+    if (!fullText) {
+      setDisplayedText('');
+      setIsComplete(false);
+      lastFullTextRef.current = '';
+      displayedIndexRef.current = 0;
+      return;
+    }
+    
+    // Check if this is new streaming content (fullText changed)
+    // We only animate new words, not the whole text
+    const isNewContent = fullText !== lastFullTextRef.current;
+    
+    if (isNewContent) {
+      lastFullTextRef.current = fullText;
+      
+      // If the new text is longer, we need to animate the new portion
+      // Split by words while preserving whitespace
+      const words = fullText.split(/(\s+)/);
+      const currentWords = displayedText.split(/(\s+)/);
+      
+      // Start from where we left off
+      let startIndex = currentWords.length;
+      
+      // If completely new content (reset), start from 0
+      if (!displayedText || !fullText.startsWith(displayedText.substring(0, Math.min(displayedText.length, 10)))) {
+        startIndex = 0;
+        setDisplayedText('');
+        displayedIndexRef.current = 0;
+      }
+      
+      // Animate remaining words
+      let currentIndex = startIndex;
+      
+      const interval = setInterval(() => {
+        if (currentIndex < words.length) {
+          setDisplayedText(words.slice(0, currentIndex + 1).join(''));
+          displayedIndexRef.current = currentIndex + 1;
+          currentIndex++;
+        } else {
+          setIsComplete(true);
+          clearInterval(interval);
+        }
+      }, 35); // ~35ms per word for ChatGPT-like feel
+      
+      return () => clearInterval(interval);
+    }
+  }, [fullText, isStreaming, displayedText]);
+  
+  // Reset when streaming starts fresh
+  useEffect(() => {
+    if (isStreaming && !fullText) {
+      setDisplayedText('');
+      setIsComplete(false);
+    }
+  }, [isStreaming, fullText]);
+  
+  return { displayedText, isComplete };
+};
+
+// =============================================================================
+// Typing Cursor Component - Slim blinking cursor
+// =============================================================================
+
+/**
+ * Slim typing cursor (1.5px width) that pulses at end of streaming text.
+ */
+const TypingCursor = memo(function TypingCursor() {
+  const theme = useThemeColors();
+  return (
+    <span 
+      className="inline-block w-[1.5px] h-[1em] ml-0.5 animate-pulse"
+      style={{ 
+        backgroundColor: theme.accent,
+        verticalAlign: 'text-bottom',
+      }}
+      aria-hidden="true"
+    />
+  );
+});
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -177,10 +282,16 @@ export const ChatPanel = memo(function ChatPanel({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // ChatGPT-like word-by-word streaming animation for AI responses
+  const { displayedText: streamingDisplayText, isComplete: streamingComplete } = useStreamingText(
+    streamingAIResponse || '',
+    isLoading && !!streamingAIResponse
+  );
+
   // Auto-scroll to bottom when new messages arrive or streaming content updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, streamingUserTranscript, streamingAIResponse]);
+  }, [messages, streamingUserTranscript, streamingAIResponse, streamingDisplayText]);
 
   // Handle form submission
   const handleSubmit = useCallback(() => {
@@ -714,18 +825,17 @@ export const ChatPanel = memo(function ChatPanel({
                   </div>
                 )}
                 
-                {/* Streaming AI Response (while AI is responding) */}
+                {/* Streaming AI Response (while AI is responding) - ChatGPT-like animation */}
                 {streamingAIResponse && (
                   <div className="flex justify-start" role="listitem">
                     <div 
                       className="max-w-[80%] px-3 py-2"
                       style={{ color: theme.text.high }}
                     >
-                      <span>{streamingAIResponse}</span>
-                      <span 
-                        className="inline-block w-2 h-4 ml-1 align-middle animate-pulse rounded-sm"
-                        style={{ backgroundColor: theme.accent }}
-                      />
+                      {/* Render markdown progressively as it streams */}
+                      <MessageContent content={streamingDisplayText} role="assistant" />
+                      {/* Show slim cursor while streaming, hide when complete */}
+                      {!streamingComplete && streamingDisplayText && <TypingCursor />}
                     </div>
                   </div>
                 )}
