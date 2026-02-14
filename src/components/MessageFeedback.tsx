@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect, memo } from 'react';
-import { useThemeColors } from '../theme';
+import { useThemeColors, SEMANTIC_COLORS } from '../theme';
 import { DSIcon } from './DSIcon';
 
 // ── Types (DEPRECATED - use types from '../types' instead) ───────
@@ -244,7 +244,7 @@ export const MessageFeedback = memo(function MessageFeedback({
           aria-label="Thumbs down"
           title="Bad response"
           className="p-1.5 rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-40"
-          style={{ color: activeAction === 'thumbs_down' ? '#ef4444' : theme.text.low }}
+          style={{ color: activeAction === 'thumbs_down' ? SEMANTIC_COLORS.negative : theme.text.low }}
         >
           <ThumbsDownIcon filled={submitted === 'thumbs_down'} />
         </button>
@@ -306,7 +306,7 @@ export const MessageFeedback = memo(function MessageFeedback({
             onClick={handleThumbsDown}
             aria-label="Submit feedback"
             className="p-1 rounded-md transition-colors hover:bg-black/5"
-            style={{ color: '#ef4444' }}
+            style={{ color: SEMANTIC_COLORS.negative }}
           >
             <CheckIcon />
           </button>

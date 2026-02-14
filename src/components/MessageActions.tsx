@@ -23,6 +23,9 @@ import { DSIcon } from './DSIcon';
 import { getSessionManager } from '../services/analytics';
 import { featureFlags } from '../services/featureFlags';
 
+/** Brand accent for active feedback states */
+const BRAND_ACCENT = '#f97316';
+
 // ============================================================================
 // Types (exported for external use)
 // ============================================================================
@@ -84,9 +87,9 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   const showLike = !feedbackGiven || feedbackGiven === 'like';
   const showDislike = !feedbackGiven || feedbackGiven === 'dislike';
   
-  // Icon colors: orange when active, gray otherwise
-  const likeIconColor = feedbackGiven === 'like' ? '#f97316' : theme.text.low;
-  const dislikeIconColor = feedbackGiven === 'dislike' ? '#f97316' : theme.text.low;
+  // Icon colors: brand accent when active, gray otherwise
+  const likeIconColor = feedbackGiven === 'like' ? BRAND_ACCENT : theme.text.low;
+  const dislikeIconColor = feedbackGiven === 'dislike' ? BRAND_ACCENT : theme.text.low;
   
   // Icon components with dynamic color styling
   const CopyIcon = () => (
