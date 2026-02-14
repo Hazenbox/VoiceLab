@@ -711,9 +711,12 @@ export const ChatPanel = memo(function ChatPanel({
       >
         {/* Mic/Stop button - pill shaped, on the left */}
         {onVoiceClick && (
-          <button
-            onClick={onVoiceClick}
-            disabled={!voiceSupported}
+          <Button
+            onPress={onVoiceClick}
+            isDisabled={!voiceSupported}
+            appearance="neutral"
+            attention="low"
+            single
             aria-label={!voiceSupported 
               ? "Voice chat not supported in this browser" 
               : _mode === 'voice' 
@@ -724,13 +727,9 @@ export const ChatPanel = memo(function ChatPanel({
               : _mode === 'voice'
                 ? "Stop voice chat"
                 : "Voice chat (speak with AI)"}
-            className={`p-2 rounded-full transition-colors flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-              !voiceSupported 
-                ? 'opacity-50 cursor-not-allowed' 
-                : 'hover:opacity-70 cursor-pointer'
-            }`}
-            style={{ 
-              color: theme.text.medium,
+            className="voice-button"
+            style={{
+              padding: '8px',
             }}
           >
             {_mode === 'voice' ? (
@@ -738,7 +737,7 @@ export const ChatPanel = memo(function ChatPanel({
             ) : (
               <DSIcon name="IcMic" size="S" attention="medium" />
             )}
-          </button>
+          </Button>
         )}
 
         {/* Multi-line textarea */}
@@ -815,6 +814,12 @@ export const ChatPanel = memo(function ChatPanel({
       aria-label="Chat conversation"
       id={id}
     >
+      <style>{`
+        .voice-button:hover:not(:disabled) {
+          background-color: ${theme.stroke.low} !important;
+          transition: none !important;
+        }
+      `}</style>
       {/* Centered container with 75% max-width on medium+ screens */}
       <div className="w-full md:max-w-[75%] mx-auto h-full flex flex-col">
         {messages.length === 0 && showEmptyState ? (

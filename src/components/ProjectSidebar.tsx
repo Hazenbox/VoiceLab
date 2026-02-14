@@ -414,7 +414,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
               aria-label="Create new project"
             >
               <div className="flex items-center gap-2">
-                <DSIcon name="IcAdd" size="XS" attention="high" />
+                <DSIcon name="IcAdd" size="S" attention="high" />
                 <span>Create</span>
               </div>
             </Button>
