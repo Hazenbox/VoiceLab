@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ConvexProvider, ConvexReactClient } from 'convex/react'
 import { DsProvider } from '@marcelinodzn/ds-react'
-import { DesignSystemProvider } from './context/DesignSystemContext'
+// DesignSystemProvider removed -- Jio DS is the sole design system
 import { ProjectProvider } from './context/ProjectContext'
 import { initSyncService, getSyncService } from './services/sync/convexSync'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -128,33 +128,31 @@ function Root() {
   }, [colorMode]);
 
   const appTree = (
-    <DesignSystemProvider>
-      <DsProvider
-        platform="Desktop (1440)"
-        colorMode={colorMode}
-        density="Default"
-        theme="MyJio"
-      >
-        <ProjectProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/admin/*" element={
-                <ErrorBoundary>
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminLayout />
-                  </Suspense>
-                </ErrorBoundary>
-              } />
-              <Route path="/*" element={
-                <ErrorBoundary>
-                  <App colorMode={colorMode} onColorModeChange={setColorMode} />
-                </ErrorBoundary>
-              } />
-            </Routes>
-          </BrowserRouter>
-        </ProjectProvider>
-      </DsProvider>
-    </DesignSystemProvider>
+    <DsProvider
+      platform="Desktop (1440)"
+      colorMode={colorMode}
+      density="Compact"
+      theme="MyJio"
+    >
+      <ProjectProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/admin/*" element={
+              <ErrorBoundary>
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminLayout />
+                </Suspense>
+              </ErrorBoundary>
+            } />
+            <Route path="/*" element={
+              <ErrorBoundary>
+                <App colorMode={colorMode} onColorModeChange={setColorMode} />
+              </ErrorBoundary>
+            } />
+          </Routes>
+        </BrowserRouter>
+      </ProjectProvider>
+    </DsProvider>
   );
 
   // Always wrap with ConvexProvider (Convex is required)

@@ -196,3 +196,52 @@ export default useThemeColors;
 
 // Export the return type for use in memoization
 export type ThemeColors = ReturnType<typeof useThemeColors>;
+
+/**
+ * Shared status color map
+ * 
+ * Use this constant for any status/severity/trust color mapping
+ * instead of hardcoding hex values in individual components.
+ * 
+ * Maps common status names to the semantic colors defined in LOCAL_COLORS.
+ */
+export const STATUS_COLORS = {
+  // Positive states
+  pass: LOCAL_COLORS.positive,
+  success: LOCAL_COLORS.positive,
+  healthy: LOCAL_COLORS.positive,
+  active: LOCAL_COLORS.positive,
+  approved: LOCAL_COLORS.positive,
+  high: LOCAL_COLORS.positive,
+
+  // Negative states
+  fail: LOCAL_COLORS.negative,
+  error: LOCAL_COLORS.negative,
+  rejected: LOCAL_COLORS.negative,
+  offline: LOCAL_COLORS.negative,
+
+  // Warning states
+  warning: LOCAL_COLORS.warning,
+  medium: LOCAL_COLORS.warning,
+  degraded: LOCAL_COLORS.warning,
+  pending: LOCAL_COLORS.warning,
+
+  // Informative states
+  info: LOCAL_COLORS.informative,
+  edit: LOCAL_COLORS.informative,
+  informative: LOCAL_COLORS.informative,
+} as const;
+
+export type StatusKey = keyof typeof STATUS_COLORS;
+
+/**
+ * Convenience function to get a status color with optional fallback
+ */
+export function getStatusColor(status: string, fallback = LOCAL_COLORS.informative): string {
+  return STATUS_COLORS[status as StatusKey] ?? fallback;
+}
+
+/**
+ * Re-export LOCAL_COLORS for direct use when semantic tokens are needed
+ */
+export const SEMANTIC_COLORS = LOCAL_COLORS;

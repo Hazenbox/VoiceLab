@@ -7,7 +7,12 @@ export {
   useTextColor,
   useStrokeColor,
   useThemeColors,
+  useAccentColor,
+  STATUS_COLORS,
+  SEMANTIC_COLORS,
+  getStatusColor,
   type TextEmphasis,
   type BackgroundEmphasis,
   type ThemeColors,
+  type StatusKey,
 } from './useColors';
