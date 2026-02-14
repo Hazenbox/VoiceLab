@@ -440,16 +440,16 @@ const DEFAULT_RULES: TokenEnforcementRuleSeed[] = [
   // BRAND RULES
   // ══════════════════════════════════════════════════════════════════════════
   {
-    tokenKey: "identity.brand",
-    tokenValue: "jio",
+    tokenKey: "ecosystem",
+    tokenValue: "*",  // Apply to ALL ecosystems (Jio is always the brand)
     ruleType: "must_not_contain",
-    patterns: ["competitor", "airtel", "vodafone", "vi", "bsnl"],
+    patterns: ["competitor", "airtel", "vodafone", "vi", "bsnl", "idea", "jio competitor"],
     autoFixAction: "remove",
-    severity: "warning",
-    errorMessage: "Avoid mentioning competitor brands in Jio context",
+    severity: "error",  // Elevated to error - brand protection is critical
+    errorMessage: "Never mention competitor brands - focus on Jio's value proposition",
     category: "brand",
     isActive: true,
-    priority: 55,
+    priority: 95,  // High priority - brand protection is critical
     createdBy: "system",
   },
 ];

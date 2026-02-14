@@ -313,14 +313,15 @@ export const ENFORCEMENT_RULES = {
   }),
 
   BRAND_JIO_MUST_NOT: createMockRule({
-    tokenKey: 'identity.brand',
-    tokenValue: 'jio',
+    tokenKey: 'ecosystem',
+    tokenValue: '*',  // Apply to all ecosystems - Jio is always the brand
     ruleType: 'must_not_contain',
-    patterns: ['competitor', 'airtel', 'vodafone', 'vi', 'bsnl'],
+    patterns: ['competitor', 'airtel', 'vodafone', 'vi', 'bsnl', 'idea', 'jio competitor'],
     autoFixAction: 'remove',
-    severity: 'warning',
-    errorMessage: 'Avoid mentioning competitor brands',
+    severity: 'error',
+    errorMessage: 'Never mention competitor brands - focus on Jio value proposition',
     category: 'brand',
+    priority: 95,
   }),
 };
 

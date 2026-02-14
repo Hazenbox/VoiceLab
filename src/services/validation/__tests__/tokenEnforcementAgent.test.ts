@@ -421,6 +421,18 @@ describe('Token Enforcement Agent', () => {
       const result = validateAgainstRule(response, rule);
       expect(result.passed).toBe(false);
     });
+
+    it('should FAIL when response mentions "Idea"', () => {
+      const response = 'Unlike Idea cellular, Jio has nationwide 5G.';
+      const result = validateAgainstRule(response, rule);
+      expect(result.passed).toBe(false);
+    });
+
+    it('should FAIL when response promotes competitor switching', () => {
+      const response = 'You could consider switching to Airtel for better service.';
+      const result = validateAgainstRule(response, rule);
+      expect(result.passed).toBe(false);
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
