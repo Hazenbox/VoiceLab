@@ -54,8 +54,9 @@ export const DelayedTooltip = memo(function DelayedTooltip({
     const length = text.length;
     if (length < 15) return 'auto';
     if (length < 30) return '140px';
-    if (length < 60) return '200px';
-    return '260px';
+    if (length < 50) return '200px';
+    if (length < 70) return '240px';
+    return '280px';
   };
   
   const handleMouseEnter = useCallback(() => {
@@ -100,7 +101,7 @@ export const DelayedTooltip = memo(function DelayedTooltip({
       {children}
       {isVisible && !disabled && (
         <div
-          className={`absolute z-50 px-2 py-1 rounded text-xs whitespace-nowrap pointer-events-none
+          className={`absolute z-50 px-2 py-1.5 rounded text-xs pointer-events-none
             ${position === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}
             left-1/2 -translate-x-1/2`}
           style={{
@@ -109,6 +110,7 @@ export const DelayedTooltip = memo(function DelayedTooltip({
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
             width: getTooltipWidth(content),
             textAlign: 'center',
+            lineHeight: '1.4',
           }}
           role="tooltip"
         >
