@@ -235,7 +235,7 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
               onClick();
             }
           }}
-          className="flex-1 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset rounded py-1"
+          className="flex-1 text-left cursor-pointer focus:outline-none rounded py-1"
         >
           <div className="truncate">
             <Text size="S" weight="low">
