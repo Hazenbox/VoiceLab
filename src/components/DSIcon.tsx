@@ -21,6 +21,8 @@ interface DSIconProps {
   size?: 'XS' | 'S' | 'M' | 'L' | 'XL';
   /** Visual emphasis level - defaults to high */
   attention?: 'low' | 'medium' | 'high';
+  /** Semantic color appearance - defaults to auto */
+  appearance?: 'auto' | 'primary' | 'secondary' | 'sparkle' | 'neutral' | 'informative' | 'positive' | 'warning' | 'negative';
   /** Additional CSS classes */
   className?: string;
   /** Inline styles (e.g., for color overrides) */
@@ -34,7 +36,8 @@ interface DSIconProps {
 export function DSIcon({ 
   name, 
   size = 'M', 
-  attention = 'high', 
+  attention = 'high',
+  appearance = 'auto',
   className,
   style,
   'aria-label': ariaLabel,
@@ -43,7 +46,8 @@ export function DSIcon({
   return (
     <Icon 
       size={size} 
-      attention={attention} 
+      attention={attention}
+      appearance={appearance}
       className={className}
       style={style}
       aria-label={ariaLabel}

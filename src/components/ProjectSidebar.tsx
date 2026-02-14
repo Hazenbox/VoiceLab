@@ -419,24 +419,24 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     {
       value: 'edit-profile',
       label: 'Edit Profile',
-      icon: <DSIcon name="IcUser" size="S" attention="medium" />,
+      icon: <DSIcon name="IcUser" size="S" attention="high" appearance="neutral" />,
     },
     ...(onNavigateToDesignSystem ? [{
       value: 'design-system',
       label: 'Design System',
-      icon: <DSIcon name="IcLayout" size="S" attention="medium" />,
+      icon: <DSIcon name="IcLayout" size="S" attention="high" appearance="neutral" />,
     }] : []),
     ...(onNavigateToHowItWorks ? [{
       value: 'how-it-works',
       label: 'How it Works',
-      icon: <DSIcon name="IcLightbulb" size="S" attention="high" />,
+      icon: <DSIcon name="IcLightbulb" size="S" attention="high" appearance="neutral" />,
     }] : []),
     {
       value: 'toggle-theme',
       label: `${colorMode === 'Light' ? 'Dark' : 'Light'} Mode`,
       icon: colorMode === 'Light' 
-        ? <DSIcon name="IcNightClear" size="S" attention="medium" />
-        : <DSIcon name="IcSunnyClear" size="S" attention="medium" />,
+        ? <DSIcon name="IcNightClear" size="S" attention="high" appearance="neutral" />
+        : <DSIcon name="IcSunnyClear" size="S" attention="high" appearance="neutral" />,
     },
   ];
 
