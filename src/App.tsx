@@ -1405,14 +1405,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   // Remove competitor mentions from the response
                   const termRegex = new RegExp(`\\b${violation.term}\\b`, 'gi');
                   fixedContent = fixedContent.replace(termRegex, '');
-                  
-                  // Clean up double spaces and awkward punctuation
-                  fixedContent = fixedContent
-                    .replace(/\s+/g, ' ')
-                    .replace(/\s+([.,!?])/g, '$1')
-                    .replace(/([.,!?])\s*([.,!?])/g, '$1')
-                    .trim();
                 }
+                
+                // Clean up formatting after removals (preserve newlines for markdown)
+                fixedContent = fixedContent
+                  .replace(/ {2,}/g, ' ')           // Collapse multiple spaces (preserve newlines)
+                  .replace(/ +([.,!?])/g, '$1')     // Remove spaces before punctuation
+                  .replace(/([.,!?]) *([.,!?])/g, '$1') // Remove duplicate punctuation
+                  .replace(/\n{3,}/g, '\n\n')       // Collapse 3+ newlines to 2
+                  .trim();
                 
                 console.log(`[TokenEnforcement] Auto-fixed ${autoFixableViolations.length} brand violations`);
                 contentForValidation = fixedContent;
@@ -1870,14 +1871,15 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   // Remove competitor mentions from the response
                   const termRegex = new RegExp(`\\b${violation.term}\\b`, 'gi');
                   fixedContent = fixedContent.replace(termRegex, '');
-                  
-                  // Clean up double spaces and awkward punctuation
-                  fixedContent = fixedContent
-                    .replace(/\s+/g, ' ')
-                    .replace(/\s+([.,!?])/g, '$1')
-                    .replace(/([.,!?])\s*([.,!?])/g, '$1')
-                    .trim();
                 }
+                
+                // Clean up formatting after removals (preserve newlines for markdown)
+                fixedContent = fixedContent
+                  .replace(/ {2,}/g, ' ')           // Collapse multiple spaces (preserve newlines)
+                  .replace(/ +([.,!?])/g, '$1')     // Remove spaces before punctuation
+                  .replace(/([.,!?]) *([.,!?])/g, '$1') // Remove duplicate punctuation
+                  .replace(/\n{3,}/g, '\n\n')       // Collapse 3+ newlines to 2
+                  .trim();
                 
                 console.log(`[TokenEnforcement] Conversational: Auto-fixed ${autoFixableViolations.length} brand violations`);
                 conversationalFinishedContent = fixedContent;
