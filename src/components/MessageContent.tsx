@@ -106,10 +106,10 @@ function createMarkdownComponents(theme: ThemeColors): Components {
       </p>
     ),
 
-    // Lists
+    // Lists - use list-outside with padding for proper sequential numbering
     ul: ({ children }) => (
       <ul 
-        className="list-disc list-inside mb-2 space-y-1"
+        className="list-disc pl-5 mb-2 space-y-1"
         style={{ color: theme.text.high }}
       >
         {children}
@@ -117,14 +117,14 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     ),
     ol: ({ children }) => (
       <ol 
-        className="list-decimal list-inside mb-2 space-y-1"
+        className="list-decimal pl-5 mb-2 space-y-1"
         style={{ color: theme.text.high }}
       >
         {children}
       </ol>
     ),
     li: ({ children }) => (
-      <li className="text-sm leading-relaxed ml-2">
+      <li className="text-sm leading-relaxed">
         {children}
       </li>
     ),
@@ -244,6 +244,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
  * Normalize markdown to fix common LLM output issues
  * - Fixes numbered lists broken by blank lines (including nested bullets)
  * - Handles: "1. Title\n- bullet\n\n1. Title" -> continuous list
+ * - Renumbers lists where LLMs output "1. 1. 1." instead of "1. 2. 3."
  */
 function normalizeMarkdown(content: string): string {
   // Step 1: Normalize multiple blank lines to single blank line
@@ -252,15 +253,6 @@ function normalizeMarkdown(content: string): string {
   // Step 2: Fix numbered lists with nested content
   // Pattern: After a numbered item (and optional nested bullets/content),
   // if there's a blank line followed by another numbered item, remove the blank line
-  // This regex matches:
-  // - A line starting with "N. " (numbered item)
-  // - Followed by any content (including nested bullets with - or *)
-  // - Then a blank line
-  // - Then another numbered item
-  // We need to remove just the blank line before the next numbered item
-  
-  // Match: content ending with newline, blank line, then "N. "
-  // Replace blank line with single newline to keep list continuous
   normalized = normalized.replace(
     /(\n(?:[-*]\s+[^\n]+\n)*)\n(?=\d+\.\s)/g,
     '$1'
@@ -272,7 +264,42 @@ function normalizeMarkdown(content: string): string {
     '$1\n'
   );
   
-  return normalized;
+  // Step 3: Fix sequential numbering - renumber lists where LLMs output "1. 1. 1."
+  // Split content into lines, track and renumber consecutive numbered list items
+  const lines = normalized.split('\n');
+  let listCounter = 0;
+  let inNumberedList = false;
+  
+  const fixedLines = lines.map((line) => {
+    // Check if line starts with a number followed by ". " (numbered list item)
+    const numberedMatch = line.match(/^(\d+)\.\s(.*)$/);
+    
+    if (numberedMatch) {
+      // This is a numbered list item
+      if (!inNumberedList) {
+        // Starting a new list
+        inNumberedList = true;
+        listCounter = 1;
+      } else {
+        // Continue existing list
+        listCounter++;
+      }
+      // Replace the number with the correct sequential number
+      return `${listCounter}. ${numberedMatch[2]}`;
+    } else {
+      // Check if this line breaks the numbered list
+      // A blank line or a line that's not indented content breaks the list
+      const isNestedContent = line.match(/^(\s+[-*]\s|$|\s{2,})/);
+      if (!isNestedContent && line.trim() !== '' && !line.match(/^[-*]\s/)) {
+        // Non-list content that's not nested - reset the list
+        inNumberedList = false;
+        listCounter = 0;
+      }
+      return line;
+    }
+  });
+  
+  return fixedLines.join('\n');
 }
 
 /**
