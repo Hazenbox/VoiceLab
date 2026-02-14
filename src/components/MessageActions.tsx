@@ -128,7 +128,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   }, [messageId, onTryAgain]);
   
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-0">
       <ActionButton
         icon={isCopied 
           ? <DSIcon name="IcCheck" size="S" attention="low" appearance="neutral" />

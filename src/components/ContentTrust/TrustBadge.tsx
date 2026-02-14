@@ -76,16 +76,19 @@ export const TrustBadge = memo(function TrustBadge({
   const ShieldIcon = () => {
     const iconName = certification === 'certified' ? 'IcProtection' : 'IcProtectionThreats';
     return (
-      <span style={{ color: theme.text.low }}>
-        <DSIcon name={iconName} size={size === 'sm' ? 'S' : size === 'lg' ? 'M' : 'S'} attention="low" />
-      </span>
+      <DSIcon 
+        name={iconName} 
+        size={size === 'sm' ? 'S' : size === 'lg' ? 'M' : 'S'} 
+        attention="low" 
+        appearance="neutral" 
+      />
     );
   };
 
   return (
     <button
       onClick={onClick}
-      className="rounded-full flex items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+      className="rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
       style={{
         width: buttonSize,
         height: buttonSize,

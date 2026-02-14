@@ -658,7 +658,7 @@ export const ChatPanel = memo(function ChatPanel({
           <MessageContent content={message.content} role="assistant" />
           
           {/* Actions row: Trust Badge + Message Actions */}
-          <div className="flex items-center gap-2 mt-1.5">
+          <div className="flex items-center gap-0 mt-1.5">
             {message.trustScore && (
               <TrustBadge
                 trustScore={message.trustScore}

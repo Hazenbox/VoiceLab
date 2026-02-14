@@ -41,7 +41,7 @@ export const ActionButton = memo(function ActionButton({
   onClick,
   disabled = false,
   isActive: _isActive = false,
-  tooltipDelay = 500,
+  tooltipDelay = 0,
   size = 32,
   className = '',
 }: ActionButtonProps) {
