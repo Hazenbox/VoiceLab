@@ -2,7 +2,8 @@ import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useThemeColors } from '../theme';
 import type { ColorMode } from '../types';
-import { Button, Avatar, Text, Label, Divider, Input } from '@marcelinodzn/ds-react';
+import { Button, Avatar, Text, Label, Divider, Input, Icon } from '@marcelinodzn/ds-react';
+import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 import { DSIcon } from './DSIcon';
 
 // ── Local Types ──────────────────────────────────────────────────
@@ -174,7 +175,7 @@ const ProjectMenu = memo(function ProjectMenu({
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        <DSIcon name="IcMoreHorizontal" size="XS" attention="low" />
+        <Icon size="XS" attention="low" asset={<LazyIcon name="IcMoreHorizontal" />} />
       </Button>
 
       {/* Dropdown Menu */}
