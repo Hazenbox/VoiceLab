@@ -5,6 +5,7 @@ import type { ColorMode } from '../types';
 import { Button, Avatar, Text, Label, Divider, Input, Icon } from '@marcelinodzn/ds-react';
 import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 import { DSIcon } from './DSIcon';
+import { DropdownMenu, type DropdownMenuItem } from './DropdownMenu';
 
 // ── Local Types ──────────────────────────────────────────────────
 // Previously imported from ./Dropdown -- inlined here for independence
@@ -56,7 +57,7 @@ interface SidebarItemProps {
   ariaCurrent?: boolean | 'page';
 }
 
-const SidebarItem = memo(function SidebarItem({
+export const SidebarItem = memo(function SidebarItem({
   variant,
   label,
   icon,
@@ -147,64 +148,8 @@ interface ProjectMenuProps {
   direction?: 'up' | 'down';
 }
 
-const ProjectMenu = memo(function ProjectMenu({
-  options,
-  onSelect,
-  isOpen,
-  onToggle,
-  direction = 'down',
 }: ProjectMenuProps) {
-  const theme = useThemeColors();
-  const [focusedIndex, setFocusedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // Close on click outside (excluding both trigger and menu)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        onToggle();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onToggle]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setFocusedIndex(prev => (prev + 1) % options.length);
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setFocusedIndex(prev => (prev - 1 + options.length) % options.length);
-          break;
-        case 'Enter':
-        case ' ':
-          e.preventDefault();
-          if (focusedIndex >= 0) {
-            onSelect(options[focusedIndex].value);
-            onToggle();
-          }
-          break;
-        case 'Escape':
-          e.preventDefault();
-          onToggle();
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, focusedIndex, options, onSelect, onToggle]);
 
   return (
     <div ref={containerRef} className="relative inline-block">
@@ -225,43 +170,16 @@ const ProjectMenu = memo(function ProjectMenu({
         <Icon size="S" attention="low" asset={<LazyIcon name="IcMoreHorizontal" />} />
       </Button>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div
-          ref={menuRef}
-          className="absolute z-50 w-[219px] rounded-lg overflow-hidden py-1 right-0"
-          style={{
-            ...(direction === 'up'
-              ? { bottom: 'calc(100% + 0.25rem)' }
-              : { top: 'calc(100% + 0.25rem)' }
-            ),
-            backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
-            border: `1px solid ${theme.stroke.low}`,
-          }}
-          role="menu"
-          aria-orientation="vertical"
-        >
-          {options.map((option, index) => (
-            <div
-              key={option.value}
-              onMouseEnter={() => setFocusedIndex(index)}
-            >
-              <SidebarItem
-                variant="menu"
-                label={option.label}
-                icon={option.icon}
-                isActive={index === focusedIndex}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSelect(option.value);
-                  onToggle();
-                }}
-                ariaLabel={option.label}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+      <DropdownMenu
+        isOpen={isOpen}
+        onClose={onToggle}
+        items={options}
+        onSelect={onSelect}
+        direction={direction}
+        width="219px"
+        showIcons={true}
+        anchorRef={containerRef}
+      />
     </div>
   );
 });
@@ -565,9 +483,9 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             onMouseEnter={() => setIsUserProfileHovered(true)}
             onMouseLeave={() => setIsUserProfileHovered(false)}
-            className="w-full px-2 py-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+            className="w-full px-2 py-2 rounded-lg transition-colors cursor-pointer focus:outline-none"
             style={{
-              backgroundColor: isUserProfileHovered ? theme.stroke.low : 'transparent',
+              backgroundColor: (isUserProfileHovered || isUserMenuOpen) ? theme.stroke.low : 'transparent',
             }}
             aria-label="User menu"
             aria-haspopup="menu"
@@ -596,32 +514,16 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             </div>
           </button>
           
-          {/* Dropdown Menu */}
-          {isUserMenuOpen && (
-            <div
-              className="absolute z-50 w-[219px] rounded-lg overflow-hidden p-1 right-0 bottom-full mb-1"
-              style={{
-                backgroundColor: theme.isLight ? '#ffffff' : '#1f1f1f',
-                border: `1px solid ${theme.stroke.medium}`,
-              }}
-              role="menu"
-              aria-orientation="vertical"
-            >
-              {userMenuOptions.map((option) => (
-                <SidebarItem
-                  key={option.value}
-                  variant="menu"
-                  label={option.label}
-                  icon={option.icon}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleUserMenuAction(option.value);
-                  }}
-                  ariaLabel={option.label}
-                />
-              ))}
-            </div>
-          )}
+          <DropdownMenu
+            isOpen={isUserMenuOpen}
+            onClose={() => setIsUserMenuOpen(false)}
+            items={userMenuOptions}
+            onSelect={handleUserMenuAction}
+            direction="up"
+            width="219px"
+            showIcons={true}
+            anchorRef={userMenuContainerRef}
+          />
           </div>
         )}
       </div>
