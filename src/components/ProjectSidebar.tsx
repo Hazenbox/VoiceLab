@@ -215,10 +215,10 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
 
   return (
     <div
-      className="w-full group transition-colors rounded-lg"
+      className="w-full group transition-colors rounded-xl"
       style={{
         backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
-        height: '32px',
+        height: '36px',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
