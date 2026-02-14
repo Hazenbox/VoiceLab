@@ -519,7 +519,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             <Avatar 
               content="initials" 
               initials={getInitials(userName)} 
-              size="S" 
+              size="M" 
               attention="medium"
             />
 
