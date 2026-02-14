@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { Button } from '@marcelinodzn/ds-react';
+import { Button, Title, Text, Label, Input, Divider } from '@marcelinodzn/ds-react';
+import { useThemeColors, SEMANTIC_COLORS } from '../theme';
 import SearchableCombobox from './SearchableCombobox';
 import { DSIcon } from './DSIcon';
 
@@ -126,6 +127,7 @@ interface OnboardingModalProps {
 
 export default function OnboardingModal({ onComplete, existingProfile, onClose }: OnboardingModalProps) {
   const [name, setName] = useState(existingProfile?.name || '');
+  const theme = useThemeColors();
   const [role, setRole] = useState<UserRole | null>(existingProfile?.role || null);
   const [product, setProduct] = useState<string>(existingProfile?.product || '');
   const [nameError, setNameError] = useState('');
@@ -169,7 +171,7 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
     >
       <div
         style={{
-          background: '#ffffff',
+          background: theme.background.ghost,
           borderRadius: '20px',
           border: 'none',
           maxWidth: '420px',
@@ -183,71 +185,39 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
       >
         {/* Close button - only in edit mode */}
         {onClose && (
-          <button
-            onClick={onClose}
-            style={{
-              position: 'absolute',
-              top: '1rem',
-              right: '1rem',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '0.25rem',
-              color: '#666',
-              zIndex: 1,
-            }}
-            aria-label="Close"
-          >
-            <DSIcon name="IcClose" size="S" attention="medium" />
-          </button>
+          <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1 }}>
+            <Button appearance="ghost" size="S" onPress={onClose} aria-label="Close">
+              <DSIcon name="IcClose" size="S" attention="medium" />
+            </Button>
+          </div>
         )}
 
-        {/* Header */}
+        {/* Header -- DS Title + Text */}
         <div style={{ padding: '1.25rem', paddingRight: onClose ? '3rem' : '1.25rem' }}>
-          <h2 style={{ color: '#1a1a1a', fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>
-            {isEditMode ? 'Edit Profile' : 'Welcome to Voice Lab'}
-          </h2>
-          <p style={{ color: '#666', fontSize: '0.8125rem', margin: '0.375rem 0 0', lineHeight: 1.4 }}>
-            Your role and product help fine-tune AI content generation to match your context, tone, and goals.
-          </p>
+          <Title size="S" as="h2" weight="high" color="high">
+            {isEditMode ? 'edit profile' : 'welcome to voice lab'}
+          </Title>
+          <div style={{ marginTop: '0.375rem' }}>
+            <Text variant="caption" weight="regular">
+              your role and product help fine-tune AI content generation to match your context, tone, and goals.
+            </Text>
+          </div>
         </div>
 
         {/* Content - Scrollable */}
         <div style={{ padding: '0 1.25rem 1.25rem', flex: 1, position: 'relative' }}>
           <div style={{ overflowY: 'auto', maxHeight: '100%' }}>
-            {/* Name Field */}
+            {/* Name Field -- DS Input */}
             <div style={{ marginBottom: '1rem' }}>
-              <label
-                style={{
-                  display: 'block',
-                  color: '#1a1a1a',
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  marginBottom: '0.375rem',
-                }}
-              >
-                Name
-              </label>
-              <input
-                type="text"
+              <Input
+                label="name"
                 value={name}
-                onChange={(e) => { setName(e.target.value); setNameError(''); }}
-                placeholder="Enter your name"
-                autoFocus={!isEditMode}
-                style={{
-                  width: '100%',
-                  padding: '0.625rem 0.75rem',
-                  borderRadius: '8px',
-                  border: `1px solid ${nameError ? '#ef4444' : '#e0e0e0'}`,
-                  background: '#f9f9f9',
-                  color: '#1a1a1a',
-                  fontSize: '0.8125rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                onChange={(val: string) => { setName(val); setNameError(''); }}
+                placeholder="enter your name"
+                isInvalid={!!nameError}
               />
               {nameError && (
-                <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                <p style={{ color: SEMANTIC_COLORS.negative, fontSize: '0.75rem', marginTop: '0.25rem' }}>
                   {nameError}
                 </p>
               )}
@@ -274,9 +244,9 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
         </div>
 
         {/* Footer */}
+        <Divider />
         <div style={{
           padding: '1.25rem',
-          borderTop: '1px solid #f0f0f0',
           display: 'flex',
           justifyContent: 'flex-end',
         }}>

@@ -5,7 +5,7 @@
  */
 
 import { memo, useState, useMemo } from 'react';
-import { useThemeColors } from '../../theme';
+import { useThemeColors, SEMANTIC_COLORS } from '../../theme';
 import type { 
   TrustScore, 
   GenerationContext, 
@@ -39,7 +39,7 @@ const ScoreIndicator: React.FC<{
   violations: number;
 }> = ({ score, label, status, violations }) => {
   const theme = useThemeColors();
-  const statusColors = { pass: '#00A859', warning: '#eab308', fail: '#ef4444' };
+  const statusColors = { pass: SEMANTIC_COLORS.positive, warning: SEMANTIC_COLORS.warning, fail: SEMANTIC_COLORS.negative };
   
   return (
     <div 

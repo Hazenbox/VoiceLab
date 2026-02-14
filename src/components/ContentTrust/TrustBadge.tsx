@@ -5,7 +5,7 @@
  */
 
 import { memo } from 'react';
-import { useThemeColors } from '../../theme';
+import { useThemeColors, SEMANTIC_COLORS } from '../../theme';
 import type { TrustScore, TrustCertification } from '../../types';
 import { getCertificationBadge } from '../../services/trust';
 import { DSIcon } from '../DSIcon';
@@ -29,19 +29,19 @@ const BADGE_COLORS: Record<TrustCertification, {
   text: string;
 }> = {
   certified: {
-    bg: 'rgba(0, 168, 89, 0.15)',
-    border: 'rgba(0, 168, 89, 0.4)',
-    text: '#00A859',
+    bg: `${SEMANTIC_COLORS.positive}26`,  // 15% opacity
+    border: `${SEMANTIC_COLORS.positive}66`, // 40% opacity
+    text: SEMANTIC_COLORS.positive,
   },
   review_recommended: {
-    bg: 'rgba(234, 179, 8, 0.15)',
-    border: 'rgba(234, 179, 8, 0.4)',
-    text: '#eab308',
+    bg: `${SEMANTIC_COLORS.warning}26`,
+    border: `${SEMANTIC_COLORS.warning}66`,
+    text: SEMANTIC_COLORS.warning,
   },
   issues_found: {
-    bg: 'rgba(239, 68, 68, 0.15)',
-    border: 'rgba(239, 68, 68, 0.4)',
-    text: '#ef4444',
+    bg: `${SEMANTIC_COLORS.negative}26`,
+    border: `${SEMANTIC_COLORS.negative}66`,
+    text: SEMANTIC_COLORS.negative,
   },
 };
 

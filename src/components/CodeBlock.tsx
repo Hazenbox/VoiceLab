@@ -7,7 +7,11 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { useThemeColors } from '../theme';
+import { Button } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
+
+/** Brand accent for inline code elements */
+const BRAND_ACCENT = '#f97316';
 
 interface CodeBlockProps {
   children: string;
@@ -29,8 +33,8 @@ export function CodeBlock({ children, className, inline }: CodeBlockProps) {
       <code
         className="px-1.5 py-0.5 rounded text-xs font-mono"
         style={{
-          backgroundColor: theme.isLight ? '#f5f5f5' : '#27272a',
-          color: '#f97316',
+          backgroundColor: theme.background.bold,
+          color: BRAND_ACCENT,
           border: `1px solid ${theme.stroke.low}`,
         }}
       >
@@ -51,29 +55,32 @@ export function CodeBlock({ children, className, inline }: CodeBlockProps) {
       <div 
         className="flex items-center justify-between px-4 py-2 text-xs font-medium"
         style={{
-          backgroundColor: theme.isLight ? '#18181b' : '#09090b',
-          color: theme.isLight ? '#a1a1aa' : '#71717a',
+          backgroundColor: theme.background.subtle,
+          color: theme.text.low,
           borderBottom: `1px solid ${theme.stroke.low}`,
         }}
       >
         <span className="uppercase">{language}</span>
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2 py-1 rounded transition-colors hover:bg-white/10"
+        <Button
+          appearance="ghost"
+          size="S"
+          onPress={handleCopy}
           aria-label={isCopied ? 'Copied!' : 'Copy code'}
         >
-          {isCopied ? (
-            <>
-              <span className="text-green-500"><DSIcon name="IcCheck" size="XS" attention="high" /></span>
-              <span className="text-green-500">Copied!</span>
-            </>
-          ) : (
-            <>
-              <DSIcon name="IcCopyDocument" size="XS" attention="medium" />
-              <span>Copy</span>
-            </>
-          )}
-        </button>
+          <div className="flex items-center gap-1.5">
+            {isCopied ? (
+              <>
+                <DSIcon name="IcCheck" size="XS" attention="high" />
+                <span>copied!</span>
+              </>
+            ) : (
+              <>
+                <DSIcon name="IcCopyDocument" size="XS" attention="medium" />
+                <span>copy</span>
+              </>
+            )}
+          </div>
+        </Button>
       </div>
 
       {/* Code content */}
@@ -85,7 +92,7 @@ export function CodeBlock({ children, className, inline }: CodeBlockProps) {
           padding: '1rem',
           fontSize: '0.8125rem',
           lineHeight: '1.5',
-          backgroundColor: theme.isLight ? '#fafafa' : '#18181b',
+          backgroundColor: theme.background.subtle,
         }}
         showLineNumbers={codeString.split('\n').length > 3}
         wrapLines
