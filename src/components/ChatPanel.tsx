@@ -453,44 +453,46 @@ export const ChatPanel = memo(function ChatPanel({
     // Audio message
     if (message.type === 'audio' && message.audioData) {
       return (
-        <div key={message.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`} role="listitem">
-          <div className="flex flex-col items-end gap-1">
-            <AudioBubble
-              messageId={message.id}
-              audioData={message.audioData}
-              sampleRate={message.audioSampleRate || 24000}
-              duration={message.audioDuration || 0}
-              transcript={message.content}
-              role={message.role}
-              showTranscript={true}
-            />
-            {/* User audio message actions (copy only, no edit for audio) */}
-            {isUser && (
-              <div className="flex items-center gap-2">
-                <UserMessageActions
-                  messageId={message.id}
-                  content={message.content}
-                  onEdit={() => {}} // no-op for audio
-                  disabled={isLoading}
-                  hideEdit={true}
-                />
-              </div>
-            )}
-            {/* Assistant audio message actions */}
-            {!isUser && onLike && onDislike && onTryAgain && (
-              <div className="flex items-center gap-2">
-                <AssistantMessageActions
-                  messageId={message.id}
-                  content={message.content}
-                  onLike={onLike}
-                  onDislike={onDislike}
-                  onTryAgain={onTryAgain}
-                  disabled={isLoading}
-                  feedbackGiven={message.userFeedback}
-                />
-              </div>
-            )}
-          </div>
+        <div
+          key={message.id}
+          className={`flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}
+          role="listitem"
+        >
+          <AudioBubble
+            messageId={message.id}
+            audioData={message.audioData}
+            sampleRate={message.audioSampleRate || 24000}
+            duration={message.audioDuration || 0}
+            transcript={message.content}
+            role={message.role}
+            showTranscript={true}
+          />
+          {/* User audio message actions (copy only, no edit for audio) */}
+          {isUser && (
+            <div className="flex items-center gap-2">
+              <UserMessageActions
+                messageId={message.id}
+                content={message.content}
+                onEdit={() => {}} // no-op for audio
+                disabled={isLoading}
+                hideEdit={true}
+              />
+            </div>
+          )}
+          {/* Assistant audio message actions */}
+          {!isUser && onLike && onDislike && onTryAgain && (
+            <div className="flex items-center gap-2">
+              <AssistantMessageActions
+                messageId={message.id}
+                content={message.content}
+                onLike={onLike}
+                onDislike={onDislike}
+                onTryAgain={onTryAgain}
+                disabled={isLoading}
+                feedbackGiven={message.userFeedback}
+              />
+            </div>
+          )}
         </div>
       );
     }
