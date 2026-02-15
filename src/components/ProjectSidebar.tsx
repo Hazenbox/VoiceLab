@@ -6,7 +6,7 @@ import { Button, Avatar, Text, Label, Divider, Input, Icon } from '@marcelinodzn
 import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 import { DSIcon } from './DSIcon';
 import { DropdownMenu, type DropdownMenuItem } from './DropdownMenu';
-import { SidebarItem, SidebarNavItem } from './sidebar';
+import { SidebarItem, SidebarNavItem, SidebarContainer } from './sidebar';
 
 // Re-export SidebarItem for backward compatibility (used by DropdownMenu)
 export { SidebarItem } from './sidebar';
@@ -296,13 +296,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   }, [onEditProfile, onNavigateToDesignSystem, onNavigateToHowItWorks, onColorModeChange, colorMode]);
 
   return (
-    <aside 
-      className="w-[260px] h-full flex flex-col overflow-hidden"
-      style={{ 
-        backgroundColor: theme.background.ghost,
-        borderRight: `1px solid ${theme.stroke.low}`
-      }}
-    >
+    <SidebarContainer>
       {/* Logo */}
       <div className="p-3">
         <img 
@@ -393,7 +387,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 
       {/* Bottom Navigation */}
       <Divider attention="low" />
-      <div className="p-2.5 space-y-0.5">
+      <div className="p-2.5">
         {/* User Profile Menu */}
         {userName && onEditProfile && (
           <div ref={userMenuContainerRef} className="relative">
@@ -445,7 +439,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
           </div>
         )}
       </div>
-    </aside>
+    </SidebarContainer>
   );
 });
 
