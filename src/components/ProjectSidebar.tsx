@@ -127,7 +127,7 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
 
   return (
     <div
-      className="w-full group rounded-xl"
+      className="w-full group rounded-[14px]"
       style={{
         backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
         height: '36px',
@@ -137,7 +137,7 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
       role="option"
       aria-selected={isActive}
     >
-      <div className="flex items-center justify-between h-full" style={{ paddingLeft: '10px', paddingRight: '4px' }}>
+      <div className="flex items-center justify-between h-full pl-2.5 pr-1">
         {/* Project name button */}
         <button
           onClick={onClick}
@@ -340,10 +340,10 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                 className="relative"
               >
                 {renamingProject === project.id ? (
-                  // Rename input mode - match 32px height of normal items
+                  // Rename input mode - match 36px height of normal items
                   <div 
-                    className="w-full flex items-center rounded-lg"
-                    style={{ backgroundColor: theme.stroke.low, height: '32px' }}
+                    className="w-full flex items-center rounded-[14px]"
+                    style={{ backgroundColor: theme.stroke.low, height: '36px' }}
                   >
                     <Input
                       ref={renameInputRef}
