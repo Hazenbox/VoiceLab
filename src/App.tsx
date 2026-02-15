@@ -3079,8 +3079,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden items-center">
-        <div className="w-full max-w-[1200px] flex flex-col h-full">
+      <main className="flex-1 flex flex-col overflow-hidden">
         {/* Screen reader announcements for mode changes */}
         <div 
           role="status" 
@@ -3092,8 +3091,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         </div>
 
         {/* Mode Content */}
-        <div className="flex-1 overflow-hidden">
-          <ErrorBoundary>
+        <ErrorBoundary>
             <div className="h-full flex flex-col">
 
               {/* Voice Mode: AI Orb Visualization + Chat History */}
@@ -3232,9 +3230,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                 />
               </div>
             </div>
-          </ErrorBoundary>
-          </div>
-        </div>
+        </ErrorBoundary>
       </main>
 
       {/* Right Sidebar - Advanced Settings */}
