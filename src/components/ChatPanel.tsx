@@ -764,9 +764,9 @@ export const ChatPanel = memo(function ChatPanel({
               }}
             >
               {_mode === 'voice' ? (
-                <DSIcon name="IcStop" size="M" attention="high" />
+                <DSIcon name="IcStop" size="S" attention="high" />
               ) : (
-                <DSIcon name="IcMic" size="M" attention="medium" />
+                <DSIcon name="IcMic" size="S" attention="medium" />
               )}
             </Button>
           </div>
@@ -828,7 +828,7 @@ export const ChatPanel = memo(function ChatPanel({
           padding: 0 !important;
         }
         .voice-button:hover:not(:disabled) {
-          background-color: ${theme.stroke.low} !important;
+          background-color: ${theme.background.bold} !important;
           transition: none !important;
         }
       `}</style>
