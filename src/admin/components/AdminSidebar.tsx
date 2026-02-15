@@ -50,7 +50,7 @@ export const AdminSidebar = memo(function AdminSidebar({
 
       {/* Section Label */}
       <div className="px-2 py-1.5">
-        <Label size="S" weight="medium" attention="low" as="span">admin panel</Label>
+        <Label size="XS" weight="medium" attention="low" as="span">admin panel</Label>
       </div>
 
       {/* Primary Navigation */}
