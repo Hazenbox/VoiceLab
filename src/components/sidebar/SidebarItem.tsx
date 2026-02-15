@@ -51,7 +51,7 @@ export const SidebarItem = memo(function SidebarItem({
       onMouseLeave={() => setIsHovered(false)}
     >
       {icon && (
-        <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">{icon}</span>
+        <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center">{icon}</span>
       )}
       <Text size="S" weight="low">
         {label}
