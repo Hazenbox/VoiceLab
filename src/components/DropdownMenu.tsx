@@ -11,7 +11,7 @@
 
 import { memo, useState, useEffect, useRef } from 'react';
 import { useThemeColors } from '../theme';
-import { SidebarItem } from './ProjectSidebar';
+import { SidebarItem } from './sidebar';
 
 export interface DropdownMenuItem {
   value: string;

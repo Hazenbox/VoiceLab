@@ -6,6 +6,10 @@ import { Button, Avatar, Text, Label, Divider, Input, Icon } from '@marcelinodzn
 import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 import { DSIcon } from './DSIcon';
 import { DropdownMenu, type DropdownMenuItem } from './DropdownMenu';
+import { SidebarItem, SidebarNavItem } from './sidebar';
+
+// Re-export SidebarItem for backward compatibility (used by DropdownMenu)
+export { SidebarItem } from './sidebar';
 
 // ── Local Types ──────────────────────────────────────────────────
 // Previously imported from ./Dropdown -- inlined here for independence
@@ -42,99 +46,7 @@ interface ProjectSidebarProps {
   onEditProfile?: () => void;
 }
 
-/**
- * Base Sidebar Item Component
- * Supports both navigation and menu item variants
- */
-interface SidebarItemProps {
-  variant: 'nav' | 'menu';
-  label: string;
-  icon?: React.ReactNode;
-  badge?: React.ReactNode;
-  isActive?: boolean;
-  onClick: () => void;
-  ariaLabel?: string;
-  ariaCurrent?: boolean | 'page';
-}
-
-export const SidebarItem = memo(function SidebarItem({
-  variant,
-  label,
-  icon,
-  badge,
-  isActive = false,
-  onClick,
-  ariaLabel,
-  ariaCurrent,
-}: SidebarItemProps) {
-  const theme = useThemeColors();
-  const [isHovered, setIsHovered] = useState(false);
-
-  const isNav = variant === 'nav';
-  const isMenu = variant === 'menu';
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex items-center gap-2 text-left cursor-pointer w-full px-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
-      style={{
-        backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
-        height: '32px',
-      }}
-      aria-label={ariaLabel}
-      aria-current={ariaCurrent}
-      role={isMenu ? 'menuitem' : undefined}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {icon && (
-        <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">{icon}</span>
-      )}
-      <Text size="S" weight="low">
-        {label}
-      </Text>
-      {badge}
-    </button>
-  );
-});
-
-/**
- * Reusable Sidebar Navigation Item Component
- * Wrapper around SidebarItem with nav variant
- */
-interface SidebarNavItemProps {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  isActive?: boolean;
-  badge?: React.ReactNode;
-  ariaLabel?: string;
-  ariaCurrent?: 'page' | undefined;
-}
-
-const SidebarNavItem = memo(function SidebarNavItem({
-  icon,
-  label,
-  onClick,
-  isActive = false,
-  badge,
-  ariaLabel,
-  ariaCurrent,
-}: SidebarNavItemProps) {
-  return (
-    <SidebarItem
-      variant="nav"
-      icon={icon}
-      label={label}
-      onClick={onClick}
-      isActive={isActive}
-      badge={badge}
-      ariaLabel={ariaLabel}
-      ariaCurrent={ariaCurrent}
-    />
-  );
-});
+// SidebarItem and SidebarNavItem imported from ./sidebar
 
 /**
  * Simple Menu Component for Project Actions
