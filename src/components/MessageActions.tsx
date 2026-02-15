@@ -182,26 +182,19 @@ export const UserMessageActions = memo(function UserMessageActions({
   disabled = false,
   hideEdit = false,
 }: UserActionsProps) {
-  const theme = useThemeColors();
   const { isCopied, copyToClipboard } = useCopyToClipboard(2000);
   
   // Icon components with grey color styling
   const CopyIcon = () => (
-    <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCopyDocument" size="S" attention="low" />
-    </span>
+    <DSIcon name="IcCopyDocument" size="S" attention="low" appearance="neutral" />
   );
   
   const CopyDoneIcon = () => (
-    <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcCheck" size="S" attention="low" />
-    </span>
+    <DSIcon name="IcCheck" size="S" attention="low" appearance="neutral" />
   );
   
   const EditIcon = () => (
-    <span style={{ color: theme.text.low }}>
-      <DSIcon name="IcEdit" size="S" attention="low" />
-    </span>
+    <DSIcon name="IcEdit" size="S" attention="low" appearance="neutral" />
   );
   
   const handleCopy = useCallback(() => {
@@ -223,10 +216,10 @@ export const UserMessageActions = memo(function UserMessageActions({
   }, [messageId, content, onEdit]);
   
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-0">
       <ActionButton
         icon={isCopied ? <CopyDoneIcon /> : <CopyIcon />}
-        label={isCopied ? "copied" : "copy"}
+        label={isCopied ? "Copied" : "Copy"}
         onClick={handleCopy}
         disabled={disabled}
         isActive={isCopied}
@@ -234,7 +227,7 @@ export const UserMessageActions = memo(function UserMessageActions({
       {!hideEdit && (
         <ActionButton
           icon={<EditIcon />}
-          label="edit"
+          label="Edit"
           onClick={handleEdit}
           disabled={disabled}
         />
