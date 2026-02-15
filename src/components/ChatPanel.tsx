@@ -725,7 +725,7 @@ export const ChatPanel = memo(function ChatPanel({
   const renderInputArea = useCallback(() => (
     <div className="w-full">
       <div 
-        className="rounded-[25px] flex items-end px-2 py-1.5 gap-1"
+        className="rounded-[25px] flex items-center p-2.5 gap-1"
         style={{ 
           backgroundColor: theme.background.bold,
         }}
@@ -755,7 +755,7 @@ export const ChatPanel = memo(function ChatPanel({
 
         {/* Voice button - matches submit button size */}
         {onVoiceClick && (
-          <div className="flex-shrink-0" style={{ width: '36px', height: '36px' }}>
+          <div className="flex-shrink-0 self-end" style={{ width: '36px', height: '36px' }}>
             <Button
               onPress={onVoiceClick}
               isDisabled={!voiceSupported}
@@ -794,7 +794,7 @@ export const ChatPanel = memo(function ChatPanel({
         )}
 
         {/* Arrow send button - Jio DS Button (high attention style) */}
-        <div className="flex-shrink-0" style={{ width: '36px', height: '36px' }}>
+        <div className="flex-shrink-0 self-end" style={{ width: '36px', height: '36px' }}>
           <Button
             onPress={handleSubmit}
             isDisabled={!inputValue.trim() || isLoading || inputDisabled}
