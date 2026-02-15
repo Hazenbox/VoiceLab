@@ -14,9 +14,9 @@ const CATEGORY_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
 
 /** Color palette for severity badges */
 const SEVERITY_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  error:   { bg: `${SEMANTIC_COLORS.negative}26`, text: SEMANTIC_COLORS.negative, label: 'error' },
-  warning: { bg: `${SEMANTIC_COLORS.warning}26`, text: SEMANTIC_COLORS.warning, label: 'warning' },
-  info:    { bg: `${SEMANTIC_COLORS.informative}26`, text: SEMANTIC_COLORS.informative, label: 'info' },
+  error:   { bg: `${SEMANTIC_COLORS.negative}26`, text: SEMANTIC_COLORS.negative, label: 'Error' },
+  warning: { bg: `${SEMANTIC_COLORS.warning}26`, text: SEMANTIC_COLORS.warning, label: 'Warning' },
+  info:    { bg: `${SEMANTIC_COLORS.informative}26`, text: SEMANTIC_COLORS.informative, label: 'Info' },
 };
 
 // ── Types ────────────────────────────────────────────────────────
@@ -169,13 +169,13 @@ export function CategorySection({
                 '--tw-ring-color': itemColor.text,
               }}
               onClick={() => onEdit(item)}
-              title={item.metadata?.suggestion ? `suggestion: ${item.metadata.suggestion}` : 'click to edit'}
+              title={item.metadata?.suggestion ? `Suggestion: ${item.metadata.suggestion}` : 'Click to edit'}
             >
               <span>{item.content}</span>
               
               {/* Severity indicator for avoid words */}
               {type === 'avoid_word' && item.metadata?.severity === 'error' && (
-                <span className="ml-1 w-1.5 h-1.5 rounded-full bg-red-500" title="high severity" />
+                <span className="ml-1 w-1.5 h-1.5 rounded-full bg-red-500" title="High severity" />
               )}
               
               {/* Delete button - shows on hover */}
@@ -185,7 +185,7 @@ export function CategorySection({
                   onDelete({ id: item._id, content: item.content });
                 }}
                 className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-white/20"
-                title="delete"
+                title="Delete"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -239,7 +239,7 @@ export function SearchFilterBar({
         </svg>
         <input
           type="text"
-          placeholder={`search ${typeLabel}...`}
+          placeholder={`Search ${typeLabel}...`}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-colors"
@@ -255,7 +255,7 @@ export function SearchFilterBar({
           <button
             onClick={() => onSearchChange('')}
             className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-            title="clear search"
+            title="Clear search"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.text.low }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -277,7 +277,7 @@ export function SearchFilterBar({
           '--tw-ring-color': theme.accent,
         }}
       >
-        <option value="">all categories</option>
+        <option value="">All categories</option>
         {availableCategories.map(cat => (
           <option key={cat} value={cat}>
             {cat.replace(/_/g, ' ')}

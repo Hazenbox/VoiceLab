@@ -307,7 +307,7 @@ function OfflineBanner() {
       style={{ backgroundColor: `${SEMANTIC_COLORS.warning}1A`, border: `1px solid ${SEMANTIC_COLORS.warning}4D` }}
     >
       <span style={{ color: SEMANTIC_COLORS.warning, fontSize: '13px' }}>
-        you are offline. showing cached data.
+        You are offline. Showing cached data.
       </span>
     </div>
   );
@@ -336,7 +336,7 @@ function QueryErrorDisplay({ error, queryName, onRetry }: {
         <span style={{ color: SEMANTIC_COLORS.negative, fontSize: '20px' }}>⚠</span>
         <div className="flex-1">
           <p className="font-medium" style={{ color: SEMANTIC_COLORS.negative, fontSize: '14px' }}>
-            failed to load {queryName}
+            Failed to load {queryName}
           </p>
           <p className="mt-1" style={{ color: theme.text.low, fontSize: '12px' }}>
             {error}
@@ -352,7 +352,7 @@ function QueryErrorDisplay({ error, queryName, onRetry }: {
                 cursor: 'pointer',
               }}
             >
-              retry
+              Retry
             </button>
           )}
         </div>
@@ -427,31 +427,31 @@ function AdminDashboard() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="dashboard" subtitle="system health and value delivery — last 24 hours" />
+      <SectionHeader title="Dashboard" subtitle="System health and value delivery — last 24 hours" />
 
       {/* Hero KPIs - 4 cards, most important metrics for POC */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         <KPICard 
-          label="total generations" 
+          label="Total generations" 
           value={dashboardStats.totalGenerations}
           description={KPI_DESCRIPTIONS.totalGenerations.description}
           colorClass="text-orange-500"
         />
         <KPICard 
-          label="avg trust score" 
+          label="Avg trust score" 
           value={dashboardStats.avgTrustScore}
           description={KPI_DESCRIPTIONS.avgTrustScore.description}
           target={KPI_DESCRIPTIONS.avgTrustScore.target}
           colorClass="text-blue-500"
         />
         <KPICard 
-          label="content copied" 
+          label="Content copied" 
           value={dashboardStats.copyCount}
           description={KPI_DESCRIPTIONS.copyCount.description}
           colorClass="text-purple-500"
         />
         <KPICard 
-          label="learnings applied" 
+          label="Learnings applied" 
           value={learningStats.totalPatternsApplied}
           description={KPI_DESCRIPTIONS.learningsApplied.description}
           colorClass="text-green-500"
@@ -462,30 +462,30 @@ function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
         {/* Sentiment Widget */}
         <AdminCard className="p-4">
-          <CardLabel>feedback sentiment</CardLabel>
+          <CardLabel>Feedback sentiment</CardLabel>
           <SentimentBar 
             likes={dashboardStats.likeCount}
             dislikes={dashboardStats.dislikeCount}
           />
           <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${theme.stroke.low}` }}>
             <span className="text-xs" style={{ color: theme.text.low }}>
-              {dashboardStats.sentimentRatio !== null ? `${dashboardStats.sentimentRatio}% positive feedback` : 'no feedback yet'}
+              {dashboardStats.sentimentRatio !== null ? `${dashboardStats.sentimentRatio}% positive feedback` : 'No feedback yet'}
             </span>
           </div>
         </AdminCard>
 
         {/* Quality Metrics */}
         <AdminCard className="p-4">
-          <CardLabel>content quality</CardLabel>
+          <CardLabel>Content quality</CardLabel>
           <StatBreakdown
             items={[
               { 
-                label: 'regeneration rate', 
+                label: 'Regeneration rate', 
                 value: `${dashboardStats.regenerationRate}%`, 
                 color: dashboardStats.regenerationRate > 15 ? SEMANTIC_COLORS.negative : SEMANTIC_COLORS.positive 
               },
               { 
-                label: 'completion rate', 
+                label: 'Completion rate', 
                 value: `${completionRate}%`,
                 color: SEMANTIC_COLORS.informative 
               },
@@ -502,10 +502,10 @@ function AdminDashboard() {
 
       {/* Hourly Activity Chart */}
       <ChartContainer
-        title="hourly activity"
-        subtitle="content generations over time"
+        title="Hourly activity"
+        subtitle="Content generations over time"
         empty={hourlyChartData.every(d => d.value === 0)}
-        emptyMessage="no activity in selected time range"
+        emptyMessage="No activity in selected time range"
         className="mb-5"
       >
         <VerticalBars data={hourlyChartData} height={140} />
@@ -514,17 +514,17 @@ function AdminDashboard() {
       {/* Recent Sessions (collapsed view) */}
       {recentSessions && recentSessions.length > 0 && (
         <AdminCard className="p-4">
-          <CardLabel>recent sessions</CardLabel>
+          <CardLabel>Recent sessions</CardLabel>
           <AdminTable
             columns={[
-              { key: 'project', label: 'project' },
-              { key: 'status', label: 'status' },
-              { key: 'messages', label: 'messages' },
-              { key: 'duration', label: 'duration' },
-              { key: 'time', label: 'started' },
+              { key: 'project', label: 'Project' },
+              { key: 'status', label: 'Status' },
+              { key: 'messages', label: 'Messages' },
+              { key: 'duration', label: 'Duration' },
+              { key: 'time', label: 'Started' },
             ]}
             isEmpty={recentSessions.length === 0}
-            emptyMessage="no sessions yet"
+            emptyMessage="No sessions yet"
           >
             {recentSessions.map((session) => (
               <AdminTableRow key={session._id}>
@@ -612,7 +612,7 @@ function CorrectionDiff({
         <div className="space-y-2">
           <div>
             <span className="block text-xs font-medium mb-1" style={{ color: SEMANTIC_COLORS.negative }}>
-              before (ai generated):
+              Before (AI generated):
             </span>
             <p className="text-sm p-2 rounded" style={{ 
               backgroundColor: `${SEMANTIC_COLORS.negative}14`, 
@@ -625,7 +625,7 @@ function CorrectionDiff({
           </div>
           <div>
             <span className="block text-xs font-medium mb-1" style={{ color: SEMANTIC_COLORS.positive }}>
-              after (user edited):
+              After (user edited):
             </span>
             <p className="text-sm p-2 rounded" style={{ 
               backgroundColor: `${SEMANTIC_COLORS.positive}14`, 
@@ -696,32 +696,32 @@ function AdminLearningCenter() {
     <>
       {!isOnline && <OfflineBanner />}
       <SectionHeader 
-        title="learning center" 
-        subtitle="how user feedback improves content generation" 
+        title="Learning center" 
+        subtitle="How user feedback improves content generation" 
       />
 
       {/* Learning Stats Hero */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         <KPICard 
-          label="learnings applied" 
+          label="Learnings applied" 
           value={learningStats.totalPatternsApplied}
           description={KPI_DESCRIPTIONS.learningsApplied.description}
           colorClass="text-green-500"
         />
         <KPICard 
-          label="edit corrections" 
+          label="Edit corrections" 
           value={learningStats.byFeedbackType.edits}
           description={KPI_DESCRIPTIONS.editCorrections.description}
           colorClass="text-blue-500"
         />
         <KPICard 
-          label="avoid patterns" 
+          label="Avoid patterns" 
           value={learningStats.uniqueAvoidPatterns}
           description={KPI_DESCRIPTIONS.avoidPatterns.description}
           colorClass="text-red-500"
         />
         <KPICard 
-          label="total feedback" 
+          label="Total feedback" 
           value={corrections.length}
           description={KPI_DESCRIPTIONS.totalFeedback.description}
           colorClass="text-purple-500"
@@ -730,7 +730,7 @@ function AdminLearningCenter() {
 
       {/* Feedback Distribution */}
       <AdminCard className="p-4 mb-5">
-        <CardLabel>feedback distribution</CardLabel>
+        <CardLabel>Feedback distribution</CardLabel>
         <div className="grid grid-cols-4 gap-4">
           {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
             <div 
@@ -761,7 +761,7 @@ function AdminLearningCenter() {
 
       {/* Before/After Comparison View */}
       <AdminCard className="p-4 mb-5">
-        <CardLabel>recent edit corrections (before → after)</CardLabel>
+        <CardLabel>Recent edit corrections (before → after)</CardLabel>
         {editCorrections.length > 0 ? (
           editCorrections.slice(0, 5).map((c, i) => (
             <CorrectionDiff 
@@ -781,7 +781,7 @@ function AdminLearningCenter() {
           ))
         ) : (
           <span style={{ color: theme.text.low, fontSize: '13px' }}>
-            no edit corrections yet. users can edit AI responses to teach better outputs.
+            No edit corrections yet. Users can edit AI responses to teach better outputs.
           </span>
         )}
       </AdminCard>
@@ -789,7 +789,7 @@ function AdminLearningCenter() {
       {/* Top Avoid Patterns */}
       {learningStats.topAvoidReasons.length > 0 && (
         <AdminCard className="p-4 mb-5">
-          <CardLabel>top patterns to avoid (from negative feedback)</CardLabel>
+          <CardLabel>Top patterns to avoid (from negative feedback)</CardLabel>
           <div className="flex flex-wrap gap-2">
             {learningStats.topAvoidReasons.map((reason, i) => (
               <span
@@ -811,20 +811,20 @@ function AdminLearningCenter() {
       {/* Full Feedback Table */}
       <AdminCard className="p-4 mb-5">
         <CardLabel>
-          {filter === 'all' ? 'all feedback' : `${filter.replace('_', ' ')} feedback`} 
+          {filter === 'all' ? 'All feedback' : `${filter.replace('_', ' ')} feedback`} 
           {' '}({filtered.length} items)
         </CardLabel>
         <AdminTable
           columns={[
-            { key: 'type', label: 'type' },
-            { key: 'original', label: 'original content' },
-            { key: 'edited', label: 'edited / comment' },
-            { key: 'eco', label: 'ecosystem' },
-            { key: 'channel', label: 'channel' },
-            { key: 'time', label: 'time' },
+            { key: 'type', label: 'Type' },
+            { key: 'original', label: 'Original content' },
+            { key: 'edited', label: 'Edited / comment' },
+            { key: 'eco', label: 'Ecosystem' },
+            { key: 'channel', label: 'Channel' },
+            { key: 'time', label: 'Time' },
           ]}
           isEmpty={filtered.length === 0}
-          emptyMessage="no feedback recorded yet."
+          emptyMessage="No feedback recorded yet."
         >
           {filtered.slice(0, 50).map((c, i) => {
             const idStr = c._id?.toString() || String(i);
@@ -854,9 +854,9 @@ function AdminLearningCenter() {
 
       {/* Correction Approval Section */}
       <AdminCard className="p-4">
-        <CardLabel>correction approval queue</CardLabel>
+        <CardLabel>Correction approval queue</CardLabel>
         <p className="text-xs mb-4" style={{ color: theme.text.low }}>
-          review and approve/reject user feedback to control what the system learns from.
+          Review and approve/reject user feedback to control what the system learns from.
         </p>
         <CorrectionApprovalList />
       </AdminCard>
@@ -947,12 +947,12 @@ function AdminKnowledge() {
     
     // Reordered: high-priority types first (avoid, auto-fix, examples)
     return [
-      { type: 'avoid_word', label: 'avoid words', count: getCount('avoid_word'), colorClass: 'text-red-500', priority: 'high' },
-      { type: 'auto_fix', label: 'auto-fix rules', count: getCount('auto_fix'), colorClass: 'text-blue-500', priority: 'high' },
-      { type: 'approved_example', label: 'approved examples', count: getCount('approved_example'), colorClass: 'text-cyan-500', priority: 'high' },
-      { type: 'preferred_word', label: 'preferred vocab', count: getCount('preferred_word'), colorClass: 'text-green-500', priority: 'medium' },
-      { type: 'product_definition', label: 'product defs', count: getCount('product_definition'), colorClass: 'text-purple-500', priority: 'low' },
-      { type: 'festival', label: 'festivals', count: getCount('festival'), colorClass: 'text-yellow-500', priority: 'low' },
+      { type: 'avoid_word', label: 'Avoid words', count: getCount('avoid_word'), colorClass: 'text-red-500', priority: 'high' },
+      { type: 'auto_fix', label: 'Auto-fix rules', count: getCount('auto_fix'), colorClass: 'text-blue-500', priority: 'high' },
+      { type: 'approved_example', label: 'Approved examples', count: getCount('approved_example'), colorClass: 'text-cyan-500', priority: 'high' },
+      { type: 'preferred_word', label: 'Preferred vocab', count: getCount('preferred_word'), colorClass: 'text-green-500', priority: 'medium' },
+      { type: 'product_definition', label: 'Product defs', count: getCount('product_definition'), colorClass: 'text-purple-500', priority: 'low' },
+      { type: 'festival', label: 'Festivals', count: getCount('festival'), colorClass: 'text-yellow-500', priority: 'low' },
     ];
   }, [knowledgeCounts]);
 
@@ -1110,12 +1110,12 @@ function AdminKnowledge() {
 
     // Get description for type
     const typeDescriptions: Record<string, string> = {
-      avoid_word: 'these words trigger warnings in the content editor.',
-      preferred_word: 'these are recommended alternatives suggested by the content editor.',
-      auto_fix: 'these rules automatically correct common typos and formatting issues.',
-      product_definition: 'official product definitions used for consistent messaging.',
-      festival: 'festival dates and cultural context for content planning.',
-      approved_example: 'approved content examples for reference and training.',
+      avoid_word: 'These words trigger warnings in the content editor.',
+      preferred_word: 'These are recommended alternatives suggested by the content editor.',
+      auto_fix: 'These rules automatically correct common typos and formatting issues.',
+      product_definition: 'Official product definitions used for consistent messaging.',
+      festival: 'Festival dates and cultural context for content planning.',
+      approved_example: 'Approved content examples for reference and training.',
     };
 
     // Check if there are any categories to display
@@ -1164,8 +1164,8 @@ function AdminKnowledge() {
           {filteredCount === 0 && (
             <div className="text-center py-8" style={{ color: theme.text.low }}>
               {searchQuery || categoryFilter 
-                ? 'no items match your search criteria.'
-                : `no ${typeLabel} configured yet.`}
+                ? 'No items match your search criteria.'
+                : `No ${typeLabel} configured yet.`}
             </div>
           )}
 
@@ -1186,14 +1186,14 @@ function AdminKnowledge() {
       case 'product_definition': {
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>product definitions ({totalCount} total)</CardLabel>
+            <CardLabel>Product definitions ({totalCount} total)</CardLabel>
             <AdminTable
               columns={[
-                { key: 'name', label: 'product' },
-                { key: 'def', label: 'definition' },
+                { key: 'name', label: 'Product' },
+                { key: 'def', label: 'Definition' },
               ]}
               isEmpty={items.length === 0}
-              emptyMessage="no product definitions configured."
+              emptyMessage="No product definitions configured."
             >
               {displayedItems.map((item, i) => (
                 <AdminTableRow key={i}>
@@ -1220,7 +1220,7 @@ function AdminKnowledge() {
                       color: '#fff',
                     }}
                   >
-                    load more
+                    Load more
                   </button>
                 )}
               </div>
@@ -1235,15 +1235,15 @@ function AdminKnowledge() {
       case 'approved_example': {
         return (
           <AdminCard className="p-4 mt-4">
-            <CardLabel>approved examples ({totalCount} total)</CardLabel>
+            <CardLabel>Approved examples ({totalCount} total)</CardLabel>
             <AdminTable
               columns={[
-                { key: 'content', label: 'content' },
-                { key: 'eco', label: 'ecosystem' },
-                { key: 'ch', label: 'channel' },
+                { key: 'content', label: 'Content' },
+                { key: 'eco', label: 'Ecosystem' },
+                { key: 'ch', label: 'Channel' },
               ]}
               isEmpty={items.length === 0}
-              emptyMessage="no examples saved yet. users can save via the bookmark icon."
+              emptyMessage="No examples saved yet. Users can save via the bookmark icon."
             >
               {displayedItems.map((ex, i) => (
                 <AdminTableRow key={i}>
@@ -1273,7 +1273,7 @@ function AdminKnowledge() {
                       color: '#fff',
                     }}
                   >
-                    load more
+                    Load more
                   </button>
                 )}
               </div>
@@ -1290,7 +1290,7 @@ function AdminKnowledge() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="knowledge base" subtitle="brand rules, vocabulary, and content guidelines" />
+      <SectionHeader title="Knowledge base" subtitle="Brand rules, vocabulary, and content guidelines" />
 
       {/* Total Rules Counter with RAG Status + Add Button */}
       <AdminCard className="p-4 mb-5">
@@ -1306,13 +1306,13 @@ function AdminKnowledge() {
           <div className="flex items-center gap-3">
             <div className="text-right">
               <span className="block text-xs" style={{ color: theme.text.low }}>
-                semantic search enabled (RAG)
+                Semantic search enabled (RAG)
               </span>
               <span className="text-xs px-2 py-0.5 rounded-full" style={{ 
                 backgroundColor: `${SEMANTIC_COLORS.positive}1F`, 
                 color: SEMANTIC_COLORS.positive 
               }}>
-                vector index active
+                Vector index active
               </span>
             </div>
             {selectedType && (
@@ -1354,13 +1354,13 @@ function AdminKnowledge() {
       {!selectedType && (
         <AdminCard className="p-4 mb-5">
           <span className="block font-medium mb-2" style={{ color: theme.text.high, fontSize: '13px' }}>
-            how to manage knowledge
+            How to manage knowledge
           </span>
           <ul className="space-y-1 pl-4" style={{ fontSize: '12px', color: theme.text.medium, listStyleType: 'disc' }}>
-            <li><strong>add items:</strong> select a category above, then click "+ add" to create new rules</li>
-            <li><strong>seed data:</strong> run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run seed:seedAll</code></li>
-            <li><strong>embeddings:</strong> run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run embeddings:backfillEmbeddings</code></li>
-            <li><strong>vocab rules</strong> are managed here -- no code deploy needed</li>
+            <li><strong>Add items:</strong> select a category above, then click "+ add" to create new rules</li>
+            <li><strong>Seed data:</strong> run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run seed:seedAll</code></li>
+            <li><strong>Embeddings:</strong> run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run embeddings:backfillEmbeddings</code></li>
+            <li><strong>Vocab rules</strong> are managed here -- no code deploy needed</li>
           </ul>
         </AdminCard>
       )}
@@ -1454,8 +1454,8 @@ function AdminUsageAnalytics() {
       
       <div className="flex justify-between items-center mb-5">
         <SectionHeader 
-          title="usage analytics" 
-          subtitle="adoption across Jio ecosystem and content channels" 
+          title="Usage analytics" 
+          subtitle="Adoption across Jio ecosystem and content channels" 
         />
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
@@ -1467,7 +1467,7 @@ function AdminUsageAnalytics() {
             {users?.length ?? 0}
           </span>
           <span style={{ color: theme.text.low, fontSize: '13px' }}>
-            registered users across Jio products
+            Registered users across Jio products
           </span>
         </div>
       </AdminCard>
@@ -1475,19 +1475,19 @@ function AdminUsageAnalytics() {
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
         <ChartContainer
-          title="by ecosystem"
-          subtitle="content generations per Jio product"
+          title="By ecosystem"
+          subtitle="Content generations per Jio product"
           empty={byEcosystem.length === 0}
-          emptyMessage="no ecosystem data available"
+          emptyMessage="No ecosystem data available"
         >
           <HorizontalBarChart data={byEcosystem} color={CHART_ACCENT} />
         </ChartContainer>
 
         <ChartContainer
-          title="by channel"
-          subtitle="content generations per channel type"
+          title="By channel"
+          subtitle="Content generations per channel type"
           empty={byChannel.length === 0}
-          emptyMessage="no channel data available"
+          emptyMessage="No channel data available"
         >
           <HorizontalBarChart data={byChannel} color={SEMANTIC_COLORS.informative} />
         </ChartContainer>
@@ -1495,16 +1495,16 @@ function AdminUsageAnalytics() {
 
       {/* Context Performance Table */}
       <AdminCard className="p-4">
-        <CardLabel>quality by context</CardLabel>
+        <CardLabel>Quality by context</CardLabel>
         <AdminTable
           columns={[
-            { key: 'ecosystem', label: 'ecosystem' },
-            { key: 'channel', label: 'channel' },
-            { key: 'count', label: 'generations' },
-            { key: 'trustScore', label: 'avg trust score' },
+            { key: 'ecosystem', label: 'Ecosystem' },
+            { key: 'channel', label: 'Channel' },
+            { key: 'count', label: 'Generations' },
+            { key: 'trustScore', label: 'Avg trust score' },
           ]}
           isEmpty={!contextStats || contextStats.length === 0}
-          emptyMessage="no usage data in selected time range"
+          emptyMessage="No usage data in selected time range"
         >
           {contextStats?.slice(0, 15).map((stat, i) => (
             <AdminTableRow key={i}>
@@ -1586,7 +1586,7 @@ function AdminUsers() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="search users..."
+          placeholder="Search users..."
           aria-label="search users"
           className="rounded-lg px-3 outline-none"
           style={{
@@ -1604,14 +1604,14 @@ function AdminUsers() {
       <AdminCard className="p-4">
         <AdminTable
           columns={[
-            { key: 'name', label: 'name' },
-            { key: 'role', label: 'role' },
-            { key: 'product', label: 'product' },
-            { key: 'deviceId', label: 'device id' },
-            { key: 'lastSeen', label: 'last seen' },
+            { key: 'name', label: 'Name' },
+            { key: 'role', label: 'Role' },
+            { key: 'product', label: 'Product' },
+            { key: 'deviceId', label: 'Device ID' },
+            { key: 'lastSeen', label: 'Last seen' },
           ]}
           isEmpty={filteredUsers.length === 0}
-          emptyMessage={searchQuery ? 'no users match your search.' : 'no users registered yet.'}
+          emptyMessage={searchQuery ? 'No users match your search.' : 'No users registered yet.'}
         >
           {filteredUsers.map((user) => (
             <AdminTableRow key={user._id}>
@@ -1628,7 +1628,7 @@ function AdminUsers() {
                     {(user.name?.[0] ?? '?').toUpperCase()}
                   </div>
                   <span style={{ fontSize: '13px', color: theme.text.high }}>
-                    {user.name || 'unknown'}
+                    {user.name || 'Unknown'}
                   </span>
                 </div>
               </AdminTableCell>

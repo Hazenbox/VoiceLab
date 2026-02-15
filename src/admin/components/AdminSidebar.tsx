@@ -15,17 +15,17 @@ interface AdminSidebarProps {
 
 // Primary navigation items - always visible
 const NAV_ITEMS: { id: AdminSection; label: string; iconName: string }[] = [
-  { id: 'dashboard', label: 'dashboard', iconName: 'IcHome' },
-  { id: 'learning', label: 'learning center', iconName: 'IcLightbulb' },
-  { id: 'knowledge', label: 'knowledge base', iconName: 'IcLibrary' },
-  { id: 'tokens', label: 'tokens', iconName: 'IcCode' },
-  { id: 'usage', label: 'usage analytics', iconName: 'IcAnalytics' },
+  { id: 'dashboard', label: 'Dashboard', iconName: 'IcHome' },
+  { id: 'learning', label: 'Learning center', iconName: 'IcLightbulb' },
+  { id: 'knowledge', label: 'Knowledge base', iconName: 'IcLibrary' },
+  { id: 'tokens', label: 'Tokens', iconName: 'IcCode' },
+  { id: 'usage', label: 'Usage analytics', iconName: 'IcAnalytics' },
 ];
 
 // Advanced navigation items - collapsible
 const ADVANCED_ITEMS: { id: AdminSection; label: string; iconName: string }[] = [
-  { id: 'users', label: 'users', iconName: 'IcUser' },
-  { id: 'config', label: 'system config', iconName: 'IcSettings' },
+  { id: 'users', label: 'Users', iconName: 'IcUser' },
+  { id: 'config', label: 'System config', iconName: 'IcSettings' },
 ];
 
 // ── AdminSidebar ─────────────────────────────────────────────────
@@ -50,7 +50,7 @@ export const AdminSidebar = memo(function AdminSidebar({
 
       {/* Section Label */}
       <div className="px-2 py-1.5">
-        <Label size="XS" weight="medium" attention="low" as="span">admin panel</Label>
+        <Label size="XS" weight="medium" attention="low" as="span">Admin panel</Label>
       </div>
 
       {/* Primary Navigation */}
@@ -80,7 +80,7 @@ export const AdminSidebar = memo(function AdminSidebar({
             size="S" 
             attention="low" 
           />
-          <span>{showAdvanced ? 'hide advanced' : 'show advanced'}</span>
+          <span>{showAdvanced ? 'Hide advanced' : 'Show advanced'}</span>
         </button>
 
         {/* Advanced Navigation Items */}
@@ -105,7 +105,7 @@ export const AdminSidebar = memo(function AdminSidebar({
         {/* Back to App */}
         <SidebarNavItem
           icon={<DSIcon name="IcArrowBack" size="S" attention="high" />}
-          label="back to app"
+          label="Back to app"
           onClick={() => { window.location.href = '/'; }}
           ariaLabel="Back to Voice Lab"
         />
@@ -113,7 +113,7 @@ export const AdminSidebar = memo(function AdminSidebar({
         {/* Sign Out */}
         <SidebarNavItem
           icon={<DSIcon name="IcLogout" size="S" attention="high" />}
-          label="sign out"
+          label="Sign out"
           onClick={onSignOut}
           ariaLabel="Sign out of admin"
         />

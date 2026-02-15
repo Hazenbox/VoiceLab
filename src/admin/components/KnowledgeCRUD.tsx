@@ -78,7 +78,7 @@ export function KnowledgeItemEditor({
       }
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'failed to save item');
+      setError(err instanceof Error ? err.message : 'Failed to save item');
     } finally {
       setIsSubmitting(false);
     }
@@ -103,7 +103,7 @@ export function KnowledgeItemEditor({
           <>
             <div className="mb-3">
               <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                word to avoid *
+                Word to avoid *
               </label>
               <input
                 type="text"
@@ -123,7 +123,7 @@ export function KnowledgeItemEditor({
             </div>
             <div className="mb-3">
               <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                severity
+                Severity
               </label>
               <select
                 value={formData.metadata.severity || 'warning'}
@@ -137,9 +137,9 @@ export function KnowledgeItemEditor({
                   border: `1px solid ${theme.stroke.medium}`,
                 }}
               >
-                <option value="warning">warning</option>
-                <option value="error">error (block)</option>
-                <option value="info">info (suggest)</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error (block)</option>
+                <option value="info">Info (suggest)</option>
               </select>
             </div>
           </>
@@ -150,7 +150,7 @@ export function KnowledgeItemEditor({
           <>
             <div className="mb-3">
               <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                preferred word *
+                Preferred word *
               </label>
               <input
                 type="text"
@@ -176,7 +176,7 @@ export function KnowledgeItemEditor({
           <>
             <div className="mb-3">
               <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                original text (to find) *
+                Original text (to find) *
               </label>
               <input
                 type="text"
@@ -196,7 +196,7 @@ export function KnowledgeItemEditor({
             </div>
             <div className="mb-3">
               <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                replacement text *
+                Replacement text *
               </label>
               <input
                 type="text"
@@ -222,7 +222,7 @@ export function KnowledgeItemEditor({
           <>
             <div className="mb-3">
               <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                product name *
+                Product name *
               </label>
               <input
                 type="text"
@@ -242,7 +242,7 @@ export function KnowledgeItemEditor({
             </div>
             <div className="mb-3">
               <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                ecosystem
+                Ecosystem
               </label>
               <select
                 value={formData.metadata.ecosystem || ''}
@@ -256,7 +256,7 @@ export function KnowledgeItemEditor({
                   border: `1px solid ${theme.stroke.medium}`,
                 }}
               >
-                <option value="">all ecosystems</option>
+                <option value="">All ecosystems</option>
                 <option value="JioCinema">JioCinema</option>
                 <option value="JioMart">JioMart</option>
                 <option value="JioTV">JioTV</option>
@@ -273,7 +273,7 @@ export function KnowledgeItemEditor({
           <>
             <div className="mb-3">
               <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                festival name *
+                Festival name *
               </label>
               <input
                 type="text"
@@ -299,7 +299,7 @@ export function KnowledgeItemEditor({
           <>
             <div className="mb-3">
               <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                example content *
+                Example content *
               </label>
               <textarea
                 value={formData.content}
@@ -319,7 +319,7 @@ export function KnowledgeItemEditor({
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
                 <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                  ecosystem
+                  Ecosystem
                 </label>
                 <select
                   value={formData.metadata.ecosystem || ''}
@@ -333,7 +333,7 @@ export function KnowledgeItemEditor({
                     border: `1px solid ${theme.stroke.medium}`,
                   }}
                 >
-                  <option value="">all</option>
+                  <option value="">All</option>
                   <option value="JioCinema">JioCinema</option>
                   <option value="JioMart">JioMart</option>
                   <option value="JioTV">JioTV</option>
@@ -344,7 +344,7 @@ export function KnowledgeItemEditor({
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-                  channel
+                  Channel
                 </label>
                 <select
                   value={formData.metadata.channel || ''}
@@ -358,12 +358,12 @@ export function KnowledgeItemEditor({
                     border: `1px solid ${theme.stroke.medium}`,
                   }}
                 >
-                  <option value="">all</option>
-                  <option value="push_notification">push notification</option>
-                  <option value="in_app_message">in-app message</option>
-                  <option value="email">email</option>
-                  <option value="sms">sms</option>
-                  <option value="social_media">social media</option>
+                  <option value="">All</option>
+                  <option value="push_notification">Push notification</option>
+                  <option value="in_app_message">In-app message</option>
+                  <option value="email">Email</option>
+                  <option value="sms">SMS</option>
+                  <option value="social_media">Social media</option>
                 </select>
               </div>
             </div>
@@ -374,7 +374,7 @@ export function KnowledgeItemEditor({
         return (
           <div className="mb-3">
             <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-              content *
+              Content *
             </label>
             <textarea
               value={formData.content}
@@ -413,7 +413,7 @@ export function KnowledgeItemEditor({
           className="font-semibold mb-4"
           style={{ color: theme.text.high, fontSize: '16px' }}
         >
-          {isEditing ? 'edit' : 'add'} {selectedType.replace('_', ' ')}
+          {isEditing ? 'Edit' : 'Add'} {selectedType.replace('_', ' ')}
         </h3>
 
         <form onSubmit={handleSubmit}>
@@ -433,7 +433,7 @@ export function KnowledgeItemEditor({
               className="text-sm"
               style={{ color: theme.text.medium }}
             >
-              active (used in content generation)
+              Active (used in content generation)
             </label>
           </div>
 
@@ -457,7 +457,7 @@ export function KnowledgeItemEditor({
                 cursor: 'pointer',
               }}
             >
-              cancel
+              Cancel
             </button>
             <button
               type="submit"
@@ -472,7 +472,7 @@ export function KnowledgeItemEditor({
                 cursor: 'pointer',
               }}
             >
-              {isSubmitting ? 'saving...' : (isEditing ? 'save changes' : 'add item')}
+              {isSubmitting ? 'Saving...' : (isEditing ? 'Save changes' : 'Add item')}
             </button>
           </div>
         </form>
@@ -510,7 +510,7 @@ export function DeleteConfirmModal({ itemContent, onConfirm, onCancel, isDeletin
           className="font-semibold mb-2"
           style={{ color: theme.text.high, fontSize: '16px' }}
         >
-          delete this item?
+          Delete this item?
         </h3>
         <p className="text-sm mb-4" style={{ color: theme.text.medium }}>
           "{itemContent.slice(0, 50)}{itemContent.length > 50 ? '...' : ''}" will be deactivated.
@@ -530,7 +530,7 @@ export function DeleteConfirmModal({ itemContent, onConfirm, onCancel, isDeletin
               cursor: 'pointer',
             }}
           >
-            cancel
+            Cancel
           </button>
           <button
             type="button"
@@ -546,7 +546,7 @@ export function DeleteConfirmModal({ itemContent, onConfirm, onCancel, isDeletin
               cursor: 'pointer',
             }}
           >
-            {isDeleting ? 'deleting...' : 'delete'}
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </button>
         </div>
       </div>

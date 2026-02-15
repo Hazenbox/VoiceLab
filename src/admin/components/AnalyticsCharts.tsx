@@ -33,7 +33,7 @@ export const ChartContainer = memo(function ChartContainer({
   children,
   loading = false,
   empty = false,
-  emptyMessage = 'no data available',
+  emptyMessage = 'No data available',
   height = 200,
   className = '',
 }: ChartContainerProps) {
@@ -117,7 +117,7 @@ export const HorizontalBarChart = memo(function HorizontalBarChart({
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center py-4">
-        <span style={{ color: theme.text.low, fontSize: '13px' }}>no data</span>
+        <span style={{ color: theme.text.low, fontSize: '13px' }}>No data</span>
       </div>
     );
   }
@@ -178,7 +178,7 @@ export const VerticalBars = memo(function VerticalBars({
   if (data.length === 0) {
     return (
       <div className="flex items-center justify-center" style={{ height }}>
-        <span style={{ color: theme.text.low, fontSize: '13px' }}>no data</span>
+        <span style={{ color: theme.text.low, fontSize: '13px' }}>No data</span>
       </div>
     );
   }
@@ -326,8 +326,8 @@ export const SentimentBar = memo(function SentimentBar({
       )}
       {showLabels && (
         <div className="flex justify-between text-xs mb-1" style={{ color: theme.text.low }}>
-          <span>positive</span>
-          <span>negative</span>
+          <span>Positive</span>
+          <span>Negative</span>
         </div>
       )}
       <div className="h-3 rounded-full overflow-hidden flex" style={{ backgroundColor: theme.stroke.low }}>
@@ -342,7 +342,7 @@ export const SentimentBar = memo(function SentimentBar({
       </div>
       {total === 0 && (
         <span className="block mt-2 text-xs" style={{ color: theme.text.low }}>
-          no feedback yet
+          No feedback yet
         </span>
       )}
     </div>

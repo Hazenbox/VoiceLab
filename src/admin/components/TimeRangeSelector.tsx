@@ -15,7 +15,7 @@ const RANGE_LABELS: Record<TimeRange, string> = {
   day: '24h',
   week: '7d',
   month: '30d',
-  all: 'all',
+  all: 'All',
 };
 
 /**

@@ -109,7 +109,7 @@ function CorrectionDetailModal({
             className="font-semibold"
             style={{ color: theme.text.high, fontSize: '16px' }}
           >
-            correction detail
+            Correction detail
           </h3>
           <div className="flex gap-2">
             <FeedbackBadge type={correction.feedbackType} />
@@ -127,7 +127,7 @@ function CorrectionDetailModal({
         {/* Original Content */}
         <div className="mb-4">
           <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-            original content (ai generated)
+            Original content (AI generated)
           </label>
           <div
             className="p-3 rounded-lg text-sm"
@@ -145,7 +145,7 @@ function CorrectionDetailModal({
         {correction.feedbackType === 'edit' && correction.editedContent && (
           <div className="mb-4">
             <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-              user edited content
+              User edited content
             </label>
             <div
               className="p-3 rounded-lg text-sm"
@@ -164,7 +164,7 @@ function CorrectionDetailModal({
         {correction.feedbackType === 'thumbs_down' && correction.reasons && correction.reasons.length > 0 && (
           <div className="mb-4">
             <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-              user reported issues
+              User reported issues
             </label>
             <div className="flex flex-wrap gap-2">
               {correction.reasons.map((reason, i) => (
@@ -188,7 +188,7 @@ function CorrectionDetailModal({
         {correction.comment && (
           <div className="mb-4">
             <label className="block text-xs font-medium mb-1" style={{ color: theme.text.low }}>
-              user comment
+              User comment
             </label>
             <div
               className="p-3 rounded-lg text-sm italic"
@@ -208,11 +208,11 @@ function CorrectionDetailModal({
           className="p-3 rounded-lg mb-4 text-xs"
           style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
         >
-          <strong>approve:</strong> this correction will be used to improve future content generation. 
-          the system learns from user edits and preferences.
+          <strong>Approve:</strong> This correction will be used to improve future content generation. 
+          The system learns from user edits and preferences.
           <br />
-          <strong>reject:</strong> this correction will be excluded from learning. 
-          use this if the feedback is incorrect, spam, or not helpful.
+          <strong>Reject:</strong> This correction will be excluded from learning. 
+          Use this if the feedback is incorrect, spam, or not helpful.
         </div>
 
         {/* Actions */}
@@ -230,7 +230,7 @@ function CorrectionDetailModal({
               cursor: 'pointer',
             }}
           >
-            close
+            Close
           </button>
           
           {correction.adminStatus !== 'rejected' && (
@@ -248,7 +248,7 @@ function CorrectionDetailModal({
                 cursor: 'pointer',
               }}
             >
-              {isUpdating ? 'updating...' : 'reject'}
+              {isUpdating ? 'Updating...' : 'Reject'}
             </button>
           )}
           
@@ -267,7 +267,7 @@ function CorrectionDetailModal({
                 cursor: 'pointer',
               }}
             >
-              {isUpdating ? 'updating...' : 'approve'}
+              {isUpdating ? 'Updating...' : 'Approve'}
             </button>
           )}
         </div>
@@ -342,9 +342,9 @@ export function CorrectionApprovalList({ deviceId }: CorrectionApprovalListProps
 
   // Filter tabs
   const filterTabs = [
-    { key: 'all', label: 'all' },
-    { key: 'approved', label: 'approved' },
-    { key: 'rejected', label: 'rejected' },
+    { key: 'all', label: 'All' },
+    { key: 'approved', label: 'Approved' },
+    { key: 'rejected', label: 'Rejected' },
   ];
 
   // Cast corrections to typed array
@@ -374,15 +374,15 @@ export function CorrectionApprovalList({ deviceId }: CorrectionApprovalListProps
       {/* Corrections Table */}
       <AdminTable
         columns={[
-          { key: 'type', label: 'type' },
-          { key: 'content', label: 'content' },
-          { key: 'context', label: 'context' },
-          { key: 'status', label: 'status' },
-          { key: 'time', label: 'time' },
+          { key: 'type', label: 'Type' },
+          { key: 'content', label: 'Content' },
+          { key: 'context', label: 'Context' },
+          { key: 'status', label: 'Status' },
+          { key: 'time', label: 'Time' },
           { key: 'action', label: '' },
         ]}
         isEmpty={typedCorrections.length === 0}
-        emptyMessage="no corrections to review"
+        emptyMessage="No corrections to review"
       >
         {typedCorrections.map((c) => (
           <AdminTableRow key={c._id.toString()}>
@@ -417,7 +417,7 @@ export function CorrectionApprovalList({ deviceId }: CorrectionApprovalListProps
                   cursor: 'pointer',
                 }}
               >
-                review
+                Review
               </button>
             </AdminTableCell>
           </AdminTableRow>

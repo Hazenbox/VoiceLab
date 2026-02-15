@@ -833,7 +833,7 @@ const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardPro
               className="text-xs font-medium mb-1"
               style={{ color: theme.text.low }}
             >
-              possible values
+              Possible values
             </h4>
             <div className="space-y-1">
               {doc.values.map((v) => (
@@ -865,7 +865,7 @@ const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardPro
                 className="text-xs font-medium mb-1 mt-3"
                 style={{ color: theme.text.low }}
               >
-                llm behavior rules
+                LLM behavior rules
               </h4>
               <div className="space-y-1">
                 {Object.entries(rules).map(([value, rule]) => (
@@ -1036,7 +1036,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
               className="text-xl font-semibold"
               style={{ color: theme.text.high }}
             >
-              tokens specification
+              Tokens specification
             </h1>
             <p
               className="text-sm mt-1"
@@ -1066,7 +1066,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
             />
             <input
               type="text"
-              placeholder="search tokens..."
+              placeholder="Search tokens..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 rounded-lg text-sm"
@@ -1089,7 +1089,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
               color: theme.text.high,
             }}
           >
-            <option value="all">all groups ({TOTAL_TOKEN_COUNT})</option>
+            <option value="all">All groups ({TOTAL_TOKEN_COUNT})</option>
             {Object.entries(TOKEN_COUNTS).map(([group, count]) => (
               <option key={group} value={group}>
                 {group.replace(/_/g, ' ').toLowerCase()} ({count})
@@ -1106,7 +1106,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
             className="text-center py-8"
             style={{ color: theme.text.low }}
           >
-            no tokens found matching "{searchQuery}"
+            No tokens found matching "{searchQuery}"
           </div>
         ) : (
           filteredGroups.map(([groupName, tokens]) => (
