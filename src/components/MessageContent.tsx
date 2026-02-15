@@ -97,7 +97,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     // Paragraphs
     p: ({ children }) => (
       <p 
-        className="text-sm mb-3"
+        className="text-sm mb-3 last:mb-0"
         style={{ color: theme.text.high, letterSpacing: '-0.12px', lineHeight: '24px' }}
       >
         {children}
@@ -108,7 +108,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     // Nested ul (inside li) gets reduced margins for proper hierarchy
     ul: ({ children }) => (
       <ul 
-        className="list-disc pl-5 mb-3 space-y-1.5 [li_>&]:mt-1 [li_>&]:mb-0"
+        className="list-disc pl-5 mb-3 last:mb-0 space-y-1.5 [li_>&]:mt-1 [li_>&]:mb-0"
         style={{ color: theme.text.high }}
       >
         {children}
@@ -116,7 +116,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
     ),
     ol: ({ children }) => (
       <ol 
-        className="list-decimal pl-5 mb-3 space-y-1.5"
+        className="list-decimal pl-5 mb-3 last:mb-0 space-y-1.5"
         style={{ color: theme.text.high }}
       >
         {children}
