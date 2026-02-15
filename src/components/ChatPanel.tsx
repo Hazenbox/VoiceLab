@@ -410,7 +410,7 @@ export const ChatPanel = memo(function ChatPanel({
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
       const scrollHeight = inputRef.current.scrollHeight;
-      const maxLines = 3;
+      const maxLines = 5;
       const lineHeight = 24; // Approximate line height in pixels
       const maxHeight = lineHeight * maxLines;
       
@@ -745,7 +745,7 @@ export const ChatPanel = memo(function ChatPanel({
           style={{ 
             color: theme.text.high,
             minHeight: '28px',
-            maxHeight: '84px', // 3 lines * 28px
+            maxHeight: '120px', // 5 lines * 24px
             lineHeight: '22px',
             paddingTop: '3px',
             paddingBottom: '3px',
