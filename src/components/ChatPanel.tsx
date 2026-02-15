@@ -725,7 +725,7 @@ export const ChatPanel = memo(function ChatPanel({
   const renderInputArea = useCallback(() => (
     <div className="w-full">
       <div 
-        className="rounded-[25px] flex items-center p-2.5 gap-1"
+        className="rounded-[28px] flex items-center p-2.5 gap-1"
         style={{ 
           backgroundColor: theme.background.bold,
         }}
