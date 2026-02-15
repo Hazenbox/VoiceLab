@@ -863,52 +863,51 @@ export const ChatPanel = memo(function ChatPanel({
           transition: none !important;
         }
       `}</style>
-      {/* Centered container with 768px max-width (matches ChatGPT's 48rem) */}
-      <div className="w-full md:max-w-3xl mx-auto h-full flex flex-col">
-        {messages.length === 0 && showEmptyState ? (
-          /* Empty State: Centered Layout */
+      
+      {messages.length === 0 && showEmptyState ? (
+        /* Empty State: Centered Layout - takes full height */
+        <div 
+          className="flex-1 flex flex-col items-center justify-center p-4 gap-6 transition-all duration-300 ease-in-out"
+          style={{
+            animation: 'fadeIn 300ms ease-in-out',
+          }}
+        >
+          <p 
+            className="text-sm text-center max-w-xs"
+            style={{ 
+              color: theme.text.low,
+              animation: 'fadeIn 300ms ease-in-out',
+              fontWeight: 900,
+              fontSize: '20px',
+              letterSpacing: '-0.3px',
+              width: '400px',
+              maxWidth: '400px',
+            }}
+            role="status"
+          >
+            {emptyStateMessage}
+          </p>
+          
+          {renderInputArea()}
+        </div>
+      ) : (
+        /* Active State: Scrollable Messages + Fixed Input at Bottom */
+        <>
+          {/* Scrollable Messages Area - scrollbar at container edge */}
           <div 
-            className="flex-1 flex flex-col items-center justify-center p-4 gap-6 transition-all duration-300 ease-in-out"
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto scrollable-container"
             style={{
               animation: 'fadeIn 300ms ease-in-out',
             }}
+            role="log"
+            aria-live="polite"
+            aria-atomic="false"
+            aria-relevant="additions"
+            tabIndex={0}
           >
-            <p 
-              className="text-sm text-center max-w-xs"
-              style={{ 
-                color: theme.text.low,
-                animation: 'fadeIn 300ms ease-in-out',
-                fontWeight: 900,
-                fontSize: '20px',
-                letterSpacing: '-0.3px',
-                width: '400px',
-                maxWidth: '400px',
-              }}
-              role="status"
-            >
-              {emptyStateMessage}
-            </p>
-            
-            {renderInputArea()}
-          </div>
-        ) : (
-          /* Active State: Scrollable Messages + Bottom Input */
-          <div 
-            className="h-full flex flex-col"
-            style={{
-              animation: 'fadeIn 300ms ease-in-out',
-            }}
-          >
-            {/* Messages Area */}
-            <div 
-              ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto pt-6 px-4 pb-4 scrollable-container"
-              role="log"
-              aria-live="polite"
-              aria-atomic="false"
-              aria-relevant="additions"
-              tabIndex={0}
-            >
+            {/* Centered content within scrollable area */}
+            <div className="max-w-3xl mx-auto px-4 pt-6 pb-4">
               <div role="list" aria-label="Messages" className="space-y-4">
                 {messages.map(renderMessage)}
                 
@@ -949,62 +948,62 @@ export const ChatPanel = memo(function ChatPanel({
                 <div ref={messagesEndRef} aria-hidden="true" />
               </div>
             </div>
-
-            {/* Loading Indicator - hidden once streaming text appears */}
-            {isLoading && !streamingAIResponse && (
-              <div 
-                className="px-4 py-2"
-                role="status"
-                aria-live="polite"
-                aria-label="Generating response"
-              >
-                <div 
-                  className="flex items-center gap-2 text-sm"
-                  style={{ color: theme.text.medium }}
-                >
-                  <div className="flex gap-1" aria-hidden="true">
-                    <span 
-                      className="w-2 h-2 rounded-full animate-bounce" 
-                      style={{ backgroundColor: theme.accent, animationDelay: '0ms' }} 
-                    />
-                    <span 
-                      className="w-2 h-2 rounded-full animate-bounce" 
-                      style={{ backgroundColor: theme.accent, animationDelay: '150ms' }} 
-                    />
-                    <span 
-                      className="w-2 h-2 rounded-full animate-bounce" 
-                      style={{ backgroundColor: theme.accent, animationDelay: '300ms' }} 
-                    />
-                  </div>
-                  <span>Generating...</span>
-                </div>
-              </div>
-            )}
-            
-            {/* Stop Generation Button - shown while streaming */}
-            {isLoading && streamingAIResponse && onStopGeneration && (
-              <div className="px-4 py-2 flex justify-center">
-                <Button
-                  appearance="secondary"
-                  size="S"
-                  onPress={onStopGeneration}
-                  aria-label="Stop generating"
-                >
-                  <div className="flex items-center gap-2">
-                    <DSIcon name="IcStop" size="XS" attention="medium" />
-                    <span>stop generating</span>
-                  </div>
-                </Button>
-              </div>
-            )}
-
-            {/* Input Area at Bottom */}
-            <div className="py-4 flex justify-center transition-all duration-300 ease-in-out">
-              {renderInputArea()}
-            </div>
           </div>
-        )}
-      </div>
+
+          {/* Loading Indicator - hidden once streaming text appears */}
+          {isLoading && !streamingAIResponse && (
+            <div 
+              className="max-w-3xl mx-auto w-full px-4 py-2"
+              role="status"
+              aria-live="polite"
+              aria-label="Generating response"
+            >
+              <div 
+                className="flex items-center gap-2 text-sm"
+                style={{ color: theme.text.medium }}
+              >
+                <div className="flex gap-1" aria-hidden="true">
+                  <span 
+                    className="w-2 h-2 rounded-full animate-bounce" 
+                    style={{ backgroundColor: theme.accent, animationDelay: '0ms' }} 
+                  />
+                  <span 
+                    className="w-2 h-2 rounded-full animate-bounce" 
+                    style={{ backgroundColor: theme.accent, animationDelay: '150ms' }} 
+                  />
+                  <span 
+                    className="w-2 h-2 rounded-full animate-bounce" 
+                    style={{ backgroundColor: theme.accent, animationDelay: '300ms' }} 
+                  />
+                </div>
+                <span>Generating...</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Stop Generation Button - shown while streaming */}
+          {isLoading && streamingAIResponse && onStopGeneration && (
+            <div className="max-w-3xl mx-auto w-full px-4 py-2 flex justify-center">
+              <Button
+                appearance="secondary"
+                size="S"
+                onPress={onStopGeneration}
+                aria-label="Stop generating"
+              >
+                <div className="flex items-center gap-2">
+                  <DSIcon name="IcStop" size="XS" attention="medium" />
+                  <span>stop generating</span>
+                </div>
+              </Button>
+            </div>
+          )}
+
+          {/* Input Area - fixed at bottom, centered */}
+          <div className="max-w-3xl mx-auto w-full px-4 pb-4">
+            {renderInputArea()}
+          </div>
+        </>
+      )}
       
       {/* Dislike Feedback Modal */}
       {onDislikeModalSubmit && onDislikeModalClose && (
