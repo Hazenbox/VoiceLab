@@ -50,7 +50,7 @@ export const AdminSidebar = memo(function AdminSidebar({
 
       {/* Section Label */}
       <div className="px-2 py-1.5">
-        <Label size="XS" weight="medium" attention="low" as="span">admin panel</Label>
+        <Label size="S" weight="medium" attention="low" as="span">admin panel</Label>
       </div>
 
       {/* Primary Navigation */}
@@ -58,7 +58,7 @@ export const AdminSidebar = memo(function AdminSidebar({
         {NAV_ITEMS.map((item) => (
           <SidebarNavItem
             key={item.id}
-            icon={<DSIcon name={item.iconName} size="XS" attention="high" />}
+            icon={<DSIcon name={item.iconName} size="S" attention="high" />}
             label={item.label}
             onClick={() => onSectionChange(item.id)}
             isActive={activeSection === item.id}
@@ -77,7 +77,7 @@ export const AdminSidebar = memo(function AdminSidebar({
         >
           <DSIcon 
             name={showAdvanced ? 'IcChevronDown' : 'IcChevronRight'} 
-            size="XS" 
+            size="S" 
             attention="low" 
           />
           <span>{showAdvanced ? 'hide advanced' : 'show advanced'}</span>
@@ -89,7 +89,7 @@ export const AdminSidebar = memo(function AdminSidebar({
             {ADVANCED_ITEMS.map((item) => (
               <SidebarNavItem
                 key={item.id}
-                icon={<DSIcon name={item.iconName} size="XS" attention="high" />}
+                icon={<DSIcon name={item.iconName} size="S" attention="high" />}
                 label={item.label}
                 onClick={() => onSectionChange(item.id)}
                 isActive={activeSection === item.id}
@@ -104,7 +104,7 @@ export const AdminSidebar = memo(function AdminSidebar({
       <div className="p-2.5">
         {/* Back to App */}
         <SidebarNavItem
-          icon={<DSIcon name="IcArrowBack" size="XS" attention="high" />}
+          icon={<DSIcon name="IcArrowBack" size="S" attention="high" />}
           label="back to app"
           onClick={() => { window.location.href = '/'; }}
           ariaLabel="Back to Voice Lab"
@@ -112,7 +112,7 @@ export const AdminSidebar = memo(function AdminSidebar({
 
         {/* Sign Out */}
         <SidebarNavItem
-          icon={<DSIcon name="IcLogout" size="XS" attention="high" />}
+          icon={<DSIcon name="IcLogout" size="S" attention="high" />}
           label="sign out"
           onClick={onSignOut}
           ariaLabel="Sign out of admin"
