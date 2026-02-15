@@ -12,7 +12,7 @@
  * - Grok-style pill-shaped input with embedded controls
  */
 
-import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, memo } from 'react';
 import type { ChatMessage, ChatMode, FeedbackPayload } from '../types';
 import { getDisplayContent } from '../types';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme';
@@ -359,6 +359,10 @@ export const ChatPanel = memo(function ChatPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  
+  // User message bubble: Dynamic multi-line detection (ChatGPT approach)
+  const userMessageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [multiLineMessages, setMultiLineMessages] = useState<Set<string>>(new Set());
 
   // ChatGPT-like word-by-word streaming animation for AI responses
   const { displayedText: streamingDisplayText, isComplete: streamingComplete } = useStreamingText(
@@ -370,6 +374,26 @@ export const ChatPanel = memo(function ChatPanel({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingUserTranscript, streamingAIResponse, streamingDisplayText]);
+
+  // Detect multi-line wrapping for user messages (ChatGPT approach)
+  useLayoutEffect(() => {
+    const newMultiLineMessages = new Set<string>();
+    
+    userMessageRefs.current.forEach((element, messageId) => {
+      if (element) {
+        // Check if content has wrapped (scrollHeight > clientHeight)
+        const hasWrapped = element.scrollHeight > element.clientHeight + 1;
+        const message = messages.find(m => m.id === messageId);
+        const hasLineBreaks = message?.content.includes('\n');
+        
+        if (hasWrapped || hasLineBreaks) {
+          newMultiLineMessages.add(messageId);
+        }
+      }
+    });
+    
+    setMultiLineMessages(newMultiLineMessages);
+  }, [messages]);
 
   // Handle form submission
   const handleSubmit = useCallback(() => {
@@ -521,11 +545,18 @@ export const ChatPanel = memo(function ChatPanel({
               </div>
             </div>
           ) : (
-            // Normal view mode
+            // Normal view mode (ChatGPT-matched: 70% width, 18px radius, dynamic padding)
             <div className="flex flex-col items-end gap-1 group">
               <div
-                className={`max-w-[80%] px-4 pt-2 ${
-                  displayContent.split('\n').length > 1 || displayContent.length > 50 ? 'rounded-2xl' : 'rounded-full'
+                ref={(el) => {
+                  if (el) {
+                    userMessageRefs.current.set(message.id, el);
+                  } else {
+                    userMessageRefs.current.delete(message.id);
+                  }
+                }}
+                className={`max-w-[70%] rounded-[18px] ${
+                  multiLineMessages.has(message.id) ? 'px-4 py-3' : 'px-4 py-1.5'
                 }`}
                 style={{
                   backgroundColor: theme.stroke.low,
@@ -832,8 +863,8 @@ export const ChatPanel = memo(function ChatPanel({
           transition: none !important;
         }
       `}</style>
-      {/* Centered container with 75% max-width on medium+ screens */}
-      <div className="w-full md:max-w-[75%] mx-auto h-full flex flex-col">
+      {/* Centered container with 768px max-width (matches ChatGPT's 48rem) */}
+      <div className="w-full md:max-w-3xl mx-auto h-full flex flex-col">
         {messages.length === 0 && showEmptyState ? (
           /* Empty State: Centered Layout */
           <div 
