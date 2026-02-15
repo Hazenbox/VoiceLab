@@ -98,9 +98,14 @@ export const DelayedTooltip = memo(function DelayedTooltip({
       onBlur={handleBlur}
     >
       {children}
-      {isVisible && !disabled && (
+      {isVisible && !disabled && (() => {
+        // Determine whitespace behavior based on content length
+        // Short text stays on one line, long text (like trust badge) can wrap
+        const whitespaceClass = content.length < 40 ? 'whitespace-nowrap' : 'whitespace-normal';
+        
+        return (
         <div
-          className={`absolute z-50 px-2 py-1 rounded text-xs whitespace-normal pointer-events-none
+          className={`absolute z-50 px-2 py-1 rounded text-xs ${whitespaceClass} pointer-events-none
             ${position === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}
             left-1/2 -translate-x-1/2`}
           style={{
@@ -114,7 +119,8 @@ export const DelayedTooltip = memo(function DelayedTooltip({
         >
           {content}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 });
