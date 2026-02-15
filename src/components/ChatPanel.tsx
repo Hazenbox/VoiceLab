@@ -546,6 +546,7 @@ export const ChatPanel = memo(function ChatPanel({
             </div>
           ) : (
             // Normal view mode (ChatGPT-matched: 70% width, 18px radius, dynamic padding)
+            <>
               <div
                 ref={(el) => {
                   if (el) {
@@ -580,6 +581,7 @@ export const ChatPanel = memo(function ChatPanel({
                   />
                 )}
               </div>
+            </>
           )}
         </div>
       );
