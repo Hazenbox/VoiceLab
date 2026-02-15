@@ -385,7 +385,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 
   return (
     <aside 
-      className="w-[240px] h-full flex flex-col overflow-hidden"
+      className="w-[260px] h-full flex flex-col overflow-hidden"
       style={{ 
         backgroundColor: theme.background.ghost,
         borderRight: `1px solid ${theme.stroke.low}`
