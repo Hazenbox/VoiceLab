@@ -508,11 +508,13 @@ export const ChatPanel = memo(function ChatPanel({
                     onCancelEdit?.();
                   }
                 }}
-                className="w-full px-4 py-2 rounded-2xl text-sm resize-none outline-none"
+                className="w-full px-4 py-2 rounded-2xl resize-none outline-none"
                 style={{
                   backgroundColor: theme.stroke.low,
                   color: theme.text.high,
                   minHeight: '60px',
+                  fontSize: '15px',
+                  lineHeight: 1.5,
                 }}
                 autoFocus
               />
@@ -741,15 +743,15 @@ export const ChatPanel = memo(function ChatPanel({
           disabled={inputDisabled}
           aria-label="Message input"
           rows={1}
-          className="flex-1 bg-transparent outline-none text-sm px-2 resize-none overflow-y-auto"
+          className="flex-1 bg-transparent outline-none px-2 resize-none overflow-y-auto"
           style={{ 
             color: theme.text.high,
             minHeight: '28px',
-            maxHeight: '120px', // 5 lines * 24px
+            maxHeight: '110px', // 5 lines * 22px
             lineHeight: '22px',
             paddingTop: '3px',
             paddingBottom: '3px',
-            fontSize: '14px',
+            fontSize: '15px',
           }}
         />
 
@@ -863,12 +865,13 @@ export const ChatPanel = memo(function ChatPanel({
           }}
         >
           <p 
-            className="text-sm text-center max-w-xs"
+            className="text-center"
             style={{ 
               color: theme.text.low,
               animation: 'fadeIn 300ms ease-in-out',
               fontWeight: 900,
-              fontSize: '20px',
+              fontSize: '19px',
+              lineHeight: 1.3,
               letterSpacing: '-0.3px',
               width: '400px',
               maxWidth: '400px',
@@ -949,8 +952,8 @@ export const ChatPanel = memo(function ChatPanel({
               aria-label="Generating response"
             >
               <div 
-                className="flex items-center gap-2 text-sm"
-                style={{ color: theme.text.medium }}
+                className="flex items-center gap-2"
+                style={{ color: theme.text.medium, fontSize: '14px' }}
               >
                 <div className="flex gap-1" aria-hidden="true">
                   <span 

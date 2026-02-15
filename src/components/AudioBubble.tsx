@@ -382,8 +382,8 @@ export const AudioBubble = memo(function AudioBubble({
       {/* Transcript (optional) */}
       {showTranscript && transcript && (
         <p
-          className={`text-sm px-3 ${isUser ? 'text-right' : 'text-left'}`}
-          style={{ color: theme.text.medium }}
+          className={`px-3 ${isUser ? 'text-right' : 'text-left'}`}
+          style={{ color: theme.text.medium, fontSize: '15px', lineHeight: 1.5 }}
         >
           {transcript}
         </p>
@@ -392,8 +392,8 @@ export const AudioBubble = memo(function AudioBubble({
       {/* Error Message */}
       {errorMessage && (
         <p
-          className="text-xs px-3"
-          style={{ color: SEMANTIC_COLORS.negative }}
+          className="px-3"
+          style={{ color: SEMANTIC_COLORS.negative, fontSize: '12px', lineHeight: 1.5 }}
           role="alert"
         >
           {errorMessage}

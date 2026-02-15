@@ -17,3 +17,5 @@ export {
   type StatusKey,
   SELECTION_COLORS,
 } from './useColors';
+
+export { chatTypography, lineHeights, type ChatTypographyKey } from './typography';

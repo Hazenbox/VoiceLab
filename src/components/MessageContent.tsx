@@ -11,8 +11,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { CodeBlock, InlineCode } from './CodeBlock';
-import { useThemeColors } from '../theme';
-import { Title, Display, Divider } from '@marcelinodzn/ds-react';
+import { useThemeColors, chatTypography } from '../theme';
+import { Divider } from '@marcelinodzn/ds-react';
 import type { Components } from 'react-markdown';
 import type { ThemeColors } from '../theme';
 
@@ -53,52 +53,97 @@ function createMarkdownComponents(theme: ThemeColors): Components {
       );
     },
 
-    // Headings -- DS Display for h1, Title for h2-h3, custom for h4-h6
+    // Headings - using chatTypography tokens (DS Compact density)
     h1: ({ children }) => (
-      <div className="mt-8 mb-3" style={{ lineHeight: '1.2' }}>
-        <Display size="M" as="h1" weight="high" color="high">{children}</Display>
-      </div>
+      <h1 
+        className="mt-8 mb-3"
+        style={{ 
+          fontSize: chatTypography.h1.fontSize,
+          lineHeight: chatTypography.h1.lineHeight,
+          fontWeight: chatTypography.h1.fontWeight,
+          color: theme.text.high,
+        }}
+      >
+        {children}
+      </h1>
     ),
     h2: ({ children }) => (
-      <div className="mt-6 mb-3" style={{ lineHeight: '1.2' }}>
-        <Title size="L" as="h2" weight="high" color="high">{children}</Title>
-      </div>
+      <h2 
+        className="mt-6 mb-3"
+        style={{ 
+          fontSize: chatTypography.h2.fontSize,
+          lineHeight: chatTypography.h2.lineHeight,
+          fontWeight: chatTypography.h2.fontWeight,
+          color: theme.text.high,
+        }}
+      >
+        {children}
+      </h2>
     ),
     h3: ({ children }) => (
-      <div className="mt-4 mb-3" style={{ lineHeight: '1.3' }}>
-        <Title size="M" as="h3" weight="high" color="high">{children}</Title>
-      </div>
+      <h3 
+        className="mt-4 mb-3"
+        style={{ 
+          fontSize: chatTypography.h3.fontSize,
+          lineHeight: chatTypography.h3.lineHeight,
+          fontWeight: chatTypography.h3.fontWeight,
+          color: theme.text.high,
+        }}
+      >
+        {children}
+      </h3>
     ),
     h4: ({ children }) => (
       <h4 
-        className="text-sm font-semibold mt-3 mb-1.5"
-        style={{ color: theme.text.high }}
+        className="mt-3 mb-1.5"
+        style={{ 
+          fontSize: chatTypography.h4.fontSize,
+          lineHeight: chatTypography.h4.lineHeight,
+          fontWeight: chatTypography.h4.fontWeight,
+          color: theme.text.high,
+        }}
       >
         {children}
       </h4>
     ),
     h5: ({ children }) => (
       <h5 
-        className="text-sm font-medium mt-3 mb-1.5"
-        style={{ color: theme.text.medium }}
+        className="mt-3 mb-1.5"
+        style={{ 
+          fontSize: chatTypography.h5.fontSize,
+          lineHeight: chatTypography.h5.lineHeight,
+          fontWeight: chatTypography.h5.fontWeight,
+          color: theme.text.medium,
+        }}
       >
         {children}
       </h5>
     ),
     h6: ({ children }) => (
       <h6 
-        className="text-xs font-medium mt-3 mb-1.5"
-        style={{ color: theme.text.medium }}
+        className="mt-3 mb-1.5"
+        style={{ 
+          fontSize: chatTypography.h6.fontSize,
+          lineHeight: chatTypography.h6.lineHeight,
+          fontWeight: chatTypography.h6.fontWeight,
+          color: theme.text.medium,
+        }}
       >
         {children}
       </h6>
     ),
 
-    // Paragraphs
+    // Paragraphs - Body/L (15px)
     p: ({ children }) => (
       <p 
-        className="text-sm mb-3 last:mb-0"
-        style={{ color: theme.text.high, letterSpacing: '-0.12px', lineHeight: '24px' }}
+        className="mb-3 last:mb-0"
+        style={{ 
+          fontSize: chatTypography.body.fontSize,
+          lineHeight: chatTypography.body.lineHeight,
+          fontWeight: chatTypography.body.fontWeight,
+          color: theme.text.high, 
+          letterSpacing: chatTypography.letterSpacing.tight,
+        }}
       >
         {children}
       </p>
@@ -123,7 +168,12 @@ function createMarkdownComponents(theme: ThemeColors): Components {
       </ol>
     ),
     li: ({ children }) => (
-      <li className="text-sm leading-relaxed">
+      <li 
+        style={{ 
+          fontSize: chatTypography.body.fontSize,
+          lineHeight: chatTypography.body.lineHeight,
+        }}
+      >
         {children}
       </li>
     ),
@@ -166,12 +216,13 @@ function createMarkdownComponents(theme: ThemeColors): Components {
       </blockquote>
     ),
 
-    // Tables
+    // Tables - Body/L (15px)
     table: ({ children }) => (
       <div className="overflow-x-auto my-3 scrollable-container">
         <table 
-          className="min-w-full text-sm border-collapse"
+          className="min-w-full border-collapse"
           style={{ 
+            fontSize: chatTypography.body.fontSize,
             borderColor: theme.stroke.low,
           }}
         >
