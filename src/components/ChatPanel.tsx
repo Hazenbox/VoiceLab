@@ -500,7 +500,7 @@ export const ChatPanel = memo(function ChatPanel({
       return (
         <div
           key={message.id}
-          className="flex justify-end"
+          className="flex flex-col items-end gap-1 group"
           role="listitem"
         >
           {isEditing ? (
@@ -546,7 +546,6 @@ export const ChatPanel = memo(function ChatPanel({
             </div>
           ) : (
             // Normal view mode (ChatGPT-matched: 70% width, 18px radius, dynamic padding)
-            <div className="flex flex-col items-end gap-1 group">
               <div
                 ref={(el) => {
                   if (el) {
@@ -581,7 +580,6 @@ export const ChatPanel = memo(function ChatPanel({
                   />
                 )}
               </div>
-            </div>
           )}
         </div>
       );
