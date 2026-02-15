@@ -65,7 +65,7 @@ function createMarkdownComponents(theme: ThemeColors): Components {
       </div>
     ),
     h3: ({ children }) => (
-      <div className="mt-4 mb-2" style={{ lineHeight: '1.3' }}>
+      <div className="mt-4 mb-3" style={{ lineHeight: '1.3' }}>
         <Title size="M" as="h3" weight="high" color="high">{children}</Title>
       </div>
     ),
