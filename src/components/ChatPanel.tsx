@@ -354,8 +354,6 @@ export const ChatPanel = memo(function ChatPanel({
 }: ChatPanelProps) {
   const theme = useThemeColors();
   const [inputValue, setInputValue] = useState('');
-  const [lineCount, setLineCount] = useState(1);
-  const [hasMultipleLines, setHasMultipleLines] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -400,8 +398,6 @@ export const ChatPanel = memo(function ChatPanel({
     if (inputValue.trim() && !isLoading && !inputDisabled) {
       onSendMessage(inputValue.trim());
       setInputValue('');
-      setLineCount(1);
-      setHasMultipleLines(false);
     }
   }, [inputValue, isLoading, inputDisabled, onSendMessage]);
 
@@ -410,15 +406,11 @@ export const ChatPanel = memo(function ChatPanel({
     const value = e.target.value;
     setInputValue(value);
     
-    // Calculate line count
-    const lines = value.split('\n').length;
-    const maxLines = 3;
-    setLineCount(Math.min(lines, maxLines));
-    
     // Auto-resize textarea
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
       const scrollHeight = inputRef.current.scrollHeight;
+      const maxLines = 3;
       const lineHeight = 24; // Approximate line height in pixels
       const maxHeight = lineHeight * maxLines;
       
@@ -427,10 +419,6 @@ export const ChatPanel = memo(function ChatPanel({
       } else {
         inputRef.current.style.height = `${maxHeight}px`;
       }
-      
-      // Detect multiple visual lines (including word-wrapped text)
-      // Single line height is approximately 34px (28px minHeight + 6px padding)
-      setHasMultipleLines(scrollHeight > 34);
     }
   }, []);
 
@@ -737,9 +725,9 @@ export const ChatPanel = memo(function ChatPanel({
   const renderInputArea = useCallback(() => (
     <div className="w-full">
       <div 
-        className={`${hasMultipleLines ? 'rounded-2xl' : 'rounded-full'} flex ${hasMultipleLines ? 'items-end' : 'items-center'} px-2 py-1.5 gap-1 transition-all duration-300`}
+        className="rounded-[25px] flex items-end px-2 py-1.5 gap-1"
         style={{ 
-          backgroundColor: theme.stroke.low,
+          backgroundColor: theme.background.bold,
         }}
       >
         {/* Multi-line textarea */}
@@ -753,7 +741,7 @@ export const ChatPanel = memo(function ChatPanel({
           disabled={inputDisabled}
           aria-label="Message input"
           rows={1}
-          className={`flex-1 bg-transparent outline-none text-sm px-2 resize-none ${lineCount > 1 ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
+          className="flex-1 bg-transparent outline-none text-sm px-2 resize-none overflow-y-auto"
           style={{ 
             color: theme.text.high,
             minHeight: '28px',
@@ -846,7 +834,7 @@ export const ChatPanel = memo(function ChatPanel({
         </div>
       )}
     </div>
-  ), [hasMultipleLines, theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, inputDisabled, handleSubmit, isLoading, modelSelector, contextSelector, channelSelector, platformSelector, settingsTrigger]);
+  ), [theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, inputDisabled, handleSubmit, isLoading, modelSelector, contextSelector, channelSelector, platformSelector, settingsTrigger]);
 
   return (
     <div 
