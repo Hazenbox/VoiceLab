@@ -1,9 +1,18 @@
-import { useState, memo } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { useThemeColors } from '../../theme/useColors';
 import { DSIcon } from '../../components/DSIcon';
 
 // ── Types ────────────────────────────────────────────────────────
 export type AdminSection = 'dashboard' | 'learning' | 'knowledge' | 'tokens' | 'usage' | 'users' | 'config';
+type AdminCategory = 'main' | 'content' | 'developer' | 'settings';
+
+interface AdminNavItem {
+  id: AdminSection | string;
+  label: string;
+  iconName?: string;
+  children?: AdminNavItem[];
+  category: AdminCategory;
+}
 
 interface AdminSidebarProps {
   activeSection: AdminSection;
@@ -11,61 +20,40 @@ interface AdminSidebarProps {
   onSignOut: () => void;
 }
 
-// Primary navigation items - always visible
-const NAV_ITEMS: { id: AdminSection; label: string; iconName: string }[] = [
-  { id: 'dashboard', label: 'dashboard', iconName: 'IcHome' },
-  { id: 'learning', label: 'learning center', iconName: 'IcLightbulb' },
-  { id: 'knowledge', label: 'knowledge base', iconName: 'IcLibrary' },
-  { id: 'tokens', label: 'tokens', iconName: 'IcCode' },
-  { id: 'usage', label: 'usage analytics', iconName: 'IcAnalytics' },
+// ── Navigation Tree Structure ─────────────────────────────────────
+const ADMIN_NAV_ITEMS: AdminNavItem[] = [
+  { id: 'dashboard', label: 'dashboard', iconName: 'IcHome', category: 'main' },
+  {
+    id: 'content',
+    label: 'content',
+    iconName: 'IcFolder',
+    category: 'content',
+    children: [
+      { id: 'learning', label: 'learning center', category: 'content' },
+      { id: 'knowledge', label: 'knowledge base', category: 'content' },
+    ],
+  },
+  {
+    id: 'developer',
+    label: 'developer',
+    iconName: 'IcCode',
+    category: 'developer',
+    children: [
+      { id: 'tokens', label: 'tokens', category: 'developer' },
+      { id: 'usage', label: 'usage analytics', category: 'developer' },
+    ],
+  },
+  {
+    id: 'settings',
+    label: 'settings',
+    iconName: 'IcSettings',
+    category: 'settings',
+    children: [
+      { id: 'users', label: 'users', category: 'settings' },
+      { id: 'config', label: 'system config', category: 'settings' },
+    ],
+  },
 ];
-
-// Advanced navigation items - collapsible
-const ADVANCED_ITEMS: { id: AdminSection; label: string; iconName: string }[] = [
-  { id: 'users', label: 'users', iconName: 'IcUser' },
-  { id: 'config', label: 'system config', iconName: 'IcSettings' },
-];
-
-// ── Sidebar Nav Item (mirrors ProjectSidebar SidebarNavItem) ─────
-const SidebarNavItem = memo(function SidebarNavItem({
-  icon,
-  label,
-  onClick,
-  isActive = false,
-  ariaLabel,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  isActive?: boolean;
-  ariaLabel?: string;
-}) {
-  const theme = useThemeColors();
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <button
-      onClick={onClick}
-      className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
-      style={{
-        backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
-        height: '32px',
-      }}
-      aria-label={ariaLabel}
-      aria-current={isActive ? 'page' : undefined}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {icon}
-      <span
-        className="text-xs font-normal"
-        style={{ color: theme.text.high, fontSize: '13px' }}
-      >
-        {label}
-      </span>
-    </button>
-  );
-});
 
 // ── AdminSidebar ─────────────────────────────────────────────────
 export const AdminSidebar = memo(function AdminSidebar({
@@ -74,11 +62,125 @@ export const AdminSidebar = memo(function AdminSidebar({
   onSignOut,
 }: AdminSidebarProps) {
   const theme = useThemeColors();
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<Set<AdminCategory>>(
+    new Set(['main', 'content', 'developer'])
+  );
+
+  // Filter items based on search query
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return ADMIN_NAV_ITEMS;
+
+    const query = searchQuery.toLowerCase();
+    const filterItems = (navItems: AdminNavItem[]): AdminNavItem[] => {
+      const result: AdminNavItem[] = [];
+      
+      for (const item of navItems) {
+        const matches = item.label.toLowerCase().includes(query);
+        const filteredChildren = item.children
+          ? filterItems(item.children)
+          : undefined;
+
+        if (matches || (filteredChildren && filteredChildren.length > 0)) {
+          result.push({
+            ...item,
+            children: filteredChildren,
+          });
+        }
+      }
+      
+      return result;
+    };
+
+    return filterItems(ADMIN_NAV_ITEMS);
+  }, [searchQuery]);
+
+  const toggleCategory = useCallback((category: AdminCategory) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  }, []);
+
+  const renderNavItem = useCallback(
+    (item: AdminNavItem, level: number = 0) => {
+      const isSelected = activeSection === item.id;
+      const hasChildren = item.children && item.children.length > 0;
+      const isExpanded = expandedCategories.has(item.category);
+
+      return (
+        <div key={item.id}>
+          <button
+            onClick={() => {
+              if (hasChildren && level === 0) {
+                toggleCategory(item.category);
+              } else if (!hasChildren || level > 0) {
+                onSectionChange(item.id as AdminSection);
+              }
+            }}
+            className="w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2"
+            style={{
+              backgroundColor: isSelected
+                ? theme.background.subtle
+                : 'transparent',
+              color: isSelected ? theme.text.high : theme.text.medium,
+              paddingLeft: `${12 + level * 16}px`,
+            }}
+            onMouseEnter={(e) => {
+              if (!isSelected) {
+                e.currentTarget.style.backgroundColor = theme.background.ghost;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isSelected) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }
+            }}
+            aria-current={isSelected ? 'page' : undefined}
+          >
+            {/* Chevron for expandable items */}
+            {hasChildren && level === 0 && (
+              <span
+                className="transition-transform duration-150"
+                style={{
+                  transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                }}
+              >
+                <DSIcon name="IcChevronRight" size="XS" attention="medium" />
+              </span>
+            )}
+            {/* Icon for top-level items without children, or bullet for nested */}
+            {!hasChildren && level === 0 && item.iconName && (
+              <DSIcon name={item.iconName} size="XS" attention={isSelected ? 'high' : 'medium'} />
+            )}
+            {!hasChildren && level > 0 && (
+              <span className="w-1 h-1 rounded-full" style={{ backgroundColor: theme.text.low }} />
+            )}
+            {/* Icon for parent items */}
+            {hasChildren && level === 0 && item.iconName && (
+              <DSIcon name={item.iconName} size="XS" attention={isSelected ? 'high' : 'medium'} />
+            )}
+            <span className="text-sm font-medium">{item.label}</span>
+          </button>
+          {hasChildren && isExpanded && (
+            <div className="ml-4">
+              {item.children!.map((child) => renderNavItem(child, level + 1))}
+            </div>
+          )}
+        </div>
+      );
+    },
+    [activeSection, expandedCategories, theme, toggleCategory, onSectionChange]
+  );
 
   return (
     <aside
-      className="w-[240px] min-w-[240px] h-full flex flex-col overflow-hidden"
+      className="w-[260px] min-w-[260px] h-full flex flex-col overflow-hidden"
       style={{
         backgroundColor: theme.background.ghost,
         borderRight: `1px solid ${theme.stroke.low}`,
@@ -91,6 +193,28 @@ export const AdminSidebar = memo(function AdminSidebar({
           alt="Jio Voice Lab"
           className="h-8"
         />
+      </div>
+
+      {/* Search */}
+      <div className="px-3 pb-3">
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: theme.text.low }}>
+            <DSIcon name="IcSearch" size="XS" attention="low" />
+          </span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="search..."
+            className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border-0 focus:outline-none focus:ring-2"
+            style={{
+              backgroundColor: theme.background.subtle,
+              color: theme.text.high,
+              // @ts-expect-error CSS custom property
+              '--tw-ring-color': theme.accent,
+            }}
+          />
+        </div>
       </div>
 
       {/* Section Label */}
@@ -106,72 +230,58 @@ export const AdminSidebar = memo(function AdminSidebar({
         admin panel
       </div>
 
-      {/* Primary Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2.5 py-1 space-y-0.5">
-        {NAV_ITEMS.map((item) => (
-          <SidebarNavItem
-            key={item.id}
-            icon={<DSIcon name={item.iconName} size="XS" attention="high" />}
-            label={item.label}
-            onClick={() => onSectionChange(item.id)}
-            isActive={activeSection === item.id}
-          />
-        ))}
-
-        {/* Advanced Section Toggle */}
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full px-2 flex items-center gap-2 rounded-lg transition-colors cursor-pointer mt-3"
-          style={{
-            height: '28px',
-            color: theme.text.low,
-            fontSize: '11px',
-          }}
-        >
-          <DSIcon 
-            name={showAdvanced ? 'IcChevronDown' : 'IcChevronRight'} 
-            size="XS" 
-            attention="low" 
-          />
-          <span>{showAdvanced ? 'hide advanced' : 'show advanced'}</span>
-        </button>
-
-        {/* Advanced Navigation Items */}
-        {showAdvanced && (
-          <div className="space-y-0.5 mt-1">
-            {ADVANCED_ITEMS.map((item) => (
-              <SidebarNavItem
-                key={item.id}
-                icon={<DSIcon name={item.iconName} size="XS" attention="high" />}
-                label={item.label}
-                onClick={() => onSectionChange(item.id)}
-                isActive={activeSection === item.id}
-              />
-            ))}
+      {/* Navigation Tree */}
+      <nav className="flex-1 overflow-y-auto p-2 scrollable-container">
+        {filteredItems.length === 0 ? (
+          <div
+            className="text-center py-8 text-sm"
+            style={{ color: theme.text.low }}
+          >
+            no items found
           </div>
+        ) : (
+          filteredItems.map((item) => renderNavItem(item))
         )}
       </nav>
 
       {/* Bottom Actions */}
       <div
-        className="p-2.5 space-y-0.5"
+        className="p-2.5"
         style={{ borderTop: `1px solid ${theme.stroke.low}` }}
       >
         {/* Back to App */}
-        <SidebarNavItem
-          icon={<DSIcon name="IcArrowBack" size="XS" attention="high" />}
-          label="back to app"
+        <button
           onClick={() => { window.location.href = '/'; }}
-          ariaLabel="Back to Voice Lab"
-        />
+          className="w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2"
+          style={{ color: theme.text.medium }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = theme.background.ghost;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          aria-label="Back to Voice Lab"
+        >
+          <DSIcon name="IcArrowBack" size="XS" attention="medium" />
+          <span className="text-sm font-medium">back to app</span>
+        </button>
 
         {/* Sign Out */}
-        <SidebarNavItem
-          icon={<DSIcon name="IcLogout" size="XS" attention="high" />}
-          label="sign out"
+        <button
           onClick={onSignOut}
-          ariaLabel="Sign out of admin"
-        />
+          className="w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center gap-2"
+          style={{ color: theme.text.medium }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = theme.background.ghost;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }}
+          aria-label="Sign out of admin"
+        >
+          <DSIcon name="IcLogout" size="XS" attention="medium" />
+          <span className="text-sm font-medium">sign out</span>
+        </button>
       </div>
     </aside>
   );
