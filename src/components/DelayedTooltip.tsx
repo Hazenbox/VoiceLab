@@ -52,10 +52,10 @@ export const DelayedTooltip = memo(function DelayedTooltip({
   // Smart width calculation (from existing TooltipIcon pattern)
   const getTooltipWidth = (text: string) => {
     const length = text.length;
-    if (length < 15) return 'auto';
-    if (length < 30) return '140px';
-    if (length < 60) return '200px';
-    return '260px';
+    if (length < 20) return 'auto';
+    if (length < 40) return '180px';
+    if (length < 80) return '240px';
+    return '300px';
   };
   
   const handleMouseEnter = useCallback(() => {
@@ -100,7 +100,7 @@ export const DelayedTooltip = memo(function DelayedTooltip({
       {children}
       {isVisible && !disabled && (
         <div
-          className={`absolute z-50 px-2 py-1 rounded text-xs whitespace-nowrap pointer-events-none
+          className={`absolute z-50 px-2 py-1 rounded text-xs whitespace-normal pointer-events-none
             ${position === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'}
             left-1/2 -translate-x-1/2`}
           style={{
