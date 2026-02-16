@@ -176,7 +176,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
     <aside
       className="h-full flex flex-col overflow-hidden relative"
       style={{
-        width: '320px',
+        width: '380px',
         backgroundColor: theme.background.ghost,
         borderLeft: `1px solid ${theme.stroke.low}`,
       }}
@@ -207,8 +207,44 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollable-container">
+          {/* Chat Settings Section */}
+          <Accordion title="Chat Settings" icon={<ChatIcon />} defaultOpen>
+            {/* Temperature */}
+            <Slider
+              label="Temperature"
+              value={temperature}
+              min={0}
+              max={1}
+              step={0.1}
+              onChange={(value) => onTemperatureChange?.(value)}
+              disabled={disabled}
+              tooltip="Controls randomness. Low (0) = focused/predictable. High (1) = creative/varied"
+            />
+            
+            {/* Max Tokens */}
+            <Slider
+              label="Max Tokens"
+              value={maxTokens}
+              min={100}
+              max={4000}
+              step={100}
+              onChange={(value) => onMaxTokensChange?.(value)}
+              disabled={disabled}
+              tooltip="Maximum response length in tokens. Higher = longer possible responses"
+            />
+            
+            {/* Stream Response */}
+            <Toggle
+              label="Stream Response"
+              checked={streamResponse}
+              onChange={(checked) => onStreamResponseChange?.(checked)}
+              disabled={disabled}
+              tooltip="Show response word-by-word as it generates, instead of all at once"
+            />
+          </Accordion>
+          
           {/* Voice Settings Section - Merged Voice & TTS with Conversation Settings */}
-          <Accordion title="Voice Settings" icon={<VoiceIcon />} defaultOpen>
+          <Accordion title="Voice Settings" icon={<VoiceIcon />}>
             <VoiceSelector
               value={voiceGender}
               onChange={onVoiceGenderChange}
@@ -275,42 +311,6 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               onChange={(value) => onConfigChange({ ...config, maxResponseLength: value as ResponseLength })}
               disabled={disabled}
               tooltip="How long AI responses should be. Short (30 words), Medium (50), Long (100)"
-            />
-          </Accordion>
-          
-          {/* Chat Settings Section */}
-          <Accordion title="Chat Settings" icon={<ChatIcon />}>
-            {/* Temperature */}
-            <Slider
-              label="Temperature"
-              value={temperature}
-              min={0}
-              max={1}
-              step={0.1}
-              onChange={(value) => onTemperatureChange?.(value)}
-              disabled={disabled}
-              tooltip="Controls randomness. Low (0) = focused/predictable. High (1) = creative/varied"
-            />
-            
-            {/* Max Tokens */}
-            <Slider
-              label="Max Tokens"
-              value={maxTokens}
-              min={100}
-              max={4000}
-              step={100}
-              onChange={(value) => onMaxTokensChange?.(value)}
-              disabled={disabled}
-              tooltip="Maximum response length in tokens. Higher = longer possible responses"
-            />
-            
-            {/* Stream Response */}
-            <Toggle
-              label="Stream Response"
-              checked={streamResponse}
-              onChange={(checked) => onStreamResponseChange?.(checked)}
-              disabled={disabled}
-              tooltip="Show response word-by-word as it generates, instead of all at once"
             />
           </Accordion>
           
