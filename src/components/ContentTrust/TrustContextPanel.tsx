@@ -21,7 +21,7 @@ import {
 import { getContextSummary } from '../../services/context';
 import { Accordion } from '../ui/Accordion';
 import { DSIcon } from '../DSIcon';
-import { Title } from '@marcelinodzn/ds-react';
+import { Title, Tabs, TabList, Tab } from '@marcelinodzn/ds-react';
 
 interface TrustContextPanelProps {
   isOpen: boolean;
@@ -464,23 +464,27 @@ export const TrustContextPanel = memo(function TrustContextPanel({
         
         {/* Tabs */}
         {isOpen && (
-          <div className="flex border-b flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
-            {(['score', 'context', 'violations'] as const).map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)}
-                className="flex-1 px-4 py-2.5 text-xs font-medium capitalize"
-                style={{
-                  color: activeTab === tab ? theme.accent : theme.text.medium,
-                  borderBottom: activeTab === tab ? `2px solid ${theme.accent}` : '2px solid transparent',
-                }}>
-                {tab}
-                {tab === 'violations' && allViolations.length > 0 && (
-                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px]"
-                    style={{ backgroundColor: `${SEMANTIC_COLORS.negative}1A`, color: SEMANTIC_COLORS.negative }}>
-                    {allViolations.length}
-                  </span>
-                )}
-              </button>
-            ))}
+          <div className="flex-shrink-0 px-4">
+            <Tabs 
+              selectedKey={activeTab} 
+              onSelectionChange={(key) => setActiveTab(key as 'score' | 'context' | 'violations')}
+            >
+              <TabList>
+                <Tab id="score">score</Tab>
+                <Tab id="context">context</Tab>
+                <Tab id="violations">
+                  violations
+                  {allViolations.length > 0 && (
+                    <span 
+                      className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px]"
+                      style={{ backgroundColor: `${SEMANTIC_COLORS.negative}1A`, color: SEMANTIC_COLORS.negative }}
+                    >
+                      {allViolations.length}
+                    </span>
+                  )}
+                </Tab>
+              </TabList>
+            </Tabs>
           </div>
         )}
         
