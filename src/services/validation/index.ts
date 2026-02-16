@@ -48,3 +48,16 @@ export type {
   ActiveTokens,
   TokenEnforcementContext,
 } from './tokenEnforcementAgent';
+
+// Structured Output Validation (Phase 2.5: JSON/XML well-formedness)
+export {
+  validateStructuredOutput,
+  detectStructuredOutput,
+  toValidationViolations as structuredOutputToViolations,
+} from './structuredOutputValidator';
+
+export type {
+  StructuredOutputValidation,
+  StructuredOutputError,
+  StructuredOutputWarning,
+} from './structuredOutputValidator';
