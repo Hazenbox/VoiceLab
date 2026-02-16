@@ -39,8 +39,8 @@ function FeedbackBadge({ type }: { type: string }) {
       style={{
         display: 'inline-block',
         backgroundColor: bg,
-        borderRadius: '8px',
-        padding: '8px 16px',
+        borderRadius: '4px',
+        padding: '2px 6px',
       }}
     >
       <Label size="XS" weight="medium" attention="high" as="span">
