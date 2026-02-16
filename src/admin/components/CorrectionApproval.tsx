@@ -404,8 +404,8 @@ export function CorrectionApprovalList({ deviceId, feedbackCounts }: CorrectionA
             </AdminTableCell>
             <AdminTableCell>
               <Button 
-                appearance="primary" 
-                size="S" 
+                appearance="ghost" 
+                size="XS" 
                 onPress={() => setSelectedCorrection(c)}
               >
                 Review
