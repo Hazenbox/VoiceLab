@@ -521,7 +521,16 @@ function AdminDashboard() {
             dislikes={dashboardStats.dislikeCount}
           />
           <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${theme.stroke.low}` }}>
-            <span className="text-xs" style={{ color: theme.text.low }}>
+            <span 
+              style={{ 
+                fontFamily: '"JioType Var"',
+                fontWeight: 400,
+                fontSize: '12px',
+                lineHeight: 1.3,
+                fontVariationSettings: '"opsz" 24',
+                color: theme.text.low,
+              }}
+            >
               {dashboardStats.sentimentRatio !== null ? `${dashboardStats.sentimentRatio}% positive feedback` : 'No feedback yet'}
             </span>
           </div>
@@ -545,7 +554,17 @@ function AdminDashboard() {
             ]}
           />
           <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${theme.stroke.low}` }}>
-            <div className="flex justify-between text-xs" style={{ color: theme.text.low }}>
+            <div 
+              className="flex justify-between"
+              style={{ 
+                fontFamily: '"JioType Var"',
+                fontWeight: 400,
+                fontSize: '12px',
+                lineHeight: 1.3,
+                fontVariationSettings: '"opsz" 24',
+                color: theme.text.low,
+              }}
+            >
               <span>regenerations: {dashboardStats.regenerationCount}</span>
               <span>errors: {dashboardStats.errorCount}</span>
             </div>

@@ -358,7 +358,17 @@ export const SentimentBar = memo(function SentimentBar({
         />
       </div>
       {total === 0 && (
-        <span className="block mt-2 text-xs" style={{ color: theme.text.low }}>
+        <span 
+          className="block mt-2"
+          style={{ 
+            fontFamily: '"JioType Var"',
+            fontWeight: 400,
+            fontSize: '12px',
+            lineHeight: 1.3,
+            fontVariationSettings: '"opsz" 24',
+            color: theme.text.low,
+          }}
+        >
           No feedback yet
         </span>
       )}
