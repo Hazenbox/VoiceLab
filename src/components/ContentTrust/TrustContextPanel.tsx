@@ -333,7 +333,7 @@ const ComplianceJustificationSection: React.FC<{
       
       {/* Guardrails Followed (Collapsible) */}
       <Accordion 
-        title="Brand Guardrails Followed" 
+        title="Brand guardrails followed" 
         defaultOpen={false}
         badge={`${followedCount}/10`}
         variant="card"
@@ -354,7 +354,7 @@ const ComplianceJustificationSection: React.FC<{
       
       {/* Validation Rules Passed (Collapsible) */}
       <Accordion 
-        title="Validation Rules Applied" 
+        title="Validation rules applied" 
         defaultOpen={false}
         badge={totalAgentRulesPassed}
         variant="card"
@@ -477,7 +477,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
               
               {/* Score Breakdown - Collapsible */}
               <Accordion 
-                title="Score Breakdown" 
+                title="Score breakdown" 
                 defaultOpen={false}
                 badge={explanation.agentBreakdown.length}
                 variant="card"
