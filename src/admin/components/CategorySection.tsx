@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
+import { Label } from '@marcelinodzn/ds-react';
 import type { Id } from '../../../convex/_generated/dataModel';
 
 /** Color palette for knowledge item categories */
@@ -51,14 +52,28 @@ interface CategorySectionProps {
 
 // ── Severity Badge Component ─────────────────────────────────────
 function SeverityBadge({ severity, count }: { severity: string; count: number }) {
+  const theme = useThemeColors();
   const style = SEVERITY_COLORS[severity] || SEVERITY_COLORS.warning;
+  
+  const bgColorMap: Record<string, string> = {
+    error:   theme.isLight ? '#FEE2E2' : 'rgba(239, 68, 68, 0.2)',
+    warning: theme.isLight ? '#FEF3C7' : 'rgba(234, 179, 8, 0.2)',
+    info:    theme.isLight ? '#DBEAFE' : 'rgba(59, 130, 246, 0.2)',
+  };
   
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-      style={{ backgroundColor: style.bg, color: style.text }}
+      className="inline-flex items-center gap-1"
+      style={{
+        display: 'inline-block',
+        backgroundColor: bgColorMap[severity] || bgColorMap.warning,
+        borderRadius: '4px',
+        padding: '2px 6px',
+      }}
     >
-      {count} {style.label}
+      <Label size="XS" weight="medium" attention="high" as="span">
+        {count} {style.label}
+      </Label>
     </span>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import { useThemeColors } from '../../theme/useColors';
+import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import { AdminTable, AdminTableRow, AdminTableCell } from './AdminTable';
 import { formatRelativeTime } from '../utils/formatters';
 import type { Id } from '../../../convex/_generated/dataModel';
@@ -175,14 +175,16 @@ function CorrectionDetailModal({
               {correction.reasons.map((reason, i) => (
                 <span
                   key={i}
-                  className="inline-block rounded-md px-2 py-1"
                   style={{
-                    fontSize: '12px',
-                    backgroundColor: `${SEMANTIC_COLORS.negative}1F`,
-                    color: SEMANTIC_COLORS.negative,
+                    display: 'inline-block',
+                    backgroundColor: theme.isLight ? '#FEE2E2' : 'rgba(239, 68, 68, 0.2)',
+                    borderRadius: '4px',
+                    padding: '2px 6px',
                   }}
                 >
-                  {reason}
+                  <Label size="XS" weight="medium" attention="high" as="span">
+                    {reason}
+                  </Label>
                 </span>
               ))}
             </div>
