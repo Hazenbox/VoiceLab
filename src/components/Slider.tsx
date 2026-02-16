@@ -97,8 +97,8 @@ export const Slider: React.FC<SliderProps> = ({
             </>
           )}
         </div>
-        <Text variant="caption" weight="regular">
-          <span style={{ fontFamily: "'Geist Mono', monospace" }}>{displayValue}</span>
+        <Text size="XS" weight="low" color="medium">
+          {displayValue}
         </Text>
       </div>
       
