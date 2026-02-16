@@ -75,6 +75,7 @@ export const Toggle: React.FC<ToggleProps> = ({
         onChange={onChange}
         isDisabled={disabled}
         size="S"
+        appearance="secondary"
       />
     </div>
   );
