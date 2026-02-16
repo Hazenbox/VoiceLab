@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
-import { Title, Text, Label, Card, CardBody, Chip } from '@marcelinodzn/ds-react';
+import { Title, Text } from '@marcelinodzn/ds-react';
 
 /** Chart accent for branded chart bars */
 const CHART_ACCENT = '#f97316';
@@ -270,21 +270,27 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle: string })
 function AdminCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   const theme = useThemeColors();
   return (
-    <Card surface="minimal" className={className} style={{ border: `1px solid ${theme.stroke.low}` }}>
-      <CardBody>
-        {children}
-      </CardBody>
-    </Card>
+    <div
+      className={`rounded-lg ${className}`}
+      style={{
+        border: `1px solid ${theme.stroke.low}`,
+        backgroundColor: 'transparent',
+      }}
+    >
+      {children}
+    </div>
   );
 }
 
 function CardLabel({ children }: { children: React.ReactNode }) {
+  const theme = useThemeColors();
   return (
-    <div style={{ marginBottom: '12px' }}>
-      <Label size="XS" weight="medium" attention="low" as="span">
-        {children}
-      </Label>
-    </div>
+    <span
+      className="block font-medium mb-3"
+      style={{ color: theme.text.low, fontSize: '11px' }}
+    >
+      {children}
+    </span>
   );
 }
 
@@ -818,62 +824,51 @@ function AdminLearningCenter() {
       {/* Feedback Distribution */}
       <AdminCard className="p-4 mb-5">
         <CardLabel>Feedback distribution</CardLabel>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div className="grid grid-cols-4 gap-4">
           {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
-            <Chip
+            <div 
               key={type}
-              size="L"
-              appearance="neutral"
-              isSelected={filter === type}
-              onPress={() => setFilter(filter === type ? 'all' : type)}
+              className="text-center p-3 rounded-lg cursor-pointer transition-all"
+              style={{ 
+                backgroundColor: filter === type ? theme.accent : theme.background.ghost,
+                opacity: filter === type ? 1 : 0.7,
+              }}
+              onClick={() => setFilter(filter === type ? 'all' : type)}
             >
-              {feedbackCounts?.[type] ?? 0} {type.replace('_', ' ')}
-            </Chip>
+              <span 
+                className="block text-2xl font-bold" 
+                style={{ color: filter === type ? '#fff' : theme.text.high }}
+              >
+                {feedbackCounts?.[type] ?? 0}
+              </span>
+              <span 
+                className="text-xs" 
+                style={{ color: filter === type ? '#fff' : theme.text.low }}
+              >
+                {type.replace('_', ' ')}
+              </span>
+            </div>
           ))}
         </div>
-      </AdminCard>
-
-      {/* Before/After Comparison View */}
-      <AdminCard className="p-4 mb-5">
-        <CardLabel>Recent edit corrections (before → after)</CardLabel>
-        {editCorrections.length > 0 ? (
-          editCorrections.slice(0, 5).map((c, i) => (
-            <CorrectionDiff 
-              key={c._id?.toString() || i}
-              original={c.originalContent}
-              edited={c.editedContent!}
-              ecosystem={(c as Record<string, unknown>).ecosystem as string || 'unknown'}
-              channel={(c as Record<string, unknown>).channel as string || 'unknown'}
-              timestamp={c.timestamp}
-              expanded={expandedId === (c._id?.toString() || String(i))}
-              onToggle={() => setExpandedId(
-                expandedId === (c._id?.toString() || String(i)) 
-                  ? null 
-                  : (c._id?.toString() || String(i))
-              )}
-            />
-          ))
-        ) : (
-          <Text size="S" weight="low" color="low">
-            No edit corrections yet. Users can edit AI responses to teach better outputs.
-          </Text>
-        )}
       </AdminCard>
 
       {/* Top Avoid Patterns */}
       {learningStats.topAvoidReasons.length > 0 && (
         <AdminCard className="p-4 mb-5">
           <CardLabel>Top patterns to avoid (from negative feedback)</CardLabel>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="flex flex-wrap gap-2">
             {learningStats.topAvoidReasons.map((reason, i) => (
-              <Chip
+              <span
                 key={i}
-                size="S"
-                appearance="negative"
-                attention="low"
+                className="inline-block rounded-md px-2 py-1"
+                style={{
+                  fontSize: '12px',
+                  backgroundColor: `${SEMANTIC_COLORS.negative}1F`,
+                  color: SEMANTIC_COLORS.negative,
+                }}
               >
                 {reason}
-              </Chip>
+              </span>
             ))}
           </div>
         </AdminCard>
