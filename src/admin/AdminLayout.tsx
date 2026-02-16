@@ -440,52 +440,43 @@ function AdminDashboard() {
       <SectionHeader title="Dashboard" subtitle="System health and value delivery — last 24 hours" />
 
       {/* Hero KPIs - 4 cards using DS DataCard */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
         <DataCard 
           title="total generations"
-          showTitle={true}
-          size="L"
-          fillEmphasis="Subtle"
-          backgroundLevel="Level 1"
           dataHead={{
             leadValue: String(dashboardStats.totalGenerations ?? 0),
+            showDataSupporting: false,
+            showSupportingLabel: false,
           }}
-          modes={{ colourMode: theme.isLight ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
+          modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
         />
         <DataCard 
           title="avg trust score"
-          showTitle={true}
-          size="L"
-          fillEmphasis="Subtle"
-          backgroundLevel="Level 1"
           dataHead={{
             leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
+            showDataSupporting: false,
             supportingLabelText: KPI_DESCRIPTIONS.avgTrustScore.target ? `target: ${KPI_DESCRIPTIONS.avgTrustScore.target}` : undefined,
             showSupportingLabel: !!KPI_DESCRIPTIONS.avgTrustScore.target,
           }}
-          modes={{ colourMode: theme.isLight ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
+          modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
         />
         <DataCard 
           title="content copied"
-          showTitle={true}
-          size="L"
-          fillEmphasis="Subtle"
-          backgroundLevel="Level 1"
           dataHead={{
             leadValue: String(dashboardStats.copyCount ?? 0),
+            showDataSupporting: false,
+            showSupportingLabel: false,
           }}
-          modes={{ colourMode: theme.isLight ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
+          modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
         />
         <DataCard 
           title="learnings applied"
-          showTitle={true}
-          size="L"
-          fillEmphasis="Subtle"
-          backgroundLevel="Level 1"
           dataHead={{
             leadValue: String(learningStats.totalPatternsApplied ?? 0),
+            showDataSupporting: false,
+            showSupportingLabel: false,
           }}
-          modes={{ colourMode: theme.isLight ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
+          modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
         />
       </div>
 
@@ -533,34 +524,28 @@ function AdminDashboard() {
 
       {/* Hourly Activity Chart - using DS VerticalBarChart */}
       {hourlyBarChartData.length > 0 && !hourlyBarChartData.every(d => d.value === 0) ? (
-        <div className="mb-5">
-          <VerticalBarChart
-            data={hourlyBarChartData}
-            chartHeader={{
-              title: "hourly activity",
-              subtitle: "content generations over time",
-              showSubtitle: true,
-            }}
-            barGroup={{
-              showYAxis: true,
-              showHoverBadge: true,
-              showCategoryLabels: true,
-            }}
-            showHeader={true}
-            modes={{ 
-              colourMode: theme.isLight ? 'Light' : 'Dark', 
-              colourTheme: 'MyJio',
-              Density: 'Compact',
-            }}
-          />
-        </div>
+        <VerticalBarChart
+          data={hourlyBarChartData}
+          chartHeader={{
+            title: "hourly activity",
+            subtitle: "content generations over time",
+          }}
+          barGroup={{
+            showYAxis: true,
+            showHoverBadge: true,
+          }}
+          modes={{ 
+            colourMode: theme.colorMode, 
+            colourTheme: 'MyJio',
+            fullWidth: true,
+          }}
+        />
       ) : (
         <ChartContainer
           title="hourly activity"
           subtitle="content generations over time"
           empty={true}
           emptyMessage="no activity in selected time range"
-          className="mb-5"
         >
           <div />
         </ChartContainer>
