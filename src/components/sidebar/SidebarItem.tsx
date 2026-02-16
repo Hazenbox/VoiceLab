@@ -39,7 +39,7 @@ export const SidebarItem = memo(function SidebarItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-2 text-left cursor-pointer w-full px-2.5 rounded-xl focus:outline-none"
+      className="flex items-center gap-2 text-left cursor-pointer w-full px-2.5 rounded-lg focus:outline-none"
       style={{
         backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
         height: '36px',
