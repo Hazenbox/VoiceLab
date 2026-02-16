@@ -819,12 +819,16 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         if (featureFlags.knowledgeBase) {
           // Use Convex data if available, otherwise fall back to code defaults
           if (convexKnowledge) {
+            // Phase 1.3: Pass corrections directly to retrieveKnowledge
+            // convexCorrections comes from the getLearningCorrections query
             promptKnowledge = retrieveKnowledge(
               {
                 avoidWords: convexKnowledge.avoidWords,
                 preferredWords: convexKnowledge.preferredWords,
                 autoFixRules: convexKnowledge.autoFixRules,
                 approvedExamples: convexKnowledge.approvedExamples,
+                // Include Convex corrections for integrated knowledge retrieval
+                corrections: convexCorrections || undefined,
               },
               effectiveEcosystem,
               effectiveChannel

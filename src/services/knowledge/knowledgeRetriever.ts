@@ -93,11 +93,29 @@ function setCache(key: string, data: KnowledgeItem[]): void {
 // The retriever accepts pre-fetched Convex data (from useQuery hooks)
 // This avoids the retriever needing to know about Convex client internals.
 
+/**
+ * Correction record from Convex
+ */
+export interface CorrectionRecord {
+  _id: string;
+  feedbackType: string;
+  originalContent: string;
+  editedContent?: string;
+  comment?: string;
+  reasons?: string[];
+  ecosystem: string;
+  channel: string;
+  adminStatus: string;
+  timestamp: number;
+}
+
 export type ConvexKnowledgeData = {
   avoidWords?: KnowledgeItem[];
   preferredWords?: KnowledgeItem[];
   autoFixRules?: KnowledgeItem[];
   approvedExamples?: KnowledgeItem[];
+  /** Phase 3: User corrections for learning */
+  corrections?: CorrectionRecord[];
 } | null;
 
 // ── Retriever ────────────────────────────────────────────────────
@@ -141,12 +159,45 @@ export function retrieveKnowledge(
       })
       .map((item) => item.content);
 
+    // Phase 3: Process corrections from Convex
+    // Filter to approved corrections with edits (learning-relevant)
+    const corrections = (convexData.corrections || [])
+      .filter((c) => {
+        // Only include approved corrections
+        if (c.adminStatus === 'rejected') return false;
+        // Must have edited content for learning
+        if (!c.editedContent) return false;
+        // Filter by ecosystem/channel if specified
+        if (ecosystem && c.ecosystem !== ecosystem) return false;
+        if (channel && c.channel !== channel) return false;
+        return true;
+      })
+      .map((c) => ({
+        original: c.originalContent,
+        edited: c.editedContent!,
+        context: c.comment || `${c.ecosystem}/${c.channel}`,
+      }))
+      // Limit to most recent 20 corrections
+      .slice(0, 20);
+
+    // Extract style preferences from comments (Phase 3.1)
+    const stylePreferences = (convexData.corrections || [])
+      .filter((c) => c.adminStatus !== 'rejected' && c.comment && c.comment.length > 10)
+      .map((c) => c.comment!)
+      .filter((comment) => {
+        // Filter to comments that look like style preferences
+        const styleKeywords = ['prefer', 'always', 'never', 'use', 'avoid', 'instead', 'better', 'tone', 'style'];
+        return styleKeywords.some((kw) => comment.toLowerCase().includes(kw));
+      })
+      .slice(0, 10);
+
     return {
       avoidWords,
       preferredWords,
       autoFixRules,
       approvedExamples,
-      corrections: [], // Will be populated in Phase 3
+      corrections,
+      stylePreferences: stylePreferences.length > 0 ? stylePreferences : undefined,
       source: 'convex',
     };
   }
