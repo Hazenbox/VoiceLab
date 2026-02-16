@@ -386,7 +386,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       </div>
 
       {/* Bottom Navigation */}
-      <Divider attention="low" />
+      <Divider attention="medium" />
       <div className="p-2.5">
         {/* User Profile Menu */}
         {userName && onEditProfile && (
