@@ -102,60 +102,35 @@ const DetectedProductBadge: React.FC<{
   suggestedEcosystem: string | null;
   matchedKeywords: string[];
 }> = ({ productName, confidence, ecosystemMismatch, suggestedEcosystem, matchedKeywords }) => {
-  const theme = useThemeColors();
-  
   if (!productName) {
     return (
-      <span className="text-xs" style={{ color: theme.text.low }}>
-        No specific product detected
-      </span>
+      <Text size="XS" color="low">No specific product detected</Text>
     );
   }
   
-  const confidenceColors = {
-    high: SEMANTIC_COLORS.positive,
-    medium: SEMANTIC_COLORS.warning,
-    low: SEMANTIC_COLORS.negative,
-  };
+  const confidenceVariant = {
+    high: 'positive',
+    medium: 'warning',
+    low: 'negative',
+  } as const;
   
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-end gap-1.5">
       <div className="flex items-center gap-1.5">
-        <span 
-          className="text-[10px] px-1.5 py-0.5 rounded"
-          style={{ 
-            backgroundColor: `${confidenceColors[confidence as keyof typeof confidenceColors] || '#6b7280'}20`,
-            color: confidenceColors[confidence as keyof typeof confidenceColors] || '#6b7280',
-          }}
-        >
+        <Badge variant={confidenceVariant[confidence as keyof typeof confidenceVariant] || 'neutral'}>
           {confidence}
-        </span>
-        <span className="text-xs font-medium" style={{ color: theme.text.high }}>
-          {productName}
-        </span>
+        </Badge>
+        <Label size="XS" weight="medium" color="high">{productName}</Label>
       </div>
       {ecosystemMismatch && suggestedEcosystem && (
-        <span 
-          className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-1"
-          style={{ 
-            backgroundColor: `${SEMANTIC_COLORS.warning}26`,
-            color: SEMANTIC_COLORS.warning,
-          }}
-        >
-          <DSIcon name="IcWarning" size="XS" attention="medium" />
+        <Badge variant="warning">
           Typically uses {suggestedEcosystem} tone
-        </span>
+        </Badge>
       )}
       {matchedKeywords.length > 0 && (
         <div className="flex flex-wrap gap-1 justify-end">
           {matchedKeywords.slice(0, 3).map((kw, i) => (
-            <span 
-              key={i}
-              className="text-[9px] px-1 py-0.5 rounded"
-              style={{ backgroundColor: theme.stroke.low, color: theme.text.low }}
-            >
-              {kw}
-            </span>
+            <Badge key={i} variant="neutral">{kw}</Badge>
           ))}
         </div>
       )}
@@ -168,7 +143,7 @@ const ContextSummarySection: React.FC<{ context: GenerationContext }> = ({ conte
   const summary = getContextSummary(context);
   
   const items = [
-    { label: 'Tone & Voice', value: summary.ecosystem },
+    { label: 'Tone & voice', value: summary.ecosystem },
     { label: 'Channel', value: summary.channel },
     { label: 'Warmth', value: summary.warmth },
     { label: 'Detail', value: summary.detail },
@@ -185,12 +160,7 @@ const ContextSummarySection: React.FC<{ context: GenerationContext }> = ({ conte
         className="p-3 rounded-lg space-y-2"
         style={{ backgroundColor: theme.stroke.low }}
       >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: theme.text.high }}>
-            <DSIcon name="IcSearch" size="XS" attention="high" />
-            Detected Topic
-          </span>
-        </div>
+        <Label size="XS" weight="high" color="high">Detected topic</Label>
         <DetectedProductBadge 
           productName={summary.detectedProduct.productName}
           confidence={summary.detectedProduct.confidence}
@@ -199,19 +169,23 @@ const ContextSummarySection: React.FC<{ context: GenerationContext }> = ({ conte
           matchedKeywords={summary.detectedProduct.matchedKeywords}
         />
         {summary.detectedProduct.ecosystemMismatch && (
-          <p className="text-[10px] leading-relaxed" style={{ color: theme.text.low }}>
+          <Text size="XS" color="low">
             Content will be about <strong>{summary.detectedProduct.productName}</strong> with 
             the tone from your selected ecosystem setting.
-          </p>
+          </Text>
         )}
       </div>
       
       {/* Other Context Items */}
       <div>
-        {items.map(item => (
-          <div key={item.label} className="flex items-center justify-between py-1.5 border-b" style={{ borderColor: theme.stroke.low }}>
-            <span className="text-xs font-medium" style={{ color: theme.text.low }}>{item.label}</span>
-            <span className="text-xs text-right max-w-[60%] truncate" style={{ color: theme.text.high }}>{item.value}</span>
+        {items.map((item, index) => (
+          <div 
+            key={item.label} 
+            className="flex items-center justify-between py-2"
+            style={{ borderBottom: index < items.length - 1 ? `1px solid ${theme.stroke.low}` : 'none' }}
+          >
+            <Label size="XS" weight="medium" color="low">{item.label}</Label>
+            <Text size="XS" color="high" style={{ textAlign: 'right', maxWidth: '60%' }}>{item.value}</Text>
           </div>
         ))}
       </div>
