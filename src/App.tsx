@@ -1834,58 +1834,66 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
         // =====================================================================
         // Finishing Layer: Apply Small Joy & Signature (conversational path)
+        // SKIP for general_chat - these are Jio-specific features
         // =====================================================================
         let conversationalFinishedContent = result.content;
         
-        try {
-          // Build lightweight context for finishing layer
-          // Determine if response has clear solution/actionable steps
-          const conversationalHasSolution = 
-            /(?:step\s*\d|follow these|here's how|to fix this|you can|try this)/i.test(conversationalFinishedContent);
-          
-          const conversationalJoyContext: JoyContext = {
-            emotion: 'shanta', // Default for conversational
-            intent: intentClassification.intent,
-            topic: intentClassification.detectedEcosystem?.ecosystem || 'general',
-            ecosystem: intentClassification.detectedEcosystem?.ecosystem || 'general',
-            resolutionStatus: 'in_progress',
-            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
-            isMilestone: false,
-            safetyDomain: undefined,
-            riskLevel: 'low',
-            isComplaint: intentClassification.intent === 'complaint',
-            isEscalated: false,
-            hasSolutionContext: conversationalHasSolution,
-          };
-          
-          // Select and inject small joy if appropriate
-          const conversationalJoy = selectJoy(conversationalJoyContext);
-          if (conversationalJoy.shouldInclude && conversationalJoy.element) {
-            conversationalFinishedContent = injectJoy(conversationalFinishedContent, conversationalJoy);
-            console.log(`[Finishing] Conversational: Added ${conversationalJoy.element.type} joy`);
+        // Only apply joy/signature for jio_inquiry, NOT general_chat
+        const isGeneralChat = intentClassification.intent === 'general_chat';
+        
+        if (!isGeneralChat) {
+          try {
+            // Build lightweight context for finishing layer
+            // Determine if response has clear solution/actionable steps
+            const conversationalHasSolution = 
+              /(?:step\s*\d|follow these|here's how|to fix this|you can|try this)/i.test(conversationalFinishedContent);
+            
+            const conversationalJoyContext: JoyContext = {
+              emotion: 'shanta', // Default for conversational
+              intent: intentClassification.intent,
+              topic: intentClassification.detectedEcosystem?.ecosystem || 'general',
+              ecosystem: intentClassification.detectedEcosystem?.ecosystem || 'general',
+              resolutionStatus: 'in_progress',
+              turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
+              isMilestone: false,
+              safetyDomain: undefined,
+              riskLevel: 'low',
+              isComplaint: intentClassification.intent === 'complaint',
+              isEscalated: false,
+              hasSolutionContext: conversationalHasSolution,
+            };
+            
+            // Select and inject small joy if appropriate
+            const conversationalJoy = selectJoy(conversationalJoyContext);
+            if (conversationalJoy.shouldInclude && conversationalJoy.element) {
+              conversationalFinishedContent = injectJoy(conversationalFinishedContent, conversationalJoy);
+              console.log(`[Finishing] Conversational: Added ${conversationalJoy.element.type} joy`);
+            }
+            
+            // Build signature context for conversational
+            const conversationalSignatureContext: SignatureContext = {
+              resolutionStatus: 'in_progress',
+              emotion: 'shanta',
+              intent: intentClassification.intent,
+              turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
+              isLastTurn: false,
+              wasEscalated: false,
+              channel: contentChannel,
+              isComplaint: intentClassification.intent === 'complaint',
+            };
+            
+            // Select and append signature if appropriate
+            const conversationalSignature = selectSignature(conversationalSignatureContext);
+            if (conversationalSignature.shouldInclude && conversationalSignature.text) {
+              conversationalFinishedContent = appendSignature(conversationalFinishedContent, conversationalSignature);
+              console.log(`[Finishing] Conversational: Added ${conversationalSignature.type} signature`);
+            }
+          } catch (finishingError) {
+            console.warn('[Finishing] Conversational error:', finishingError);
+            conversationalFinishedContent = result.content;
           }
-          
-          // Build signature context for conversational
-          const conversationalSignatureContext: SignatureContext = {
-            resolutionStatus: 'in_progress',
-            emotion: 'shanta',
-            intent: intentClassification.intent,
-            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
-            isLastTurn: false,
-            wasEscalated: false,
-            channel: contentChannel,
-            isComplaint: intentClassification.intent === 'complaint',
-          };
-          
-          // Select and append signature if appropriate
-          const conversationalSignature = selectSignature(conversationalSignatureContext);
-          if (conversationalSignature.shouldInclude && conversationalSignature.text) {
-            conversationalFinishedContent = appendSignature(conversationalFinishedContent, conversationalSignature);
-            console.log(`[Finishing] Conversational: Added ${conversationalSignature.type} signature`);
-          }
-        } catch (finishingError) {
-          console.warn('[Finishing] Conversational error:', finishingError);
-          conversationalFinishedContent = result.content;
+        } else {
+          console.log('[Finishing] Skipping joy/signature for general_chat intent');
         }
 
         // =====================================================================
@@ -1972,8 +1980,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
         // P0-FIX: Run lightweight validation on conversational content
         // This catches safety issues that could slip through in chat mode
+        // SKIP for general_chat - no trust validation needed for casual greetings
         let conversationalTrustScore: TrustScore | undefined;
-        if (featureFlags.validateConversational) {
+        if (featureFlags.validateConversational && !isGeneralChat) {
           try {
             // Use detected ecosystem/channel if available, otherwise fall back to UI selection
             const effectiveEcosystem = intentClassification?.detectedEcosystem?.ecosystem || ecosystem;
@@ -2012,6 +2021,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             // Don't fail the response if validation fails - log and continue
             console.error('[P0-FIX] Conversational validation error:', validationErr);
           }
+        } else if (isGeneralChat) {
+          console.log('[Validation] Skipping trust validation for general_chat intent');
         }
 
         // =================================================================
