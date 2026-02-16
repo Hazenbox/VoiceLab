@@ -200,3 +200,57 @@ export const MiniKPI = memo(function MiniKPI({
     </div>
   );
 });
+
+/**
+ * Simple KPI card with colors prop for dashboard components
+ * Phase 4.4: Used by ChannelDashboard, IntentAccuracyDashboard, TonalityComplianceDashboard
+ */
+interface SimpleKPICardProps {
+  label: string;
+  value: string;
+  valueColor?: string;
+  subtext?: string;
+  subtextColor?: string;
+  colors: {
+    surface: string;
+    surfaceSecondary: string;
+    text: string;
+    textSecondary: string;
+    border: string;
+  };
+}
+
+export function SimpleKPICard({
+  label,
+  value,
+  valueColor,
+  subtext,
+  subtextColor,
+  colors,
+}: SimpleKPICardProps) {
+  return (
+    <div
+      style={{
+        padding: '16px',
+        borderRadius: '8px',
+        backgroundColor: colors.surfaceSecondary,
+        border: `1px solid ${colors.border}`,
+      }}
+    >
+      <div style={{ fontSize: '12px', color: colors.textSecondary, marginBottom: '4px' }}>
+        {label}
+      </div>
+      <div style={{ fontSize: '24px', fontWeight: 'bold', color: valueColor || colors.text }}>
+        {value}
+      </div>
+      {subtext && (
+        <div style={{ fontSize: '11px', color: subtextColor || colors.textSecondary, marginTop: '4px' }}>
+          {subtext}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Re-export with both names for backwards compatibility
+export { SimpleKPICard as KPICardSimple };
