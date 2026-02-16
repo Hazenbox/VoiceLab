@@ -10,9 +10,7 @@ const CHART_ACCENT = '#f97316';
 const MUTED_GRAY = '#6b7280';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { AdminSidebar, type AdminSection } from './components/AdminSidebar';
-import { AdminStatCard } from './components/AdminStatCard';
 import { AdminTable, AdminTableRow, AdminTableCell } from './components/AdminTable';
-import { KPICard } from './components/KPICard';
 import { TimeRangeSelector, getTimestampForRange, type TimeRange } from './components/TimeRangeSelector';
 import { ChartContainer, HorizontalBarChart, VerticalBars, StatBreakdown, SentimentBar } from './components/AnalyticsCharts';
 import { DataCard, VerticalBarChart } from '@jio/datavis-components';
@@ -768,31 +766,59 @@ function AdminLearningCenter() {
       />
 
       {/* Learning Stats Hero */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-        <KPICard 
-          label="Learnings applied" 
-          value={learningStats.totalPatternsApplied}
-          description={KPI_DESCRIPTIONS.learningsApplied.description}
-          colorClass="text-green-500"
-        />
-        <KPICard 
-          label="Edit corrections" 
-          value={learningStats.byFeedbackType.edits}
-          description={KPI_DESCRIPTIONS.editCorrections.description}
-          colorClass="text-blue-500"
-        />
-        <KPICard 
-          label="Avoid patterns" 
-          value={learningStats.uniqueAvoidPatterns}
-          description={KPI_DESCRIPTIONS.avoidPatterns.description}
-          colorClass="text-red-500"
-        />
-        <KPICard 
-          label="Total feedback" 
-          value={corrections.length}
-          description={KPI_DESCRIPTIONS.totalFeedback.description}
-          colorClass="text-purple-500"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="learnings applied"
+            fillEmphasis="Ghost"
+            width="100%"
+            dataHead={{
+              leadValue: String(learningStats.totalPatternsApplied ?? 0),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="edit corrections"
+            fillEmphasis="Ghost"
+            width="100%"
+            dataHead={{
+              leadValue: String(learningStats.byFeedbackType.edits ?? 0),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="avoid patterns"
+            fillEmphasis="Ghost"
+            width="100%"
+            dataHead={{
+              leadValue: String(learningStats.uniqueAvoidPatterns ?? 0),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="total feedback"
+            fillEmphasis="Ghost"
+            width="100%"
+            dataHead={{
+              leadValue: String(corrections.length ?? 0),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
       </div>
 
       {/* Feedback Distribution */}
@@ -1401,16 +1427,29 @@ function AdminKnowledge() {
       </AdminCard>
 
       {/* Type Overview - Reordered with high-priority first */}
-      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2.5 mb-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-5">
         {knowledgeTypes.map((kt) => (
-          <AdminStatCard
+          <button
             key={kt.type}
-            label={kt.label}
-            value={kt.count}
-            colorClass={kt.colorClass}
             onClick={() => handleCardClick(kt.type)}
-            isSelected={selectedType === kt.type}
-          />
+            className="rounded-lg cursor-pointer transition-all hover:shadow-sm text-left"
+            style={{ 
+              border: `1px solid ${selectedType === kt.type ? theme.accent : theme.stroke.low}`,
+              backgroundColor: 'transparent',
+            }}
+          >
+            <DataCard 
+              title={kt.label}
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: String(kt.count),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </button>
         ))}
       </div>
 
