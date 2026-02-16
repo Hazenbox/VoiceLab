@@ -259,6 +259,39 @@ const STYLE_PATTERNS: PatternRule[] = [
   
   // 24-hour time format to 12-hour (Training 1.pdf)
   { id: 'st-038', pattern: /\b([01]?\d|2[0-3]):([0-5]\d)\s*(hrs?|hours?)\b/gi, severity: 'warning', rule: 'Use 12-hour time format', suggestion: 'Use AM/PM format (e.g., 3:30 PM)', category: 'time' },
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Phase 2.1: Additional style/grammar patterns from PDF
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Full stop enforcement: Flag sentences not ending with proper punctuation
+  // (excludes lines that look like headings, bullets, or CTAs)
+  // Note: This is info-level as some contexts (buttons, CTAs) intentionally omit periods
+  { id: 'st-039', pattern: /^[A-Z][^.!?\n]{20,}[^.!?\n\d]$/gm, severity: 'info', rule: 'Sentences should end with proper punctuation', suggestion: 'Add period (.) at the end', category: 'punctuation' },
+  
+  // Ampersand detection: Flag & when not part of a brand name
+  // Allow: AT&T, R&D, H&M (brand names with &)
+  // Flag: "recharge & enjoy", "plans & offers"
+  { id: 'st-040', pattern: /\s&\s(?!(?:T|D|M)\b)/g, severity: 'warning', rule: 'Use "and" instead of "&" in body text', suggestion: 'and', category: 'punctuation' },
+  
+  // Numerals vs words: Flag spelled-out numbers one through ten when used as quantities
+  // This enforces the rule: use numerals for quantities
+  { id: 'st-041', pattern: /\b(one|two|three|four|five|six|seven|eight|nine|ten)\s+(day|month|year|GB|MB|minute|hour|week|user|plan|call|message|sms|time)s?\b/gi, severity: 'warning', rule: 'Use numerals for quantities', suggestion: 'Replace with numeral (1, 2, 3...)', category: 'numbers' },
+  
+  // Double space detection: Flag multiple spaces after periods or anywhere
+  { id: 'st-042', pattern: /\s{2,}/g, severity: 'info', rule: 'Remove extra spaces', suggestion: 'Use single space', category: 'spacing' },
+  
+  // Sentence starting with lowercase after period (grammar)
+  { id: 'st-043', pattern: /[.!?]\s+[a-z]/g, severity: 'warning', rule: 'Capitalize first letter after sentence end', suggestion: 'Capitalize the letter', category: 'capitalization' },
+  
+  // Em-dash vs double hyphen
+  { id: 'st-044', pattern: /--/g, severity: 'info', rule: 'Use proper em-dash (—) instead of double hyphen', suggestion: '—', category: 'punctuation' },
+  
+  // Ellipsis format (use proper character, not three dots)
+  { id: 'st-045', pattern: /\.{3,}/g, severity: 'info', rule: 'Use proper ellipsis character (…)', suggestion: '…', category: 'punctuation' },
+  
+  // Trailing/leading punctuation issues
+  { id: 'st-046', pattern: /^\s*[,;:]/gm, severity: 'warning', rule: 'Remove leading punctuation', suggestion: 'Remove the punctuation', category: 'punctuation' },
 ];
 
 export const styleConsistencyAgent: ValidationAgent = {
