@@ -32,3 +32,15 @@ export {
   type UseTrustSettingsOptions,
   type UseTrustSettingsReturn,
 } from './useTrustSettings';
+
+// Abort Controller Hook
+export { useAbortController, useAbortControllerMap } from './useAbortController';
+
+// Other Hooks (existing, now re-exported)
+export { useSyncStatus } from './useSyncStatus';
+export { useCopyToClipboard } from './useCopyToClipboard';
+export { useNetworkStatus } from './useNetworkStatus';
+export { useAudioAnalyzer } from './useAudioAnalyzer';
+export { useChatPersistence } from './useChatPersistence';
+export { useAudioRecorder } from './useAudioRecorder';
+export { useSessionAnalytics } from './useSessionAnalytics';
