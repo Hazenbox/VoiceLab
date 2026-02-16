@@ -35,7 +35,7 @@ export const Accordion = memo(function Accordion({
   const isCard = variant === 'card';
 
   return (
-    <div className="border rounded-xl" style={{ borderColor: theme.stroke.low, overflow: 'hidden' }}>
+    <div className="border rounded-xl" style={{ borderColor: theme.stroke.medium, overflow: 'hidden' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between text-left transition-colors hover:opacity-80 p-3"
