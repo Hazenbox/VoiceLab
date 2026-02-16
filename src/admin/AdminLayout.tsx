@@ -236,7 +236,23 @@ function FeedbackBadge({ type }: { type: string }) {
   );
 }
 
-// ── Utility: Section Header ──────────────────────────────────────
+// ── Utility: Page Header (main page title) ───────────────────────
+function PageHeader({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="mb-5">
+      <Title size="M" as="h1" weight="high" color="high">
+        {title}
+      </Title>
+      <div className="mt-1">
+        <Text size="S" weight="low" color="low">
+          {description}
+        </Text>
+      </div>
+    </div>
+  );
+}
+
+// ── Utility: Section Header (chart/section titles) ───────────────
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="mb-5">
@@ -244,7 +260,7 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle: string })
         {title}
       </Title>
       <div className="mt-0.5">
-        <Text variant="caption" weight="regular" color="low">
+        <Text size="XS" weight="low" color="low">
           {subtitle}
         </Text>
       </div>
@@ -433,7 +449,7 @@ function AdminDashboard() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="Dashboard" subtitle="System health and value delivery — last 24 hours" />
+      <PageHeader title="dashboard" description="system health and value delivery — last 24 hours" />
 
       {/* Hero KPIs - 4 cards using DS DataCard */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
@@ -746,9 +762,9 @@ function AdminLearningCenter() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader 
-        title="Learning center" 
-        subtitle="How user feedback improves content generation" 
+      <PageHeader 
+        title="learning center" 
+        description="how user feedback improves content generation" 
       />
 
       {/* Learning Stats Hero */}
@@ -1341,7 +1357,7 @@ function AdminKnowledge() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="Knowledge base" subtitle="Brand rules, vocabulary, and content guidelines" />
+      <PageHeader title="knowledge base" description="brand rules, vocabulary, and content guidelines" />
 
       {/* Total Rules Counter with RAG Status + Add Button */}
       <AdminCard className="p-4 mb-5">
@@ -1504,9 +1520,9 @@ function AdminUsageAnalytics() {
       {!isOnline && <OfflineBanner />}
       
       <div className="flex justify-between items-center mb-5">
-        <SectionHeader 
-          title="Usage analytics" 
-          subtitle="Adoption across Jio ecosystem and content channels" 
+        <PageHeader 
+          title="usage analytics" 
+          description="adoption across Jio ecosystem and content channels" 
         />
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
@@ -1627,7 +1643,7 @@ function AdminUsers() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <SectionHeader title="Users" subtitle="registered user profiles (device-based)" />
+      <PageHeader title="users" description="registered user profiles (device-based)" />
 
       {/* Search */}
       <div className="mb-4">
@@ -1726,7 +1742,7 @@ function AdminConfig() {
 
   return (
     <>
-      <SectionHeader title="System Config" subtitle="Feature flags and environment configuration" />
+      <PageHeader title="system config" description="feature flags and environment configuration" />
 
       {/* Feature Flags */}
       <AdminCard className="p-4 mb-5">
