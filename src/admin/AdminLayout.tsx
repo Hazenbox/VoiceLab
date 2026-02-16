@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
-import { Title, Text, Label, Chip, Divider, Button } from '@marcelinodzn/ds-react';
+import { Title, Text, Label, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
 import { Badge } from '../components/ui/Badge';
 import OnboardingModal, { loadUserProfile, type UserProfile } from '../components/OnboardingModal';
 import type { ColorMode } from '../types';
@@ -945,28 +945,28 @@ function AdminLearningCenter() {
           All feedback ({corrections.length} items)
         </CardLabel>
         
-        {/* Filter Chips */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
-          <Chip
+        {/* Filter SegmentedControl */}
+        <div style={{ marginBottom: '16px' }}>
+          <SegmentedControl 
+            value={feedbackTypeFilter} 
+            onChange={setFeedbackTypeFilter}
+            aria-label="filter by feedback type"
             size="S"
-            appearance="neutral"
-            isSelected={feedbackTypeFilter === 'all'}
-            onPress={() => setFeedbackTypeFilter('all')}
           >
-            all
-          </Chip>
-          <Divider orientation="vertical" />
-          {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
-            <Chip
-              key={type}
-              size="S"
-              appearance="neutral"
-              isSelected={feedbackTypeFilter === type}
-              onPress={() => setFeedbackTypeFilter(feedbackTypeFilter === type ? 'all' : type)}
-            >
-              {feedbackCounts?.[type] ?? 0} {type.replace('_', ' ')}
-            </Chip>
-          ))}
+            <SegmentedControlItem value="all">all</SegmentedControlItem>
+            <SegmentedControlItem value="thumbs_up">
+              {feedbackCounts?.thumbs_up ?? 0} thumbs up
+            </SegmentedControlItem>
+            <SegmentedControlItem value="thumbs_down">
+              {feedbackCounts?.thumbs_down ?? 0} thumbs down
+            </SegmentedControlItem>
+            <SegmentedControlItem value="edit">
+              {feedbackCounts?.edit ?? 0} edit
+            </SegmentedControlItem>
+            <SegmentedControlItem value="comment">
+              {feedbackCounts?.comment ?? 0} comment
+            </SegmentedControlItem>
+          </SegmentedControl>
         </div>
 
         <AdminTable
