@@ -781,6 +781,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         // =================================================================
         const effectiveEcosystem = intentClassification?.detectedEcosystem?.ecosystem || ecosystem;
         const effectiveChannel = intentClassification?.detectedChannel?.channel || contentChannel;
+        const classifiedIntent = intentClassification?.intent;
 
         const generationContext = buildGenerationContext({
           ecosystem: effectiveEcosystem,
