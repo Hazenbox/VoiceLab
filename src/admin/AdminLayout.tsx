@@ -244,16 +244,26 @@ function FeedbackBadge({ type }: { type: string }) {
 
 // ── Utility: Page Header (main page title) ───────────────────────
 function PageHeader({ title, description }: { title: string; description: string }) {
+  const theme = useThemeColors();
   return (
     <div className="mb-5">
       <Title size="L" as="h1" weight="high" color="high">
         {title}
       </Title>
-      <div className="mt-1">
-        <Text size="S" weight="low" color="medium">
-          {description}
-        </Text>
-      </div>
+      <p 
+        className="mt-1"
+        style={{
+          fontFamily: '"JioType Var"',
+          fontWeight: 400,
+          fontSize: '12px',
+          lineHeight: 1.3,
+          fontVariationSettings: '"opsz" 24',
+          color: theme.text.low,
+          margin: 0,
+        }}
+      >
+        {description}
+      </p>
     </div>
   );
 }
@@ -570,45 +580,47 @@ function AdminDashboard() {
       </div>
 
       {/* Hourly Activity Chart - using DS VerticalBarChart */}
-      {hourlyBarChartData.length > 0 && !hourlyBarChartData.every(d => d.value === 0) ? (
-        <div 
-          className="rounded-lg"
-          style={{ 
-            border: `1px solid ${theme.stroke.low}`,
-            padding: '16px',
-          }}
-        >
-          <VerticalBarChart
-            data={hourlyBarChartData}
-            chartHeader={{
-              title: "hourly activity",
-              subtitle: "content generations over time",
+      <div className="mb-5">
+        {hourlyBarChartData.length > 0 && !hourlyBarChartData.every(d => d.value === 0) ? (
+          <div 
+            className="rounded-lg"
+            style={{ 
+              border: `1px solid ${theme.stroke.low}`,
+              padding: '16px',
             }}
-            chartFooter={{
-              source: "",
-              notes: "",
-            }}
-            barGroup={{
-              showYAxis: true,
-              showHoverBadge: true,
-            }}
-            modes={{ 
-              colourMode: theme.colorMode, 
-              colourTheme: 'MyJio',
-              fullWidth: true,
-            }}
-          />
-        </div>
-      ) : (
-        <ChartContainer
-          title="hourly activity"
-          subtitle="content generations over time"
-          empty={true}
-          emptyMessage="no activity in selected time range"
-        >
-          <div />
-        </ChartContainer>
-      )}
+          >
+            <VerticalBarChart
+              data={hourlyBarChartData}
+              chartHeader={{
+                title: "hourly activity",
+                subtitle: "content generations over time",
+              }}
+              chartFooter={{
+                source: "",
+                notes: "",
+              }}
+              barGroup={{
+                showYAxis: true,
+                showHoverBadge: true,
+              }}
+              modes={{ 
+                colourMode: theme.colorMode, 
+                colourTheme: 'MyJio',
+                fullWidth: true,
+              }}
+            />
+          </div>
+        ) : (
+          <ChartContainer
+            title="hourly activity"
+            subtitle="content generations over time"
+            empty={true}
+            emptyMessage="no activity in selected time range"
+          >
+            <div />
+          </ChartContainer>
+        )}
+      </div>
 
       {/* Recent Sessions (collapsed view) */}
       {recentSessions && recentSessions.length > 0 && (
