@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
-import { Title, Text } from '@marcelinodzn/ds-react';
+import { Title, Text, Label } from '@marcelinodzn/ds-react';
 
 /** Chart accent for branded chart bars */
 const CHART_ACCENT = '#f97316';
@@ -209,28 +209,30 @@ function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
 }
 
 // ── Utility: Feedback badge ──────────────────────────────────────
-const FEEDBACK_COLORS: Record<string, { bg: string; fg: string }> = {
-  thumbs_up:   { bg: `${SEMANTIC_COLORS.positive}1F`, fg: SEMANTIC_COLORS.positive },
-  thumbs_down: { bg: `${SEMANTIC_COLORS.negative}1F`, fg: SEMANTIC_COLORS.negative },
-  edit:        { bg: `${SEMANTIC_COLORS.informative}1F`, fg: SEMANTIC_COLORS.informative },
-  comment:     { bg: `${SEMANTIC_COLORS.warning}1F`, fg: SEMANTIC_COLORS.warning },
-};
-const FEEDBACK_FALLBACK = { bg: `${MUTED_GRAY}1F`, fg: MUTED_GRAY };
-
 function FeedbackBadge({ type }: { type: string }) {
-  const c = FEEDBACK_COLORS[type] || FEEDBACK_FALLBACK;
+  const theme = useThemeColors();
+  
+  const colorMap: Record<string, string> = {
+    thumbs_up:   theme.isLight ? '#DCFCE7' : 'rgba(34, 197, 94, 0.2)',
+    thumbs_down: theme.isLight ? '#FEE2E2' : 'rgba(239, 68, 68, 0.2)',
+    edit:        theme.isLight ? '#DBEAFE' : 'rgba(59, 130, 246, 0.2)',
+    comment:     theme.isLight ? '#FEF3C7' : 'rgba(234, 179, 8, 0.2)',
+  };
+  const fallbackBg = theme.isLight ? '#F3F4F6' : 'rgba(107, 114, 128, 0.2)';
+  const bg = colorMap[type] || fallbackBg;
+
   return (
     <span
-      className="inline-block font-medium whitespace-nowrap"
       style={{
-        fontSize: '11px',
+        display: 'inline-block',
+        backgroundColor: bg,
         borderRadius: '4px',
         padding: '2px 6px',
-        backgroundColor: c.bg,
-        color: c.fg,
       }}
     >
-      {type.replace('_', ' ')}
+      <Label size="XS" weight="medium" attention="high" as="span">
+        {type.replace('_', ' ')}
+      </Label>
     </span>
   );
 }
