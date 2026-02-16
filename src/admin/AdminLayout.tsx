@@ -240,11 +240,11 @@ function FeedbackBadge({ type }: { type: string }) {
 function PageHeader({ title, description }: { title: string; description: string }) {
   return (
     <div className="mb-5">
-      <Title size="M" as="h1" weight="high" color="high">
+      <Title size="L" as="h1" weight="high" color="high">
         {title}
       </Title>
       <div className="mt-1">
-        <Text size="S" weight="low" color="low">
+        <Text size="S" weight="low" color="medium">
           {description}
         </Text>
       </div>
@@ -449,7 +449,7 @@ function AdminDashboard() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <PageHeader title="dashboard" description="system health and value delivery — last 24 hours" />
+      <PageHeader title="Dashboard" description="System health and value delivery — last 24 hours" />
 
       {/* Hero KPIs - 4 cards using DS DataCard */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
@@ -763,8 +763,8 @@ function AdminLearningCenter() {
     <>
       {!isOnline && <OfflineBanner />}
       <PageHeader 
-        title="learning center" 
-        description="how user feedback improves content generation" 
+        title="Learning center" 
+        description="How user feedback improves content generation" 
       />
 
       {/* Learning Stats Hero */}
@@ -1357,7 +1357,7 @@ function AdminKnowledge() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <PageHeader title="knowledge base" description="brand rules, vocabulary, and content guidelines" />
+      <PageHeader title="Knowledge base" description="Brand rules, vocabulary, and content guidelines" />
 
       {/* Total Rules Counter with RAG Status + Add Button */}
       <AdminCard className="p-4 mb-5">
@@ -1521,8 +1521,8 @@ function AdminUsageAnalytics() {
       
       <div className="flex justify-between items-center mb-5">
         <PageHeader 
-          title="usage analytics" 
-          description="adoption across Jio ecosystem and content channels" 
+          title="Usage analytics" 
+          description="Adoption across Jio ecosystem and content channels" 
         />
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
@@ -1643,7 +1643,7 @@ function AdminUsers() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <PageHeader title="users" description="registered user profiles (device-based)" />
+      <PageHeader title="Users" description="Registered user profiles (device-based)" />
 
       {/* Search */}
       <div className="mb-4">
@@ -1742,7 +1742,7 @@ function AdminConfig() {
 
   return (
     <>
-      <PageHeader title="system config" description="feature flags and environment configuration" />
+      <PageHeader title="System config" description="Feature flags and environment configuration" />
 
       {/* Feature Flags */}
       <AdminCard className="p-4 mb-5">
