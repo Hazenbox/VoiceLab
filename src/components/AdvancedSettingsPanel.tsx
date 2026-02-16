@@ -90,13 +90,13 @@ interface AdvancedSettingsPanelProps {
 // Icons - Using DSIcon wrapper
 // =============================================================================
 
-const VoiceIcon = () => <DSIcon name="IcMic" size="S" attention="high" />;
+const VoiceIcon = () => <DSIcon name="IcMic" size="S" attention="medium" appearance="neutral" />;
 
-const ProjectIcon = () => <DSIcon name="IcFolder" size="S" attention="high" />;
+const ProjectIcon = () => <DSIcon name="IcFolder" size="S" attention="medium" appearance="neutral" />;
 
-const TrustIcon = () => <DSIcon name="IcProtection" size="S" attention="high" />;
+const TrustIcon = () => <DSIcon name="IcProtection" size="S" attention="medium" appearance="neutral" />;
 
-const ChatIcon = () => <DSIcon name="IcChat" size="S" attention="high" />;
+const ChatIcon = () => <DSIcon name="IcChat" size="S" attention="medium" appearance="neutral" />;
 
 // =============================================================================
 // Main Component

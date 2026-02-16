@@ -367,9 +367,9 @@ const ComplianceJustificationSection: React.FC<{
         variant="card"
         icon={
           hasViolations ? (
-            <DSIcon name="IcProtectionThreats" size="S" attention="high" />
+            <DSIcon name="IcProtectionThreats" size="S" attention="medium" appearance="neutral" />
           ) : (
-            <DSIcon name="IcProtection" size="S" attention="high" />
+            <DSIcon name="IcProtection" size="S" attention="medium" appearance="neutral" />
           )
         }
       >
