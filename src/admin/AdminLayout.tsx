@@ -511,31 +511,60 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Quality Metrics */}
-      <div className="mb-5">
-        <AdminCard className="p-4">
-          <CardLabel>Content quality</CardLabel>
-          <StatBreakdown
-            items={[
-              { 
-                label: 'Regeneration rate', 
-                value: `${dashboardStats.regenerationRate}%`,
-              },
-              { 
-                label: 'Completion rate', 
-                value: `${completionRate}%`,
-              },
-              { 
-                label: 'Regenerations', 
-                value: String(dashboardStats.regenerationCount),
-              },
-              { 
-                label: 'Errors', 
-                value: String(dashboardStats.errorCount),
-              },
-            ]}
+      {/* Quality Metrics - 4 cards using DS DataCard */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="regeneration rate"
+            fillEmphasis="Ghost"
+            width="100%"
+            dataHead={{
+              leadValue: `${dashboardStats.regenerationRate}%`,
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
-        </AdminCard>
+        </div>
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="completion rate"
+            fillEmphasis="Ghost"
+            width="100%"
+            dataHead={{
+              leadValue: `${completionRate}%`,
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="regenerations"
+            fillEmphasis="Ghost"
+            width="100%"
+            dataHead={{
+              leadValue: String(dashboardStats.regenerationCount),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="errors"
+            fillEmphasis="Ghost"
+            width="100%"
+            dataHead={{
+              leadValue: String(dashboardStats.errorCount),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
       </div>
 
       {/* Hourly Activity Chart - using DS VerticalBarChart */}
