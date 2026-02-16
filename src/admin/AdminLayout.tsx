@@ -470,7 +470,7 @@ function AdminDashboard() {
         className="rounded-xl mb-5"
         style={{ 
           border: `1px solid ${theme.stroke.medium}`,
-          padding: '16px',
+          padding: '16px 0 0 0',
         }}
       >
         <h2 
@@ -480,7 +480,7 @@ function AdminDashboard() {
             fontFamily: 'JioType Var', 
             color: theme.text.high, 
             margin: 0,
-            paddingBottom: '16px',
+            padding: '0 16px 16px 16px',
             fontSize: '14px',
           }}
         >
@@ -552,7 +552,7 @@ function AdminDashboard() {
         className="rounded-xl mb-5"
         style={{ 
           border: `1px solid ${theme.stroke.medium}`,
-          padding: '16px',
+          padding: '16px 0 0 0',
         }}
       >
         <h2 
@@ -562,7 +562,7 @@ function AdminDashboard() {
             fontFamily: 'JioType Var', 
             color: theme.text.high, 
             margin: 0,
-            paddingBottom: '16px',
+            padding: '0 16px 16px 16px',
             fontSize: '14px',
           }}
         >
@@ -710,11 +710,7 @@ function AdminDashboard() {
                 </AdminTableCell>
                 <AdminTableCell>{session.messageCount}</AdminTableCell>
                 <AdminTableCell>{formatDuration(session.durationSeconds ?? null)}</AdminTableCell>
-                <AdminTableCell>
-                  <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                    {formatRelativeTime(session.startedAt)}
-                  </span>
-                </AdminTableCell>
+                <AdminTableCell muted>{formatRelativeTime(session.startedAt)}</AdminTableCell>
               </AdminTableRow>
             ))}
           </AdminTable>
@@ -951,11 +947,7 @@ function AdminLearningCenter() {
                 <AdminTableCell className="max-w-[200px] truncate">{c.editedContent || c.comment || '—'}</AdminTableCell>
                 <AdminTableCell>{(c as Record<string, unknown>).ecosystem as string || '—'}</AdminTableCell>
                 <AdminTableCell>{(c as Record<string, unknown>).channel as string || '—'}</AdminTableCell>
-                <AdminTableCell className="whitespace-nowrap">
-                  <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                    {formatRelativeTime(c.timestamp)}
-                  </span>
-                </AdminTableCell>
+                <AdminTableCell className="whitespace-nowrap" muted>{formatRelativeTime(c.timestamp)}</AdminTableCell>
               </AdminTableRow>
             );
           })}
@@ -1769,10 +1761,8 @@ function AdminUsers() {
                   {user.deviceId ? `${user.deviceId.slice(0, 20)}...` : '—'}
                 </span>
               </AdminTableCell>
-              <AdminTableCell className="whitespace-nowrap">
-                <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                  {user.lastSeenAt ? formatRelativeTime(user.lastSeenAt) : '—'}
-                </span>
+              <AdminTableCell className="whitespace-nowrap" muted>
+                {user.lastSeenAt ? formatRelativeTime(user.lastSeenAt) : '—'}
               </AdminTableCell>
             </AdminTableRow>
           ))}
