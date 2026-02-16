@@ -184,7 +184,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       {/* Header */}
       {(
         <div
-          className="pl-6 pr-4 py-3 flex items-center justify-between"
+          className="pl-4 pr-4 py-3 flex items-center justify-between"
         >
           <Title size="M" as="h2" weight="high" color="high">
             Advanced settings

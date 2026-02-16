@@ -440,7 +440,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
         
         {/* Header */}
         {isOpen && (
-          <div className="pl-6 pr-4 py-3 flex items-center justify-between flex-shrink-0">
+          <div className="pl-4 pr-4 py-3 flex items-center justify-between flex-shrink-0">
             <Title size="M" as="h2" weight="high" color="high">
               Content trust
             </Title>
