@@ -457,8 +457,7 @@ function AdminDashboard() {
           dataHead={{
             leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
             showDataSupporting: false,
-            supportingLabelText: KPI_DESCRIPTIONS.avgTrustScore.target ? `target: ${KPI_DESCRIPTIONS.avgTrustScore.target}` : undefined,
-            showSupportingLabel: !!KPI_DESCRIPTIONS.avgTrustScore.target,
+            showSupportingLabel: false,
           }}
           modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
         />
