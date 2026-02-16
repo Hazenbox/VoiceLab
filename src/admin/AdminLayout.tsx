@@ -246,7 +246,7 @@ function FeedbackBadge({ type }: { type: string }) {
 function PageHeader({ title, description }: { title: string; description: string }) {
   const theme = useThemeColors();
   return (
-    <div className="mb-5">
+    <div className="mb-6">
       <Title size="L" as="h1" weight="high" color="high">
         {title}
       </Title>
@@ -302,10 +302,10 @@ function AdminCard({ children, className = '' }: { children: React.ReactNode; cl
 
 function CardLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-3 mt-4 first:mt-0">
-      <Label size="S" weight="high" attention="high" as="span">
+    <div className="mb-3 mt-6 first:mt-0">
+      <Title size="XS" as="h2" weight="high" color="high">
         {children}
-      </Label>
+      </Title>
     </div>
   );
 }
