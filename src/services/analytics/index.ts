@@ -34,3 +34,36 @@ export {
   resetErrorLogger 
 } from './errorLogger';
 export type { ErrorSource, ErrorLogEntry } from './errorLogger';
+
+// CSAT & Intent Accuracy Tracking (Phase 3.4)
+export {
+  // CSAT Collection
+  shouldPromptCSAT,
+  generateCSATPrompt,
+  recordCSATResponse,
+  optOutCSAT,
+  optInCSAT,
+  calculateCSATMetrics,
+  getCSATLabel,
+  getDeviceCSATHistory,
+  DEFAULT_CSAT_CONFIG,
+  // Intent Accuracy
+  logDetectedIntent,
+  correctIntentLog,
+  inferIntentCorrectness,
+  calculateIntentAccuracyMetrics,
+  getIntentAccuracySummary,
+  // Convex Sync
+  csatToConvexEvent,
+  intentLogToConvexEvent,
+  getPendingSyncData,
+  clearSyncedData,
+} from './csatIntentTracker';
+export type {
+  CSATScore,
+  CSATCollection,
+  IntentAccuracyLog,
+  CSATPromptConfig,
+  IntentAccuracyMetrics,
+  CSATMetrics,
+} from './csatIntentTracker';
