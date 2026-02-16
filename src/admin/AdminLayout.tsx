@@ -292,8 +292,8 @@ function AdminCard({ children, className = '' }: { children: React.ReactNode; cl
 
 function CardLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-2">
-      <Label size="S" weight="medium" attention="high" as="span">
+    <div className="mb-3 mt-4 first:mt-0">
+      <Label size="S" weight="high" attention="high" as="span">
         {children}
       </Label>
     </div>
