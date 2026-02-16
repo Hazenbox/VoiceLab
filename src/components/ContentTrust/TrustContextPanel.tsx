@@ -69,7 +69,7 @@ const ViolationItem: React.FC<{ violation: Violation }> = ({ violation }) => {
         <Badge variant={severityVariant[violation.severity]}>
           {violation.severity}
         </Badge>
-        <div className="flex-1 space-y-2">
+        <div className="flex-1 space-y-3">
           <Text size="S" color="high">{violation.rule}</Text>
           {violation.suggestion && (
             <Text size="XS" color="medium">{violation.suggestion}</Text>
