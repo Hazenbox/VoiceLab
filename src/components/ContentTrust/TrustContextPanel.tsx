@@ -23,7 +23,7 @@ import { getContextSummary } from '../../services/context';
 import { Accordion } from '../ui/Accordion';
 import { Badge } from '../ui/Badge';
 import { DSIcon } from '../DSIcon';
-import { Title, Tabs, TabList, Tab, Label, Text, Chip, Button } from '@marcelinodzn/ds-react';
+import { Title, Tabs, TabList, Tab, Label, Text, Button } from '@marcelinodzn/ds-react';
 
 interface TrustContextPanelProps {
   isOpen: boolean;
@@ -358,8 +358,8 @@ const EvidenceTimelineItem: React.FC<{
   const theme = useThemeColors();
   
   return (
-    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-      {/* Timeline indicator: numbered circle + line */}
+    <div style={{ display: 'flex', gap: '12px' }}>
+      {/* Timeline column: numbered circle + connector line */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ 
           width: '20px', 
@@ -373,19 +373,22 @@ const EvidenceTimelineItem: React.FC<{
         }}>
           <span style={{ color: '#ffffff', fontSize: '11px', fontWeight: 600 }}>{stepNumber}</span>
         </div>
+        {/* Connector line - extends to next step */}
         {!isLast && (
           <div style={{ 
             width: '2px', 
-            flex: 1, 
-            minHeight: '20px',
+            flex: 1,
             backgroundColor: theme.stroke.medium,
           }} />
         )}
       </div>
       
-      {/* Content - marginTop to align with center of circle */}
-      <div style={{ flex: 1, paddingBottom: isLast ? 0 : '16px', marginTop: '2px' }}>
-        <Label size="S" weight="high" color="high">{title}</Label>
+      {/* Content */}
+      <div style={{ flex: 1, paddingBottom: isLast ? 0 : '16px' }}>
+        {/* Title row - height matches circle for vertical centering */}
+        <div style={{ height: '20px', display: 'flex', alignItems: 'center' }}>
+          <Label size="S" weight="high" color="high">{title}</Label>
+        </div>
         <div style={{ marginTop: '4px' }}>
           <Text size="XS" color="medium">
             {items.map((item, i) => (
@@ -400,7 +403,7 @@ const EvidenceTimelineItem: React.FC<{
         {tags && tags.length > 0 && (
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
             {tags.map((tag, idx) => (
-              <Chip key={idx} size="S" appearance="neutral">{tag}</Chip>
+              <Badge key={idx} variant="neutral">{tag}</Badge>
             ))}
           </div>
         )}
