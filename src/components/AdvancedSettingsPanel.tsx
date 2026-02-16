@@ -34,7 +34,7 @@ import { TooltipIcon } from './TooltipIcon';
 import { useThemeColors } from '../theme';
 // Design system context removed - now using single Jio DS
 import { getEcosystemOptions, getChannelOptions, getLanguageOptions, getRegionOptions } from '../services/guidelines';
-import { TextArea } from '@marcelinodzn/ds-react';
+import { TextArea, Title, IconButton } from '@marcelinodzn/ds-react';
 import { Accordion } from './ui/Accordion';
 
 // =============================================================================
@@ -187,28 +187,17 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           className="px-3 py-3 border-b flex items-center justify-between"
           style={{ borderColor: theme.stroke.low }}
         >
-          <h2
-            className="text-sm font-semibold"
-            style={{ color: theme.text.high }}
-          >
-            Advanced Settings
-          </h2>
-          <button
-            onClick={onToggleCollapse}
-            className="close-settings-btn w-6 h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
-            style={{
-              backgroundColor: 'transparent',
-              color: theme.text.high,
-            }}
+          <Title size="S" as="h2" weight="high" color="high">
+            advanced settings
+          </Title>
+          <IconButton
+            size="S"
+            appearance="ghost"
+            type="neutral"
+            onPress={onToggleCollapse}
             aria-label="Close settings panel"
-          >
-            <DSIcon name="IcClose" size="XS" attention="medium" />
-            <style>{`
-              .close-settings-btn:hover {
-                background-color: ${theme.stroke.low} !important;
-              }
-            `}</style>
-          </button>
+            asset={<DSIcon name="IcClose" size="S" attention="medium" />}
+          />
         </div>
       )}
       
