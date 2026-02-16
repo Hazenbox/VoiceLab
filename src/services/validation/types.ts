@@ -20,7 +20,8 @@ export type ValidationAgentId =
   | 'style_consistency'
   | 'brand_alignment'
   | 'readability'
-  | 'avoid_words';
+  | 'avoid_words'
+  | 'commercial_sensitivity';
 
 /**
  * Individual violation found by an agent (extends base Violation)
@@ -124,6 +125,7 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
     'brand_alignment',
     'readability',
     'avoid_words',
+    'commercial_sensitivity', // Phase 1.5: Detects pushy sales/inappropriate promotional timing
   ],
   skipPatternMatching: false,
   parallelExecution: true,
@@ -133,20 +135,23 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
 /**
  * Agent weights for score calculation
  * Updated to include readability (Training 1.pdf requirement: Grade 8 readability)
- * Rebalanced to sum to 100 after adding avoid_words agent
+ * Rebalanced to sum to 100 after adding avoid_words and commercial_sensitivity agents
  * 
- * Rationale: style_consistency gets the largest reduction (-2) because
- * avoid_words agent covers overlapping jargon territory
+ * Rationale:
+ * - style_consistency reduced (overlaps with avoid_words)
+ * - brand_alignment reduced slightly (overlaps with commercial_sensitivity)
+ * - commercial_sensitivity lower weight as it's context-specific
  */
 export const AGENT_WEIGHTS: Record<ValidationAgentId, number> = {
-  gender_neutrality: 11,      // was 12
-  inclusivity: 11,            // was 12
-  cultural_sensitivity: 11,   // was 12
-  accessibility: 9,           // was 10
-  compliance: 13,             // was 14
-  style_consistency: 12,      // was 14 (reduced more - overlaps with avoid_words)
-  brand_alignment: 13,        // was 14
-  readability: 10,            // was 12
-  avoid_words: 10,            // NEW
-  // Sum: 11+11+11+9+13+12+13+10+10 = 100
+  gender_neutrality: 10,      // was 11
+  inclusivity: 10,            // was 11
+  cultural_sensitivity: 10,   // was 11
+  accessibility: 9,           // unchanged
+  compliance: 12,             // was 13
+  style_consistency: 11,      // was 12
+  brand_alignment: 12,        // was 13
+  readability: 9,             // was 10
+  avoid_words: 9,             // was 10
+  commercial_sensitivity: 8,  // NEW - Phase 1.5
+  // Sum: 10+10+10+9+12+11+12+9+9+8 = 100
 };
