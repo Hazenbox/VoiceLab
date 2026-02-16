@@ -297,7 +297,7 @@ export function createLogger(moduleName: string) {
 }
 
 // Default export as a convenient logger object
-const logger = {
+export const logger = {
   debug,
   info,
   warn,
