@@ -15,6 +15,9 @@ import type {
 import { DEFAULT_VALIDATION_CONFIG, AGENT_WEIGHTS } from './types';
 import { getEnabledAgents, VALIDATION_AGENTS } from './agents';
 import { getChannel } from '../guidelines/channels';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('Validation');
 
 // =============================================================================
 // Position-Based Deduplication
@@ -210,7 +213,7 @@ function validateChannelConstraints(
     }
   } catch (error) {
     // If channel not found, silently skip constraint validation
-    console.warn('[Validation] Channel constraint check skipped:', error);
+    log.debug('Channel constraint check skipped', { error: String(error) });
   }
   
   return violations;
@@ -265,7 +268,7 @@ export async function runValidationPipeline(
   
   // Log summary for monitoring (not verbose debug)
   if (autoFixableCount > 0) {
-    console.log(`[Validation] ${allViolations.length} violations (${autoFixableCount} auto-fixable)`);
+    log.info(`${allViolations.length} violations found`, { autoFixable: autoFixableCount });
   }
   
   // Calculate weighted overall score

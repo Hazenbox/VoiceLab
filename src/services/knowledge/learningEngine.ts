@@ -14,6 +14,9 @@
  */
 
 import type { RetrievedKnowledge } from './knowledgeRetriever';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('LearningEngine');
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -216,9 +219,9 @@ export function storeRejectedCorrections(rejectedInfos: RejectedCorrectionInfo[]
     // Update sync timestamp
     localStorage.setItem(LOCAL_REJECTION_SYNC_KEY, String(Date.now()));
     
-    console.log(`[LearningEngine] Stored ${newRejections.length} new rejections, total: ${merged.length}`);
+    log.debug(`Stored ${newRejections.length} new rejections`, { total: merged.length });
   } catch (e) {
-    console.warn('[LearningEngine] Failed to store rejected corrections:', e);
+    log.warn('Failed to store rejected corrections', { error: String(e) });
   }
 }
 
@@ -319,7 +322,7 @@ export function storeLocalCorrection(correction: CorrectionEntry): void {
     
     // P1: Check for duplicates before adding
     if (isDuplicateCorrection(correction, corrections)) {
-      console.log('[LearningEngine] Duplicate correction detected, skipping');
+      log.debug('Duplicate correction detected, skipping');
       return;
     }
     
@@ -327,7 +330,7 @@ export function storeLocalCorrection(correction: CorrectionEntry): void {
     const trimmed = corrections.slice(0, MAX_LOCAL_CORRECTIONS);
     localStorage.setItem(LOCAL_CORRECTIONS_KEY, JSON.stringify(trimmed));
   } catch (e) {
-    console.warn('[LearningEngine] Failed to store correction (quota?):', e);
+    log.warn('Failed to store correction (quota?)', { error: String(e) });
   }
 }
 
@@ -363,7 +366,7 @@ export function getLocalCorrections(
       return true;
     });
   } catch (error) {
-    console.warn('[LearningEngine] Failed to read local corrections:', error);
+    log.warn('Failed to read local corrections', { error: String(error) });
     return [];
   }
 }

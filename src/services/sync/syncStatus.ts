@@ -8,6 +8,9 @@
  */
 
 import * as queueStorage from './queueStorage';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('SyncStatus');
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -88,7 +91,7 @@ class SyncStatusManager {
       const count = await queueStorage.getQueueSize();
       this.updateStatus({ pendingCount: count });
     } catch (error) {
-      console.warn('[SyncStatus] Failed to get queue size:', error);
+      log.warn('Failed to get queue size', { error: String(error) });
     }
   }
 
@@ -127,7 +130,7 @@ class SyncStatusManager {
       try {
         listener(statusCopy);
       } catch (error) {
-        console.warn('[SyncStatus] Listener error:', error);
+        log.warn('Listener error', { error: String(error) });
       }
     });
   }

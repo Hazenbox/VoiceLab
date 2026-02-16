@@ -16,6 +16,9 @@
 import * as queueStorage from './queueStorage';
 import { withRetry, type RetryOptions } from '../reliability';
 import { getSyncStatusManager } from './syncStatus';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('ConvexSync');
 
 // ── Retry Configuration ───────────────────────────────────────────
 const RETRY_CONFIG: RetryOptions = {
@@ -241,7 +244,7 @@ export class ConvexSyncService {
         // Transition to half-open: allow a single request through
         this.circuitBreaker.state = 'half-open';
         this.circuitBreaker.successCount = 0;
-        console.log('[ConvexSync] Circuit breaker transitioning to half-open');
+        log.info('Circuit breaker transitioning to half-open');
         return false;
       }
       return true; // Still in cooldown
@@ -266,7 +269,7 @@ export class ConvexSyncService {
         cb.successCount = 0;
         cb.lastFailureTime = null;
         cb.openedAt = null;
-        console.log('[ConvexSync] Circuit breaker closed after successful requests');
+        log.info('Circuit breaker closed after successful requests');
       }
     } else if (cb.state === 'closed') {
       // Reset failure count on success (sliding window approach)
@@ -288,12 +291,12 @@ export class ConvexSyncService {
       // Immediately re-open on any failure in half-open state
       cb.state = 'open';
       cb.openedAt = now;
-      console.warn('[ConvexSync] Circuit breaker re-opened after half-open failure');
+      log.warn('Circuit breaker re-opened after half-open failure');
     } else if (cb.state === 'closed' && cb.failureCount >= CIRCUIT_BREAKER_CONFIG.failureThreshold) {
       // Open the circuit
       cb.state = 'open';
       cb.openedAt = now;
-      console.warn(`[ConvexSync] Circuit breaker opened after ${cb.failureCount} failures. Cooldown: ${CIRCUIT_BREAKER_CONFIG.resetTimeoutMs}ms`);
+      log.warn('Circuit breaker opened', { failures: cb.failureCount, cooldownMs: CIRCUIT_BREAKER_CONFIG.resetTimeoutMs });
     }
   }
   
@@ -324,7 +327,7 @@ export class ConvexSyncService {
     // Check circuit breaker before attempting
     if (this.isCircuitOpen()) {
       const status = this.getCircuitBreakerStatus();
-      console.log(`[ConvexSync] Circuit open, skipping ${name}. Retry in ${status.timeUntilRetry}ms`);
+      log.debug(`Circuit open, skipping ${name}`, { retryIn: status.timeUntilRetry });
       return { ok: false };
     }
     
@@ -334,7 +337,7 @@ export class ConvexSyncService {
         {
           ...RETRY_CONFIG,
           onRetry: (attempt, error, delay) => {
-            console.log(`[ConvexSync] Retry ${attempt} for ${name} after ${delay}ms:`, error.message);
+            log.debug(`Retry ${attempt} for ${name}`, { delay, error: error.message });
           },
         }
       );
@@ -345,7 +348,7 @@ export class ConvexSyncService {
     } catch (error) {
       // Failure - record for circuit breaker
       this.recordFailure();
-      console.warn('[ConvexSync] Mutation failed after retries:', name, error);
+      log.warn('Mutation failed after retries', { mutation: name, error: String(error) });
       return { ok: false };
     }
   }
@@ -357,7 +360,7 @@ export class ConvexSyncService {
     
     // Check circuit breaker before attempting
     if (this.isCircuitOpen()) {
-      console.log(`[ConvexSync] Circuit open, skipping ${name}`);
+      log.debug(`Circuit open, skipping ${name}`);
       return { ok: false };
     }
     
@@ -367,7 +370,7 @@ export class ConvexSyncService {
       return { ok: true, value: result };
     } catch (error) {
       this.recordFailure();
-      console.warn('[ConvexSync] Mutation failed:', name, error);
+      log.warn('Mutation failed', { mutation: name, error: String(error) });
       return { ok: false };
     }
   }
@@ -376,7 +379,7 @@ export class ConvexSyncService {
 
   async syncUserProfile(profile: UserProfileSync): Promise<string | null> {
     if (!this.isAvailable) {
-      console.log('[ConvexSync] syncUserProfile: not available, queuing');
+      log.debug('syncUserProfile: not available, queuing');
       queueStorage.addToQueue({
         type: 'user_sync',
         data: { ...profile },
@@ -396,12 +399,12 @@ export class ConvexSyncService {
 
     if (result.ok && result.value) {
       this.setConvexUserId(result.value);
-      console.log('[ConvexSync] syncUserProfile: success, userId:', result.value);
+      log.debug('syncUserProfile: success', { userId: result.value });
       return result.value;
     }
     
     // Mutation failed - queue for retry
-    console.warn('[ConvexSync] syncUserProfile: mutation failed, queuing for retry');
+    log.warn('syncUserProfile: mutation failed, queuing for retry');
     queueStorage.addToQueue({
       type: 'user_sync',
       data: { ...profile },
@@ -553,7 +556,7 @@ export class ConvexSyncService {
     });
 
     if (result.ok && result.value) {
-      console.log('[ConvexSync] Session created:', result.value);
+      log.debug('Session created', { sessionId: result.value });
       return result.value;
     }
 
@@ -699,14 +702,14 @@ export class ConvexSyncService {
   async flushQueue(): Promise<void> {
     // P0-FIX: Prevent concurrent queue flush operations
     if (this.isFlushingQueue) {
-      console.log('[ConvexSync] Queue flush already in progress, skipping');
+      log.debug('Queue flush already in progress, skipping');
       return;
     }
     
     // CRITICAL: Only require isAvailable and deviceId initially
     // convexUserId may be established by processing user_sync events
     if (!this.isAvailable || !this.deviceId) {
-      console.log('[ConvexSync] Cannot flush: isAvailable=%s, deviceId=%s', this.isAvailable, !!this.deviceId);
+      log.debug('Cannot flush', { isAvailable: this.isAvailable, hasDeviceId: !!this.deviceId });
       return;
     }
 
@@ -714,7 +717,7 @@ export class ConvexSyncService {
     if (queue.length === 0) return;
 
     this.isFlushingQueue = true;
-    console.log(`[ConvexSync] Flushing ${queue.length} queued events`);
+    log.info(`Flushing ${queue.length} queued events`, { count: queue.length });
     
     // P3: Notify sync status manager that sync is starting
     try {
@@ -743,7 +746,7 @@ export class ConvexSyncService {
         if (event.id) await queueStorage.removeFromQueue(event.id);
         if (result.value) {
           this.setConvexUserId(result.value);
-          console.log('[ConvexSync] User synced, convexUserId established:', result.value);
+          log.debug('User synced, convexUserId established', { userId: result.value });
         }
       } else {
         // Failure - increment attempts
@@ -753,7 +756,7 @@ export class ConvexSyncService {
 
     // NOW check for convexUserId before processing events that require it
     if (!this.convexUserId) {
-      console.warn('[ConvexSync] Cannot flush analytics/corrections: no convexUserId established');
+      log.warn('Cannot flush analytics/corrections: no convexUserId established');
       // Still continue with heartbeats which don't require convexUserId
     }
 
@@ -801,7 +804,7 @@ export class ConvexSyncService {
       for (const event of correctionEvents) {
         // P0-FIX: Skip if already processed (deduplication)
         if (event.idempotencyKey && this.processedIdempotencyKeys.has(event.idempotencyKey)) {
-          console.log('[ConvexSync] Skipping duplicate correction:', event.idempotencyKey);
+          log.debug('Skipping duplicate correction', { idempotencyKey: event.idempotencyKey });
           if (event.id) await queueStorage.removeFromQueue(event.id);
           continue;
         }
@@ -881,7 +884,7 @@ export class ConvexSyncService {
     }
 
     const remainingSize = await queueStorage.getQueueSize();
-    console.log(`[ConvexSync] Flush complete. ${remainingSize} events remain in queue`);
+    log.info('Flush complete', { remaining: remainingSize });
     
     // P0-FIX: Reset flushing flag
     this.isFlushingQueue = false;

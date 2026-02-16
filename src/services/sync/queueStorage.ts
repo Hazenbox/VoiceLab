@@ -5,6 +5,10 @@
  * Falls back to localStorage if IndexedDB is unavailable.
  */
 
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('QueueStorage');
+
 const DB_NAME = 'voicelab_sync';
 const STORE_NAME = 'events';
 const DB_VERSION = 1;
@@ -58,7 +62,7 @@ async function openDatabase(): Promise<IDBDatabase> {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
       
       request.onerror = () => {
-        console.warn('[QueueStorage] IndexedDB open failed, falling back to localStorage');
+        log.warn('IndexedDB open failed, falling back to localStorage');
         useLocalStorageFallback = true;
         reject(request.error);
       };
@@ -82,7 +86,7 @@ async function openDatabase(): Promise<IDBDatabase> {
         }
       };
     } catch (error) {
-      console.warn('[QueueStorage] IndexedDB not available, using localStorage fallback:', error);
+      log.warn('IndexedDB not available, using localStorage fallback', { error: String(error) });
       useLocalStorageFallback = true;
       reject(error);
     }
@@ -109,7 +113,7 @@ export async function addToQueue(event: Omit<QueuedEvent, 'id'>): Promise<void> 
   
   // P0-FIX: Check for duplicates before adding
   if (await hasIdempotencyKey(idempotencyKey)) {
-    console.log('[QueueStorage] Duplicate event detected, skipping:', idempotencyKey);
+    log.debug('Duplicate event detected, skipping', { idempotencyKey });
     return;
   }
   
@@ -132,12 +136,12 @@ export async function addToQueue(event: Omit<QueuedEvent, 'id'>): Promise<void> 
         
         request.onsuccess = () => resolve();
         request.onerror = () => {
-          console.warn('[QueueStorage] Failed to add to IndexedDB:', request.error);
+          log.warn('Failed to add to IndexedDB', { error: String(request.error) });
           reject(request.error);
         };
       });
     } catch (error) {
-      console.warn('[QueueStorage] IndexedDB add failed, falling back to localStorage');
+      log.warn('IndexedDB add failed, falling back to localStorage');
       useLocalStorageFallback = true;
     }
   }
@@ -149,7 +153,7 @@ export async function addToQueue(event: Omit<QueuedEvent, 'id'>): Promise<void> 
     queue.push({ ...eventWithMeta, id: Date.now() + Math.random() });
     localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(queue));
   } catch (error) {
-    console.error('[QueueStorage] Failed to add to localStorage:', error);
+    log.error('Failed to add to localStorage', { error: String(error) });
   }
 }
 
@@ -177,12 +181,12 @@ export async function getQueue(): Promise<QueuedEvent[]> {
           resolve(validEvents);
         };
         request.onerror = () => {
-          console.warn('[QueueStorage] Failed to get from IndexedDB:', request.error);
+          log.warn('Failed to get from IndexedDB', { error: String(request.error) });
           reject(request.error);
         };
       });
     } catch (error) {
-      console.warn('[QueueStorage] IndexedDB getAll failed, falling back to localStorage');
+      log.warn('IndexedDB getAll failed, falling back to localStorage');
       useLocalStorageFallback = true;
     }
   }
@@ -194,7 +198,7 @@ export async function getQueue(): Promise<QueuedEvent[]> {
     // P1-FIX: Filter out expired events
     return allEvents.filter(event => event.timestamp >= expiryThreshold);
   } catch (error) {
-    console.error('[QueueStorage] Failed to get from localStorage:', error);
+    log.error('Failed to get from localStorage', { error: String(error) });
     return [];
   }
 }
@@ -215,12 +219,12 @@ export async function removeFromQueue(id: number): Promise<void> {
         
         request.onsuccess = () => resolve();
         request.onerror = () => {
-          console.warn('[QueueStorage] Failed to remove from IndexedDB:', request.error);
+          log.warn('Failed to remove from IndexedDB', { error: String(request.error) });
           reject(request.error);
         };
       });
     } catch (error) {
-      console.warn('[QueueStorage] IndexedDB delete failed, falling back to localStorage');
+      log.warn('IndexedDB delete failed, falling back to localStorage');
       useLocalStorageFallback = true;
     }
   }
@@ -234,7 +238,7 @@ export async function removeFromQueue(id: number): Promise<void> {
     const filtered = queue.filter(e => e.id !== id);
     localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(filtered));
   } catch (error) {
-    console.error('[QueueStorage] Failed to remove from localStorage:', error);
+    log.error('Failed to remove from localStorage', { error: String(error) });
   }
 }
 
@@ -244,7 +248,7 @@ export async function removeFromQueue(id: number): Promise<void> {
 export async function updateAttempts(id: number, attempts: number): Promise<void> {
   // Skip if too many attempts
   if (attempts > MAX_RETRY_ATTEMPTS) {
-    console.warn(`[QueueStorage] Event ${id} exceeded max retry attempts, removing`);
+    log.warn(`Event ${id} exceeded max retry attempts, removing`, { eventId: id, attempts });
     await removeFromQueue(id);
     return;
   }
@@ -271,18 +275,18 @@ export async function updateAttempts(id: number, attempts: number): Promise<void
           
           putRequest.onsuccess = () => resolve();
           putRequest.onerror = () => {
-            console.warn('[QueueStorage] Failed to update attempts in IndexedDB:', putRequest.error);
+            log.warn('Failed to update attempts in IndexedDB', { error: String(putRequest.error) });
             reject(putRequest.error);
           };
         };
         
         getRequest.onerror = () => {
-          console.warn('[QueueStorage] Failed to get event for update from IndexedDB:', getRequest.error);
+          log.warn('Failed to get event for update from IndexedDB', { error: String(getRequest.error) });
           reject(getRequest.error);
         };
       });
     } catch (error) {
-      console.warn('[QueueStorage] IndexedDB update failed, falling back to localStorage');
+      log.warn('IndexedDB update failed, falling back to localStorage');
       useLocalStorageFallback = true;
     }
   }
@@ -299,7 +303,7 @@ export async function updateAttempts(id: number, attempts: number): Promise<void
       localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(queue));
     }
   } catch (error) {
-    console.error('[QueueStorage] Failed to update attempts in localStorage:', error);
+    log.error('Failed to update attempts in localStorage', { error: String(error) });
   }
 }
 
@@ -319,12 +323,12 @@ export async function clearQueue(): Promise<void> {
         
         request.onsuccess = () => resolve();
         request.onerror = () => {
-          console.warn('[QueueStorage] Failed to clear IndexedDB:', request.error);
+          log.warn('Failed to clear IndexedDB', { error: String(request.error) });
           reject(request.error);
         };
       });
     } catch (error) {
-      console.warn('[QueueStorage] IndexedDB clear failed, falling back to localStorage');
+      log.warn('IndexedDB clear failed, falling back to localStorage');
       useLocalStorageFallback = true;
     }
   }
@@ -333,7 +337,7 @@ export async function clearQueue(): Promise<void> {
   try {
     localStorage.removeItem(FALLBACK_STORAGE_KEY);
   } catch (error) {
-    console.error('[QueueStorage] Failed to clear localStorage:', error);
+    log.error('Failed to clear localStorage', { error: String(error) });
   }
 }
 
@@ -360,7 +364,7 @@ export async function removeExpiredEvents(): Promise<number> {
     return 0;
   }
   
-  console.log(`[QueueStorage] Removing ${expiredEvents.length} expired events (older than 7 days)`);
+  log.info(`Removing ${expiredEvents.length} expired events`, { count: expiredEvents.length, ttlDays: 7 });
   
   for (const event of expiredEvents) {
     if (event.id) {

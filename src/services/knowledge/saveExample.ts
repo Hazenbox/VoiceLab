@@ -9,6 +9,9 @@
  */
 
 import { getSyncService } from '../sync/convexSync';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('SaveExample');
 
 export interface SaveExamplePayload {
   content: string;
@@ -43,7 +46,7 @@ export async function saveAsExample(payload: SaveExamplePayload): Promise<boolea
       });
       return true;
     } catch (error) {
-      console.warn('[SaveExample] Failed to sync to Convex:', error);
+      log.warn('Failed to sync to Convex', { error: String(error) });
       // Local save still succeeded
       return true;
     }
@@ -78,7 +81,7 @@ function storeLocalExample(payload: SaveExamplePayload): void {
     const trimmed = examples.slice(0, MAX_LOCAL_EXAMPLES);
     localStorage.setItem(LOCAL_EXAMPLES_KEY, JSON.stringify(trimmed));
   } catch (e) {
-    console.warn('[SaveExample] Failed to store example (quota?):', e);
+    log.warn('Failed to store example (quota?)', { error: String(e) });
   }
 }
 
@@ -102,7 +105,7 @@ export function getLocalExamples(
       })
       .map((e) => e.content);
   } catch (error) {
-    console.warn('[SaveExample] Failed to read local examples:', error);
+    log.warn('Failed to read local examples', { error: String(error) });
     return [];
   }
 }

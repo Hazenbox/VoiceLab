@@ -9,6 +9,7 @@ import { CostTracker } from '../monitoring/costTracker';
 import { PromptRegistry, type PromptVersion } from '../monitoring/promptRegistry';
 import { ResponseCache } from '../caching/responseCache';
 import { isProduction } from '../../config/providers';
+import { createLogger } from '../../utils/logger';
 import type { 
   LLMProvider, 
   LLMProviderType, 
@@ -16,6 +17,8 @@ import type {
   LLMGenerateResult,
   LLMUsageMetrics
 } from '../providers/llm/types';
+
+const log = createLogger('Orchestrator');
 
 export interface OrchestratorConfig {
   enableRetry: boolean;
@@ -42,7 +45,7 @@ export class LLMOrchestrator {
     
     this.retryManager = new RetryManager({
       onRetry: (attempt, error) => {
-        console.log(`[Orchestrator] Retry attempt ${attempt} after ${error.code}`);
+        log.warn(`Retry attempt ${attempt}`, { errorCode: error.code });
       },
     });
     
@@ -50,7 +53,7 @@ export class LLMOrchestrator {
       fallbackChain: config.fallbackChain,
       enableAutoFallback: config.enableFallback,
       onFallback: (from, to, reason) => {
-        console.warn(`[Orchestrator] Fallback: ${from} -> ${to} (${reason})`);
+        log.warn(`Fallback triggered`, { from, to, reason });
       },
     });
     
@@ -84,7 +87,7 @@ export class LLMOrchestrator {
       const cached = this.responseCache.get(cacheKey);
       
       if (cached) {
-        console.log('[Orchestrator] Returning cached response');
+        log.debug('Returning cached response');
         return { ...cached, cached: true };
       }
     }
@@ -149,11 +152,10 @@ export class LLMOrchestrator {
       }
 
       const totalLatency = Date.now() - startTime;
-      console.log(
-        `[Orchestrator] Success with ${usedProvider} ` +
-        `(${totalLatency}ms, ${result.usage.totalTokens} tokens, ` +
-        `$${result.usage.estimatedCost.toFixed(6)})`
-      );
+      log.timed(`Success with ${usedProvider}`, totalLatency, {
+        tokens: result.usage.totalTokens,
+        cost: result.usage.estimatedCost.toFixed(6),
+      });
 
       return { ...result, cached: false };
 
@@ -180,7 +182,7 @@ export class LLMOrchestrator {
         });
       }
 
-      console.error(`[Orchestrator] All attempts failed after ${totalLatency}ms`);
+      log.error(`All attempts failed after ${totalLatency}ms`, { latency: totalLatency });
       throw error;
     }
   }
@@ -279,10 +281,9 @@ export class LLMOrchestrator {
       }
 
       const totalLatency = Date.now() - startTime;
-      console.log(
-        `[Orchestrator] Stream completed with ${usedProvider} ` +
-        `(${totalLatency}ms, ${result.usage.totalTokens} tokens)`
-      );
+      log.timed(`Stream completed with ${usedProvider}`, totalLatency, {
+        tokens: result.usage.totalTokens,
+      });
 
       return result;
 
@@ -309,7 +310,7 @@ export class LLMOrchestrator {
         });
       }
 
-      console.error(`[Orchestrator] Stream failed after ${totalLatency}ms with all fallbacks exhausted`);
+      log.error(`Stream failed after ${totalLatency}ms with all fallbacks exhausted`, { latency: totalLatency });
       throw error;
     }
   }
