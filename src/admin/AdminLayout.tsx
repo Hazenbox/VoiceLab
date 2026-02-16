@@ -800,6 +800,9 @@ function AdminLearningCenter() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
   
+  // Get user profile for deviceId (needed for admin mutations)
+  const userProfile = loadUserProfile();
+  
   // Direct Convex queries
   const corrections = useQuery(api.corrections.listAll, { limit: 200 });
   const learningStats = useQuery(api.corrections.getLearningStats, {});
@@ -1006,7 +1009,7 @@ function AdminLearningCenter() {
         <p className="text-xs mb-4" style={{ color: theme.text.low }}>
           Review and approve/reject user feedback to control what the system learns from.
         </p>
-        <CorrectionApprovalList feedbackCounts={feedbackCounts} />
+        <CorrectionApprovalList deviceId={userProfile?.deviceId} feedbackCounts={feedbackCounts} />
       </AdminCard>
     </>
   );
