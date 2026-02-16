@@ -223,12 +223,12 @@ const ContextSummarySection: React.FC<{ context: GenerationContext }> = ({ conte
 // =============================================================================
 
 /**
- * Shield check icon for trust indicators
+ * Shield check icon for trust indicators - aligned with text
  */
-const ShieldCheckIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <span className={className}>
+const ShieldCheckIcon: React.FC = () => (
+  <div className="flex-shrink-0 flex items-center" style={{ height: '20px' }}>
     <DSIcon name="IcProtection" size="S" attention="high" />
-  </span>
+  </div>
 );
 
 /**
@@ -332,17 +332,17 @@ const ComplianceJustificationSection: React.FC<{
     <div className="space-y-3">
       {/* Trust Summary Header */}
       <div 
-        className="flex items-center gap-3 p-3 rounded-lg" 
-        style={{ backgroundColor: 'rgba(0, 168, 89, 0.1)' }}
+        className="flex items-start gap-3 p-3 rounded-lg" 
+        style={{ backgroundColor: `${SEMANTIC_COLORS.positive}1A` }}
       >
-        <ShieldCheckIcon className="flex-shrink-0 text-[#00A859]" />
+        <ShieldCheckIcon />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold" style={{ color: '#00A859' }}>
+          <Label size="S" weight="high" color="high" style={{ color: SEMANTIC_COLORS.positive }}>
             {trustSummary.totalRulesPassed}/{trustSummary.totalRulesChecked} rules followed
-          </p>
-          <p className="text-xs" style={{ color: theme.text.medium }}>
+          </Label>
+          <Text size="XS" color="medium">
             {trustSummary.compliancePercentage}% compliance achieved
-          </p>
+          </Text>
         </div>
       </div>
       
