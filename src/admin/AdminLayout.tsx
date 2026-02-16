@@ -543,13 +543,11 @@ function AdminDashboard() {
             items={[
               { 
                 label: 'Regeneration rate', 
-                value: `${dashboardStats.regenerationRate}%`, 
-                color: dashboardStats.regenerationRate > 15 ? SEMANTIC_COLORS.negative : SEMANTIC_COLORS.positive 
+                value: `${dashboardStats.regenerationRate}%`,
               },
               { 
                 label: 'Completion rate', 
                 value: `${completionRate}%`,
-                color: SEMANTIC_COLORS.informative 
               },
             ]}
           />
