@@ -525,24 +525,16 @@ function AdminDashboard() {
                 label: 'Completion rate', 
                 value: `${completionRate}%`,
               },
+              { 
+                label: 'Regenerations', 
+                value: String(dashboardStats.regenerationCount),
+              },
+              { 
+                label: 'Errors', 
+                value: String(dashboardStats.errorCount),
+              },
             ]}
           />
-          <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${theme.stroke.low}` }}>
-            <div 
-              className="flex justify-between"
-              style={{ 
-                fontFamily: '"JioType Var"',
-                fontWeight: 400,
-                fontSize: '12px',
-                lineHeight: 1.3,
-                fontVariationSettings: '"opsz" 24',
-                color: theme.text.low,
-              }}
-            >
-              <span>regenerations: {dashboardStats.regenerationCount}</span>
-              <span>errors: {dashboardStats.errorCount}</span>
-            </div>
-          </div>
         </AdminCard>
       </div>
 
