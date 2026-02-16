@@ -286,14 +286,12 @@ function AdminCard({ children, className = '' }: { children: React.ReactNode; cl
 }
 
 function CardLabel({ children }: { children: React.ReactNode }) {
-  const theme = useThemeColors();
   return (
-    <span
-      className="block font-medium mb-3"
-      style={{ color: theme.text.low, fontSize: '11px' }}
-    >
-      {children}
-    </span>
+    <div className="mb-3">
+      <Label size="XS" weight="medium" attention="low" as="span">
+        {children}
+      </Label>
+    </div>
   );
 }
 
