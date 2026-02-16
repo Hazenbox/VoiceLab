@@ -14,6 +14,7 @@ import { AdminTable, AdminTableRow, AdminTableCell } from './components/AdminTab
 import { KPICard } from './components/KPICard';
 import { TimeRangeSelector, getTimestampForRange, type TimeRange } from './components/TimeRangeSelector';
 import { ChartContainer, HorizontalBarChart, VerticalBars, StatBreakdown, SentimentBar } from './components/AnalyticsCharts';
+import { DataCard, VerticalBarChart } from '@jio/datavis-components';
 import { KPI_DESCRIPTIONS } from './constants/kpiDescriptions';
 import { formatDuration, formatRelativeTime } from './utils/formatters';
 import { getApiBaseUrl } from '../config/providers';
@@ -377,7 +378,7 @@ function AdminDashboard() {
   const hourlyBreakdown = useQuery(api.analytics.hourlyBreakdown, { since });
   const recentSessions = useQuery(api.sessions.getRecent, { limit: 5 });
   
-  // Format hourly data for charts
+  // Format hourly data for charts (legacy format)
   const hourlyChartData = useMemo(() => {
     if (!hourlyBreakdown) return [];
     try {
@@ -390,6 +391,15 @@ function AdminDashboard() {
       return [];
     }
   }, [hourlyBreakdown]);
+
+  // Format hourly data for DS VerticalBarChart
+  const hourlyBarChartData = useMemo(() => {
+    return hourlyChartData.map((d, i) => ({
+      id: String(i),
+      category: d.label,
+      value: d.value,
+    }));
+  }, [hourlyChartData]);
   
   // Loading state - show skeleton while data is loading
   if (dashboardStats === undefined || learningStats === undefined) {
@@ -429,32 +439,53 @@ function AdminDashboard() {
       {!isOnline && <OfflineBanner />}
       <SectionHeader title="Dashboard" subtitle="System health and value delivery — last 24 hours" />
 
-      {/* Hero KPIs - 4 cards, most important metrics for POC */}
+      {/* Hero KPIs - 4 cards using DS DataCard */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-        <KPICard 
-          label="Total generations" 
-          value={dashboardStats.totalGenerations}
-          description={KPI_DESCRIPTIONS.totalGenerations.description}
-          colorClass="text-orange-500"
+        <DataCard 
+          title="total generations"
+          showTitle={true}
+          size="L"
+          fillEmphasis="Subtle"
+          backgroundLevel="Level 1"
+          dataHead={{
+            leadValue: String(dashboardStats.totalGenerations ?? 0),
+          }}
+          modes={{ colourMode: theme.background.ghost === 'transparent' ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
         />
-        <KPICard 
-          label="Avg trust score" 
-          value={dashboardStats.avgTrustScore}
-          description={KPI_DESCRIPTIONS.avgTrustScore.description}
-          target={KPI_DESCRIPTIONS.avgTrustScore.target}
-          colorClass="text-blue-500"
+        <DataCard 
+          title="avg trust score"
+          showTitle={true}
+          size="L"
+          fillEmphasis="Subtle"
+          backgroundLevel="Level 1"
+          dataHead={{
+            leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
+            supportingLabelText: KPI_DESCRIPTIONS.avgTrustScore.target ? `target: ${KPI_DESCRIPTIONS.avgTrustScore.target}` : undefined,
+            showSupportingLabel: !!KPI_DESCRIPTIONS.avgTrustScore.target,
+          }}
+          modes={{ colourMode: theme.background.ghost === 'transparent' ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
         />
-        <KPICard 
-          label="Content copied" 
-          value={dashboardStats.copyCount}
-          description={KPI_DESCRIPTIONS.copyCount.description}
-          colorClass="text-purple-500"
+        <DataCard 
+          title="content copied"
+          showTitle={true}
+          size="L"
+          fillEmphasis="Subtle"
+          backgroundLevel="Level 1"
+          dataHead={{
+            leadValue: String(dashboardStats.copyCount ?? 0),
+          }}
+          modes={{ colourMode: theme.background.ghost === 'transparent' ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
         />
-        <KPICard 
-          label="Learnings applied" 
-          value={learningStats.totalPatternsApplied}
-          description={KPI_DESCRIPTIONS.learningsApplied.description}
-          colorClass="text-green-500"
+        <DataCard 
+          title="learnings applied"
+          showTitle={true}
+          size="L"
+          fillEmphasis="Subtle"
+          backgroundLevel="Level 1"
+          dataHead={{
+            leadValue: String(learningStats.totalPatternsApplied ?? 0),
+          }}
+          modes={{ colourMode: theme.background.ghost === 'transparent' ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
         />
       </div>
 
@@ -500,16 +531,40 @@ function AdminDashboard() {
         </AdminCard>
       </div>
 
-      {/* Hourly Activity Chart */}
-      <ChartContainer
-        title="Hourly activity"
-        subtitle="Content generations over time"
-        empty={hourlyChartData.every(d => d.value === 0)}
-        emptyMessage="No activity in selected time range"
-        className="mb-5"
-      >
-        <VerticalBars data={hourlyChartData} height={140} />
-      </ChartContainer>
+      {/* Hourly Activity Chart - using DS VerticalBarChart */}
+      {hourlyBarChartData.length > 0 && !hourlyBarChartData.every(d => d.value === 0) ? (
+        <div className="mb-5">
+          <VerticalBarChart
+            data={hourlyBarChartData}
+            chartHeader={{
+              title: "hourly activity",
+              subtitle: "content generations over time",
+              showSubtitle: true,
+            }}
+            barGroup={{
+              showYAxis: true,
+              showHoverBadge: true,
+              showCategoryLabels: true,
+            }}
+            showHeader={true}
+            modes={{ 
+              colourMode: theme.background.ghost === 'transparent' ? 'Light' : 'Dark', 
+              colourTheme: 'MyJio',
+              Density: 'Compact',
+            }}
+          />
+        </div>
+      ) : (
+        <ChartContainer
+          title="hourly activity"
+          subtitle="content generations over time"
+          empty={true}
+          emptyMessage="no activity in selected time range"
+          className="mb-5"
+        >
+          <div />
+        </ChartContainer>
+      )}
 
       {/* Recent Sessions (collapsed view) */}
       {recentSessions && recentSessions.length > 0 && (
