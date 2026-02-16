@@ -267,6 +267,7 @@ export const ProgressBar = memo(function ProgressBar({
 
 /**
  * Stat breakdown - shows multiple values in a row
+ * Uses JioType Var font to match DataCard styling
  */
 export const StatBreakdown = memo(function StatBreakdown({
   items,
@@ -280,14 +281,30 @@ export const StatBreakdown = memo(function StatBreakdown({
       {items.map((item) => (
         <div key={item.label} className="text-center min-w-[70px]">
           <span
-            className="block font-semibold"
-            style={{ fontSize: '18px', color: item.color || theme.text.high }}
+            className="block"
+            style={{ 
+              fontFamily: '"JioType Var"',
+              fontWeight: 900,
+              fontSize: '26px',
+              lineHeight: 1,
+              letterSpacing: '0px',
+              fontVariationSettings: '"opsz" 24',
+              color: item.color || theme.text.high,
+            }}
           >
             {item.value}
           </span>
           <span
             className="block"
-            style={{ fontSize: '10px', color: theme.text.low }}
+            style={{ 
+              fontFamily: '"JioType Var"',
+              fontWeight: 400,
+              fontSize: '12px',
+              lineHeight: 1.3,
+              fontVariationSettings: '"opsz" 24',
+              color: theme.text.low,
+              marginTop: '4px',
+            }}
           >
             {item.label}
           </span>

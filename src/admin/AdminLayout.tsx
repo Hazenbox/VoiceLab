@@ -555,22 +555,34 @@ function AdminDashboard() {
 
       {/* Hourly Activity Chart - using DS VerticalBarChart */}
       {hourlyBarChartData.length > 0 && !hourlyBarChartData.every(d => d.value === 0) ? (
-        <VerticalBarChart
-          data={hourlyBarChartData}
-          chartHeader={{
-            title: "hourly activity",
-            subtitle: "content generations over time",
+        <div 
+          className="rounded-lg"
+          style={{ 
+            border: `1px solid ${theme.stroke.low}`,
+            padding: '16px',
           }}
-          barGroup={{
-            showYAxis: true,
-            showHoverBadge: true,
-          }}
-          modes={{ 
-            colourMode: theme.colorMode, 
-            colourTheme: 'MyJio',
-            fullWidth: true,
-          }}
-        />
+        >
+          <VerticalBarChart
+            data={hourlyBarChartData}
+            chartHeader={{
+              title: "hourly activity",
+              subtitle: "content generations over time",
+            }}
+            chartFooter={{
+              showSource: false,
+              showNotes: false,
+            }}
+            barGroup={{
+              showYAxis: true,
+              showHoverBadge: true,
+            }}
+            modes={{ 
+              colourMode: theme.colorMode, 
+              colourTheme: 'MyJio',
+              fullWidth: true,
+            }}
+          />
+        </div>
       ) : (
         <ChartContainer
           title="hourly activity"
