@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
-import { Title, Text } from '@marcelinodzn/ds-react';
+import { Title, Text, Label, Card, CardBody, Chip } from '@marcelinodzn/ds-react';
 
 /** Chart accent for branded chart bars */
 const CHART_ACCENT = '#f97316';
@@ -270,27 +270,21 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle: string })
 function AdminCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   const theme = useThemeColors();
   return (
-    <div
-      className={`rounded-lg ${className}`}
-      style={{
-        border: `1px solid ${theme.stroke.low}`,
-        backgroundColor: 'transparent',
-      }}
-    >
-      {children}
-    </div>
+    <Card surface="minimal" className={className} style={{ border: `1px solid ${theme.stroke.low}` }}>
+      <CardBody>
+        {children}
+      </CardBody>
+    </Card>
   );
 }
 
 function CardLabel({ children }: { children: React.ReactNode }) {
-  const theme = useThemeColors();
   return (
-    <span
-      className="block font-medium mb-3"
-      style={{ color: theme.text.low, fontSize: '11px' }}
-    >
-      {children}
-    </span>
+    <div style={{ marginBottom: '12px' }}>
+      <Label size="XS" weight="medium" attention="low" as="span">
+        {children}
+      </Label>
+    </div>
   );
 }
 
@@ -824,30 +818,17 @@ function AdminLearningCenter() {
       {/* Feedback Distribution */}
       <AdminCard className="p-4 mb-5">
         <CardLabel>Feedback distribution</CardLabel>
-        <div className="grid grid-cols-4 gap-4">
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
-            <div 
+            <Chip
               key={type}
-              className="text-center p-3 rounded-lg cursor-pointer transition-all"
-              style={{ 
-                backgroundColor: filter === type ? theme.accent : theme.background.ghost,
-                opacity: filter === type ? 1 : 0.7,
-              }}
-              onClick={() => setFilter(filter === type ? 'all' : type)}
+              size="L"
+              appearance="neutral"
+              isSelected={filter === type}
+              onPress={() => setFilter(filter === type ? 'all' : type)}
             >
-              <span 
-                className="block text-2xl font-bold" 
-                style={{ color: filter === type ? '#fff' : theme.text.high }}
-              >
-                {feedbackCounts?.[type] ?? 0}
-              </span>
-              <span 
-                className="text-xs" 
-                style={{ color: filter === type ? '#fff' : theme.text.low }}
-              >
-                {type.replace('_', ' ')}
-              </span>
-            </div>
+              {feedbackCounts?.[type] ?? 0} {type.replace('_', ' ')}
+            </Chip>
           ))}
         </div>
       </AdminCard>
@@ -873,9 +854,9 @@ function AdminLearningCenter() {
             />
           ))
         ) : (
-          <span style={{ color: theme.text.low, fontSize: '13px' }}>
+          <Text size="S" weight="low" color="low">
             No edit corrections yet. Users can edit AI responses to teach better outputs.
-          </span>
+          </Text>
         )}
       </AdminCard>
 
@@ -883,19 +864,16 @@ function AdminLearningCenter() {
       {learningStats.topAvoidReasons.length > 0 && (
         <AdminCard className="p-4 mb-5">
           <CardLabel>Top patterns to avoid (from negative feedback)</CardLabel>
-          <div className="flex flex-wrap gap-2">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {learningStats.topAvoidReasons.map((reason, i) => (
-              <span
+              <Chip
                 key={i}
-                className="inline-block rounded-md px-2 py-1"
-                style={{
-                  fontSize: '12px',
-                  backgroundColor: `${SEMANTIC_COLORS.negative}1F`,
-                  color: SEMANTIC_COLORS.negative,
-                }}
+                size="S"
+                appearance="negative"
+                attention="low"
               >
                 {reason}
-              </span>
+              </Chip>
             ))}
           </div>
         </AdminCard>
