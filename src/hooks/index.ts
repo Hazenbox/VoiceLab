@@ -1,20 +1,34 @@
 /**
- * Hooks Index
- * Export all custom hooks
+ * Custom Hooks (Phase 4.1)
+ * 
+ * Extracted from App.tsx for better code organization.
+ * 
+ * @module hooks
  */
 
+// Generation Hook
 export { 
-  useAbortController, 
-  useCancellableFetch,
-  useAbortControllerMap,
-} from './useAbortController';
+  useGeneration,
+  type GenerationState,
+  type GenerationResult,
+  type GenerationOptions,
+  type UseGenerationReturn,
+} from './useGeneration';
 
-export { useCopyToClipboard } from './useCopyToClipboard';
+// Messages Hook
+export {
+  useMessages,
+  type Message,
+  type MessagesState,
+  type UseMessagesOptions,
+  type UseMessagesReturn,
+} from './useMessages';
 
-export { useChatPersistence } from './useChatPersistence';
-export { useAudioRecorder } from './useAudioRecorder';
-export { useNetworkStatus, useOfflineBanner } from './useNetworkStatus';
-export { useAudioAnalyzer, createAudioAnalyzer } from './useAudioAnalyzer';
-export type { AudioAnalyzerResult, AudioAnalyzerOptions } from './useAudioAnalyzer';
-export { useSessionAnalytics, useResponseTimer } from './useSessionAnalytics';
-export { useSyncStatus, type SyncStatus, type SyncState } from './useSyncStatus';
+// Trust Settings Hook
+export {
+  useTrustSettings,
+  getChannelConstraints,
+  type TrustSettings,
+  type UseTrustSettingsOptions,
+  type UseTrustSettingsReturn,
+} from './useTrustSettings';
