@@ -3152,7 +3152,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   showEmptyState={chatMode !== 'voice'}
                   emptyStateMessage={chatMode === 'copy'
                     ? (featureFlags.conversationalMode
-                      ? 'Ask me anything, or ask me to create content for you.'
+                      ? 'Ask anything or create content'
                       : 'What would you like to create today?')
                     : 'Start a voice conversation or type a message'}
                   inputDisabled={chatMode === 'voice' && appState !== AppState.IDLE && appState !== AppState.ERROR}
