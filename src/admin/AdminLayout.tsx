@@ -251,7 +251,6 @@ function PageHeader({ title, description }: { title: string; description: string
         {title}
       </Title>
       <p 
-        className="mt-3"
         style={{
           fontFamily: '"JioType Var"',
           fontWeight: 400,
@@ -260,6 +259,7 @@ function PageHeader({ title, description }: { title: string; description: string
           fontVariationSettings: '"opsz" 24',
           color: theme.text.low,
           margin: 0,
+          marginTop: '12px',
         }}
       >
         {description}
