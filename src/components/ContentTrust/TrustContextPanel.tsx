@@ -384,7 +384,7 @@ const EvidenceTimelineItem: React.FC<{
       </div>
       
       {/* Content */}
-      <div style={{ flex: 1, paddingBottom: isLast ? 0 : '16px' }}>
+      <div style={{ flex: 1, paddingBottom: isLast ? 0 : '24px' }}>
         {/* Title row - height matches circle for vertical centering */}
         <div style={{ height: '20px', display: 'flex', alignItems: 'center' }}>
           <Label size="S" weight="high" color="high">{title}</Label>
