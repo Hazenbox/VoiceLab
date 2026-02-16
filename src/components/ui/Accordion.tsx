@@ -57,8 +57,8 @@ export const Accordion = memo(function Accordion({
               {badge}
             </span>
           )}
-          <span className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} style={{ color: theme.text.medium }}>
-            <DSIcon name="IcChevronDown" size="S" attention="medium" />
+          <span className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+            <DSIcon name="IcChevronDown" size="M" attention="low" appearance="neutral" />
           </span>
         </div>
       </button>
