@@ -39,7 +39,7 @@ export const SidebarItem = memo(function SidebarItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-2 text-left cursor-pointer w-full px-2.5 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-inset"
+      className="flex items-center gap-2 text-left cursor-pointer w-full px-2.5 rounded-[14px] focus:outline-none"
       style={{
         backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
         height: '36px',
@@ -51,7 +51,7 @@ export const SidebarItem = memo(function SidebarItem({
       onMouseLeave={() => setIsHovered(false)}
     >
       {icon && (
-        <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center">{icon}</span>
+        <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">{icon}</span>
       )}
       <Text size="S" weight="low">
         {label}
