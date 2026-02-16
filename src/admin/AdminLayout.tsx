@@ -1443,33 +1443,40 @@ function AdminKnowledge() {
       {!isOnline && <OfflineBanner />}
       <PageHeader title="Knowledge base" description="Brand rules, vocabulary, and content guidelines" />
 
-      {/* Total Rules Counter with Add Button */}
-      <div className="flex items-center justify-between mb-5">
-        <div 
-          className="rounded-xl"
-          style={{ border: `1px solid ${theme.stroke.medium}` }}
-        >
-          <DataCard 
-            title="Active rules"
-            fillEmphasis="Ghost"
-            width="auto"
-            dataHead={{
-              leadValue: String(totalActiveRules),
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
+      {/* Total Rules Counter with RAG Status + Add Button */}
+      <div 
+        className="rounded-xl mb-5"
+        style={{ 
+          border: `1px solid ${theme.stroke.medium}`,
+          padding: '16px',
+        }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <DataCard 
+              title="active rules"
+              fillEmphasis="Ghost"
+              width="auto"
+              dataHead={{
+                leadValue: String(totalActiveRules),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+            <span style={{ color: theme.text.low, fontSize: '12px' }}>
+              enforcing Jio brand guidelines
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Label size="XS" attention="low">Vector index active</Label>
+            {selectedType && (
+              <Button appearance="primary" size="S" onPress={handleAddNew}>
+                + add {selectedType.replace('_', ' ')}
+              </Button>
+            )}
+          </div>
         </div>
-        {selectedType && (
-          <Button
-            appearance="primary"
-            size="S"
-            onPress={handleAddNew}
-          >
-            + add {selectedType.replace('_', ' ')}
-          </Button>
-        )}
       </div>
 
       {/* Type Overview - Reordered with high-priority first */}
