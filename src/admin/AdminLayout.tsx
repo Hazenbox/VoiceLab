@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
-import { Title, Text, Label, Chip, Divider } from '@marcelinodzn/ds-react';
+import { Title, Text, Label, Chip, Divider, Button } from '@marcelinodzn/ds-react';
 import { Badge } from '../components/ui/Badge';
 import OnboardingModal, { loadUserProfile, type UserProfile } from '../components/OnboardingModal';
 import type { ColorMode } from '../types';
@@ -1443,46 +1443,34 @@ function AdminKnowledge() {
       {!isOnline && <OfflineBanner />}
       <PageHeader title="Knowledge base" description="Brand rules, vocabulary, and content guidelines" />
 
-      {/* Total Rules Counter with RAG Status + Add Button */}
-      <AdminCard className="p-4 mb-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-3xl font-bold" style={{ color: theme.accent }}>
-              {totalActiveRules}
-            </span>
-            <span className="ml-2 text-sm" style={{ color: theme.text.low }}>
-              active rules enforcing Jio brand guidelines
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <span className="block text-xs" style={{ color: theme.text.low }}>
-                Semantic search enabled (RAG)
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded-full" style={{ 
-                backgroundColor: `${SEMANTIC_COLORS.positive}1F`, 
-                color: SEMANTIC_COLORS.positive 
-              }}>
-                Vector index active
-              </span>
-            </div>
-            {selectedType && (
-              <button
-                onClick={handleAddNew}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:opacity-90"
-                style={{
-                  backgroundColor: theme.accent,
-                  color: '#fff',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                + add {selectedType.replace('_', ' ')}
-              </button>
-            )}
-          </div>
+      {/* Total Rules Counter with Add Button */}
+      <div className="flex items-center justify-between mb-5">
+        <div 
+          className="rounded-xl"
+          style={{ border: `1px solid ${theme.stroke.medium}` }}
+        >
+          <DataCard 
+            title="Active rules"
+            fillEmphasis="Ghost"
+            width="auto"
+            dataHead={{
+              leadValue: String(totalActiveRules),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
         </div>
-      </AdminCard>
+        {selectedType && (
+          <Button
+            appearance="primary"
+            size="S"
+            onPress={handleAddNew}
+          >
+            + add {selectedType.replace('_', ' ')}
+          </Button>
+        )}
+      </div>
 
       {/* Type Overview - Reordered with high-priority first */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-5">
