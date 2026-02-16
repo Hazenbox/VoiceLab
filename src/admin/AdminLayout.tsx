@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
-import { Title, Text, Label } from '@marcelinodzn/ds-react';
+import { Title, Text, Label, Chip, Divider } from '@marcelinodzn/ds-react';
 import { Badge } from '../components/ui/Badge';
 import OnboardingModal, { loadUserProfile, type UserProfile } from '../components/OnboardingModal';
 import type { ColorMode } from '../types';
@@ -806,6 +806,7 @@ function AdminLearningCenter() {
   const feedbackCounts = useQuery(api.corrections.countByFeedbackType, {});
   
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [feedbackTypeFilter, setFeedbackTypeFilter] = useState<string>('all');
 
   // Debug logging for production troubleshooting
   useEffect(() => {
@@ -940,6 +941,31 @@ function AdminLearningCenter() {
         <CardLabel>
           All feedback ({corrections.length} items)
         </CardLabel>
+        
+        {/* Filter Chips */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
+          <Chip
+            size="S"
+            appearance="neutral"
+            isSelected={feedbackTypeFilter === 'all'}
+            onPress={() => setFeedbackTypeFilter('all')}
+          >
+            all
+          </Chip>
+          <Divider orientation="vertical" />
+          {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
+            <Chip
+              key={type}
+              size="S"
+              appearance="neutral"
+              isSelected={feedbackTypeFilter === type}
+              onPress={() => setFeedbackTypeFilter(feedbackTypeFilter === type ? 'all' : type)}
+            >
+              {feedbackCounts?.[type] ?? 0} {type.replace('_', ' ')}
+            </Chip>
+          ))}
+        </div>
+
         <AdminTable
           columns={[
             { key: 'type', label: 'type' },
@@ -949,10 +975,10 @@ function AdminLearningCenter() {
             { key: 'channel', label: 'channel' },
             { key: 'time', label: 'time' },
           ]}
-          isEmpty={corrections.length === 0}
+          isEmpty={(feedbackTypeFilter === 'all' ? corrections : corrections.filter(c => c.feedbackType === feedbackTypeFilter)).length === 0}
           emptyMessage="No feedback recorded yet."
         >
-          {corrections.slice(0, 50).map((c, i) => {
+          {(feedbackTypeFilter === 'all' ? corrections : corrections.filter(c => c.feedbackType === feedbackTypeFilter)).slice(0, 50).map((c, i) => {
             const idStr = c._id?.toString() || String(i);
             
             return (
@@ -962,18 +988,14 @@ function AdminLearningCenter() {
                 <AdminTableCell className="max-w-[200px] truncate">{c.editedContent || c.comment || '—'}</AdminTableCell>
                 <AdminTableCell>{(c as Record<string, unknown>).ecosystem as string || '—'}</AdminTableCell>
                 <AdminTableCell>{(c as Record<string, unknown>).channel as string || '—'}</AdminTableCell>
-                <AdminTableCell className="whitespace-nowrap">
-                  <span style={{ color: theme.text.low, fontSize: '12px' }}>
-                    {formatRelativeTime(c.timestamp)}
-                  </span>
-                </AdminTableCell>
+                <AdminTableCell className="whitespace-nowrap" muted>{formatRelativeTime(c.timestamp)}</AdminTableCell>
               </AdminTableRow>
             );
           })}
         </AdminTable>
-        {corrections.length > 50 && (
+        {(feedbackTypeFilter === 'all' ? corrections : corrections.filter(c => c.feedbackType === feedbackTypeFilter)).length > 50 && (
           <span className="block mt-2" style={{ color: theme.text.low, fontSize: '12px' }}>
-            showing 50 of {corrections.length} items.
+            showing 50 of {(feedbackTypeFilter === 'all' ? corrections : corrections.filter(c => c.feedbackType === feedbackTypeFilter)).length} items.
           </span>
         )}
       </AdminCard>
