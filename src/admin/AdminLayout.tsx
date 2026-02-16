@@ -251,7 +251,7 @@ function PageHeader({ title, description }: { title: string; description: string
         {title}
       </Title>
       <p 
-        className="mt-2"
+        className="mt-3"
         style={{
           fontFamily: '"JioType Var"',
           fontWeight: 400,
@@ -487,7 +487,7 @@ function AdminDashboard() {
           Overview
         </h2>
         <div className="flex flex-col lg:flex-row">
-          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium }}>
+          <div className="flex-1">
             <DataCard 
               title="total generations"
               fillEmphasis="Ghost"
@@ -500,7 +500,7 @@ function AdminDashboard() {
               modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
             />
           </div>
-          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium, paddingLeft: '16px' }}>
+          <div className="flex-1">
             <DataCard 
               title="avg trust score"
               fillEmphasis="Ghost"
@@ -513,7 +513,7 @@ function AdminDashboard() {
               modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
             />
           </div>
-          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium, paddingLeft: '16px' }}>
+          <div className="flex-1">
             <DataCard 
               title="content copied"
               fillEmphasis="Ghost"
@@ -526,7 +526,7 @@ function AdminDashboard() {
               modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
             />
           </div>
-          <div className="flex-1" style={{ paddingLeft: '16px' }}>
+          <div className="flex-1">
             <DataCard 
               title="learnings applied"
               fillEmphasis="Ghost"
@@ -547,7 +547,7 @@ function AdminDashboard() {
         className="rounded-xl mb-5"
         style={{ 
           border: `1px solid ${theme.stroke.medium}`,
-          padding: '16px 0 0 0',
+          padding: '16px',
         }}
       >
         <h2 
@@ -557,14 +557,14 @@ function AdminDashboard() {
             fontFamily: 'JioType Var', 
             color: theme.text.high, 
             margin: 0,
-            padding: '0 16px 16px 16px',
+            paddingBottom: '16px',
             fontSize: '14px',
           }}
         >
           Content quality
         </h2>
         <div className="flex flex-col lg:flex-row">
-          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium }}>
+          <div className="flex-1">
             <DataCard 
               title="regeneration rate"
               fillEmphasis="Ghost"
@@ -577,7 +577,7 @@ function AdminDashboard() {
               modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
             />
           </div>
-          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium, paddingLeft: '16px' }}>
+          <div className="flex-1">
             <DataCard 
               title="completion rate"
               fillEmphasis="Ghost"
@@ -590,7 +590,7 @@ function AdminDashboard() {
               modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
             />
           </div>
-          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium, paddingLeft: '16px' }}>
+          <div className="flex-1">
             <DataCard 
               title="regenerations"
               fillEmphasis="Ghost"
@@ -603,7 +603,7 @@ function AdminDashboard() {
               modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
             />
           </div>
-          <div className="flex-1" style={{ paddingLeft: '16px' }}>
+          <div className="flex-1">
             <DataCard 
               title="errors"
               fillEmphasis="Ghost"
