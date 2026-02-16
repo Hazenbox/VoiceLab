@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
+import { Title, Text } from '@marcelinodzn/ds-react';
 
 /** Chart accent for branded chart bars */
 const CHART_ACCENT = '#f97316';
@@ -237,21 +238,16 @@ function FeedbackBadge({ type }: { type: string }) {
 
 // ── Utility: Section Header ──────────────────────────────────────
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
-  const theme = useThemeColors();
   return (
     <div className="mb-5">
-      <h2
-        className="font-semibold"
-        style={{ color: theme.text.high, fontSize: '16px', letterSpacing: '-0.3px', margin: 0 }}
-      >
+      <Title size="S" as="h2" weight="high" color="high">
         {title}
-      </h2>
-      <span
-        className="block mt-0.5"
-        style={{ color: theme.text.low, fontSize: '12px' }}
-      >
-        {subtitle}
-      </span>
+      </Title>
+      <div className="mt-0.5">
+        <Text variant="caption" weight="regular" color="low">
+          {subtitle}
+        </Text>
+      </div>
     </div>
   );
 }
