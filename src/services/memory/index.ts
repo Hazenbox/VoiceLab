@@ -35,3 +35,23 @@ export {
   type ResolutionMemory,
   type MemoryContext,
 } from './midTermMemory';
+
+// Long-Term Memory (Phase 3.3 - 6-12 months, opt-in, Convex-backed)
+export {
+  createLongTermMemory,
+  getLongTermMemory,
+  hasOptedIn,
+  optIn,
+  optOut,
+  updateLongTermMemory,
+  extractMemoryContext as extractLongTermContext,
+  getMemoryPromptSection,
+  isStale,
+  pruneStaleData,
+  fromConvexLearningProfile,
+  toConvexUpdate,
+  clearCache as clearLongTermCache,
+  type LongTermMemory,
+  type LongTermMemoryInput,
+  type LongTermMemoryContext,
+} from './longTermMemory';
