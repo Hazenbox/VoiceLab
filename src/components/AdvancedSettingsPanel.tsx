@@ -178,7 +178,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       style={{
         width: '380px',
         backgroundColor: theme.background.ghost,
-        borderLeft: `1px solid ${theme.stroke.low}`,
+        borderLeft: `1px solid ${theme.stroke.medium}`,
       }}
     >
       {/* Header */}

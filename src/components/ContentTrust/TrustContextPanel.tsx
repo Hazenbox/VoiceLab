@@ -403,7 +403,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
         
         {/* Tabs */}
         {isOpen && (
-          <div className="flex-shrink-0 px-4 border-b" style={{ borderColor: theme.stroke.low }}>
+          <div className="flex-shrink-0 px-4 border-b" style={{ borderColor: theme.stroke.medium }}>
             <Tabs 
               selectedKey={activeTab} 
               onSelectionChange={(key) => setActiveTab(key as 'score' | 'context' | 'violations')}
