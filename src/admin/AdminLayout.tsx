@@ -511,32 +511,8 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Quality & Engagement Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-        {/* Sentiment Widget */}
-        <AdminCard className="p-4">
-          <CardLabel>Feedback sentiment</CardLabel>
-          <SentimentBar 
-            likes={dashboardStats.likeCount}
-            dislikes={dashboardStats.dislikeCount}
-          />
-          <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${theme.stroke.low}` }}>
-            <span 
-              style={{ 
-                fontFamily: '"JioType Var"',
-                fontWeight: 400,
-                fontSize: '12px',
-                lineHeight: 1.3,
-                fontVariationSettings: '"opsz" 24',
-                color: theme.text.low,
-              }}
-            >
-              {dashboardStats.sentimentRatio !== null ? `${dashboardStats.sentimentRatio}% positive feedback` : 'No feedback yet'}
-            </span>
-          </div>
-        </AdminCard>
-
-        {/* Quality Metrics */}
+      {/* Quality Metrics */}
+      <div className="mb-5">
         <AdminCard className="p-4">
           <CardLabel>Content quality</CardLabel>
           <StatBreakdown
