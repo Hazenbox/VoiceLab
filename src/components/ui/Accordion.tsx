@@ -10,6 +10,7 @@
 import { useState, memo } from 'react';
 import { useThemeColors } from '../../theme';
 import { DSIcon } from '../DSIcon';
+import { Badge } from './Badge';
 
 interface AccordionProps {
   title: string;
@@ -50,12 +51,9 @@ export const Accordion = memo(function Accordion({
         </div>
         <div className="flex items-center gap-2">
           {badge !== undefined && (
-            <span
-              className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-              style={{ backgroundColor: '#00A859', color: '#ffffff' }}
-            >
+            <Badge variant="positive" emphasis="high">
               {badge}
-            </span>
+            </Badge>
           )}
           <span className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}>
             <DSIcon name="IcChevronDown" size="M" attention="low" appearance="neutral" />
