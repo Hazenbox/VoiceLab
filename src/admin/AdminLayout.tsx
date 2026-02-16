@@ -251,7 +251,7 @@ function PageHeader({ title, description }: { title: string; description: string
         {title}
       </Title>
       <p 
-        className="mt-1"
+        className="mt-2"
         style={{
           fontFamily: '"JioType Var"',
           fontWeight: 400,
