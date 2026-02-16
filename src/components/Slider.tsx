@@ -78,7 +78,7 @@ export const Slider: React.FC<SliderProps> = ({
                 onMouseEnter={() => setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
               >
-                <DSIcon name="IcInfo" size="XS" attention="medium" appearance="neutral" />
+                <DSIcon name="IcInfo" size="XS" attention="low" appearance="neutral" />
               </div>
               {showTooltip && (
                 <div
