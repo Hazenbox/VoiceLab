@@ -259,7 +259,7 @@ function PageHeader({ title, description }: { title: string; description: string
           fontVariationSettings: '"opsz" 24',
           color: theme.text.low,
           margin: 0,
-          marginTop: '12px',
+          marginTop: '8px',
         }}
       >
         {description}
