@@ -22,7 +22,8 @@ import { TrustBadge } from './ContentTrust';
 import { AssistantMessageActions, UserMessageActions } from './MessageActions';
 import { VersionNavigator } from './VersionNavigator';
 import { DislikeFeedbackModal } from './DislikeFeedbackModal';
-import { Button, Chip } from '@marcelinodzn/ds-react';
+import { Button } from '@marcelinodzn/ds-react';
+import { Badge } from './ui/Badge';
 import { DSIcon } from './DSIcon';
 
 /** Send button brand purple */
@@ -629,10 +630,10 @@ export const ChatPanel = memo(function ChatPanel({
               
               {/* Tag row - show accept button only if pending, otherwise show auto-fixed indicator */}
               <div className="flex items-center justify-between gap-2 mt-2">
-                <Chip size="S" appearance="positive">
+                <Badge variant="positive">
                   {isAutoFixPending ? 'recommended based on jio rules' : 'auto-fixed based on jio rules'}
-                </Chip>
-                {isAutoFixPending ? (
+                </Badge>
+                {isAutoFixPending && (
                   <Button
                     appearance="primary"
                     size="S"
@@ -640,11 +641,6 @@ export const ChatPanel = memo(function ChatPanel({
                   >
                     accept
                   </Button>
-                ) : (
-                  <Chip size="S" appearance="positive">
-                    <DSIcon name="IcCheck" size="XS" attention="high" />
-                    applied
-                  </Chip>
                 )}
               </div>
               
