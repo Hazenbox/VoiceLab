@@ -549,7 +549,7 @@ export const ChatPanel = memo(function ChatPanel({
                   }
                 }}
                 className={`max-w-[70%] rounded-[18px] ${
-                  multiLineMessages.has(message.id) ? 'px-5 py-4' : 'px-5 py-2'
+                  multiLineMessages.has(message.id) ? 'px-4 py-4' : 'px-4 py-2'
                 }`}
                 style={{
                   backgroundColor: theme.stroke.low,
