@@ -470,7 +470,7 @@ function AdminDashboard() {
         className="rounded-xl mb-5"
         style={{ 
           border: `1px solid ${theme.stroke.medium}`,
-          padding: '16px 0 0 0',
+          padding: '16px',
         }}
       >
         <h2 
@@ -480,18 +480,13 @@ function AdminDashboard() {
             fontFamily: 'JioType Var', 
             color: theme.text.high, 
             margin: 0,
-            padding: '0 16px 16px 16px',
+            paddingBottom: '16px',
             fontSize: '14px',
           }}
         >
           Overview
         </h2>
-        <div 
-          className="flex flex-col lg:flex-row"
-          style={{ 
-            borderTop: `1px solid ${theme.stroke.medium}`,
-          }}
-        >
+        <div className="flex flex-col lg:flex-row">
           <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium }}>
             <DataCard 
               title="total generations"
@@ -552,7 +547,7 @@ function AdminDashboard() {
         className="rounded-xl mb-5"
         style={{ 
           border: `1px solid ${theme.stroke.medium}`,
-          padding: '16px 0 0 0',
+          padding: '16px',
         }}
       >
         <h2 
@@ -562,18 +557,13 @@ function AdminDashboard() {
             fontFamily: 'JioType Var', 
             color: theme.text.high, 
             margin: 0,
-            padding: '0 16px 16px 16px',
+            paddingBottom: '16px',
             fontSize: '14px',
           }}
         >
           Content quality
         </h2>
-        <div 
-          className="flex flex-col lg:flex-row"
-          style={{ 
-            borderTop: `1px solid ${theme.stroke.medium}`,
-          }}
-        >
+        <div className="flex flex-col lg:flex-row">
           <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium }}>
             <DataCard 
               title="regeneration rate"
@@ -710,7 +700,11 @@ function AdminDashboard() {
                 </AdminTableCell>
                 <AdminTableCell>{session.messageCount}</AdminTableCell>
                 <AdminTableCell>{formatDuration(session.durationSeconds ?? null)}</AdminTableCell>
-                <AdminTableCell muted>{formatRelativeTime(session.startedAt)}</AdminTableCell>
+                <AdminTableCell>
+                  <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                    {formatRelativeTime(session.startedAt)}
+                  </span>
+                </AdminTableCell>
               </AdminTableRow>
             ))}
           </AdminTable>
@@ -947,7 +941,11 @@ function AdminLearningCenter() {
                 <AdminTableCell className="max-w-[200px] truncate">{c.editedContent || c.comment || '—'}</AdminTableCell>
                 <AdminTableCell>{(c as Record<string, unknown>).ecosystem as string || '—'}</AdminTableCell>
                 <AdminTableCell>{(c as Record<string, unknown>).channel as string || '—'}</AdminTableCell>
-                <AdminTableCell className="whitespace-nowrap" muted>{formatRelativeTime(c.timestamp)}</AdminTableCell>
+                <AdminTableCell className="whitespace-nowrap">
+                  <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                    {formatRelativeTime(c.timestamp)}
+                  </span>
+                </AdminTableCell>
               </AdminTableRow>
             );
           })}
@@ -1761,8 +1759,10 @@ function AdminUsers() {
                   {user.deviceId ? `${user.deviceId.slice(0, 20)}...` : '—'}
                 </span>
               </AdminTableCell>
-              <AdminTableCell className="whitespace-nowrap" muted>
-                {user.lastSeenAt ? formatRelativeTime(user.lastSeenAt) : '—'}
+              <AdminTableCell className="whitespace-nowrap">
+                <span style={{ color: theme.text.low, fontSize: '12px' }}>
+                  {user.lastSeenAt ? formatRelativeTime(user.lastSeenAt) : '—'}
+                </span>
               </AdminTableCell>
             </AdminTableRow>
           ))}
