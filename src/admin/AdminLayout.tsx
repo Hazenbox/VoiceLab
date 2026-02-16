@@ -289,9 +289,9 @@ function AdminCard({ children, className = '' }: { children: React.ReactNode; cl
   const theme = useThemeColors();
   return (
     <div
-      className={`rounded-lg ${className}`}
+      className={`rounded-xl ${className}`}
       style={{
-        border: `1px solid ${theme.stroke.low}`,
+        border: `1px solid ${theme.stroke.medium}`,
         backgroundColor: 'transparent',
       }}
     >
@@ -468,7 +468,7 @@ function AdminDashboard() {
       {/* Overview Section */}
       <CardLabel>Overview</CardLabel>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="total generations"
             fillEmphasis="Ghost"
@@ -481,7 +481,7 @@ function AdminDashboard() {
             modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
         </div>
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="avg trust score"
             fillEmphasis="Ghost"
@@ -494,7 +494,7 @@ function AdminDashboard() {
             modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
         </div>
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="content copied"
             fillEmphasis="Ghost"
@@ -507,7 +507,7 @@ function AdminDashboard() {
             modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
         </div>
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="learnings applied"
             fillEmphasis="Ghost"
@@ -525,7 +525,7 @@ function AdminDashboard() {
       {/* Content Quality Section */}
       <CardLabel>Content quality</CardLabel>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="regeneration rate"
             fillEmphasis="Ghost"
@@ -538,7 +538,7 @@ function AdminDashboard() {
             modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
         </div>
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="completion rate"
             fillEmphasis="Ghost"
@@ -551,7 +551,7 @@ function AdminDashboard() {
             modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
         </div>
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="regenerations"
             fillEmphasis="Ghost"
@@ -564,7 +564,7 @@ function AdminDashboard() {
             modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
         </div>
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="errors"
             fillEmphasis="Ghost"
@@ -583,9 +583,9 @@ function AdminDashboard() {
       <div className="mb-5">
         {hourlyBarChartData.length > 0 && !hourlyBarChartData.every(d => d.value === 0) ? (
           <div 
-            className="rounded-lg"
+            className="rounded-xl"
             style={{ 
-              border: `1px solid ${theme.stroke.low}`,
+              border: `1px solid ${theme.stroke.medium}`,
               padding: '16px',
             }}
           >
@@ -806,7 +806,7 @@ function AdminLearningCenter() {
 
       {/* Learning Stats Hero */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="learnings applied"
             fillEmphasis="Ghost"
@@ -819,7 +819,7 @@ function AdminLearningCenter() {
             modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
         </div>
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="edit corrections"
             fillEmphasis="Ghost"
@@ -832,7 +832,7 @@ function AdminLearningCenter() {
             modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
         </div>
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="avoid patterns"
             fillEmphasis="Ghost"
@@ -845,7 +845,7 @@ function AdminLearningCenter() {
             modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
         </div>
-        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
           <DataCard 
             title="total feedback"
             fillEmphasis="Ghost"
