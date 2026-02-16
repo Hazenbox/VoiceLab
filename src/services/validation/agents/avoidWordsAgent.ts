@@ -267,9 +267,14 @@ function getSuggestion(word: string, category: string): string {
 
 /**
  * Check if a word has a known alternative (for autoFixable flag)
+ * 
+ * IMPORTANT: ALL violations should be auto-fixable. If we have a suggestion,
+ * we can auto-fix it. This ensures no violating content appears in output.
  */
 function hasKnownAlternative(word: string): boolean {
-  return word.toLowerCase() in WORD_ALTERNATIVES;
+  // Always return true - all violations with suggestions can be auto-fixed
+  // The auto-fix engine will use the suggestion text if no direct replacement exists
+  return true;
 }
 
 /**

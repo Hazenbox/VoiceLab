@@ -409,6 +409,8 @@ export const readabilityAgent: ValidationAgent = {
     const grade = calculateFleschKincaidGrade(content);
     
     // If grade is above 8, add violation
+    // Note: Readability issues require content restructuring, which cannot be auto-fixed
+    // with simple word replacements. These violations are informational.
     if (grade > 8) {
       violations.push({
         severity: grade > 10 ? 'error' : 'warning',
@@ -417,7 +419,7 @@ export const readabilityAgent: ValidationAgent = {
         suggestion: 'Use shorter sentences and simpler words to reach Grade 8 readability',
         category: 'readability_score',
         position: { start: 0, end: content.length },
-        autoFixable: false,
+        autoFixable: false, // Cannot auto-fix structural issues
         agentId: 'readability',
       });
     }

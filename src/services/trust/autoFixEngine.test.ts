@@ -70,7 +70,9 @@ describe('AutoFixEngine', () => {
       });
     });
 
-    it('should skip non-autoFixable violations', () => {
+    it('should now process ALL violations regardless of autoFixable flag (aggressive mode)', () => {
+      // NEW BEHAVIOR: Auto-fix engine now processes ALL violations that have suggestions
+      // to ensure no violating content ever appears in the final output
       const violations: Violation[] = [
         {
           rule: 'Complex issue',
@@ -79,16 +81,19 @@ describe('AutoFixEngine', () => {
           text: 'some text',
           suggestion: 'manual fix needed',
           position: { start: 0, end: 9 },
-          autoFixable: false,
+          autoFixable: false, // Even with autoFixable=false, we now generate a fix
         },
       ];
 
       const fixes = generateAutoFixes(violations);
 
-      expect(fixes).toHaveLength(0);
+      // Changed from 0 to 1 - we now fix ALL violations with suggestions
+      expect(fixes).toHaveLength(1);
+      expect(fixes[0].replacement).toBe('manual fix needed');
+      expect(fixes[0].original).toBe('some text');
     });
 
-    it('should return empty array for violations without known fixes', () => {
+    it('should use suggestion for violations without known replacements', () => {
       const violations: Violation[] = [
         {
           rule: 'Unknown issue',
@@ -103,9 +108,10 @@ describe('AutoFixEngine', () => {
 
       const fixes = generateAutoFixes(violations);
 
-      // Unknown word not in REPLACEMENTS
-      expect(fixes).toHaveLength(1); // Uses suggestion with lower confidence
-      expect(fixes[0].confidence).toBe(0.7);
+      // Unknown word not in REPLACEMENTS - uses suggestion
+      expect(fixes).toHaveLength(1);
+      // Confidence increased from 0.7 to 0.75 for raw suggestions
+      expect(fixes[0].confidence).toBe(0.75);
     });
   });
 

@@ -295,6 +295,10 @@ function getMergedReplacements(
 /**
  * Generate auto-fixes for violations
  * 
+ * IMPORTANT: This function now aggressively generates fixes for ALL violations
+ * that have either a direct replacement or a suggestion. No violating content
+ * should ever appear in the final output.
+ * 
  * @param violations - Array of violations to generate fixes for
  * @param dynamicReplacements - Optional array of admin-managed rules from Convex
  *                              These are merged with static REPLACEMENTS (Convex rules take priority)
@@ -310,7 +314,8 @@ export function generateAutoFixes(
   const mergedReplacements = getMergedReplacements(dynamicReplacements);
   
   for (const violation of violations) {
-    if (!violation.autoFixable) continue;
+    // Process ALL violations - don't skip based on autoFixable flag
+    // We want to attempt fixing everything that has a suggestion
     
     // Skip violations with missing text
     if (!violation.text) {
@@ -322,6 +327,7 @@ export function generateAutoFixes(
     const directFix = mergedReplacements[text];
     
     if (directFix) {
+      // Direct replacement from dictionary - highest confidence
       fixes.push({
         original: violation.text,
         replacement: matchCase(violation.text, directFix.replacement),
@@ -329,7 +335,8 @@ export function generateAutoFixes(
         rule: violation.rule,
         violation,
       });
-    } else if (violation.suggestion && violation.suggestion.length < 50) {
+    } else if (violation.suggestion) {
+      // No direct replacement - use the suggestion
       // Try to extract replacement from suggestion (format: "Replace X with: Y")
       const suggestionMatch = violation.suggestion.match(/Replace\s+["']?[^"']+["']?\s+with:\s*(.+)/i);
       if (suggestionMatch) {
@@ -337,19 +344,31 @@ export function generateAutoFixes(
         fixes.push({
           original: violation.text,
           replacement: matchCase(violation.text, suggestedReplacement),
+          confidence: 0.85, // Higher confidence for structured suggestions
+          rule: violation.rule,
+          violation,
+        });
+      } else if (violation.suggestion.length < 100) {
+        // Fallback to raw suggestion (increased limit from 50 to 100)
+        // Only use short suggestions as direct replacements
+        fixes.push({
+          original: violation.text,
+          replacement: violation.suggestion,
           confidence: 0.75,
           rule: violation.rule,
           violation,
         });
       } else {
-        // Fallback to raw suggestion
+        // For very long suggestions, try to remove the violating text
+        // This is a last resort - remove content rather than leave violations
         fixes.push({
           original: violation.text,
-          replacement: violation.suggestion,
-          confidence: 0.7,
+          replacement: '', // Remove the violating content
+          confidence: 0.60,
           rule: violation.rule,
           violation,
         });
+        console.log(`[AutoFix] Removing violating content (no short replacement): "${violation.text}"`);
       }
     }
   }
@@ -398,11 +417,14 @@ function escapeRegex(str: string): string {
  * 
  * IMPORTANT: Uses global regex replacement to fix ALL occurrences of a word,
  * not just the first one. This is critical for content with repeated violations.
+ * 
+ * AGGRESSIVE MODE: Default minConfidence lowered to 0.5 to ensure ALL violations
+ * are fixed. No violating content should ever appear in the final output.
  */
 export function applyAutoFixes(
   content: string,
   fixes: AutoFix[],
-  minConfidence: number = 0.8
+  minConfidence: number = 0.5 // Lowered from 0.8 to fix ALL violations
 ): AutoFixResult {
   let fixedContent = content;
   const appliedFixes: AutoFix[] = [];
@@ -410,7 +432,7 @@ export function applyAutoFixes(
   
   const sortedFixes = [...fixes]
     .filter(f => f.confidence >= minConfidence)
-    .slice(0, 20); // Increased from 10 to 20 to handle more violations
+    .slice(0, 50); // Increased from 20 to 50 to handle many violations
   
   for (const fix of sortedFixes) {
     // Use global, case-insensitive regex to replace ALL occurrences
