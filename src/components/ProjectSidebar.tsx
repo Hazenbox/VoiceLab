@@ -127,7 +127,7 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
 
   return (
     <div
-      className="w-full group rounded-[14px]"
+      className="w-full group rounded-xl"
       style={{
         backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
         height: '36px',
@@ -342,7 +342,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                 {renamingProject === project.id ? (
                   // Rename input mode - match 36px height of normal items
                   <div 
-                    className="w-full flex items-center rounded-[14px]"
+                    className="w-full flex items-center rounded-xl"
                     style={{ backgroundColor: theme.stroke.low, height: '36px' }}
                   >
                     <Input
