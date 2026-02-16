@@ -365,7 +365,7 @@ const EvidenceTimelineItem: React.FC<{
           width: '20px', 
           height: '20px', 
           borderRadius: '50%',
-          backgroundColor: theme.accent, 
+          backgroundColor: SEMANTIC_COLORS.informative, 
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
@@ -376,15 +376,15 @@ const EvidenceTimelineItem: React.FC<{
         {/* Connector line - extends to next step */}
         {!isLast && (
           <div style={{ 
-            width: '2px', 
+            width: '1px', 
             flex: 1,
-            backgroundColor: theme.stroke.medium,
+            backgroundColor: theme.stroke.low,
           }} />
         )}
       </div>
       
       {/* Content */}
-      <div style={{ flex: 1, paddingBottom: isLast ? 0 : '24px' }}>
+      <div style={{ flex: 1, paddingBottom: isLast ? 0 : '32px' }}>
         {/* Title row - height matches circle for vertical centering */}
         <div style={{ height: '20px', display: 'flex', alignItems: 'center' }}>
           <Label size="S" weight="high" color="high">{title}</Label>
