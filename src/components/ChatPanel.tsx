@@ -870,7 +870,7 @@ export const ChatPanel = memo(function ChatPanel({
               color: theme.text.high,
               animation: 'fadeIn 300ms ease-in-out',
               fontWeight: 900,
-              fontSize: '19px',
+              fontSize: '24px',
               lineHeight: 1.3,
               letterSpacing: '-0.3px',
               width: '400px',
