@@ -124,6 +124,73 @@ const WORD_ALTERNATIVES: Record<string, string> = {
   
   // === Agent-specific alternatives (not in vocabulary.ts) ===
   
+  // Verb variants - streamline
+  'streamline': 'simplify',
+  'streamlined': 'simplified',
+  'streamlining': 'simplifying',
+  'streamlines': 'simplifies',
+  
+  // Verb variants - optimize
+  'optimize': 'improve',
+  'optimized': 'improved',
+  'optimizing': 'improving',
+  'optimizes': 'improves',
+  
+  // Verb variants - leverage
+  'leveraged': 'used',
+  'leveraging': 'using',
+  'leverages': 'uses',
+  
+  // Verb variants - utilize
+  'utilized': 'used',
+  'utilizing': 'using',
+  'utilizes': 'uses',
+  
+  // Verb variants - maximize/minimize
+  'maximize': 'increase',
+  'maximized': 'increased',
+  'maximizing': 'increasing',
+  'maximizes': 'increases',
+  'minimize': 'reduce',
+  'minimized': 'reduced',
+  'minimizing': 'reducing',
+  'minimizes': 'reduces',
+  
+  // Verb variants - prioritize
+  'prioritize': 'focus on',
+  'prioritized': 'focused on',
+  'prioritizing': 'focusing on',
+  'prioritizes': 'focuses on',
+  
+  // Verb variants - incentivize
+  'incentivize': 'encourage',
+  'incentivized': 'encouraged',
+  'incentivizing': 'encouraging',
+  'incentivizes': 'encourages',
+  
+  // Verb variants - onboard
+  'onboard': 'welcome',
+  'onboarded': 'welcomed',
+  'onboarding': 'welcoming',
+  'onboards': 'welcomes',
+  
+  // Verb variants - sync
+  'synced': 'connected',
+  'syncing': 'connecting',
+  'syncs': 'connects',
+  
+  // Compound phrase space variants
+  'best in class': 'excellent',
+  'world class': 'excellent',
+  'cutting edge': 'advanced',
+  'state of the art': 'modern',
+  'high end': 'premium',
+  'tech savvy': 'comfortable with technology',
+  'low hanging fruit': 'easy wins',
+  'deep-dive': 'detailed look',
+  'circle-back': 'follow up',
+  'touch-base': 'connect',
+  
   // Complex words (additional)
   'avail': 'get, claim, or use',
   'availing': 'getting, claiming, or using',
