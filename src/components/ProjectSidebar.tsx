@@ -432,7 +432,8 @@ export const ProjectSidebar = memo(function ProjectSidebar({
             items={userMenuOptions}
             onSelect={handleUserMenuAction}
             direction="up"
-            width="219px"
+            width="239px"
+            position="left"
             showIcons={true}
             anchorRef={userMenuContainerRef}
           />
