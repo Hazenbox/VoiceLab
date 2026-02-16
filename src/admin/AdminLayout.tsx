@@ -450,7 +450,7 @@ function AdminDashboard() {
           dataHead={{
             leadValue: String(dashboardStats.totalGenerations ?? 0),
           }}
-          modes={{ colourMode: theme.background.ghost === 'transparent' ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
+          modes={{ colourMode: theme.isLight ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
         />
         <DataCard 
           title="avg trust score"
@@ -463,7 +463,7 @@ function AdminDashboard() {
             supportingLabelText: KPI_DESCRIPTIONS.avgTrustScore.target ? `target: ${KPI_DESCRIPTIONS.avgTrustScore.target}` : undefined,
             showSupportingLabel: !!KPI_DESCRIPTIONS.avgTrustScore.target,
           }}
-          modes={{ colourMode: theme.background.ghost === 'transparent' ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
+          modes={{ colourMode: theme.isLight ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
         />
         <DataCard 
           title="content copied"
@@ -474,7 +474,7 @@ function AdminDashboard() {
           dataHead={{
             leadValue: String(dashboardStats.copyCount ?? 0),
           }}
-          modes={{ colourMode: theme.background.ghost === 'transparent' ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
+          modes={{ colourMode: theme.isLight ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
         />
         <DataCard 
           title="learnings applied"
@@ -485,7 +485,7 @@ function AdminDashboard() {
           dataHead={{
             leadValue: String(learningStats.totalPatternsApplied ?? 0),
           }}
-          modes={{ colourMode: theme.background.ghost === 'transparent' ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
+          modes={{ colourMode: theme.isLight ? 'Light' : 'Dark', colourTheme: 'MyJio' }}
         />
       </div>
 
@@ -548,7 +548,7 @@ function AdminDashboard() {
             }}
             showHeader={true}
             modes={{ 
-              colourMode: theme.background.ghost === 'transparent' ? 'Light' : 'Dark', 
+              colourMode: theme.isLight ? 'Light' : 'Dark', 
               colourTheme: 'MyJio',
               Density: 'Compact',
             }}
