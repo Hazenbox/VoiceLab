@@ -21,7 +21,8 @@ export type ValidationAgentId =
   | 'brand_alignment'
   | 'readability'
   | 'avoid_words'
-  | 'commercial_sensitivity';
+  | 'commercial_sensitivity'
+  | 'ux_microcopy'; // Phase 2.4: CTA format, dead-end, error structure
 
 /**
  * Individual violation found by an agent (extends base Violation)
@@ -126,6 +127,7 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
     'readability',
     'avoid_words',
     'commercial_sensitivity', // Phase 1.5: Detects pushy sales/inappropriate promotional timing
+    'ux_microcopy',          // Phase 2.4: CTA format, dead-end detection, error structure
   ],
   skipPatternMatching: false,
   parallelExecution: true,
@@ -135,23 +137,25 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
 /**
  * Agent weights for score calculation
  * Updated to include readability (Training 1.pdf requirement: Grade 8 readability)
- * Rebalanced to sum to 100 after adding avoid_words and commercial_sensitivity agents
+ * Rebalanced to sum to 100 after adding avoid_words, commercial_sensitivity, and ux_microcopy agents
  * 
  * Rationale:
  * - style_consistency reduced (overlaps with avoid_words)
  * - brand_alignment reduced slightly (overlaps with commercial_sensitivity)
  * - commercial_sensitivity lower weight as it's context-specific
+ * - ux_microcopy moderate weight - important for user experience
  */
 export const AGENT_WEIGHTS: Record<ValidationAgentId, number> = {
-  gender_neutrality: 10,      // was 11
-  inclusivity: 10,            // was 11
-  cultural_sensitivity: 10,   // was 11
+  gender_neutrality: 9,       // reduced from 10
+  inclusivity: 9,             // reduced from 10
+  cultural_sensitivity: 9,    // reduced from 10
   accessibility: 9,           // unchanged
-  compliance: 12,             // was 13
-  style_consistency: 11,      // was 12
-  brand_alignment: 12,        // was 13
-  readability: 9,             // was 10
-  avoid_words: 9,             // was 10
-  commercial_sensitivity: 8,  // NEW - Phase 1.5
-  // Sum: 10+10+10+9+12+11+12+9+9+8 = 100
+  compliance: 11,             // reduced from 12
+  style_consistency: 10,      // reduced from 11
+  brand_alignment: 11,        // reduced from 12
+  readability: 9,             // unchanged
+  avoid_words: 8,             // reduced from 9
+  commercial_sensitivity: 8,  // unchanged
+  ux_microcopy: 7,            // NEW - Phase 2.4: CTA, dead-end, error structure
+  // Sum: 9+9+9+9+11+10+11+9+8+8+7 = 100
 };
