@@ -34,7 +34,7 @@ import { TooltipIcon } from './TooltipIcon';
 import { useThemeColors } from '../theme';
 // Design system context removed - now using single Jio DS
 import { getEcosystemOptions, getChannelOptions, getLanguageOptions, getRegionOptions } from '../services/guidelines';
-import { TextArea, Title, IconButton } from '@marcelinodzn/ds-react';
+import { TextArea, Title } from '@marcelinodzn/ds-react';
 import { Accordion } from './ui/Accordion';
 
 // =============================================================================
@@ -190,14 +190,19 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           <Title size="S" as="h2" weight="high" color="high">
             advanced settings
           </Title>
-          <IconButton
-            size="S"
-            appearance="ghost"
-            type="neutral"
-            onPress={onToggleCollapse}
+          <button
+            onClick={onToggleCollapse}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{
+              backgroundColor: theme.background.ghost,
+              color: theme.text.medium,
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.stroke.low}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme.background.ghost}
             aria-label="Close settings panel"
-            asset={<DSIcon name="IcClose" size="S" attention="medium" />}
-          />
+          >
+            <DSIcon name="IcClose" size="S" attention="medium" />
+          </button>
         </div>
       )}
       
