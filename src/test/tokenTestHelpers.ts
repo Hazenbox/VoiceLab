@@ -316,7 +316,9 @@ export const ENFORCEMENT_RULES = {
     tokenKey: 'ecosystem',
     tokenValue: '*',  // Apply to all ecosystems - Jio is always the brand
     ruleType: 'must_not_contain',
-    patterns: ['competitor', 'airtel', 'vodafone', 'vi', 'bsnl', 'idea', 'jio competitor'],
+    // Use word boundaries for short patterns to avoid false positives
+    // e.g., "vi" should not match "service", "provide", "activity"
+    patterns: ['competitor', 'airtel', 'vodafone', '\\bvi\\b', 'bsnl', '\\bidea\\b', 'jio competitor'],
     autoFixAction: 'remove',
     severity: 'error',
     errorMessage: 'Never mention competitor brands - focus on Jio value proposition',
@@ -413,12 +415,17 @@ Is there something else I can help you with today?`,
 
 /**
  * Check if response contains any of the required patterns
+ * Supports:
+ * - Plain string matching (case-insensitive)
+ * - Regex patterns with word boundaries (e.g., '\\bvi\\b')
+ * - Regex patterns with OR (e.g., 'airtel|vodafone')
+ * - Case-insensitive regex prefix (?i)
  */
 export function containsAnyPattern(content: string, patterns: string[]): boolean {
   const lowerContent = content.toLowerCase();
   return patterns.some(pattern => {
-    // Check if it's a regex pattern
-    if (pattern.startsWith('(?i)') || pattern.includes('|')) {
+    // Check if it's a regex pattern (has word boundaries, OR, or regex prefix)
+    if (pattern.includes('\\b') || pattern.startsWith('(?i)') || pattern.includes('|')) {
       try {
         const regex = new RegExp(pattern.replace('(?i)', ''), 'i');
         return regex.test(content);

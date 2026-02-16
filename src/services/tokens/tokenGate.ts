@@ -110,6 +110,37 @@ Is there something else I can help you with today?`,
     priority: 95,
     category: 'safety',
   },
+  {
+    id: 'gate_child_safety_block',
+    tokenKey: 'safety.domain',
+    triggerValues: ['sexual_minors', 'child_safety'],
+    action: 'block',
+    blockResponse: `I cannot help with this request. Child safety is paramount.
+
+If you suspect child abuse or exploitation, please contact:
+- **Childline India**: 1098 (24/7)
+- **NCPCR**: 1800-121-0505
+- **Police**: 100 or 112
+
+These services are available 24/7 and can provide immediate assistance.`,
+    priority: 100,
+    category: 'safety',
+  },
+  {
+    id: 'gate_weapons_block',
+    tokenKey: 'safety.domain',
+    triggerValues: ['weapons', 'dangerous_activity'],
+    action: 'block',
+    blockResponse: `I'm not able to provide information about weapons or dangerous activities.
+
+If you're in an emergency situation, please contact:
+- **Emergency**: 112
+- **Police**: 100
+
+Is there something else I can help you with today?`,
+    priority: 95,
+    category: 'safety',
+  },
   
   // ══════════════════════════════════════════════════════════════════════════
   // NUDGE GATES

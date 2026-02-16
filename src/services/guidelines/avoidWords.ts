@@ -22,6 +22,11 @@ export const COMPLEX_WORDS = [
   'deep dive', 'circle back', 'touch base', 'take offline',
   'move the needle', 'low-hanging fruit', 'boil the ocean',
   
+  // Business buzzwords (from stress test gaps)
+  'maximize', 'incentivize', 'prioritize',
+  'deliverable', 'actionable', 'scalable', 'robust',
+  'holistic', 'proactive', 'disruptive',
+  
   // Unnecessary complexity
   'aforementioned', 'henceforth', 'hereby', 'therein', 'whereby',
   'pursuant to', 'in accordance with', 'notwithstanding',
@@ -50,6 +55,11 @@ export const ROBOTIC_WORDS = [
   'as per our records', 'for your reference', 'please note',
   'be advised', 'be informed', 'please be notified',
   'it has come to our attention', 'we wish to inform',
+  'kindly note', 'for your information', 'further to',  // Added from stress test gaps
+  
+  // Legal/formal phrases (from stress test gaps)
+  'herein', 'therein', 'wherein', 'pursuant',
+  'in compliance with',
   
   // Transaction-speak
   'your request has been', 'your query has been',
@@ -70,10 +80,12 @@ export const FEAR_BASED_WORDS = [
   'urgent', 'hurry', 'rush', 'immediate', 'now or never',
   'last chance', 'final warning', 'act now', 'limited time',
   'running out', 'expires soon', 'only X left',
+  'immediate action required', 'deadline',  // Added from stress test gaps
   
   // FOMO triggers
   "don't miss", "don't miss out", 'FOMO', 'everyone is',
   'others are already', "you'll regret", 'never again',
+  'selling fast', 'almost gone',  // Added from stress test gaps
   
   // Threat-adjacent
   'consequences', 'penalty', 'forfeit', 'lose', 'lose out',
@@ -101,6 +113,9 @@ export const BUREAUCRATIC_WORDS = [
   // Official-speak
   'hereby', 'herewith', 'thereto', 'therewith', 'thereof',
   'aforementioned', 'abovementioned', 'undersigned',
+  
+  // Archaic legal terms (from stress test gaps)
+  'heretofore', 'wherefore', 'forthwith', 'inasmuch',
   
   // Distance-creating
   'the management', 'the company', 'the organization',
@@ -178,6 +193,10 @@ export const MARKETING_JARGON_WORDS = [
   'utilize', 'leverage', 'synergy', 'paradigm', 'bandwidth',
   'circle back', 'deep dive', 'ping', 'loop in',
   'dashboard', 'onboard', 'optimize', 'streamline',
+  
+  // Additional marketing jargon (from stress test gaps)
+  'pain point', 'value proposition',
+  'ecosystem', 'disrupt', 'pivot',
   
   // Gender-specific terms (from GENDER_NEUTRAL_ALTERNATIVES)
   // These need replacement with gender-neutral alternatives

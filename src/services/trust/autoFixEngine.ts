@@ -304,16 +304,36 @@ function getMergedReplacements(
  *                              These are merged with static REPLACEMENTS (Convex rules take priority)
  *                              If not provided, uses cached dynamic rules from setDynamicAutoFixRules()
  */
+/**
+ * Get numeric rank for severity (higher = more severe)
+ * Used for deduplication to keep the most severe violation at each position
+ */
+function severityRank(severity: string | undefined): number {
+  return { error: 3, warning: 2, info: 1 }[severity ?? 'info'] ?? 0;
+}
+
 export function generateAutoFixes(
   violations: Violation[],
   dynamicReplacements?: DynamicReplacement[]
 ): AutoFix[] {
   const fixes: AutoFix[] = [];
   
+  // DEDUPLICATION: Remove violations at same position, keeping higher severity
+  const uniqueByPosition = new Map<string, Violation>();
+  for (const v of violations) {
+    const posKey = `${v.position?.start ?? 0}-${v.position?.end ?? 0}-${v.text}`;
+    const existing = uniqueByPosition.get(posKey);
+    // Keep higher severity violation
+    if (!existing || severityRank(v.severity) > severityRank(existing.severity)) {
+      uniqueByPosition.set(posKey, v);
+    }
+  }
+  const deduplicatedViolations = Array.from(uniqueByPosition.values());
+  
   // Get merged replacements (static + dynamic)
   const mergedReplacements = getMergedReplacements(dynamicReplacements);
   
-  for (const violation of violations) {
+  for (const violation of deduplicatedViolations) {
     // Process ALL violations - don't skip based on autoFixable flag
     // We want to attempt fixing everything that has a suggestion
     
