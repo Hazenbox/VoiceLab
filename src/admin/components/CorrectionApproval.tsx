@@ -25,25 +25,25 @@ interface Correction {
 function FeedbackBadge({ type }: { type: string }) {
   const theme = useThemeColors();
   
-  const colorMap: Record<string, { bg: string; fg: string }> = {
-    thumbs_up:   { bg: `${theme.semantic.positive}1F`, fg: theme.semantic.positive },
-    thumbs_down: { bg: `${theme.semantic.negative}1F`, fg: theme.semantic.negative },
-    edit:        { bg: `${theme.semantic.informative}1F`, fg: theme.semantic.informative },
-    comment:     { bg: `${theme.semantic.warning}1F`, fg: theme.semantic.warning },
+  const colorMap: Record<string, string> = {
+    thumbs_up:   theme.isLight ? '#DCFCE7' : 'rgba(34, 197, 94, 0.2)',
+    thumbs_down: theme.isLight ? '#FEE2E2' : 'rgba(239, 68, 68, 0.2)',
+    edit:        theme.isLight ? '#DBEAFE' : 'rgba(59, 130, 246, 0.2)',
+    comment:     theme.isLight ? '#FEF3C7' : 'rgba(234, 179, 8, 0.2)',
   };
-  const fallback = { bg: 'rgba(107,114,128,0.12)', fg: theme.text.low };
-  const c = colorMap[type] || fallback;
+  const fallbackBg = theme.isLight ? '#F3F4F6' : 'rgba(107, 114, 128, 0.2)';
+  const bg = colorMap[type] || fallbackBg;
 
   return (
     <span
       style={{
         display: 'inline-block',
-        backgroundColor: c.bg,
-        borderRadius: '9999px',
-        padding: '1px 8px',
+        backgroundColor: bg,
+        borderRadius: '8px',
+        padding: '8px 16px',
       }}
     >
-      <Label size="3XS" weight="medium" attention="high" as="span" style={{ color: c.fg }}>
+      <Label size="XS" weight="medium" attention="high" as="span">
         {type.replace('_', ' ')}
       </Label>
     </span>
@@ -54,23 +54,23 @@ function FeedbackBadge({ type }: { type: string }) {
 function StatusBadge({ status }: { status: string }) {
   const theme = useThemeColors();
   
-  const statusMap: Record<string, { bg: string; fg: string }> = {
-    approved: { bg: `${theme.semantic.positive}1F`, fg: theme.semantic.positive },
-    rejected: { bg: `${theme.semantic.negative}1F`, fg: theme.semantic.negative },
-    pending:  { bg: `${theme.semantic.warning}1F`, fg: theme.semantic.warning },
+  const statusMap: Record<string, string> = {
+    approved: theme.isLight ? '#DCFCE7' : 'rgba(34, 197, 94, 0.2)',
+    rejected: theme.isLight ? '#FEE2E2' : 'rgba(239, 68, 68, 0.2)',
+    pending:  theme.isLight ? '#FEF3C7' : 'rgba(234, 179, 8, 0.2)',
   };
-  const c = statusMap[status] || statusMap.pending;
+  const bg = statusMap[status] || statusMap.pending;
 
   return (
     <span
       style={{
         display: 'inline-block',
-        backgroundColor: c.bg,
-        borderRadius: '9999px',
-        padding: '1px 8px',
+        backgroundColor: bg,
+        borderRadius: '8px',
+        padding: '8px 16px',
       }}
     >
-      <Label size="3XS" weight="medium" attention="high" as="span" style={{ color: c.fg }}>
+      <Label size="XS" weight="medium" attention="high" as="span">
         {status}
       </Label>
     </span>
