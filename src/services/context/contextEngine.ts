@@ -418,10 +418,10 @@ export function getContextSummary(context: GenerationContext): {
   return {
     ecosystem: `${ecosystem.name} - ${ecosystem.tone}`,
     channel: `${channel.name} (${channel.group})`,
-    warmth: `${context.warmth}/10 ${context.warmth >= 7 ? '🔥 Warm' : context.warmth <= 3 ? '❄️ Formal' : '⚖️ Balanced'}`,
-    detail: `${context.detail}/10 ${context.detail >= 7 ? '📚 Comprehensive' : context.detail <= 3 ? '📌 Brief' : '📝 Moderate'}`,
+    warmth: `${context.warmth}/10 - ${context.warmth >= 7 ? 'Warm' : context.warmth <= 3 ? 'Formal' : 'Balanced'}`,
+    detail: `${context.detail}/10 - ${context.detail >= 7 ? 'Comprehensive' : context.detail <= 3 ? 'Brief' : 'Moderate'}`,
     goal: context.goal,
-    profile: `${context.userProfile.ageGroup === 'digital_confident' ? '💻' : '👴'} ${context.userProfile.language}, ${context.userProfile.region}`,
+    profile: `${context.userProfile.language}, ${context.userProfile.region}`,
     emotion: `${context.emotion.charAt(0).toUpperCase() + context.emotion.slice(1)}`,
     timing: `${context.timing.timeOfDay}${context.timing.festival ? ` (${context.timing.festival})` : ''}, ${context.timing.dayOfWeek}`,
     overrides: overridesList,

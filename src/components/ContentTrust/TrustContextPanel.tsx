@@ -371,7 +371,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
       style={{
         width: isOpen ? '380px' : '0px',
         backgroundColor: theme.background.ghost,
-        borderLeft: `1px solid ${theme.stroke.low}`,
+        borderLeft: `1px solid ${theme.stroke.medium}`,
         transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1), transform 250ms cubic-bezier(0.4, 0, 0.2, 1)',
         transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
         opacity: isOpen ? 1 : 0,
