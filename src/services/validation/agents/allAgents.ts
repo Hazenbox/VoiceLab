@@ -304,8 +304,9 @@ const BRAND_PATTERNS: PatternRule[] = [
   { id: 'ba-015', pattern: /\b(highly motivated|discerning customers|premium users)\b/gi, severity: 'warning', rule: 'Avoid exclusionary language', suggestion: 'everyone, all users', category: 'judgment' },
   
   // Marketing: Benefit-first rule (Training 1.pdf - headlines should lead with benefit)
-  // This pattern catches headlines that start with event names (common mistake)
-  { id: 'ba-016', pattern: /\b(Diwali|Durga Puja|Holi|Eid|Christmas|New Year|Independence Day)\s+(sale|offer|special)\b/gi, severity: 'warning', rule: 'Headlines should lead with benefit, not event', suggestion: 'Put discount/benefit first: "50% off - [Event] Special"', category: 'marketing' },
+  // This pattern catches headlines that START with event names (common mistake)
+  // Uses ^ anchor with multiline flag to only flag content where event name is at the beginning of a line
+  { id: 'ba-016', pattern: /^(Diwali|Durga Puja|Holi|Eid|Christmas|New Year|Independence Day)\s+(sale|offer|special)\b/gim, severity: 'warning', rule: 'Headlines should lead with benefit, not event', suggestion: 'Put discount/benefit first: "50% off - [Event] Special"', category: 'marketing' },
   
   // Shame-inducing words (Training 1.pdf)
   { id: 'ba-017', pattern: /\b(you forgot|you missed|you failed to)\b/gi, severity: 'warning', rule: 'Avoid blame language', suggestion: 'Here\'s a reminder, Still time to', category: 'shame' },

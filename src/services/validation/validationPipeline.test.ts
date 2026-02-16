@@ -195,4 +195,56 @@ describe('validationPipeline', () => {
       expect(result.autoFixableCount).toBeLessThanOrEqual(result.totalViolations);
     });
   });
+
+  describe('benefit-first headline rule (ba-016)', () => {
+    it('should flag event-first headlines', () => {
+      // Event name at the start should trigger violation
+      const eventFirstContent = 'Diwali sale now on!';
+      const result = runQuickValidation(eventFirstContent, ['brand_alignment']);
+      
+      const violations = result.agentResults.flatMap(r => r.violations);
+      const benefitViolation = violations.find(v => v.rule.includes('benefit'));
+      
+      expect(benefitViolation).toBeDefined();
+      expect(benefitViolation?.suggestion).toContain('50% off');
+    });
+
+    it('should allow benefit-first headlines with event names', () => {
+      // Benefit first, event name later - should NOT trigger violation
+      const benefitFirstContent = '50% off - Diwali Special';
+      const result = runQuickValidation(benefitFirstContent, ['brand_alignment']);
+      
+      const violations = result.agentResults.flatMap(r => r.violations);
+      const benefitViolation = violations.find(v => v.rule.includes('benefit'));
+      
+      expect(benefitViolation).toBeUndefined();
+    });
+
+    it('should flag multiple event-first patterns', () => {
+      const testCases = [
+        'Christmas offer for you',
+        'Holi special discounts',
+        'New Year offer available',
+      ];
+      
+      for (const content of testCases) {
+        const result = runQuickValidation(content, ['brand_alignment']);
+        const violations = result.agentResults.flatMap(r => r.violations);
+        const benefitViolation = violations.find(v => v.rule.includes('benefit'));
+        
+        expect(benefitViolation).toBeDefined();
+      }
+    });
+
+    it('should allow event names mid-sentence', () => {
+      // Event name NOT at the start - should pass
+      const midSentenceContent = 'Shop now! Diwali sale ends soon';
+      const result = runQuickValidation(midSentenceContent, ['brand_alignment']);
+      
+      const violations = result.agentResults.flatMap(r => r.violations);
+      const benefitViolation = violations.find(v => v.rule.includes('benefit'));
+      
+      expect(benefitViolation).toBeUndefined();
+    });
+  });
 });
