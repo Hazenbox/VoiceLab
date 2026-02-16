@@ -184,11 +184,10 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       {/* Header */}
       {(
         <div
-          className="px-3 py-3 border-b flex items-center justify-between"
-          style={{ borderColor: theme.stroke.low }}
+          className="px-3 py-3 flex items-center justify-between"
         >
-          <Title size="S" as="h2" weight="high" color="high">
-            advanced settings
+          <Title size="M" as="h2" weight="high" color="high">
+            Advanced Settings
           </Title>
           <button
             onClick={onToggleCollapse}
