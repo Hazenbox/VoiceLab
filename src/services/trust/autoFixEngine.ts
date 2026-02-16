@@ -349,15 +349,21 @@ export function generateAutoFixes(
           violation,
         });
       } else if (violation.suggestion.length < 100) {
-        // Fallback to raw suggestion (increased limit from 50 to 100)
-        // Only use short suggestions as direct replacements
-        fixes.push({
-          original: violation.text,
-          replacement: violation.suggestion,
-          confidence: 0.75,
-          rule: violation.rule,
-          violation,
-        });
+        // Check if suggestion is instructional (not a literal replacement)
+        // These are guidance for humans, not actual replacement values
+        const isInstructional = /^(Add|Use|Consider|Avoid|Remove|Describe|Rephrase|Break|Simplify|Put|State|Lowercase|Substantiate|Here's)/i.test(violation.suggestion);
+        
+        if (!isInstructional) {
+          // Fallback to raw suggestion - only use short, non-instructional suggestions
+          fixes.push({
+            original: violation.text,
+            replacement: violation.suggestion,
+            confidence: 0.75,
+            rule: violation.rule,
+            violation,
+          });
+        }
+        // Skip instructional suggestions - they're guidance, not replacements
       } else {
         // For very long suggestions, try to remove the violating text
         // This is a last resort - remove content rather than leave violations
