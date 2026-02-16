@@ -353,9 +353,11 @@ export function getToneAdjustments(profile: UserProfile): ToneAdjustments {
   }
   
   // Literacy level adjustments
+  // Note: useEmoji is now just a hint - actual decision uses emojiContext.ts
+  // which considers channel, ecosystem, emotion, and safety domain
   if (profile.literacyLevel === 'low') {
     adjustments.sentenceLength = 'short';
-    adjustments.useEmoji = true;
+    adjustments.useEmoji = true; // Hint: consider emojis for visual aid
     adjustments.useStepByStep = true;
     adjustments.technicalTerms = false;
     adjustments.useNumerals = true;
@@ -392,10 +394,12 @@ export function getToneInstructions(adjustments: ToneAdjustments): string {
     instructions.push('One idea per sentence');
   }
   
+  // Note: Emoji instructions now come from emojiContext.ts based on
+  // channel, ecosystem, emotion, and safety domain - not just this flag
   if (adjustments.useEmoji) {
-    instructions.push('Use emoji to support key points (✅, 📱, 💰)');
+    instructions.push('Consider using emoji to support key points (see emoji context rules)');
   } else {
-    instructions.push('Do not use emoji');
+    instructions.push('Emoji use depends on context (see emoji context rules)');
   }
   
   if (adjustments.useStepByStep) {

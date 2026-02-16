@@ -292,6 +292,21 @@ const STYLE_PATTERNS: PatternRule[] = [
   
   // Trailing/leading punctuation issues
   { id: 'st-046', pattern: /^\s*[,;:]/gm, severity: 'warning', rule: 'Remove leading punctuation', suggestion: 'Remove the punctuation', category: 'punctuation' },
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Phase 2.3: Emoji validation patterns
+  // Note: Full contextual emoji validation is in emojiContext.ts
+  // These patterns catch obvious overuse and misuse
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Excessive emoji usage (more than 3 in a message)
+  { id: 'st-047', pattern: /(?:[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}].*){4,}/gu, severity: 'warning', rule: 'Too many emojis', suggestion: 'Use max 2-3 emojis per message', category: 'emoji' },
+  
+  // Emoji in formal/technical context markers (policy, terms, legal)
+  { id: 'st-048', pattern: /(?:terms|conditions|policy|privacy|legal|agreement|warranty)[\s\S]{0,50}[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}]/giu, severity: 'warning', rule: 'Avoid emojis in legal/formal content', suggestion: 'Remove emoji from formal sections', category: 'emoji' },
+  
+  // Fun emojis in error/failure context
+  { id: 'st-049', pattern: /(?:error|failed|failure|issue|problem)[\s\S]{0,30}(?:🎉|✨|🎊|👏|🙌)/giu, severity: 'warning', rule: 'Avoid celebratory emojis in error messages', suggestion: 'Use neutral or empathetic tone', category: 'emoji' },
 ];
 
 export const styleConsistencyAgent: ValidationAgent = {
