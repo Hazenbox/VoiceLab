@@ -7,20 +7,19 @@ import { formatRelativeTime } from '../utils/formatters';
 import type { Id } from '../../../convex/_generated/dataModel';
 import { Chip, Divider } from '@marcelinodzn/ds-react';
 
-/** Semantic color map for feedback types */
-const FEEDBACK_COLORS: Record<string, { bg: string; fg: string }> = {
-  thumbs_up:   { bg: `${SEMANTIC_COLORS.positive}1F`, fg: SEMANTIC_COLORS.positive },
-  thumbs_down: { bg: `${SEMANTIC_COLORS.negative}1F`, fg: SEMANTIC_COLORS.negative },
-  edit:        { bg: `${SEMANTIC_COLORS.informative}1F`, fg: SEMANTIC_COLORS.informative },
-  comment:     { bg: `${SEMANTIC_COLORS.warning}1F`, fg: SEMANTIC_COLORS.warning },
+/** DS Chip appearance mapping for feedback types */
+const FEEDBACK_APPEARANCE: Record<string, 'positive' | 'negative' | 'primary' | 'neutral'> = {
+  thumbs_up: 'positive',
+  thumbs_down: 'negative',
+  edit: 'primary',
+  comment: 'neutral',
 };
-const FEEDBACK_FALLBACK = { bg: 'rgba(107,114,128,0.12)', fg: '#6b7280' };
 
-/** Semantic color map for admin statuses */
-const STATUS_MAP: Record<string, { bg: string; fg: string }> = {
-  approved: { bg: `${SEMANTIC_COLORS.positive}1F`, fg: SEMANTIC_COLORS.positive },
-  rejected: { bg: `${SEMANTIC_COLORS.negative}1F`, fg: SEMANTIC_COLORS.negative },
-  pending:  { bg: `${SEMANTIC_COLORS.warning}1F`, fg: SEMANTIC_COLORS.warning },
+/** DS Chip appearance mapping for admin statuses */
+const STATUS_APPEARANCE: Record<string, 'positive' | 'negative' | 'neutral'> = {
+  approved: 'positive',
+  rejected: 'negative',
+  pending: 'neutral',
 };
 
 // ── Types ────────────────────────────────────────────────────────
@@ -37,39 +36,21 @@ interface Correction {
   timestamp: number;
 }
 
-// ── Feedback Type Badge ─────────────────────────────────────────
+// ── Feedback Type Badge (DS Chip) ────────────────────────────────
 function FeedbackBadge({ type }: { type: string }) {
-  const c = FEEDBACK_COLORS[type] || FEEDBACK_FALLBACK;
   return (
-    <span
-      className="inline-block rounded-full font-medium whitespace-nowrap"
-      style={{
-        fontSize: '11px',
-        padding: '1px 8px',
-        backgroundColor: c.bg,
-        color: c.fg,
-      }}
-    >
+    <Chip size="S" attention="medium" appearance={FEEDBACK_APPEARANCE[type] || 'neutral'}>
       {type.replace('_', ' ')}
-    </span>
+    </Chip>
   );
 }
 
-// ── Status Badge ────────────────────────────────────────────────
+// ── Status Badge (DS Chip) ───────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
-  const c = STATUS_MAP[status] || STATUS_MAP.pending;
   return (
-    <span
-      className="inline-block rounded-full font-medium whitespace-nowrap"
-      style={{
-        fontSize: '11px',
-        padding: '1px 8px',
-        backgroundColor: c.bg,
-        color: c.fg,
-      }}
-    >
+    <Chip size="S" attention="medium" appearance={STATUS_APPEARANCE[status] || 'neutral'}>
       {status}
-    </span>
+    </Chip>
   );
 }
 

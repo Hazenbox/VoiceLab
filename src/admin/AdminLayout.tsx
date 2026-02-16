@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
-import { Title, Text } from '@marcelinodzn/ds-react';
+import { Title, Text, Chip } from '@marcelinodzn/ds-react';
 
 /** Chart accent for branded chart bars */
 const CHART_ACCENT = '#f97316';
@@ -208,29 +208,19 @@ function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
   );
 }
 
-// ── Utility: Feedback badge ──────────────────────────────────────
-const FEEDBACK_COLORS: Record<string, { bg: string; fg: string }> = {
-  thumbs_up:   { bg: `${SEMANTIC_COLORS.positive}1F`, fg: SEMANTIC_COLORS.positive },
-  thumbs_down: { bg: `${SEMANTIC_COLORS.negative}1F`, fg: SEMANTIC_COLORS.negative },
-  edit:        { bg: `${SEMANTIC_COLORS.informative}1F`, fg: SEMANTIC_COLORS.informative },
-  comment:     { bg: `${SEMANTIC_COLORS.warning}1F`, fg: SEMANTIC_COLORS.warning },
+// ── Utility: Feedback badge (DS Chip) ────────────────────────────
+const FEEDBACK_APPEARANCE: Record<string, 'positive' | 'negative' | 'primary' | 'neutral'> = {
+  thumbs_up: 'positive',
+  thumbs_down: 'negative',
+  edit: 'primary',
+  comment: 'neutral',
 };
-const FEEDBACK_FALLBACK = { bg: `${MUTED_GRAY}1F`, fg: MUTED_GRAY };
 
 function FeedbackBadge({ type }: { type: string }) {
-  const c = FEEDBACK_COLORS[type] || FEEDBACK_FALLBACK;
   return (
-    <span
-      className="inline-block rounded-full font-medium whitespace-nowrap"
-      style={{
-        fontSize: '11px',
-        padding: '1px 8px',
-        backgroundColor: c.bg,
-        color: c.fg,
-      }}
-    >
+    <Chip size="S" attention="medium" appearance={FEEDBACK_APPEARANCE[type] || 'neutral'}>
       {type.replace('_', ' ')}
-    </span>
+    </Chip>
   );
 }
 
