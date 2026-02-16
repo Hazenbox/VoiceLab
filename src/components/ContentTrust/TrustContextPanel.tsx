@@ -484,8 +484,8 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
       <div>
         <p style={{ 
           fontFamily: '"JioType Var"', 
-          fontWeight: 800, 
-          fontSize: '16px', 
+          fontWeight: 700, 
+          fontSize: '14px', 
           lineHeight: 1.1, 
           color: theme.text.high,
           margin: 0,
