@@ -223,15 +223,6 @@ const ContextSummarySection: React.FC<{ context: GenerationContext }> = ({ conte
 // =============================================================================
 
 /**
- * Shield check icon for trust indicators - aligned with text
- */
-const ShieldCheckIcon: React.FC = () => (
-  <div className="flex-shrink-0 flex items-center" style={{ height: '20px' }}>
-    <DSIcon name="IcProtection" size="S" attention="high" />
-  </div>
-);
-
-/**
  * Content Preview - Shows the analyzed content
  */
 const ContentPreview: React.FC<{ content: string }> = ({ content }) => {
@@ -332,18 +323,15 @@ const ComplianceJustificationSection: React.FC<{
     <div className="space-y-3">
       {/* Trust Summary Header */}
       <div 
-        className="flex items-start gap-3 p-3 rounded-lg" 
+        className="p-3 rounded-lg" 
         style={{ backgroundColor: `${SEMANTIC_COLORS.positive}1A` }}
       >
-        <ShieldCheckIcon />
-        <div className="flex-1 min-w-0">
-          <Label size="S" weight="high" color="high" style={{ color: SEMANTIC_COLORS.positive }}>
-            {trustSummary.totalRulesPassed}/{trustSummary.totalRulesChecked} rules followed
-          </Label>
-          <Text size="XS" color="medium">
-            {trustSummary.compliancePercentage}% compliance achieved
-          </Text>
-        </div>
+        <Label size="S" weight="high" color="high" style={{ color: SEMANTIC_COLORS.positive }}>
+          {trustSummary.totalRulesPassed}/{trustSummary.totalRulesChecked} rules followed
+        </Label>
+        <Text size="XS" color="medium">
+          {trustSummary.compliancePercentage}% compliance achieved
+        </Text>
       </div>
       
       {/* Guardrails Followed (Collapsible) */}
