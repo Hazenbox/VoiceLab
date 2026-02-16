@@ -51,7 +51,7 @@ export const Toggle: React.FC<ToggleProps> = ({
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
             >
-              <DSIcon name="IcInfo" size="XS" attention="medium" />
+              <DSIcon name="IcInfo" size="XS" attention="medium" appearance="neutral" />
             </div>
             {showTooltip && (
               <div
