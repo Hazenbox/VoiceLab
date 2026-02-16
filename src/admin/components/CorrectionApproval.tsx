@@ -39,7 +39,7 @@ interface Correction {
 // ── Feedback Type Badge (DS Chip) ────────────────────────────────
 function FeedbackBadge({ type }: { type: string }) {
   return (
-    <Chip size="S" attention="medium" appearance={FEEDBACK_APPEARANCE[type] || 'neutral'}>
+    <Chip size="S" appearance={FEEDBACK_APPEARANCE[type] || 'neutral'}>
       {type.replace('_', ' ')}
     </Chip>
   );
@@ -48,7 +48,7 @@ function FeedbackBadge({ type }: { type: string }) {
 // ── Status Badge (DS Chip) ───────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
   return (
-    <Chip size="S" attention="medium" appearance={STATUS_APPEARANCE[status] || 'neutral'}>
+    <Chip size="S" appearance={STATUS_APPEARANCE[status] || 'neutral'}>
       {status}
     </Chip>
   );

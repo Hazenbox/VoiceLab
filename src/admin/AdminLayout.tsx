@@ -218,7 +218,7 @@ const FEEDBACK_APPEARANCE: Record<string, 'positive' | 'negative' | 'primary' | 
 
 function FeedbackBadge({ type }: { type: string }) {
   return (
-    <Chip size="S" attention="medium" appearance={FEEDBACK_APPEARANCE[type] || 'neutral'}>
+    <Chip size="S" appearance={FEEDBACK_APPEARANCE[type] || 'neutral'}>
       {type.replace('_', ' ')}
     </Chip>
   );
