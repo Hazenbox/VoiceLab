@@ -569,8 +569,8 @@ function AdminDashboard() {
               subtitle: "content generations over time",
             }}
             chartFooter={{
-              showSource: false,
-              showNotes: false,
+              source: "",
+              notes: "",
             }}
             barGroup={{
               showYAxis: true,
