@@ -208,7 +208,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 pt-0 pb-4 space-y-3 scrollable-container">
           {/* Chat Settings Section */}
-          <Accordion title="Chat Settings" icon={<ChatIcon />} defaultOpen>
+          <Accordion title="Chat settings" icon={<ChatIcon />} defaultOpen>
             {/* Temperature */}
             <Slider
               label="Temperature"
@@ -244,7 +244,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </Accordion>
           
           {/* Voice Settings Section - Merged Voice & TTS with Conversation Settings */}
-          <Accordion title="Voice Settings" icon={<VoiceIcon />}>
+          <Accordion title="Voice settings" icon={<VoiceIcon />}>
             <VoiceSelector
               value={voiceGender}
               onChange={onVoiceGenderChange}
@@ -315,7 +315,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </Accordion>
           
           {/* Project Defaults Section */}
-          <Accordion title="Project Defaults" icon={<ProjectIcon />}>
+          <Accordion title="Project defaults" icon={<ProjectIcon />}>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5">
                 <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
@@ -391,7 +391,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </Accordion>
           
           {/* Trust Settings Section */}
-          <Accordion title="Trust Settings" icon={<TrustIcon />}>
+          <Accordion title="Trust settings" icon={<TrustIcon />}>
             <Slider
               label="Minimum Score"
               value={trustSettings.minimumScore}

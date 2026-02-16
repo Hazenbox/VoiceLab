@@ -64,26 +64,20 @@ const ViolationItem: React.FC<{ violation: Violation }> = ({ violation }) => {
   const severityVariant = { error: 'negative', warning: 'warning', info: 'informative' } as const;
   
   return (
-    <div className="p-3 rounded-lg mb-2" style={{ backgroundColor: theme.background.ghost }}>
+    <div className="p-3 rounded-lg mb-2" style={{ backgroundColor: theme.stroke.low }}>
       <div className="flex items-start gap-2">
         <Badge variant={severityVariant[violation.severity]}>
           {violation.severity}
         </Badge>
-        <div className="flex-1">
+        <div className="flex-1 space-y-1">
           <Text size="S" color="high">{violation.rule}</Text>
           {violation.suggestion && (
-            <div className="mt-1 flex items-start gap-1">
-              <span className="flex-shrink-0" style={{ lineHeight: 1 }}>
-                <DSIcon name="IcInfo" size="XS" attention="low" appearance="neutral" />
-              </span>
-              <Text size="XS" color="medium">{violation.suggestion}</Text>
-            </div>
+            <Text size="XS" color="medium">{violation.suggestion}</Text>
           )}
           {violation.text && (
-            <p className="text-xs mt-1 font-mono px-2 py-1 rounded"
-              style={{ backgroundColor: theme.stroke.low, color: theme.text.low }}>
+            <Text size="XS" color="low" style={{ fontFamily: 'var(--font-mono)' }}>
               "{violation.text}"
-            </p>
+            </Text>
           )}
         </div>
       </div>
@@ -337,13 +331,6 @@ const ComplianceJustificationSection: React.FC<{
         defaultOpen={false}
         badge={`${followedCount}/10`}
         variant="card"
-        icon={
-          hasViolations ? (
-            <DSIcon name="IcProtectionThreats" size="S" attention="medium" appearance="neutral" />
-          ) : (
-            <DSIcon name="IcProtection" size="S" attention="medium" appearance="neutral" />
-          )
-        }
       >
         <div>
           {guardrailsFollowed.map(g => (
@@ -442,10 +429,10 @@ export const TrustContextPanel = memo(function TrustContextPanel({
               size="M"
             >
               <TabList>
-                <Tab id="score">score</Tab>
-                <Tab id="context">context</Tab>
+                <Tab id="score">Score</Tab>
+                <Tab id="context">Context</Tab>
                 <Tab id="violations">
-                  violations
+                  Violations
                   {allViolations.length > 0 && (
                     <span 
                       className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px]"
