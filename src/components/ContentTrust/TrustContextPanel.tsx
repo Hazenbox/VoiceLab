@@ -268,8 +268,8 @@ const GuardrailItem: React.FC<{ guardrail: GuardrailStatus }> = ({ guardrail }) 
       className="flex items-start gap-2 py-2 border-b last:border-b-0"
       style={{ borderColor: theme.stroke.low }}
     >
-      {/* Icon aligned with first line of text */}
-      <div className="flex-shrink-0 flex items-center" style={{ height: '16px' }}>
+      {/* Icon aligned with label (12px font, line-height 1) */}
+      <div className="flex-shrink-0 flex items-center" style={{ height: '12px' }}>
         {isFollowed ? (
           <DSIcon name="IcSuccessColored" size="XS" attention="high" />
         ) : (
