@@ -4,6 +4,8 @@ import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
 import { Title, Text, Label } from '@marcelinodzn/ds-react';
 import { Badge } from '../components/ui/Badge';
+import OnboardingModal, { loadUserProfile, type UserProfile } from '../components/OnboardingModal';
+import type { ColorMode } from '../types';
 
 /** Chart accent for branded chart bars */
 const CHART_ACCENT = '#f97316';
@@ -1764,11 +1766,20 @@ function AdminConfig() {
 // MAIN LAYOUT
 // ═══════════════════════════════════════════════════════════════════
 
-export default function AdminLayout() {
+interface AdminLayoutProps {
+  colorMode: ColorMode;
+  onColorModeChange: (mode: ColorMode) => void;
+}
+
+export default function AdminLayout({ colorMode, onColorModeChange }: AdminLayoutProps) {
   const [authenticated, setAuthenticated] = useState(false);
   const [isVerifying, setIsVerifying] = useState(true);
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const theme = useThemeColors();
+  
+  // User profile state for the user menu
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   // Verify existing token on mount
   useEffect(() => {
@@ -1788,13 +1799,10 @@ export default function AdminLayout() {
     verifyToken();
   }, []);
 
-  const handleSignOut = useCallback(async () => {
-    const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
-    if (token) {
-      await logoutAdmin(token);
-    }
-    sessionStorage.removeItem(SESSION_TOKEN_KEY);
-    setAuthenticated(false);
+  // Handle profile save from OnboardingModal
+  const handleProfileSave = useCallback((profile: UserProfile) => {
+    setUserProfile(profile);
+    setShowEditProfile(false);
   }, []);
 
   // Show loading while verifying token
@@ -1832,7 +1840,12 @@ export default function AdminLayout() {
       <AdminSidebar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
-        onSignOut={handleSignOut}
+        userName={userProfile?.name}
+        userRole={userProfile?.role}
+        colorMode={colorMode}
+        onColorModeChange={onColorModeChange}
+        onEditProfile={() => setShowEditProfile(true)}
+        onNavigateToHowItWorks={() => { window.location.href = '/?view=how-it-works'; }}
       />
 
       {/* Content Area */}
@@ -1841,6 +1854,16 @@ export default function AdminLayout() {
           {renderContent()}
         </div>
       </main>
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <OnboardingModal
+          isOpen={showEditProfile}
+          onComplete={handleProfileSave}
+          initialProfile={userProfile || undefined}
+          isEditMode={true}
+        />
+      )}
     </div>
   );
 }

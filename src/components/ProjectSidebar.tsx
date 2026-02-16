@@ -258,6 +258,11 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       icon: <DSIcon name="IcLightbulb" size="S" attention="high" appearance="neutral" />,
     }] : []),
     {
+      value: 'admin-panel',
+      label: 'Admin Panel',
+      icon: <DSIcon name="IcSettings" size="S" attention="high" appearance="neutral" />,
+    },
+    {
       value: 'toggle-theme',
       label: `${colorMode === 'Light' ? 'Dark' : 'Light'} Mode`,
       icon: colorMode === 'Light' 
@@ -274,6 +279,9 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         break;
       case 'how-it-works':
         onNavigateToHowItWorks?.();
+        break;
+      case 'admin-panel':
+        window.location.href = '/admin';
         break;
       case 'toggle-theme':
         onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light');

@@ -140,7 +140,7 @@ function Root() {
             <Route path="/admin/*" element={
               <ErrorBoundary>
                 <Suspense fallback={<AdminLoadingFallback />}>
-                  <AdminLayout />
+                  <AdminLayout colorMode={colorMode} onColorModeChange={setColorMode} />
                 </Suspense>
               </ErrorBoundary>
             } />
