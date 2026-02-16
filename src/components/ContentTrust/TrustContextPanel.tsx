@@ -500,6 +500,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
           color: theme.text.high,
           margin: 0,
           marginTop: '4px',
+          paddingBottom: '16px',
         }}>
           See exactly what rules, learnings, and fixes were applied.
         </p>
