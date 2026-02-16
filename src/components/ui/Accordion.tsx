@@ -45,8 +45,8 @@ export const Accordion = memo(function Accordion({
         }}
       >
         <div className="flex items-center gap-2">
-          {icon && <span className="w-5 h-5 flex items-center justify-center">{icon}</span>}
-          <span className="text-xs font-semibold">{title}</span>
+          {icon && <span className="w-6 h-6 flex items-center justify-center">{icon}</span>}
+          <span className="text-sm font-semibold">{title}</span>
         </div>
         <div className="flex items-center gap-2">
           {badge !== undefined && (
@@ -58,7 +58,7 @@ export const Accordion = memo(function Accordion({
             </span>
           )}
           <span className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} style={{ color: theme.text.medium }}>
-            <DSIcon name="IcChevronDown" size="XS" attention="medium" />
+            <DSIcon name="IcChevronDown" size="S" attention="medium" />
           </span>
         </div>
       </button>
