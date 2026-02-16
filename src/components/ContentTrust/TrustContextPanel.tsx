@@ -23,7 +23,7 @@ import { getContextSummary } from '../../services/context';
 import { Accordion } from '../ui/Accordion';
 import { Badge } from '../ui/Badge';
 import { DSIcon } from '../DSIcon';
-import { Title, Tabs, TabList, Tab, Label, Text, Chip } from '@marcelinodzn/ds-react';
+import { Title, Tabs, TabList, Tab, Label, Text, Chip, Button } from '@marcelinodzn/ds-react';
 
 interface TrustContextPanelProps {
   isOpen: boolean;
@@ -345,101 +345,66 @@ const ComplianceJustificationSection: React.FC<{
 // =============================================================================
 
 /**
- * Evidence Flow Step Item - A single row in a workflow step
+ * Evidence Timeline Item - A single step in the timeline
+ * Clean, minimal design with connected dots
  */
-interface EvidenceFlowStepItem {
-  label: string;
-  value: string | number;
-  /** Optional inline tags to display below the item */
-  tags?: string[];
-}
-
-/**
- * Evidence Flow Step - Visual workflow step showing what was applied
- * Uses pure DS components and inline styles (no Tailwind)
- */
-const EvidenceFlowStep: React.FC<{
-  icon: string;
+const EvidenceTimelineItem: React.FC<{
   title: string;
-  stepNumber: number;
-  items: EvidenceFlowStepItem[];
+  items: Array<{ label: string; value: string | number }>;
+  tags?: string[];
   isLast?: boolean;
-}> = ({ icon, title, stepNumber, items, isLast = false }) => {
+}> = ({ title, items, tags, isLast = false }) => {
   const theme = useThemeColors();
   
   return (
-    <div style={{ position: 'relative' }}>
-      {/* Connector line to next step */}
-      {!isLast && (
-        <div 
-          style={{ 
-            position: 'absolute',
-            left: '19px',
-            top: '40px',
-            width: '2px',
-            height: '24px',
+    <div style={{ display: 'flex', gap: '12px' }}>
+      {/* Timeline indicator: dot + line */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ 
+          width: '10px', 
+          height: '10px', 
+          borderRadius: '50%',
+          backgroundColor: theme.accent, 
+          flexShrink: 0,
+        }} />
+        {!isLast && (
+          <div style={{ 
+            width: '2px', 
+            flex: 1, 
+            minHeight: '20px',
             backgroundColor: theme.stroke.medium,
-          }}
-        />
-      )}
+          }} />
+        )}
+      </div>
       
-      {/* Step content */}
-      <div 
-        style={{ 
-          backgroundColor: theme.stroke.low,
-          borderRadius: '12px',
-          padding: '12px',
-        }}
-      >
-        {/* Step header with icon and title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-          <div 
-            style={{ 
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              backgroundColor: theme.background.ghost,
-              border: `1px solid ${theme.stroke.medium}`,
-            }}
-          >
-            <DSIcon name={icon as 'IcDatabase' | 'IcLightbulb' | 'IcStar'} size="S" attention="medium" />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Label size="XS" weight="medium" color="low">Step {stepNumber}</Label>
-            <Label size="S" weight="high" color="high">{title}</Label>
-          </div>
+      {/* Content */}
+      <div style={{ flex: 1, paddingBottom: isLast ? 0 : '16px' }}>
+        <Label size="S" weight="high" color="high">{title}</Label>
+        <div style={{ marginTop: '4px' }}>
+          <Text size="XS" color="medium">
+            {items.map((item, i) => (
+              <span key={i}>
+                {item.label}: <span style={{ color: theme.text.high, fontWeight: 500 }}>{item.value}</span>
+                {i < items.length - 1 && <span style={{ margin: '0 8px', color: theme.stroke.medium }}>|</span>}
+              </span>
+            ))}
+          </Text>
         </div>
-        
-        {/* Items list */}
-        <div style={{ marginLeft: '50px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {items.map((item, i) => (
-            <div key={i}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text size="XS" color="low">{item.label}</Text>
-                <Text size="XS" color="high" style={{ fontWeight: 500 }}>{item.value}</Text>
-              </div>
-              {/* Inline tags */}
-              {item.tags && item.tags.length > 0 && (
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
-                  {item.tags.map((tag, idx) => (
-                    <Chip key={idx} size="S" appearance="neutral">{tag}</Chip>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        {/* Inline tags */}
+        {tags && tags.length > 0 && (
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+            {tags.map((tag, idx) => (
+              <Chip key={idx} size="S" appearance="neutral">{tag}</Chip>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 /**
- * Evidence Section - Main evidence display with workflow visualization
+ * Evidence Section - Main evidence display with clean timeline
  * Uses pure DS components and inline styles (no Tailwind)
  */
 const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence }) => {
@@ -457,8 +422,52 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
   
   const totalInfluences = (hasKnowledge ? 1 : 0) + (hasLearnings ? 1 : 0) + (hasAutoFixes ? 1 : 0);
   
-  // Calculate step numbers dynamically
-  let stepNumber = 0;
+  // Build timeline items array
+  const timelineItems: Array<{
+    title: string;
+    items: Array<{ label: string; value: string | number }>;
+    tags?: string[];
+  }> = [];
+  
+  if (hasKnowledge) {
+    timelineItems.push({
+      title: 'knowledge base',
+      items: [
+        { label: 'avoid words', value: evidence.knowledgeUsed.avoidWordsMatched.length },
+        { label: 'preferred', value: evidence.knowledgeUsed.preferredWordsUsed.length },
+        { label: 'rules', value: evidence.knowledgeUsed.autoFixRulesCount },
+      ],
+      tags: evidence.knowledgeUsed.avoidWordsMatched.length > 0 
+        ? evidence.knowledgeUsed.avoidWordsMatched.slice(0, 5) 
+        : undefined,
+    });
+  }
+  
+  if (hasLearnings) {
+    timelineItems.push({
+      title: 'learnings applied',
+      items: [
+        { label: 'corrections', value: evidence.learningsApplied.correctionsCount },
+        { label: 'avoid patterns', value: evidence.learningsApplied.avoidPatterns.length },
+      ],
+      tags: evidence.learningsApplied.avoidPatterns.length > 0 
+        ? evidence.learningsApplied.avoidPatterns.slice(0, 5) 
+        : undefined,
+    });
+  }
+  
+  if (hasAutoFixes) {
+    timelineItems.push({
+      title: 'auto-fixes applied',
+      items: [
+        { label: 'replacements', value: evidence.autoFixes.totalCount },
+        ...evidence.autoFixes.applied.slice(0, 2).map(fix => ({
+          label: `"${fix.from}"`,
+          value: `→ "${fix.to}"`,
+        })),
+      ],
+    });
+  }
   
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -478,70 +487,19 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
         </Text>
       </div>
       
-      {/* Knowledge Base Step */}
-      {hasKnowledge && (
-        <EvidenceFlowStep
-          icon="IcDatabase"
-          title="knowledge base"
-          stepNumber={++stepNumber}
-          items={[
-            { 
-              label: 'avoid words matched', 
-              value: evidence.knowledgeUsed.avoidWordsMatched.length,
-              tags: evidence.knowledgeUsed.avoidWordsMatched.length > 0 
-                ? evidence.knowledgeUsed.avoidWordsMatched.slice(0, 5) 
-                : undefined,
-            },
-            { label: 'preferred terms available', value: evidence.knowledgeUsed.preferredWordsUsed.length },
-            { label: 'auto-fix rules', value: evidence.knowledgeUsed.autoFixRulesCount },
-            { label: 'source', value: evidence.knowledgeUsed.source.replace(/_/g, ' ') },
-          ]}
-          isLast={!hasLearnings && !hasAutoFixes}
-        />
-      )}
-      
-      {/* Learnings Step */}
-      {hasLearnings && (
-        <EvidenceFlowStep
-          icon="IcLightbulb"
-          title="learnings applied"
-          stepNumber={++stepNumber}
-          items={[
-            { label: 'correction pairs', value: evidence.learningsApplied.correctionsCount },
-            { 
-              label: 'avoid patterns', 
-              value: evidence.learningsApplied.avoidPatterns.length,
-              tags: evidence.learningsApplied.avoidPatterns.length > 0 
-                ? evidence.learningsApplied.avoidPatterns.slice(0, 5) 
-                : undefined,
-            },
-            { 
-              label: 'style preferences', 
-              value: evidence.learningsApplied.stylePreferences.length,
-              tags: evidence.learningsApplied.stylePreferences.length > 0 
-                ? evidence.learningsApplied.stylePreferences.slice(0, 3) 
-                : undefined,
-            },
-          ]}
-          isLast={!hasAutoFixes}
-        />
-      )}
-      
-      {/* Auto-Fixes Step */}
-      {hasAutoFixes && (
-        <EvidenceFlowStep
-          icon="IcStar"
-          title="auto-fixes applied"
-          stepNumber={++stepNumber}
-          items={[
-            { label: 'total replacements', value: evidence.autoFixes.totalCount },
-            ...evidence.autoFixes.applied.slice(0, 3).map(fix => ({
-              label: `"${fix.from}"`,
-              value: `→ "${fix.to}"`,
-            })),
-          ]}
-          isLast={true}
-        />
+      {/* Timeline */}
+      {timelineItems.length > 0 && (
+        <div>
+          {timelineItems.map((item, index) => (
+            <EvidenceTimelineItem
+              key={index}
+              title={item.title}
+              items={item.items}
+              tags={item.tags}
+              isLast={index === timelineItems.length - 1}
+            />
+          ))}
+        </div>
       )}
       
       {/* No Evidence State */}
@@ -724,15 +682,25 @@ export const TrustContextPanel = memo(function TrustContextPanel({
           
           {activeTab === 'evidence' && evidence && <EvidenceSection evidence={evidence} />}
           {activeTab === 'evidence' && !evidence && (
-            <div className="text-center py-8">
+            <div style={{ textAlign: 'center', paddingTop: '32px', paddingBottom: '32px' }}>
               <div 
-                className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
-                style={{ backgroundColor: theme.stroke.low }}
+                style={{ 
+                  width: '48px', 
+                  height: '48px', 
+                  borderRadius: '50%', 
+                  margin: '0 auto 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: theme.stroke.low,
+                }}
               >
                 <DSIcon name="IcInfo" size="M" attention="low" />
               </div>
-              <p className="text-sm" style={{ color: theme.text.medium }}>No evidence available</p>
-              <p className="text-xs mt-1" style={{ color: theme.text.low }}>Evidence is captured during content generation</p>
+              <Text size="S" color="medium">No evidence available</Text>
+              <div style={{ marginTop: '4px' }}>
+                <Text size="XS" color="low">Evidence is captured during content generation</Text>
+              </div>
             </div>
           )}
           </div>
@@ -740,12 +708,20 @@ export const TrustContextPanel = memo(function TrustContextPanel({
         
         {/* Footer */}
         {isOpen && autoFixAvailable && trustScore && allViolations.length > 0 && (
-          <div className="px-4 py-3 border-t flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
-            <button onClick={onAutoFix} className="w-full py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2"
-              style={{ backgroundColor: theme.accent, color: '#ffffff' }}>
+          <div style={{ 
+            padding: '12px 16px', 
+            borderTop: `1px solid ${theme.stroke.low}`,
+            flexShrink: 0,
+          }}>
+            <Button 
+              appearance="primary" 
+              size="M" 
+              onPress={onAutoFix}
+              style={{ width: '100%' }}
+            >
               <DSIcon name="IcStar" size="XS" attention="high" />
               Auto-Fix ({trustScore.autoFixableCount} fixable)
-            </button>
+            </Button>
           </div>
         )}
       </aside>
