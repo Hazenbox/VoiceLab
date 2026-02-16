@@ -22,7 +22,8 @@ export type ValidationAgentId =
   | 'readability'
   | 'avoid_words'
   | 'commercial_sensitivity'
-  | 'ux_microcopy'; // Phase 2.4: CTA format, dead-end, error structure
+  | 'ux_microcopy'   // Phase 2.4: CTA format, dead-end, error structure
+  | 'glossary';      // Phase 3.1: Ecosystem-specific terminology validation
 
 /**
  * Individual violation found by an agent (extends base Violation)
@@ -128,6 +129,7 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
     'avoid_words',
     'commercial_sensitivity', // Phase 1.5: Detects pushy sales/inappropriate promotional timing
     'ux_microcopy',          // Phase 2.4: CTA format, dead-end detection, error structure
+    'glossary',              // Phase 3.1: Ecosystem-specific terminology validation
   ],
   skipPatternMatching: false,
   parallelExecution: true,
@@ -146,16 +148,17 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
  * - ux_microcopy moderate weight - important for user experience
  */
 export const AGENT_WEIGHTS: Record<ValidationAgentId, number> = {
-  gender_neutrality: 9,       // reduced from 10
-  inclusivity: 9,             // reduced from 10
-  cultural_sensitivity: 9,    // reduced from 10
-  accessibility: 9,           // unchanged
-  compliance: 11,             // reduced from 12
-  style_consistency: 10,      // reduced from 11
-  brand_alignment: 11,        // reduced from 12
+  gender_neutrality: 8,       // reduced from 9
+  inclusivity: 8,             // reduced from 9
+  cultural_sensitivity: 8,    // reduced from 9
+  accessibility: 8,           // reduced from 9
+  compliance: 10,             // reduced from 11
+  style_consistency: 10,      // unchanged
+  brand_alignment: 10,        // reduced from 11
   readability: 9,             // unchanged
-  avoid_words: 8,             // reduced from 9
-  commercial_sensitivity: 8,  // unchanged
-  ux_microcopy: 7,            // NEW - Phase 2.4: CTA, dead-end, error structure
-  // Sum: 9+9+9+9+11+10+11+9+8+8+7 = 100
+  avoid_words: 8,             // unchanged
+  commercial_sensitivity: 7,  // reduced from 8
+  ux_microcopy: 7,            // unchanged
+  glossary: 7,                // NEW - Phase 3.1: Ecosystem terminology
+  // Sum: 8+8+8+8+10+10+10+9+8+7+7+7 = 100
 };

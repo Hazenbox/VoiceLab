@@ -104,3 +104,29 @@ export {
   scanForAvoidWords,
   type WordCategory,
 } from './avoidWords';
+
+// Ecosystem Glossary (Phase 3.1)
+export {
+  JIO_GLOSSARY,
+  getGlossaryForEcosystem,
+  getGlossaryByCategory,
+  getGlossaryByPriority,
+  findGlossaryTerm,
+  getGlossaryInstructions,
+  validateGlossaryUsage,
+  toViolations as glossaryToViolations,
+  type GlossaryTerm,
+  type GlossaryValidationResult,
+} from './ecosystemGlossary';
+
+// Emoji Context Rules (Phase 2.3)
+export {
+  shouldUseEmoji,
+  getEmojiInstructions,
+  validateEmojis,
+  CONTEXTUAL_EMOJIS,
+  type EmojiContext,
+  type EmojiContextInput,
+  type EmojiDecision,
+  type EmojiValidationResult,
+} from './emojiContext';
