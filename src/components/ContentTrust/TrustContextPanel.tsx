@@ -48,12 +48,10 @@ const ScoreIndicator: React.FC<{
       className="flex items-center justify-between py-2 border-b last:border-b-0"
       style={{ borderColor: theme.stroke.low }}
     >
-      <span className="text-sm" style={{ color: theme.text.high }}>{label}</span>
+      <Text size="S" color="high">{label}</Text>
       <div className="flex items-center gap-2">
         {violations > 0 && (
-          <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: `${SEMANTIC_COLORS.negative}1A`, color: SEMANTIC_COLORS.negative }}>
-            {violations}
-          </span>
+          <Badge variant="negative">{violations}</Badge>
         )}
         <span className="text-sm font-medium tabular-nums" style={{ color: statusColors[status] }}>{score}</span>
       </div>
@@ -297,29 +295,19 @@ const ValidationAgentItem: React.FC<{ validation: ValidationAgentSummary }> = ({
       style={{ borderColor: theme.stroke.low }}
     >
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs font-medium" style={{ color: theme.text.high }}>
+        <Label size="XS" weight="medium" color="high">
           {validation.agentName}
-        </span>
-        <span 
-          className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-          style={{ 
-            backgroundColor: isPerfect ? SEMANTIC_COLORS.positive : SEMANTIC_COLORS.warning,
-            color: '#ffffff',
-          }}
-        >
+        </Label>
+        <Badge variant={isPerfect ? 'positive' : 'warning'}>
           {validation.rulesPassed}/{validation.rulesChecked}
-        </span>
+        </Badge>
       </div>
       {validation.keyRulesFollowed.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {validation.keyRulesFollowed.slice(0, 3).map((rule, i) => (
-            <span 
-              key={i}
-              className="text-[10px] px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
-            >
+            <Badge key={i} variant="neutral">
               {rule}
-            </span>
+            </Badge>
           ))}
         </div>
       )}
