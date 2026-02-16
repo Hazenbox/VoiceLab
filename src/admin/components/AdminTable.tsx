@@ -35,8 +35,13 @@ export const AdminTable = memo(function AdminTable({
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`text-left py-1.5 px-3 font-medium ${col.className || ''}`}
-                style={{ color: theme.text.low, fontSize: '11px' }}
+                className={`text-left py-1.5 px-3 ${col.className || ''}`}
+                style={{ 
+                  color: theme.text.high, 
+                  fontSize: '12px',
+                  fontWeight: 400,
+                  lineHeight: 1.3,
+                }}
               >
                 {col.label}
               </th>
