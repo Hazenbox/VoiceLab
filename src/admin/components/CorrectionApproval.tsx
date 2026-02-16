@@ -5,22 +5,21 @@ import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import { AdminTable, AdminTableRow, AdminTableCell } from './AdminTable';
 import { formatRelativeTime } from '../utils/formatters';
 import type { Id } from '../../../convex/_generated/dataModel';
-import { Chip, Divider, Label } from '@marcelinodzn/ds-react';
+import { Chip, Divider, Badge } from '@marcelinodzn/ds-react';
 
-/** Semantic color map for feedback types */
-const FEEDBACK_COLORS: Record<string, { bg: string; fg: string }> = {
-  thumbs_up:   { bg: `${SEMANTIC_COLORS.positive}1F`, fg: SEMANTIC_COLORS.positive },
-  thumbs_down: { bg: `${SEMANTIC_COLORS.negative}1F`, fg: SEMANTIC_COLORS.negative },
-  edit:        { bg: `${SEMANTIC_COLORS.informative}1F`, fg: SEMANTIC_COLORS.informative },
-  comment:     { bg: `${SEMANTIC_COLORS.warning}1F`, fg: SEMANTIC_COLORS.warning },
+/** DS Badge appearance mapping for feedback types */
+const FEEDBACK_APPEARANCE: Record<string, 'success' | 'error' | 'primary' | 'warning' | 'secondary'> = {
+  thumbs_up: 'success',
+  thumbs_down: 'error',
+  edit: 'primary',
+  comment: 'warning',
 };
-const FEEDBACK_FALLBACK = { bg: 'rgba(107,114,128,0.12)', fg: '#6b7280' };
 
-/** Semantic color map for admin statuses */
-const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
-  approved: { bg: `${SEMANTIC_COLORS.positive}1F`, fg: SEMANTIC_COLORS.positive },
-  rejected: { bg: `${SEMANTIC_COLORS.negative}1F`, fg: SEMANTIC_COLORS.negative },
-  pending:  { bg: `${SEMANTIC_COLORS.warning}1F`, fg: SEMANTIC_COLORS.warning },
+/** DS Badge appearance mapping for admin statuses */
+const STATUS_APPEARANCE: Record<string, 'success' | 'error' | 'warning'> = {
+  approved: 'success',
+  rejected: 'error',
+  pending: 'warning',
 };
 
 // ── Types ────────────────────────────────────────────────────────
@@ -37,43 +36,17 @@ interface Correction {
   timestamp: number;
 }
 
-// ── Feedback Type Badge (DS Label) ───────────────────────────────
+// ── Feedback Type Badge (DS Badge) ───────────────────────────────
 function FeedbackBadge({ type }: { type: string }) {
-  const colors = FEEDBACK_COLORS[type] || FEEDBACK_FALLBACK;
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '2px 8px',
-        borderRadius: '9999px',
-        backgroundColor: colors.bg,
-      }}
-    >
-      <Label size="XS" weight="medium" attention="high" as="span" style={{ color: colors.fg }}>
-        {type.replace('_', ' ')}
-      </Label>
-    </span>
+    <Badge content={type.replace('_', ' ')} appearance={FEEDBACK_APPEARANCE[type] || 'secondary'} />
   );
 }
 
-// ── Status Badge (DS Label) ──────────────────────────────────────
+// ── Status Badge (DS Badge) ──────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
-  const colors = STATUS_COLORS[status] || STATUS_COLORS.pending;
   return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        padding: '2px 8px',
-        borderRadius: '9999px',
-        backgroundColor: colors.bg,
-      }}
-    >
-      <Label size="XS" weight="medium" attention="high" as="span" style={{ color: colors.fg }}>
-        {status}
-      </Label>
-    </span>
+    <Badge content={status} appearance={STATUS_APPEARANCE[status] || 'warning'} />
   );
 }
 
