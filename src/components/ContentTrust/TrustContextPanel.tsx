@@ -480,20 +480,29 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
   
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* Summary Header */}
-      <div 
-        style={{ 
-          backgroundColor: `${SEMANTIC_COLORS.positive}1A`,
-          borderRadius: '12px',
-          padding: '12px',
-        }}
-      >
-        <Label size="S" weight="high" color="high" style={{ color: SEMANTIC_COLORS.positive }}>
-          {totalInfluences} influence{totalInfluences !== 1 ? 's' : ''} shaped this response
-        </Label>
-        <Text size="XS" color="medium">
-          See exactly what rules, learnings, and fixes were applied
-        </Text>
+      {/* Summary Header - simple text, no card */}
+      <div>
+        <p style={{ 
+          fontFamily: '"JioType Var"', 
+          fontWeight: 800, 
+          fontSize: '16px', 
+          lineHeight: 1.1, 
+          color: theme.text.high,
+          margin: 0,
+        }}>
+          {totalInfluences} influence{totalInfluences !== 1 ? 's' : ''} shaped this response.
+        </p>
+        <p style={{ 
+          fontFamily: '"JioType Var"', 
+          fontWeight: 400, 
+          fontSize: '12px', 
+          lineHeight: 1.3, 
+          color: theme.text.high,
+          margin: 0,
+          marginTop: '4px',
+        }}>
+          See exactly what rules, learnings, and fixes were applied.
+        </p>
       </div>
       
       {/* Timeline */}
