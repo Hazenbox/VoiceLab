@@ -5,7 +5,7 @@ import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import { AdminTable, AdminTableRow, AdminTableCell } from './AdminTable';
 import { formatRelativeTime } from '../utils/formatters';
 import type { Id } from '../../../convex/_generated/dataModel';
-import { Chip, Divider, Label } from '@marcelinodzn/ds-react';
+import { Chip, Divider, Label, Button } from '@marcelinodzn/ds-react';
 
 // ── Types ────────────────────────────────────────────────────────
 interface Correction {
@@ -215,67 +215,36 @@ function CorrectionDetailModal({
           className="p-3 rounded-lg mb-4 text-xs"
           style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
         >
-          <strong>Approve:</strong> This correction will be used to improve future content generation. 
-          The system learns from user edits and preferences.
-          <br />
-          <strong>Reject:</strong> This correction will be excluded from learning. 
-          Use this if the feedback is incorrect, spam, or not helpful.
+          All feedback is auto-approved for learning. Use <strong>Reject</strong> to exclude 
+          incorrect, spam, or unhelpful feedback from the learning engine.
         </div>
 
         {/* Actions */}
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 rounded-lg font-medium transition-opacity hover:opacity-80"
-            style={{
-              height: '36px',
-              fontSize: '13px',
-              backgroundColor: theme.stroke.low,
-              color: theme.text.high,
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
+          <Button appearance="ghost" size="S" onPress={onClose}>
             Close
-          </button>
+          </Button>
           
           {correction.adminStatus !== 'rejected' && (
-            <button
-              type="button"
-              onClick={onReject}
-              disabled={isUpdating}
-              className="flex-1 rounded-lg font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={{
-                height: '36px',
-                fontSize: '13px',
-                backgroundColor: SEMANTIC_COLORS.negative,
-                color: '#fff',
-                border: 'none',
-                cursor: 'pointer',
-              }}
+            <Button 
+              appearance="negative" 
+              size="S" 
+              onPress={onReject} 
+              isDisabled={isUpdating}
             >
               {isUpdating ? 'Updating...' : 'Reject'}
-            </button>
+            </Button>
           )}
           
           {correction.adminStatus !== 'approved' && (
-            <button
-              type="button"
-              onClick={onApprove}
-              disabled={isUpdating}
-              className="flex-1 rounded-lg font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={{
-                height: '36px',
-                fontSize: '13px',
-                backgroundColor: SEMANTIC_COLORS.positive,
-                color: '#fff',
-                border: 'none',
-                cursor: 'pointer',
-              }}
+            <Button 
+              appearance="positive" 
+              size="S" 
+              onPress={onApprove} 
+              isDisabled={isUpdating}
             >
               {isUpdating ? 'Updating...' : 'Approve'}
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -434,18 +403,13 @@ export function CorrectionApprovalList({ deviceId, feedbackCounts }: CorrectionA
               </span>
             </AdminTableCell>
             <AdminTableCell>
-              <button
-                onClick={() => setSelectedCorrection(c)}
-                className="px-2 py-1 rounded text-xs font-medium transition-colors hover:opacity-80"
-                style={{
-                  backgroundColor: theme.accent,
-                  color: '#fff',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
+              <Button 
+                appearance="primary" 
+                size="S" 
+                onPress={() => setSelectedCorrection(c)}
               >
                 Review
-              </button>
+              </Button>
             </AdminTableCell>
           </AdminTableRow>
         ))}
