@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
-import { Title, Text } from '@marcelinodzn/ds-react';
+import { Title, Text, Label } from '@marcelinodzn/ds-react';
 import { Badge } from '../components/ui/Badge';
 
 /** Chart accent for branded chart bars */
