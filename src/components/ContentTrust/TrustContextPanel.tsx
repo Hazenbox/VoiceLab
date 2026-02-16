@@ -233,10 +233,7 @@ const ContentPreview: React.FC<{ content: string }> = ({ content }) => {
   return (
     <div 
       className="p-3 rounded-lg" 
-      style={{ 
-        backgroundColor: theme.background.ghost,
-        border: `1px solid ${theme.stroke.low}`,
-      }}
+      style={{ backgroundColor: theme.stroke.low }}
     >
       <Text size="S" color="medium">
         "{content}"
