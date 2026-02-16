@@ -440,11 +440,12 @@ function AdminDashboard() {
       <SectionHeader title="Dashboard" subtitle="System health and value delivery — last 24 hours" />
 
       {/* Hero KPIs - 4 cards using DS DataCard */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
         <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
           <DataCard 
             title="total generations"
             fillEmphasis="Ghost"
+            width="100%"
             dataHead={{
               leadValue: String(dashboardStats.totalGenerations ?? 0),
               showDataSupporting: false,
@@ -457,6 +458,7 @@ function AdminDashboard() {
           <DataCard 
             title="avg trust score"
             fillEmphasis="Ghost"
+            width="100%"
             dataHead={{
               leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
               showDataSupporting: false,
@@ -469,6 +471,7 @@ function AdminDashboard() {
           <DataCard 
             title="content copied"
             fillEmphasis="Ghost"
+            width="100%"
             dataHead={{
               leadValue: String(dashboardStats.copyCount ?? 0),
               showDataSupporting: false,
@@ -481,6 +484,7 @@ function AdminDashboard() {
           <DataCard 
             title="learnings applied"
             fillEmphasis="Ghost"
+            width="100%"
             dataHead={{
               leadValue: String(learningStats.totalPatternsApplied ?? 0),
               showDataSupporting: false,
