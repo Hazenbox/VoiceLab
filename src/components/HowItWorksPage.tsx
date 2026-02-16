@@ -1041,49 +1041,70 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
           <Section 
             number={10} 
             title="Learning from Feedback"
-            description="The system learns from every user interaction and improves over time"
+            description="Every interaction trains the AI to generate better content"
           >
-            <CompactTable 
-              title="Feedback Signal Strengths"
-              headers={['Feedback Type', 'Signal', 'What the System Learns']}
-              rows={[
-                ['Thumbs Up', 'Positive', 'Reinforcement - content saved as example for reuse'],
-                ['Thumbs Down', 'Negative', 'Avoidance patterns extracted from optional reason'],
-                ['Edit', 'Strongest', 'Original vs. edited delta - learns before/after corrections (200 char cap)'],
-                ['Comment', 'Qualitative', 'Style preferences and tone guidance'],
-                ['Save as Example', 'Approval', 'Bookmarked content becomes a prompt example (max 50 locally)'],
-              ]}
-            />
+            {/* Visual Flow Diagram */}
+            <div 
+              className="mb-5 p-4 rounded-xl"
+              style={{ 
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`,
+              }}
+            >
+              <p className="text-xs mb-3" style={{ color: theme.text.low, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Feedback Loop
+              </p>
+              <FlowCanvas height={80} viewBox="0 0 700 80" dotColor={theme.stroke.low}>
+                <FlowNode x={0} y={15} width={120} height={50} label="User Feedback" sublabel="thumbs, edits" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowArrow x1={125} y1={40} x2={155} y2={40} color={theme.accent} />
+                
+                <FlowNode x={160} y={15} width={130} height={50} label="Auto-Approved" sublabel="instant learning" color="#dcfce7" textColor={theme.text.high} strokeColor="#86efac" />
+                <FlowArrow x1={295} y1={40} x2={325} y2={40} color={theme.accent} />
+                
+                <FlowNode x={330} y={15} width={130} height={50} label="Learning Engine" sublabel="extract patterns" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowArrow x1={465} y1={40} x2={495} y2={40} color={theme.accent} />
+                
+                <FlowNode x={500} y={15} width={140} height={50} label="Next Generation" sublabel="improved output" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              </FlowCanvas>
+            </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-4 mb-4">
+            <div className="grid grid-cols-3 gap-4 mb-4">
               <InfoCard 
-                title="Learning Pipeline"
+                title="Feedback Types"
                 items={[
-                  'extractLearningInsights() processes corrections by ecosystem/channel',
-                  'Edits (up to 10) become before/after correction pairs',
-                  'Thumbs down (up to 5) become avoidance patterns',
-                  'Comments (up to 5) become style preferences',
-                  'Builds a composite "Learned from User Corrections" prompt section',
-                  'Merged into the Knowledge Retriever output'
+                  'Thumbs up: save as example',
+                  'Thumbs down: learn to avoid',
+                  'Edit: before/after correction',
+                  'Comment: style preference'
                 ]}
-                icon={<DSIcon name="IcLightbulb" size="XS" attention="high" />}
+                icon={<DSIcon name="IcThumbsUp" size="XS" attention="high" />}
               />
               <InfoCard 
-                title="How Learning Improves the Prompt"
+                title="Auto-Approval System"
                 items={[
-                  'Avoid patterns merged into avoidWords (deduplicated)',
-                  'Style preferences injected as a dedicated section',
-                  'Corrections shown as numbered BEFORE/AFTER pairs',
-                  'Saved examples become approved content in the prompt (max 5)',
-                  'All filtered by current ecosystem/channel context',
-                  'Local corrections cache: max 100 entries in localStorage'
+                  'All feedback auto-approved',
+                  'Instant effect on next generation',
+                  'Admin can review and reject',
+                  'Rejected items stop influencing'
+                ]}
+                icon={<DSIcon name="IcCheck" size="XS" attention="high" />}
+              />
+              <InfoCard 
+                title="What Gets Injected"
+                items={[
+                  'Correction pairs (before → after)',
+                  'Avoid patterns from dislikes',
+                  'Style preferences from comments',
+                  'Saved examples as references'
                 ]}
                 icon={<DSIcon name="IcTrendingUp" size="XS" attention="high" />}
               />
             </div>
 
             <p className="text-sm" style={{ color: theme.text.medium }}>
-              Every piece of feedback creates a learning signal. The Learning Engine extracts patterns from corrections, filters them by the current ecosystem and channel context, and injects them into the next generation's prompt. This means the system progressively adapts to each user's preferences. Corrections are stored locally (max 100) and synced to Convex for cross-user learning in the admin panel.
+              The feedback loop is immediate: every thumbs up, edit, or comment is auto-approved and shapes the next generation. 
+              Admins can review in the Learning Center and reject unwanted patterns. This creates a self-improving system 
+              that adapts to your team's preferences.
             </p>
           </Section>
 
@@ -1156,72 +1177,66 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
           <Section 
             number={12} 
             title="Admin Panel (/admin)"
-            description="Passphrase-protected admin interface for system oversight"
+            description="Monitor AI performance and manage what it learns"
           >
+            {/* Visual Flow Diagram */}
+            <div 
+              className="mb-6 p-4 rounded-xl"
+              style={{ 
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`,
+              }}
+            >
+              <FlowCanvas height={80} viewBox="0 0 700 80" dotColor={theme.stroke.low}>
+                <FlowNode x={0} y={15} width={140} height={50} label="Dashboard" sublabel="system health" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowArrow x1={145} y1={40} x2={175} y2={40} color={theme.accent} />
+                
+                <FlowNode x={180} y={15} width={160} height={50} label="Learning Center" sublabel="user feedback" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowArrow x1={345} y1={40} x2={375} y2={40} color={theme.accent} />
+                
+                <FlowNode x={380} y={15} width={160} height={50} label="Knowledge Base" sublabel="rules & vocab" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowArrow x1={545} y1={40} x2={575} y2={40} color={theme.accent} />
+                
+                <FlowNode x={580} y={15} width={110} height={50} label="Tokens" sublabel="brand rules" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              </FlowCanvas>
+            </div>
+
             <div className="grid grid-cols-3 gap-4 mb-4">
               <InfoCard 
                 title="Dashboard"
                 items={[
-                  '4 stat cards (today, this week, total, examples)',
-                  'Feedback breakdown by type with percentages',
-                  'Recent feedback table (last 10 entries)',
-                  'Type badges and content previews'
+                  'Overview: generations, trust score, copies',
+                  'Content quality metrics',
+                  'Hourly activity chart',
+                  'Recent sessions'
                 ]}
+                icon={<DSIcon name="IcAnalytics" size="XS" attention="high" />}
               />
               <InfoCard 
-                title="Analytics"
+                title="Learning Center"
                 items={[
-                  'Feedback by Ecosystem (sorted by count)',
-                  'Feedback by Channel (sorted by count)',
-                  'Feedback Type Distribution',
-                  'Designed for Convex real-time data'
+                  'Feedback stats: learnings, corrections, patterns',
+                  'Filter by type (thumbs, edits, comments)',
+                  'Review and approve/reject queue',
+                  'Auto-approval with manual reject'
                 ]}
+                icon={<DSIcon name="IcLightbulb" size="XS" attention="high" />}
               />
-              <InfoCard 
-                title="Memory & Learnings"
-                items={[
-                  'Filter bar: All / thumbs_up / thumbs_down / edit / comment',
-                  'Full corrections table with content preview',
-                  'Original, edited, and comment columns',
-                  'Paginated to 50 items'
-                ]}
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 mb-4">
               <InfoCard 
                 title="Knowledge Base"
                 items={[
-                  '6 knowledge type cards with counts',
-                  '~283 avoid words, ~200+ vocabulary',
-                  '~33 auto-fix rules, 14 products, 11 festivals',
-                  'Management guide (seed & embed commands)',
-                  'Locally saved examples table'
+                  'Active rules counter',
+                  '6 categories: avoid, preferred, auto-fix...',
+                  'Search and filter by category',
+                  'Add, edit, delete rules'
                 ]}
-              />
-              <InfoCard 
-                title="Users"
-                items={[
-                  'Device-based identification explained',
-                  'Current device profile display',
-                  'Name, role, product, device ID',
-                  'Designed for multi-user listing from Convex'
-                ]}
-              />
-              <InfoCard 
-                title="System Config"
-                items={[
-                  '5 feature flags with env var names',
-                  'Convex URL and deployment info',
-                  'Default LLM and fallback chain',
-                  'HuggingFace embedding model info',
-                  'Environment diagnostics'
-                ]}
+                icon={<DSIcon name="IcDatabase" size="XS" attention="high" />}
               />
             </div>
 
             <p className="text-sm" style={{ color: theme.text.medium }}>
-              Access the admin panel at <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>/admin</code>. Passphrase is configured via <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>ADMIN_PASSPHRASE</code> environment variable (set in Vercel dashboard for production). Session stored in sessionStorage -- re-enter after browser close. The admin panel reads from localStorage with a 5-second polling interval and is designed to also pull directly from Convex when connected.
+              Access at <code className="px-1.5 py-0.5 rounded text-xs" style={{ backgroundColor: theme.stroke.low }}>/admin</code>. 
+              The admin panel pulls real-time data from Convex and shows how user feedback shapes AI behavior.
             </p>
           </Section>
 

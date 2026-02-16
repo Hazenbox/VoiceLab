@@ -231,6 +231,52 @@ export interface AutoFixPreview {
 }
 
 /**
+ * Evidence of what influenced content generation
+ * Used to show transparency in the Trust panel's Evidence tab
+ */
+export interface GenerationEvidence {
+  /** Knowledge base items that were used */
+  knowledgeUsed: {
+    /** Avoid words that matched in the output (before auto-fix) */
+    avoidWordsMatched: string[];
+    /** Preferred vocabulary terms used in the output */
+    preferredWordsUsed: string[];
+    /** Number of auto-fix rules available */
+    autoFixRulesCount: number;
+    /** Source of knowledge data */
+    source: 'convex' | 'code_defaults' | 'convex_with_rag';
+  };
+  
+  /** Learnings from user feedback that were applied */
+  learningsApplied: {
+    /** Number of correction pairs injected into prompt */
+    correctionsCount: number;
+    /** Avoid patterns from thumbs-down feedback */
+    avoidPatterns: string[];
+    /** Style preferences from user comments */
+    stylePreferences: string[];
+  };
+  
+  /** Auto-fixes applied after generation */
+  autoFixes: {
+    /** List of replacements made */
+    applied: Array<{ from: string; to: string }>;
+    /** Total count of fixes */
+    totalCount: number;
+  };
+  
+  /** RAG semantic search results (if used) */
+  semanticSearch?: {
+    /** Original query */
+    query: string;
+    /** Number of results used */
+    resultsUsed: number;
+    /** Highest relevance score */
+    topScore: number;
+  };
+}
+
+/**
  * Result from a single validation agent
  */
 export interface ValidationResult {
@@ -730,6 +776,16 @@ export interface ChatMessage {
    * recommended (right) content with accept button.
    */
   autoFixPreview?: AutoFixPreview;
+  
+  // ==========================================================================
+  // GENERATION EVIDENCE (for transparency in Trust panel)
+  // ==========================================================================
+  
+  /**
+   * Evidence of what influenced this generation.
+   * Shows in the "Evidence" tab of the Trust panel.
+   */
+  evidence?: GenerationEvidence;
 }
 
 // Inworld configuration

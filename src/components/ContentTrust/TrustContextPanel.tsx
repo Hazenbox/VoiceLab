@@ -13,6 +13,7 @@ import type {
   ComplianceJustification,
   GuardrailStatus,
   ValidationAgentSummary,
+  GenerationEvidence,
 } from '../../types';
 import { 
   getScoreExplanation, 
@@ -32,6 +33,8 @@ interface TrustContextPanelProps {
   analyzedContent?: string;
   onAutoFix?: () => void;
   autoFixAvailable?: boolean;
+  /** Evidence of what influenced the generation */
+  evidence?: GenerationEvidence;
 }
 
 const ScoreIndicator: React.FC<{
@@ -337,6 +340,185 @@ const ComplianceJustificationSection: React.FC<{
   );
 };
 
+// =============================================================================
+// EVIDENCE SECTION - Shows what influenced the generation
+// =============================================================================
+
+/**
+ * Evidence Flow Step - Visual workflow step showing what was applied
+ */
+const EvidenceFlowStep: React.FC<{
+  icon: string;
+  title: string;
+  items: Array<{ label: string; value: string | number }>;
+  isLast?: boolean;
+}> = ({ icon, title, items, isLast = false }) => {
+  const theme = useThemeColors();
+  
+  return (
+    <div className="relative">
+      {/* Connector line */}
+      {!isLast && (
+        <div 
+          className="absolute left-5 top-12 w-0.5 h-6"
+          style={{ backgroundColor: theme.stroke.medium }}
+        />
+      )}
+      
+      {/* Step content */}
+      <div 
+        className="p-3 rounded-lg"
+        style={{ backgroundColor: theme.stroke.low }}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <div 
+            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
+          >
+            <DSIcon name={icon as 'IcDatabase' | 'IcLightbulb' | 'IcStar'} size="S" attention="medium" />
+          </div>
+          <Label size="S" weight="high" color="high">{title}</Label>
+        </div>
+        
+        <div className="ml-12 space-y-1">
+          {items.map((item, i) => (
+            <div key={i} className="flex items-center justify-between">
+              <Text size="XS" color="low">{item.label}</Text>
+              <Text size="XS" color="high" style={{ fontWeight: 500 }}>{item.value}</Text>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Evidence Section - Main evidence display with workflow visualization
+ */
+const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence }) => {
+  const theme = useThemeColors();
+  
+  const hasKnowledge = evidence.knowledgeUsed.avoidWordsMatched.length > 0 || 
+                       evidence.knowledgeUsed.preferredWordsUsed.length > 0 ||
+                       evidence.knowledgeUsed.autoFixRulesCount > 0;
+  
+  const hasLearnings = evidence.learningsApplied.correctionsCount > 0 ||
+                       evidence.learningsApplied.avoidPatterns.length > 0 ||
+                       evidence.learningsApplied.stylePreferences.length > 0;
+  
+  const hasAutoFixes = evidence.autoFixes.totalCount > 0;
+  
+  const totalInfluences = (hasKnowledge ? 1 : 0) + (hasLearnings ? 1 : 0) + (hasAutoFixes ? 1 : 0);
+  
+  return (
+    <div className="space-y-4">
+      {/* Summary Header */}
+      <div 
+        className="p-3 rounded-lg"
+        style={{ backgroundColor: `${SEMANTIC_COLORS.positive}1A` }}
+      >
+        <Label size="S" weight="high" color="high" style={{ color: SEMANTIC_COLORS.positive }}>
+          {totalInfluences} influence{totalInfluences !== 1 ? 's' : ''} shaped this response
+        </Label>
+        <Text size="XS" color="medium">
+          See exactly what rules, learnings, and fixes were applied
+        </Text>
+      </div>
+      
+      {/* Knowledge Base Step */}
+      {hasKnowledge && (
+        <EvidenceFlowStep
+          icon="IcDatabase"
+          title="knowledge base"
+          items={[
+            { label: 'avoid words matched', value: evidence.knowledgeUsed.avoidWordsMatched.length },
+            { label: 'preferred terms available', value: evidence.knowledgeUsed.preferredWordsUsed.length },
+            { label: 'auto-fix rules', value: evidence.knowledgeUsed.autoFixRulesCount },
+            { label: 'source', value: evidence.knowledgeUsed.source.replace('_', ' ') },
+          ]}
+          isLast={!hasLearnings && !hasAutoFixes}
+        />
+      )}
+      
+      {/* Learnings Step */}
+      {hasLearnings && (
+        <EvidenceFlowStep
+          icon="IcLightbulb"
+          title="learnings applied"
+          items={[
+            { label: 'correction pairs', value: evidence.learningsApplied.correctionsCount },
+            { label: 'avoid patterns', value: evidence.learningsApplied.avoidPatterns.length },
+            { label: 'style preferences', value: evidence.learningsApplied.stylePreferences.length },
+          ]}
+          isLast={!hasAutoFixes}
+        />
+      )}
+      
+      {/* Auto-Fixes Step */}
+      {hasAutoFixes && (
+        <EvidenceFlowStep
+          icon="IcStar"
+          title="auto-fixes applied"
+          items={[
+            { label: 'total replacements', value: evidence.autoFixes.totalCount },
+            ...evidence.autoFixes.applied.slice(0, 3).map(fix => ({
+              label: `"${fix.from}"`,
+              value: `"${fix.to}"`,
+            })),
+          ]}
+          isLast={true}
+        />
+      )}
+      
+      {/* Detailed Lists (Collapsible) */}
+      {evidence.knowledgeUsed.avoidWordsMatched.length > 0 && (
+        <Accordion title="avoid words detected" defaultOpen={false} badge={evidence.knowledgeUsed.avoidWordsMatched.length} variant="card">
+          <div className="flex flex-wrap gap-1.5">
+            {evidence.knowledgeUsed.avoidWordsMatched.map((word, i) => (
+              <Badge key={i} variant="negative">{word}</Badge>
+            ))}
+          </div>
+        </Accordion>
+      )}
+      
+      {evidence.learningsApplied.avoidPatterns.length > 0 && (
+        <Accordion title="learned avoid patterns" defaultOpen={false} badge={evidence.learningsApplied.avoidPatterns.length} variant="card">
+          <div className="flex flex-wrap gap-1.5">
+            {evidence.learningsApplied.avoidPatterns.map((pattern, i) => (
+              <Badge key={i} variant="warning">{pattern}</Badge>
+            ))}
+          </div>
+        </Accordion>
+      )}
+      
+      {evidence.learningsApplied.stylePreferences.length > 0 && (
+        <Accordion title="style preferences" defaultOpen={false} badge={evidence.learningsApplied.stylePreferences.length} variant="card">
+          <div className="space-y-1.5">
+            {evidence.learningsApplied.stylePreferences.map((pref, i) => (
+              <Text key={i} size="XS" color="medium">"{pref}"</Text>
+            ))}
+          </div>
+        </Accordion>
+      )}
+      
+      {/* No Evidence State */}
+      {!hasKnowledge && !hasLearnings && !hasAutoFixes && (
+        <div className="text-center py-8">
+          <div 
+            className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
+            style={{ backgroundColor: theme.stroke.low }}
+          >
+            <DSIcon name="IcInfo" size="M" attention="low" />
+          </div>
+          <Text size="S" color="medium">No specific rules or learnings were applied</Text>
+          <Text size="XS" color="low">This response used default generation settings</Text>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const TrustContextPanel = memo(function TrustContextPanel({
   isOpen,
   onClose,
@@ -345,9 +527,10 @@ export const TrustContextPanel = memo(function TrustContextPanel({
   analyzedContent,
   onAutoFix,
   autoFixAvailable = false,
+  evidence,
 }: TrustContextPanelProps) {
   const theme = useThemeColors();
-  const [activeTab, setActiveTab] = useState<'score' | 'context' | 'violations'>('score');
+  const [activeTab, setActiveTab] = useState<'score' | 'context' | 'violations' | 'evidence'>('score');
   
   const explanation = trustScore ? getScoreExplanation(trustScore) : null;
   
@@ -406,7 +589,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
           <div className="flex-shrink-0 px-4 border-b" style={{ borderColor: theme.stroke.medium }}>
             <Tabs 
               selectedKey={activeTab} 
-              onSelectionChange={(key) => setActiveTab(key as 'score' | 'context' | 'violations')}
+              onSelectionChange={(key) => setActiveTab(key as 'score' | 'context' | 'violations' | 'evidence')}
               size="S"
             >
               <TabList>
@@ -420,6 +603,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                     )}
                   </span>
                 </Tab>
+                <Tab id="evidence">Evidence</Tab>
               </TabList>
             </Tabs>
           </div>
@@ -477,6 +661,20 @@ export const TrustContextPanel = memo(function TrustContextPanel({
               ) : (
                 allViolations.map((violation, i) => <ViolationItem key={i} violation={violation} />)
               )}
+            </div>
+          )}
+          
+          {activeTab === 'evidence' && evidence && <EvidenceSection evidence={evidence} />}
+          {activeTab === 'evidence' && !evidence && (
+            <div className="text-center py-8">
+              <div 
+                className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
+                style={{ backgroundColor: theme.stroke.low }}
+              >
+                <DSIcon name="IcInfo" size="M" attention="low" />
+              </div>
+              <p className="text-sm" style={{ color: theme.text.medium }}>No evidence available</p>
+              <p className="text-xs mt-1" style={{ color: theme.text.low }}>Evidence is captured during content generation</p>
             </div>
           )}
           </div>

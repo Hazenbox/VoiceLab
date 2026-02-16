@@ -9,6 +9,7 @@ import type {
   ContentChannelType,
   TrustSettings,
   TrustScore,
+  GenerationEvidence,
 } from './types';
 import { 
   VoiceGender, 
@@ -1705,7 +1706,35 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           privacyMaskedContent = finalContent;
         }
 
-        // Create AI response with trust data, intent tag, and auto-fix preview
+        // =====================================================================
+        // Build Generation Evidence for Trust panel transparency
+        // =====================================================================
+        const evidence: GenerationEvidence = {
+          knowledgeUsed: {
+            avoidWordsMatched: trustScore?.validationResults
+              .flatMap(r => r.violations)
+              .filter(v => v.agentId === 'avoid_words')
+              .map(v => v.text || v.rule)
+              .filter((t): t is string => !!t)
+              .slice(0, 10) ?? [],
+            preferredWordsUsed: promptKnowledge?.preferredWords?.slice(0, 10) ?? [],
+            autoFixRulesCount: promptKnowledge?.autoFixRules?.length ?? 0,
+            source: promptKnowledge?.source ?? 'code_defaults',
+          },
+          learningsApplied: {
+            correctionsCount: promptKnowledge?.corrections?.length ?? 0,
+            avoidPatterns: promptKnowledge?.avoidWords
+              ?.filter(w => !getCodeDefaults().avoidWords.includes(w))
+              .slice(0, 5) ?? [],
+            stylePreferences: promptKnowledge?.stylePreferences?.slice(0, 3) ?? [],
+          },
+          autoFixes: {
+            applied: autoFixPreview?.appliedFixes?.map(f => ({ from: f.original, to: f.replacement })) ?? [],
+            totalCount: autoFixPreview?.appliedFixes?.length ?? 0,
+          },
+        };
+
+        // Create AI response with trust data, intent tag, auto-fix preview, and evidence
         const aiMessage = {
           ...createTextMessage('assistant', privacyMaskedContent, chatMode, userMessageId),
           messageIntent: 'content_generation' as const,
@@ -1713,6 +1742,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           generationContext: finalContext,
           validationSummary,
           autoFixPreview,
+          evidence,
         };
         
         if (replaceResponseId) {
@@ -3302,6 +3332,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           !isAutoFixing && 
           (selectedMessageForTrustPanel?.trustScore?.autoFixableCount ?? 0) > 0
         }
+        evidence={selectedMessageForTrustPanel?.evidence}
       />
 
 
