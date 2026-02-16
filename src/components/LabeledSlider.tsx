@@ -60,13 +60,13 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5 relative">
-        <Label size="XS" weight="medium" attention="medium" as="label">
+        <Label size="XS" weight="medium" attention="high" as="label">
           {label}
         </Label>
         {tooltip && (
           <>
             <div
-              className="cursor-help opacity-50"
+              className="cursor-help flex items-center"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
             >

@@ -26,13 +26,13 @@ export const TooltipIcon: React.FC<TooltipIconProps> = ({ tooltip }) => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative flex items-center">
       <div
-        className="cursor-help opacity-50"
+        className="cursor-help flex items-center"
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
-        <DSIcon name="IcInfo" size="XS" attention="medium" aria-label="Information" />
+        <DSIcon name="IcInfo" size="XS" attention="low" aria-label="Information" />
       </div>
       {showTooltip && (
         <div

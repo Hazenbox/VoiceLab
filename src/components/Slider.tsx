@@ -68,13 +68,13 @@ export const Slider: React.FC<SliderProps> = ({
       {/* Label and Value */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 relative">
-          <Label size="XS" weight="medium" attention="medium" as="label">
+          <Label size="XS" weight="medium" attention="high" as="label">
             {label}
           </Label>
           {tooltip && (
             <>
               <div
-                className="cursor-help opacity-50"
+                className="cursor-help flex items-center"
                 onMouseEnter={() => setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
               >
