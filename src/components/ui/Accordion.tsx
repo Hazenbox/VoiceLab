@@ -45,7 +45,7 @@ export const Accordion = memo(function Accordion({
         }}
       >
         <div className="flex items-center gap-2">
-          {icon && <span className="w-4 h-4">{icon}</span>}
+          {icon && <span className="w-5 h-5 flex items-center justify-center">{icon}</span>}
           <span className="text-xs font-semibold">{title}</span>
         </div>
         <div className="flex items-center gap-2">
