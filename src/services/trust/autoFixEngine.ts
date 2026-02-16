@@ -97,22 +97,96 @@ const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> 
   'notwithstanding': { replacement: 'despite', confidence: 0.90 },
   
   // Marketing jargon - Simplification category
+  // Compound phrases (hyphenated AND space variants)
   'best-in-class': { replacement: 'excellent', confidence: 0.95 },
+  'best in class': { replacement: 'excellent', confidence: 0.95 },
   'world-class': { replacement: 'excellent', confidence: 0.95 },
+  'world class': { replacement: 'excellent', confidence: 0.95 },
   'state-of-the-art': { replacement: 'modern', confidence: 0.95 },
+  'state of the art': { replacement: 'modern', confidence: 0.95 },
   'cutting-edge': { replacement: 'advanced', confidence: 0.95 },
+  'cutting edge': { replacement: 'advanced', confidence: 0.95 },
+  'high-end': { replacement: 'premium', confidence: 0.90 },
+  'high end': { replacement: 'premium', confidence: 0.90 },
+  'tech-savvy': { replacement: 'comfortable with technology', confidence: 0.90 },
+  'tech savvy': { replacement: 'comfortable with technology', confidence: 0.90 },
+  'low-hanging fruit': { replacement: 'easy wins', confidence: 0.90 },
+  'low hanging fruit': { replacement: 'easy wins', confidence: 0.90 },
+  
+  // Single-word buzzwords
   'synergy': { replacement: 'working together', confidence: 0.90 },
   'paradigm': { replacement: 'approach', confidence: 0.90 },
   'bandwidth': { replacement: 'capacity', confidence: 0.85 },
-  'deep dive': { replacement: 'detailed look', confidence: 0.90 },
-  'circle back': { replacement: 'follow up', confidence: 0.90 },
-  'touch base': { replacement: 'connect', confidence: 0.90 },
-  'move the needle': { replacement: 'make progress', confidence: 0.90 },
-  'low-hanging fruit': { replacement: 'easy wins', confidence: 0.90 },
   'seamless': { replacement: 'smooth', confidence: 0.90 },
   'frictionless': { replacement: 'easy', confidence: 0.90 },
   'robust': { replacement: 'strong', confidence: 0.85 },
   'scalable': { replacement: 'flexible', confidence: 0.85 },
+  
+  // Multi-word phrases (with space and hyphen variants)
+  'deep dive': { replacement: 'detailed look', confidence: 0.90 },
+  'deep-dive': { replacement: 'detailed look', confidence: 0.90 },
+  'circle back': { replacement: 'follow up', confidence: 0.90 },
+  'circle-back': { replacement: 'follow up', confidence: 0.90 },
+  'touch base': { replacement: 'connect', confidence: 0.90 },
+  'touch-base': { replacement: 'connect', confidence: 0.90 },
+  'move the needle': { replacement: 'make progress', confidence: 0.90 },
+  
+  // Verb variants - streamline
+  'streamline': { replacement: 'simplify', confidence: 0.90 },
+  'streamlined': { replacement: 'simplified', confidence: 0.90 },
+  'streamlining': { replacement: 'simplifying', confidence: 0.90 },
+  'streamlines': { replacement: 'simplifies', confidence: 0.90 },
+  
+  // Verb variants - optimize
+  'optimize': { replacement: 'improve', confidence: 0.90 },
+  'optimized': { replacement: 'improved', confidence: 0.90 },
+  'optimizing': { replacement: 'improving', confidence: 0.90 },
+  'optimizes': { replacement: 'improves', confidence: 0.90 },
+  
+  // Verb variants - leverage
+  'leverage': { replacement: 'use', confidence: 0.90 },
+  'leveraged': { replacement: 'used', confidence: 0.90 },
+  'leveraging': { replacement: 'using', confidence: 0.90 },
+  'leverages': { replacement: 'uses', confidence: 0.90 },
+  
+  // Verb variants - utilize (already has base in VOCABULARY_REPLACEMENTS, add variants)
+  'utilized': { replacement: 'used', confidence: 0.95 },
+  'utilizing': { replacement: 'using', confidence: 0.95 },
+  'utilizes': { replacement: 'uses', confidence: 0.95 },
+  
+  // Verb variants - maximize/minimize
+  'maximize': { replacement: 'increase', confidence: 0.90 },
+  'maximized': { replacement: 'increased', confidence: 0.90 },
+  'maximizing': { replacement: 'increasing', confidence: 0.90 },
+  'maximizes': { replacement: 'increases', confidence: 0.90 },
+  'minimize': { replacement: 'reduce', confidence: 0.90 },
+  'minimized': { replacement: 'reduced', confidence: 0.90 },
+  'minimizing': { replacement: 'reducing', confidence: 0.90 },
+  'minimizes': { replacement: 'reduces', confidence: 0.90 },
+  
+  // Verb variants - prioritize
+  'prioritize': { replacement: 'focus on', confidence: 0.85 },
+  'prioritized': { replacement: 'focused on', confidence: 0.85 },
+  'prioritizing': { replacement: 'focusing on', confidence: 0.85 },
+  'prioritizes': { replacement: 'focuses on', confidence: 0.85 },
+  
+  // Verb variants - incentivize
+  'incentivize': { replacement: 'encourage', confidence: 0.90 },
+  'incentivized': { replacement: 'encouraged', confidence: 0.90 },
+  'incentivizing': { replacement: 'encouraging', confidence: 0.90 },
+  'incentivizes': { replacement: 'encourages', confidence: 0.90 },
+  
+  // Verb variants - onboard
+  'onboard': { replacement: 'welcome', confidence: 0.85 },
+  'onboarded': { replacement: 'welcomed', confidence: 0.85 },
+  'onboarding': { replacement: 'welcoming', confidence: 0.85 },
+  'onboards': { replacement: 'welcomes', confidence: 0.85 },
+  
+  // Verb variants - sync
+  'sync': { replacement: 'connect', confidence: 0.85 },
+  'synced': { replacement: 'connected', confidence: 0.85 },
+  'syncing': { replacement: 'connecting', confidence: 0.85 },
+  'syncs': { replacement: 'connects', confidence: 0.85 },
   
   // Robotic phrases
   'please note': { replacement: '', confidence: 0.85 },  // Often redundant, remove

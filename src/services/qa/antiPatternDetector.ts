@@ -137,7 +137,8 @@ const ANTI_PATTERNS: AntiPatternDefinition[] = [
     name: 'corporate jargon',
     description: 'using corporate buzzwords',
     severity: 'low',
-    pattern: /\b(synergy|leverage|paradigm|best-in-class|world-class|streamline|optimize)\b/gi,
+    // Pattern matches verb conjugations (-ing, -ed, -s) AND hyphen/space variants
+    pattern: /\b(synergy|leverag(e|ed|ing|es)|paradigm|best[-\s]?in[-\s]?class|world[-\s]?class|cutting[-\s]?edge|state[-\s]?of[-\s]?the[-\s]?art|streamlin(e|ed|ing|es)|optimiz(e|ed|ing|es)|maximiz(e|ed|ing|es)|minimiz(e|ed|ing|es)|utiliz(e|ed|ing|es)|prioritiz(e|ed|ing|es)|incentiviz(e|ed|ing|es))\b/gi,
     fix: 'use simple, everyday language',
   },
   {

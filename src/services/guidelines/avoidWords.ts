@@ -378,10 +378,87 @@ function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// =============================================================================
+// VERB VARIANT MATCHING
+// =============================================================================
+
 /**
- * Scan text for words to avoid using word-boundary matching
- * Uses regex with \b word boundaries to prevent false positives
- * (e.g., "just" should not match inside "adjust", "justice", "justify")
+ * Verbs that need conjugation matching (-ing, -ed, -s, -es variants)
+ * Maps base verb to its stem for pattern generation
+ */
+const VERB_AVOID_WORDS: Record<string, string> = {
+  // -ize verbs (stem removes 'e')
+  'streamline': 'streamlin',
+  'optimize': 'optimiz',
+  'leverage': 'leverag',
+  'utilize': 'utiliz',
+  'maximize': 'maximiz',
+  'minimize': 'minimiz',
+  'prioritize': 'prioritiz',
+  'incentivize': 'incentiviz',
+  'monetize': 'monetiz',
+  'customize': 'customiz',
+  'personalize': 'personaliz',
+  'finalize': 'finaliz',
+  'digitize': 'digitiz',
+  'revolutionize': 'revolutioniz',
+  'synchronize': 'synchroniz',
+  'harmonize': 'harmoniz',
+  'organize': 'organiz',
+  'realize': 'realiz',
+  'recognize': 'recogniz',
+  'analyze': 'analyz',
+  'categorize': 'categoriz',
+  // Regular verbs
+  'onboard': 'onboard',
+  'sync': 'sync',
+  'ping': 'ping',
+  'loop': 'loop',
+};
+
+/**
+ * Build a regex pattern for a word that handles:
+ * 1. Verb conjugations (-ing, -ed, -s, -es) for verbs
+ * 2. Hyphen/space variants for compound phrases (e.g., "best-in-class" / "best in class")
+ */
+function buildFlexiblePattern(word: string): RegExp {
+  // Check if it's a verb that needs conjugation matching
+  const verbStem = VERB_AVOID_WORDS[word.toLowerCase()];
+  if (verbStem) {
+    // Match: base form + -ing, -ed, -s, -es, -er, -ers
+    // e.g., "streamline" -> /\bstreamlin(e|ed|ing|es|er|ers)\b/gi
+    return new RegExp(`\\b${escapeRegex(verbStem)}(e|ed|ing|es|er|ers)?\\b`, 'gi');
+  }
+  
+  // Check if it's a compound phrase with hyphens
+  if (word.includes('-')) {
+    // Replace hyphens with [-\s]? to match both hyphen and space variants
+    // e.g., "best-in-class" -> /\bbest[-\s]?in[-\s]?class\b/gi
+    const parts = word.split('-');
+    const flexiblePattern = parts.map(p => escapeRegex(p)).join('[-\\s]?');
+    return new RegExp(`\\b${flexiblePattern}\\b`, 'gi');
+  }
+  
+  // Check if it's a multi-word phrase with spaces (no hyphens)
+  if (word.includes(' ') && !word.includes('-')) {
+    // For phrases like "deep dive", also match with hyphens
+    // e.g., "deep dive" -> /\bdeep[-\s]?dive\b/gi (also matches "deep-dive")
+    const parts = word.split(' ');
+    const flexiblePattern = parts.map(p => escapeRegex(p)).join('[-\\s]+');
+    return new RegExp(`\\b${flexiblePattern}\\b`, 'gi');
+  }
+  
+  // Regular word: exact match with word boundaries
+  return new RegExp(`\\b${escapeRegex(word)}\\b`, 'gi');
+}
+
+/**
+ * Scan text for words to avoid using intelligent pattern matching
+ * 
+ * Features:
+ * 1. Word boundary matching to prevent false positives (e.g., "just" won't match "adjust")
+ * 2. Verb conjugation matching (-ing, -ed, -s variants for verbs like "streamline")
+ * 3. Hyphen/space variant matching (e.g., "best-in-class" also matches "best in class")
  */
 export function scanForAvoidWords(text: string): Array<{
   word: string;
@@ -396,15 +473,22 @@ export function scanForAvoidWords(text: string): Array<{
     position: { start: number; end: number };
   }> = [];
   
+  // Track matched positions to avoid duplicates
+  const matchedPositions = new Set<string>();
+  
   for (const category of WORD_CATEGORIES) {
     for (const word of category.words) {
-      // Use word boundary regex to avoid false positives
-      // e.g., "just" should not match "adjust", "justice"
-      const escapedWord = escapeRegex(word);
-      const regex = new RegExp(`\\b${escapedWord}\\b`, 'gi');
+      // Build flexible pattern that handles verb variants and compound phrases
+      const regex = buildFlexiblePattern(word);
       
       let match;
       while ((match = regex.exec(text)) !== null) {
+        const posKey = `${match.index}-${match.index + match[0].length}`;
+        
+        // Skip if we've already matched at this position
+        if (matchedPositions.has(posKey)) continue;
+        matchedPositions.add(posKey);
+        
         results.push({
           word: match[0], // Use the actual matched text (preserves case)
           category: category.name,
