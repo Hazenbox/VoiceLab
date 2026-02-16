@@ -191,7 +191,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
           </Title>
           <button
             onClick={onToggleCollapse}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
             style={{
               backgroundColor: theme.background.ghost,
               color: theme.text.medium,
