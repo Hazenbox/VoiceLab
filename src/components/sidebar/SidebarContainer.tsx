@@ -28,7 +28,7 @@ export const SidebarContainer = memo(function SidebarContainer({
         width: `${width}px`,
         minWidth: `${width}px`,
         backgroundColor: theme.background.ghost,
-        borderRight: `1px solid ${theme.stroke.high}`,
+        borderRight: `1px solid ${theme.stroke.medium}`,
       }}
     >
       {children}

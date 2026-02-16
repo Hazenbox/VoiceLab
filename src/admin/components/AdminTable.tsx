@@ -37,9 +37,8 @@ export const AdminTable = memo(function AdminTable({
                 key={col.key}
                 className={`text-left py-1.5 px-3 ${col.className || ''}`}
                 style={{ 
-                  color: theme.text.low, 
+                  color: theme.text.high, 
                   fontSize: '12px',
-                  fontFamily: 'JioType Var',
                   fontWeight: 400,
                   lineHeight: 1.3,
                 }}
@@ -86,28 +85,20 @@ export const AdminTableRow = memo(function AdminTableRow({
 });
 
 /**
- * Standard table cell with compact padding and DS typography.
+ * Standard table cell with compact padding and consistent font.
  */
 export const AdminTableCell = memo(function AdminTableCell({
   children,
   className = '',
-  muted = false,
 }: {
   children: React.ReactNode;
   className?: string;
-  muted?: boolean;
 }) {
   const theme = useThemeColors();
   return (
     <td
       className={`py-1.5 px-3 ${className}`}
-      style={{ 
-        color: muted ? theme.text.low : theme.text.high, 
-        fontSize: '12px',
-        fontFamily: 'JioType Var',
-        fontWeight: 400,
-        lineHeight: 1.3,
-      }}
+      style={{ color: theme.text.high, fontSize: '13px' }}
     >
       {children}
     </td>
