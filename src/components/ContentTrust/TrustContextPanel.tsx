@@ -439,15 +439,12 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                 <Tab id="score">Score</Tab>
                 <Tab id="context">Context</Tab>
                 <Tab id="violations">
-                  Violations
-                  {allViolations.length > 0 && (
-                    <span 
-                      className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px]"
-                      style={{ backgroundColor: `${SEMANTIC_COLORS.negative}1A`, color: SEMANTIC_COLORS.negative }}
-                    >
-                      {allViolations.length}
-                    </span>
-                  )}
+                  <span className="flex items-center gap-1.5">
+                    Violations
+                    {allViolations.length > 0 && (
+                      <Badge variant="negative">{allViolations.length}</Badge>
+                    )}
+                  </span>
                 </Tab>
               </TabList>
             </Tabs>
