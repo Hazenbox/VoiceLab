@@ -210,7 +210,7 @@ const STYLE_PATTERNS: PatternRule[] = [
   
   // CRITICAL: Exclamation marks (Training 1.pdf - avoid unless absolutely necessary)
   { id: 'st-007', pattern: /[!]{2,}/g, severity: 'error', rule: 'Never use multiple exclamations', suggestion: 'Remove extra exclamation marks', category: 'punctuation' },
-  { id: 'st-008', pattern: /!/g, severity: 'info', rule: 'Avoid exclamation marks unless absolutely necessary', suggestion: 'Consider removing or using a full stop', category: 'punctuation' },
+  { id: 'st-008', pattern: /!/g, severity: 'info', rule: 'Avoid exclamation marks unless absolutely necessary', suggestion: '.', category: 'punctuation' },
   
   // CRITICAL: Title Case Detection (Training 1.pdf - Use sentence case only)
   // Detects patterns like "Get Started Today" or "Light Up Your Home"
