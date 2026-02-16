@@ -440,7 +440,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
   
   if (hasKnowledge) {
     timelineItems.push({
-      title: 'Knowledge Base',
+      title: 'Knowledge base',
       items: [
         { label: 'avoid words', value: evidence.knowledgeUsed.avoidWordsMatched.length },
         { label: 'preferred', value: evidence.knowledgeUsed.preferredWordsUsed.length },
@@ -454,7 +454,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
   
   if (hasLearnings) {
     timelineItems.push({
-      title: 'Learnings Applied',
+      title: 'Learnings applied',
       items: [
         { label: 'corrections', value: evidence.learningsApplied.correctionsCount },
         { label: 'avoid patterns', value: evidence.learningsApplied.avoidPatterns.length },
@@ -467,7 +467,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
   
   if (hasAutoFixes) {
     timelineItems.push({
-      title: 'Auto-Fixes Applied',
+      title: 'Auto-fixes applied',
       items: [
         { label: 'replacements', value: evidence.autoFixes.totalCount },
         ...evidence.autoFixes.applied.slice(0, 2).map(fix => ({
