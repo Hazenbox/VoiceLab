@@ -115,3 +115,17 @@ export {
   type ResolutionAction,
   type ResolutionActionType,
 } from './resolutionTracker';
+
+// Channel-Specific Phrases (Phase 3.2)
+export {
+  CHANNEL_PHRASES,
+  getChannelPhrases,
+  getOpeningPhrase,
+  getClosingPhrase,
+  getTransitionPhrase,
+  getChannelConstraints,
+  getChannelPhrasingInstructions,
+  stateToClosingContext,
+  stateToTransition,
+  type ChannelPhrases,
+} from './channelPhrases';
