@@ -5,7 +5,7 @@
 
 /* Tailwind v4 theme configuration */
 @theme {
-  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* JioTypeVar - Regular */
