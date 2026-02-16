@@ -206,7 +206,7 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       )}
       
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollable-container">
+      <div className="flex-1 overflow-y-auto px-4 pt-2 pb-4 space-y-3 scrollable-container">
           {/* Chat Settings Section */}
           <Accordion title="Chat Settings" icon={<ChatIcon />} defaultOpen>
             {/* Temperature */}
