@@ -720,7 +720,6 @@ function AdminLearningCenter() {
   const learningStats = useQuery(api.corrections.getLearningStats, {});
   const feedbackCounts = useQuery(api.corrections.countByFeedbackType, {});
   
-  const [filter, setFilter] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Debug logging for production troubleshooting
@@ -748,11 +747,6 @@ function AdminLearningCenter() {
       />
     );
   }
-
-  // Filter corrections for the table
-  const filtered = filter === 'all' 
-    ? corrections 
-    : corrections.filter(c => c.feedbackType === filter);
 
   // Get edit corrections for the diff view
   const editCorrections = corrections.filter(c => c.feedbackType === 'edit' && c.editedContent);
@@ -846,22 +840,21 @@ function AdminLearningCenter() {
       {/* Full Feedback Table */}
       <AdminCard className="p-4 mb-5">
         <CardLabel>
-          {filter === 'all' ? 'All feedback' : `${filter.replace('_', ' ')} feedback`} 
-          {' '}({filtered.length} items)
+          All feedback ({corrections.length} items)
         </CardLabel>
         <AdminTable
           columns={[
-            { key: 'type', label: 'Type' },
-            { key: 'original', label: 'Original content' },
-            { key: 'edited', label: 'Edited / comment' },
-            { key: 'eco', label: 'Ecosystem' },
-            { key: 'channel', label: 'Channel' },
-            { key: 'time', label: 'Time' },
+            { key: 'type', label: 'type' },
+            { key: 'original', label: 'original content' },
+            { key: 'edited', label: 'edited / comment' },
+            { key: 'eco', label: 'ecosystem' },
+            { key: 'channel', label: 'channel' },
+            { key: 'time', label: 'time' },
           ]}
-          isEmpty={filtered.length === 0}
+          isEmpty={corrections.length === 0}
           emptyMessage="No feedback recorded yet."
         >
-          {filtered.slice(0, 50).map((c, i) => {
+          {corrections.slice(0, 50).map((c, i) => {
             const idStr = c._id?.toString() || String(i);
             
             return (
@@ -880,42 +873,11 @@ function AdminLearningCenter() {
             );
           })}
         </AdminTable>
-        {filtered.length > 50 && (
+        {corrections.length > 50 && (
           <span className="block mt-2" style={{ color: theme.text.low, fontSize: '12px' }}>
-            showing 50 of {filtered.length} items.
+            showing 50 of {corrections.length} items.
           </span>
         )}
-      </AdminCard>
-
-      {/* Feedback Distribution */}
-      <AdminCard className="p-4 mb-5">
-        <CardLabel>Feedback distribution</CardLabel>
-        <div className="grid grid-cols-4 gap-4">
-          {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
-            <div 
-              key={type}
-              className="text-center p-3 rounded-lg cursor-pointer transition-all"
-              style={{ 
-                backgroundColor: filter === type ? theme.accent : theme.background.ghost,
-                opacity: filter === type ? 1 : 0.7,
-              }}
-              onClick={() => setFilter(filter === type ? 'all' : type)}
-            >
-              <span 
-                className="block text-2xl font-bold" 
-                style={{ color: filter === type ? '#fff' : theme.text.high }}
-              >
-                {feedbackCounts?.[type] ?? 0}
-              </span>
-              <span 
-                className="text-xs" 
-                style={{ color: filter === type ? '#fff' : theme.text.low }}
-              >
-                {type.replace('_', ' ')}
-              </span>
-            </div>
-          ))}
-        </div>
       </AdminCard>
 
       {/* Correction Approval Section */}
@@ -924,7 +886,7 @@ function AdminLearningCenter() {
         <p className="text-xs mb-4" style={{ color: theme.text.low }}>
           Review and approve/reject user feedback to control what the system learns from.
         </p>
-        <CorrectionApprovalList />
+        <CorrectionApprovalList feedbackCounts={feedbackCounts} />
       </AdminCard>
     </>
   );

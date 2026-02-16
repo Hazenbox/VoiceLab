@@ -5,6 +5,7 @@ import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import { AdminTable, AdminTableRow, AdminTableCell } from './AdminTable';
 import { formatRelativeTime } from '../utils/formatters';
 import type { Id } from '../../../convex/_generated/dataModel';
+import { Chip, Divider } from '@marcelinodzn/ds-react';
 
 /** Semantic color map for feedback types */
 const FEEDBACK_COLORS: Record<string, { bg: string; fg: string }> = {
@@ -279,18 +280,20 @@ function CorrectionDetailModal({
 // ── Main Correction Approval List ────────────────────────────────
 interface CorrectionApprovalListProps {
   deviceId?: string;
+  feedbackCounts?: Record<string, number>;
 }
 
-export function CorrectionApprovalList({ deviceId }: CorrectionApprovalListProps) {
+export function CorrectionApprovalList({ deviceId, feedbackCounts }: CorrectionApprovalListProps) {
   const theme = useThemeColors();
-  const [filter, setFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedCorrection, setSelectedCorrection] = useState<Correction | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  // Fetch corrections
+  // Fetch corrections (filtered by adminStatus via API)
   const corrections = useQuery(api.corrections.listAll, { 
     limit: 100,
-    adminStatus: filter !== 'all' ? filter : undefined,
+    adminStatus: statusFilter !== 'all' ? statusFilter : undefined,
   });
   
   // Update mutation
@@ -340,51 +343,69 @@ export function CorrectionApprovalList({ deviceId }: CorrectionApprovalListProps
     );
   }
 
-  // Filter tabs
-  const filterTabs = [
-    { key: 'all', label: 'All' },
-    { key: 'approved', label: 'Approved' },
-    { key: 'rejected', label: 'Rejected' },
+  // Status filter tabs
+  const statusTabs = [
+    { key: 'all', label: 'all' },
+    { key: 'approved', label: 'approved' },
+    { key: 'rejected', label: 'rejected' },
   ];
 
   // Cast corrections to typed array
   const typedCorrections = (corrections || []) as Correction[];
+  
+  // Apply feedbackType filter client-side
+  const filteredCorrections = typeFilter === 'all' 
+    ? typedCorrections 
+    : typedCorrections.filter(c => c.feedbackType === typeFilter);
 
   return (
     <>
-      {/* Filter Tabs */}
-      <div className="flex gap-2 mb-4">
-        {filterTabs.map(tab => (
-          <button
+      {/* Filter Chips */}
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
+        {/* Status filters */}
+        {statusTabs.map(tab => (
+          <Chip
             key={tab.key}
-            onClick={() => setFilter(tab.key)}
-            className="px-3 py-1 rounded-lg text-xs font-medium transition-colors"
-            style={{
-              backgroundColor: filter === tab.key ? theme.accent : theme.stroke.low,
-              color: filter === tab.key ? '#fff' : theme.text.medium,
-              border: 'none',
-              cursor: 'pointer',
-            }}
+            size="S"
+            appearance="neutral"
+            isSelected={statusFilter === tab.key}
+            onPress={() => setStatusFilter(tab.key)}
           >
             {tab.label}
-          </button>
+          </Chip>
+        ))}
+        
+        {/* Visual separator */}
+        <Divider orientation="vertical" />
+        
+        {/* Feedback type filters - functional */}
+        {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
+          <Chip
+            key={type}
+            size="S"
+            appearance="neutral"
+            isSelected={typeFilter === type}
+            onPress={() => setTypeFilter(typeFilter === type ? 'all' : type)}
+          >
+            {feedbackCounts?.[type] ?? 0} {type.replace('_', ' ')}
+          </Chip>
         ))}
       </div>
 
       {/* Corrections Table */}
       <AdminTable
         columns={[
-          { key: 'type', label: 'Type' },
-          { key: 'content', label: 'Content' },
-          { key: 'context', label: 'Context' },
-          { key: 'status', label: 'Status' },
-          { key: 'time', label: 'Time' },
+          { key: 'type', label: 'type' },
+          { key: 'content', label: 'content' },
+          { key: 'context', label: 'context' },
+          { key: 'status', label: 'status' },
+          { key: 'time', label: 'time' },
           { key: 'action', label: '' },
         ]}
-        isEmpty={typedCorrections.length === 0}
+        isEmpty={filteredCorrections.length === 0}
         emptyMessage="No corrections to review"
       >
-        {typedCorrections.map((c) => (
+        {filteredCorrections.map((c) => (
           <AdminTableRow key={c._id.toString()}>
             <AdminTableCell>
               <FeedbackBadge type={c.feedbackType} />
