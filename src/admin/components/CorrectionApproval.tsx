@@ -53,27 +53,11 @@ function FeedbackBadge({ type }: { type: string }) {
 // ── Status Badge ────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
   const theme = useThemeColors();
-  
-  const statusMap: Record<string, string> = {
-    approved: theme.isLight ? '#DCFCE7' : 'rgba(34, 197, 94, 0.2)',
-    rejected: theme.isLight ? '#FEE2E2' : 'rgba(239, 68, 68, 0.2)',
-    pending:  theme.isLight ? '#FEF3C7' : 'rgba(234, 179, 8, 0.2)',
-  };
-  const bg = statusMap[status] || statusMap.pending;
 
   return (
-    <span
-      style={{
-        display: 'inline-block',
-        backgroundColor: bg,
-        borderRadius: '4px',
-        padding: '2px 6px',
-      }}
-    >
-      <Label size="XS" weight="medium" attention="high" as="span">
-        {status}
-      </Label>
-    </span>
+    <Label size="XS" weight="medium" attention="low" as="span" style={{ color: theme.text.low }}>
+      {status}
+    </Label>
   );
 }
 
