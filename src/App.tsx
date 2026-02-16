@@ -206,6 +206,8 @@ import {
   setCachedEnforcementRules,
   getCachedEnforcementRules,
 } from './services/validation/tokenEnforcementCache';
+// Project auto-naming (ChatGPT-style)
+import { generateProjectNameFromExchange } from './services/projectNaming';
 import type { 
   FeedbackPayload, 
   SendMessageOptions, 
@@ -268,7 +270,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   
   // Project context
   const { 
-    activeProject, 
+    activeProject,
+    updateProject,
     updateProjectConfig, 
     updateProjectVoiceGender, 
     // New Content Trust methods
@@ -277,6 +280,20 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     updateProjectDefaultLanguage,
     updateProjectDefaultRegion,
   } = useProject();
+  
+  // ── Auto-rename Project (ChatGPT-style) ────────────────────────
+  // Automatically rename "Untitled N" projects based on first message exchange
+  const tryAutoRenameProject = useCallback((userMessage: string, aiResponse: string) => {
+    // Only auto-rename if project still has default "Untitled" name
+    if (!activeProject?.name.startsWith('Untitled')) return;
+    
+    // Generate name from user message + AI response (ChatGPT-style)
+    const suggestedName = generateProjectNameFromExchange(userMessage, aiResponse);
+    if (suggestedName) {
+      updateProject(activeProject.id, { name: suggestedName });
+      console.log(`[AutoRename] Project renamed to: "${suggestedName}"`);
+    }
+  }, [activeProject, updateProject]);
   
   // ── Onboarding State ──────────────────────────────────────────
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
@@ -522,8 +539,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Refs for conversation turn tracking (to link user message to AI response)
   const currentTurnRef = useRef<{
     userMessageId: string | null;
+    userText: string;  // User's transcript text for auto-rename
     responseText: string;
-  }>({ userMessageId: null, responseText: '' });
+  }>({ userMessageId: null, userText: '', responseText: '' });
 
   // ========================================================================
   // Convex Knowledge Base & Learning Integration (Phase 2-4)
@@ -1703,6 +1721,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           addMessage(aiMessage);
         }
         
+        // Auto-rename project if still "Untitled" (ChatGPT-style)
+        tryAutoRenameProject(message, privacyMaskedContent);
+        
         // v2: Track assistant message and response time
         let responseTimeMs: number | undefined;
         if (featureFlags.responseTimeTracking || featureFlags.sessionAnalytics) {
@@ -2104,6 +2125,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           addMessage(aiMessage);
         }
         
+        // Auto-rename project if still "Untitled" (ChatGPT-style)
+        tryAutoRenameProject(message, privacyMaskedConversational);
+        
         // v2: Track assistant message and response time for conversational path
         if (featureFlags.responseTimeTracking || featureFlags.sessionAnalytics) {
           const responseTimer = getResponseTimer();
@@ -2190,7 +2214,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       markIdempotencyKeyProcessed(idempotencyKey);
     }
     }); // End deduplicateRequest wrapper
-  }, [resetChatAbort, chatMode, addMessage, replaceMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings, temperature, maxTokens, streamResponse, userProfile]);
+  }, [resetChatAbort, chatMode, addMessage, replaceMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings, temperature, maxTokens, streamResponse, userProfile, tryAutoRenameProject]);
 
   // ========================================================================
   // Phase 3: Feedback & Learning Handlers
@@ -2745,7 +2769,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               case 'listening':
                 setAppState(AppState.LISTENING);
                 // Reset turn tracking when starting to listen
-                currentTurnRef.current = { userMessageId: null, responseText: '' };
+                currentTurnRef.current = { userMessageId: null, userText: '', responseText: '' };
                 break;
               case 'speaking':
                 setAppState(AppState.SPEAKING);
@@ -2768,6 +2792,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
               const userMessage = createTextMessage('user', text, 'voice');
               addMessage(userMessage);
               currentTurnRef.current.userMessageId = userMessage.id;
+              currentTurnRef.current.userText = text;  // Store for auto-rename
               // Clear transcript display after adding to history
               setTimeout(() => setTranscript(''), 500);
             }
@@ -2796,11 +2821,16 @@ function App({ colorMode, onColorModeChange }: AppProps) {
             );
             addMessage(aiMessage);
             
+            // Auto-rename project if still "Untitled" (ChatGPT-style)
+            if (currentTurnRef.current.userText && currentTurnRef.current.responseText) {
+              tryAutoRenameProject(currentTurnRef.current.userText, currentTurnRef.current.responseText);
+            }
+            
             // Clear streaming AI response after message is created
             setStreamingAIResponse('');
             
             // Reset turn tracking
-            currentTurnRef.current = { userMessageId: null, responseText: '' };
+            currentTurnRef.current = { userMessageId: null, userText: '', responseText: '' };
           },
           onError: (err) => {
             console.error('Conversation error:', err);
@@ -2917,7 +2947,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     }
 
     // Reset turn tracking to prevent stale data
-    currentTurnRef.current = { userMessageId: null, responseText: '' };
+    currentTurnRef.current = { userMessageId: null, userText: '', responseText: '' };
 
     setAppState(AppState.IDLE);
     setTranscript('');
