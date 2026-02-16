@@ -265,11 +265,11 @@ const GuardrailItem: React.FC<{ guardrail: GuardrailStatus }> = ({ guardrail }) 
   
   return (
     <div 
-      className="flex items-center gap-2 py-2 border-b last:border-b-0"
+      className="flex items-start gap-2 py-2 border-b last:border-b-0"
       style={{ borderColor: theme.stroke.low }}
     >
-      {/* Icon aligned with text */}
-      <div className="flex-shrink-0">
+      {/* Icon aligned with first line of text */}
+      <div className="flex-shrink-0 flex items-center" style={{ height: '16px' }}>
         {isFollowed ? (
           <DSIcon name="IcSuccessColored" size="XS" attention="high" />
         ) : (
@@ -277,7 +277,7 @@ const GuardrailItem: React.FC<{ guardrail: GuardrailStatus }> = ({ guardrail }) 
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <Label size="S" weight="medium" color="high">{guardrail.rule}</Label>
+        <Label size="XS" weight="medium" color="high">{guardrail.rule}</Label>
         <Text size="XS" color="low">{guardrail.description}</Text>
       </div>
     </div>
@@ -462,10 +462,11 @@ export const TrustContextPanel = memo(function TrustContextPanel({
         
         {/* Tabs */}
         {isOpen && (
-          <div className="flex-shrink-0 px-4">
+          <div className="flex-shrink-0 px-4 border-b" style={{ borderColor: theme.stroke.low }}>
             <Tabs 
               selectedKey={activeTab} 
               onSelectionChange={(key) => setActiveTab(key as 'score' | 'context' | 'violations')}
+              size="S"
             >
               <TabList>
                 <Tab id="score">score</Tab>
