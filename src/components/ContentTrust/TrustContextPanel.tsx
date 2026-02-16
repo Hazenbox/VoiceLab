@@ -21,6 +21,7 @@ import {
 import { getContextSummary } from '../../services/context';
 import { Accordion } from '../ui/Accordion';
 import { DSIcon } from '../DSIcon';
+import { Title } from '@marcelinodzn/ds-react';
 
 interface TrustContextPanelProps {
   isOpen: boolean;
@@ -441,23 +442,22 @@ export const TrustContextPanel = memo(function TrustContextPanel({
         
         {/* Header */}
         {isOpen && (
-          <div className="px-3 py-3 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: theme.stroke.low }}>
-            <h2 className="text-sm font-semibold" style={{ color: theme.text.high }}>Content Trust</h2>
+          <div className="pl-6 pr-4 py-3 flex items-center justify-between flex-shrink-0">
+            <Title size="M" as="h2" weight="high" color="high">
+              Content trust
+            </Title>
             <button
               onClick={onClose}
-              className="close-trust-btn w-6 h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
               style={{
-                backgroundColor: 'transparent',
-                color: theme.text.high,
+                backgroundColor: theme.background.ghost,
+                color: theme.text.medium,
               }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.stroke.low}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme.background.ghost}
               aria-label="Close trust panel"
             >
-              <DSIcon name="IcClose" size="XS" attention="high" />
-              <style>{`
-                .close-trust-btn:hover {
-                  background-color: ${theme.stroke.low} !important;
-                }
-              `}</style>
+              <DSIcon name="IcClose" size="S" attention="medium" />
             </button>
           </div>
         )}
