@@ -60,7 +60,7 @@ export const LabeledSlider: React.FC<LabeledSliderProps> = ({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5 relative">
-        <Label size="XS" weight="medium" attention="high" as="label">
+        <Label size="XS" weight="low" attention="high" as="label">
           {label}
         </Label>
         {tooltip && (
