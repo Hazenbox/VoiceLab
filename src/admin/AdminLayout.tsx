@@ -455,7 +455,8 @@ function AdminDashboard() {
       {!isOnline && <OfflineBanner />}
       <PageHeader title="Dashboard" description="System health and value delivery — last 24 hours" />
 
-      {/* Hero KPIs - 4 cards using DS DataCard */}
+      {/* Overview Section */}
+      <CardLabel>Overview</CardLabel>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
         <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
           <DataCard 
@@ -511,7 +512,8 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Quality Metrics - 4 cards using DS DataCard */}
+      {/* Content Quality Section */}
+      <CardLabel>Content quality</CardLabel>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
         <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
           <DataCard 
