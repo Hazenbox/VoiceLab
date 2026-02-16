@@ -89,20 +89,28 @@ export interface GenerationRequest {
   directiveOverrides?: DirectiveOverride[];
 }
 
+export interface ValidationCheck {
+  name: string;
+  passed: boolean;
+  message?: string;
+  severity: 'critical' | 'error' | 'warning' | 'info';
+  /** The problematic text if found */
+  matchedText?: string;
+}
+
 export interface ValidationResult {
   /** Overall pass/fail */
   passed: boolean;
   /** Individual check results */
-  checks: Array<{
-    name: string;
-    passed: boolean;
-    message?: string;
-    severity: 'error' | 'warning' | 'info';
-  }>;
+  checks: ValidationCheck[];
   /** Suggested improvements */
   suggestions: string[];
   /** Whether response should be regenerated */
   shouldRegenerate: boolean;
+  /** Critical issues that require immediate action */
+  hasCriticalIssues: boolean;
+  /** Error-level issues */
+  hasErrorIssues: boolean;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -197,7 +205,7 @@ export class ConstitutionalWrapper {
     response: string,
     context: ConstitutionalContext
   ): ValidationResult {
-    const checks: ValidationResult['checks'] = [];
+    const checks: ValidationCheck[] = [];
     const suggestions: string[] = [];
     
     // Check 1: Length appropriate for detail level
@@ -231,29 +239,51 @@ export class ConstitutionalWrapper {
       });
     }
     
-    // Check 2: Forbidden phrases (from hard limits)
-    const forbiddenPatterns = [
-      /i am (a )?human/i,
-      /i (am|was) born/i,
-      /my (personal )?experience/i,
-      /trust me/i,
-      /i guarantee/i,
-      /you must/i,
-      /you have to/i,
+    // Check 2: Forbidden phrases (CRITICAL - from hard limits)
+    // These are things Jio AI must NEVER say
+    const criticalForbiddenPatterns: Array<{ pattern: RegExp; reason: string }> = [
+      { pattern: /i am (a )?human/i, reason: 'AI claiming to be human' },
+      { pattern: /i (am|was) born/i, reason: 'AI claiming birth/human origin' },
+      { pattern: /my (personal )?experience/i, reason: 'AI claiming personal experiences' },
     ];
     
-    for (const pattern of forbiddenPatterns) {
-      if (pattern.test(response)) {
+    const errorForbiddenPatterns: Array<{ pattern: RegExp; reason: string }> = [
+      { pattern: /trust me/i, reason: 'Demanding trust without evidence' },
+      { pattern: /i guarantee/i, reason: 'Making absolute guarantees' },
+      { pattern: /you must/i, reason: 'Commanding tone instead of guiding' },
+      { pattern: /you have to/i, reason: 'Demanding tone instead of suggesting' },
+      { pattern: /it'?s your fault/i, reason: 'Blaming the user' },
+      { pattern: /you should have/i, reason: 'Blame language' },
+      { pattern: /obviously|clearly you/i, reason: 'Condescending tone' },
+    ];
+    
+    for (const { pattern, reason } of criticalForbiddenPatterns) {
+      const match = response.match(pattern);
+      if (match) {
         checks.push({
-          name: 'forbidden_phrase',
+          name: 'forbidden_phrase_critical',
           passed: false,
-          message: `Contains forbidden phrase matching: ${pattern.source}`,
-          severity: 'error',
+          message: `CRITICAL: ${reason}`,
+          severity: 'critical',
+          matchedText: match[0],
         });
       }
     }
     
-    if (!checks.some(c => c.name === 'forbidden_phrase')) {
+    for (const { pattern, reason } of errorForbiddenPatterns) {
+      const match = response.match(pattern);
+      if (match) {
+        checks.push({
+          name: 'forbidden_phrase',
+          passed: false,
+          message: reason,
+          severity: 'error',
+          matchedText: match[0],
+        });
+      }
+    }
+    
+    if (!checks.some(c => c.name.startsWith('forbidden_phrase'))) {
       checks.push({
         name: 'forbidden_phrases',
         passed: true,
@@ -272,6 +302,7 @@ export class ConstitutionalWrapper {
           passed: false,
           message: `Contains forbidden tone shift: ${forbidden}`,
           severity: 'warning',
+          matchedText: forbidden,
         });
         suggestions.push(`Avoid ${forbidden} tone given user's emotional state`);
       }
@@ -285,17 +316,34 @@ export class ConstitutionalWrapper {
       });
     }
     
-    // Check 4: Safety domain compliance
+    // Check 4: Safety domain compliance (CRITICAL for high-risk domains)
     const detectedDomains = context.safetyResult?.classification?.detectedDomains || 
                             context.safetyResult?.classification?.allDetectedDomains || [];
     if (detectedDomains.length > 0) {
       const criticalDomains = detectedDomains.filter(
-        (d: { level?: string; domain?: string; advisoryBoundary?: string }) => d.level === 'critical' || d.level === 'high'
+        (d: { level?: string; domain?: string; advisoryBoundary?: string }) => d.level === 'critical'
+      );
+      const highDomains = detectedDomains.filter(
+        (d: { level?: string; domain?: string; advisoryBoundary?: string }) => d.level === 'high'
       );
       
       for (const domain of criticalDomains) {
-        // Check for appropriate disclaimers
-        const hasDisclaimer = /consult|professional|expert|emergency|helpline|specialist/i.test(response);
+        // Check for appropriate disclaimers - CRITICAL for life-threatening domains
+        const hasDisclaimer = /consult|professional|expert|emergency|helpline|specialist|doctor|police/i.test(response);
+        
+        if (!hasDisclaimer && domain.advisoryBoundary !== 'normal_information') {
+          checks.push({
+            name: 'safety_disclaimer_critical',
+            passed: false,
+            message: `CRITICAL: Missing safety disclaimer for ${domain.domain} topic`,
+            severity: 'critical',
+          });
+          suggestions.push(`Add emergency resources or professional referral for ${domain.domain}`);
+        }
+      }
+      
+      for (const domain of highDomains) {
+        const hasDisclaimer = /consult|professional|expert|specialist/i.test(response);
         
         if (!hasDisclaimer && domain.advisoryBoundary !== 'normal_information') {
           checks.push({
@@ -309,7 +357,7 @@ export class ConstitutionalWrapper {
       }
     }
     
-    if (!checks.some(c => c.name === 'safety_disclaimer')) {
+    if (!checks.some(c => c.name.startsWith('safety_disclaimer'))) {
       checks.push({
         name: 'safety_compliance',
         passed: true,
@@ -342,14 +390,16 @@ export class ConstitutionalWrapper {
     }
     
     // Determine overall result
+    const criticalIssues = checks.filter(c => !c.passed && c.severity === 'critical');
     const errors = checks.filter(c => !c.passed && c.severity === 'error');
-    const warnings = checks.filter(c => !c.passed && c.severity === 'warning');
     
     return {
-      passed: errors.length === 0,
+      passed: criticalIssues.length === 0 && errors.length === 0,
       checks,
       suggestions,
-      shouldRegenerate: errors.length > 0,
+      shouldRegenerate: criticalIssues.length > 0,
+      hasCriticalIssues: criticalIssues.length > 0,
+      hasErrorIssues: errors.length > 0,
     };
   }
   
@@ -691,4 +741,78 @@ export function validateConstitutionalResponse(
   context: ConstitutionalContext
 ): ValidationResult {
   return getConstitutionalWrapper().validateResponse(response, context);
+}
+
+/**
+ * Convert constitutional validation results to standard Violation format
+ * for integration with the Trust Score system
+ */
+export function convertToViolations(validationResult: ValidationResult): Array<{
+  severity: 'error' | 'warning' | 'info';
+  rule: string;
+  text: string;
+  suggestion: string;
+  category: string;
+  autoFixable: boolean;
+}> {
+  const violations: Array<{
+    severity: 'error' | 'warning' | 'info';
+    rule: string;
+    text: string;
+    suggestion: string;
+    category: string;
+    autoFixable: boolean;
+  }> = [];
+
+  for (const check of validationResult.checks) {
+    if (!check.passed) {
+      // Map 'critical' severity to 'error' for standard Violation type
+      const mappedSeverity: 'error' | 'warning' | 'info' = 
+        check.severity === 'critical' ? 'error' : check.severity;
+      
+      violations.push({
+        severity: mappedSeverity,
+        rule: check.name,
+        text: check.matchedText || check.message || check.name,
+        suggestion: validationResult.suggestions.find(s => 
+          s.toLowerCase().includes(check.name.replace(/_/g, ' ').toLowerCase())
+        ) || getDefaultSuggestion(check.name),
+        category: 'constitutional',
+        autoFixable: isAutoFixable(check.name),
+      });
+    }
+  }
+
+  return violations;
+}
+
+/**
+ * Get default suggestion based on check name
+ */
+function getDefaultSuggestion(checkName: string): string {
+  const suggestions: Record<string, string> = {
+    'forbidden_phrase_critical': 'Remove the phrase that claims human identity or experiences',
+    'forbidden_phrase': 'Rephrase using supportive, non-demanding language',
+    'safety_disclaimer_critical': 'Add emergency resources (helpline numbers, professional referral)',
+    'safety_disclaimer': 'Add appropriate professional referral or disclaimer',
+    'emotion_tone': 'Adjust tone to match user emotional state',
+    'pattern_acknowledge': 'Start by acknowledging the user request or concern',
+    'pattern_next_step': 'End with a clear next step or offer for further help',
+    'response_length_min': 'Add more detail or explanation',
+    'response_length_max': 'Be more concise',
+  };
+  return suggestions[checkName] || 'Review and revise this content';
+}
+
+/**
+ * Check if a violation type is auto-fixable
+ */
+function isAutoFixable(checkName: string): boolean {
+  // These violations can potentially be auto-fixed by replacing text
+  const autoFixableChecks = [
+    'forbidden_phrase',
+    'forbidden_phrase_critical',
+    'response_length_max',
+  ];
+  return autoFixableChecks.includes(checkName);
 }

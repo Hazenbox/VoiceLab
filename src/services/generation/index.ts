@@ -11,7 +11,9 @@ export {
   getConstitutionalWrapper,
   prepareConstitutionalContext,
   validateConstitutionalResponse,
+  convertToViolations,
   type ConstitutionalContext,
   type GenerationRequest,
   type ValidationResult,
+  type ValidationCheck,
 } from './constitutionalWrapper';

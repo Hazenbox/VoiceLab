@@ -24,7 +24,7 @@ export const chatTypography = {
   h6: { fontSize: '12px', lineHeight: 1.4, fontWeight: 500 },  // Body/S
 
   // Body text
-  body: { fontSize: '15px', lineHeight: 1.5, fontWeight: 300 },    // Body/L - BASE (lighter for JioType)
+  body: { fontSize: '15px', lineHeight: 1.5, fontWeight: 400 },    // Body/L - BASE
   bodySm: { fontSize: '14px', lineHeight: 1.5, fontWeight: 400 },  // Body/M
 
   // UI elements

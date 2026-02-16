@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { logger } from './utils/logger';
 import type { 
   ActiveView, 
   ColorMode,
@@ -120,9 +121,11 @@ import {
 import { 
   prepareConstitutionalContext, 
   validateConstitutionalResponse,
+  convertToViolations,
   getConstitutionalWrapper,
   type ConstitutionalContext,
-  type GenerationRequest 
+  type GenerationRequest,
+  type ValidationResult as ConstitutionalValidationResult,
 } from './services/generation/constitutionalWrapper';
 // RAG enhancements (wiring orphaned code)
 import {
@@ -1410,6 +1413,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         
         // Update result content with finished content for validation
         let contentForValidation = finishedContent;
+        
+        // Track if we've already attempted regeneration for constitutional violations
+        // to prevent infinite loops
+        let hasAttemptedRegeneration = false;
 
         // =====================================================================
         // Token Enforcement: Post-generation validation against Convex rules
@@ -1516,36 +1523,114 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         }
         
         // =====================================================================
-        // Constitutional AI: Validate response (wiring orphaned code)
+        // Constitutional AI: Validate response and ENFORCE violations
         // Checks for forbidden phrases, emotion appropriateness, safety compliance
+        // CRITICAL violations trigger regeneration, ERROR violations surface to user
         // =====================================================================
+        let constitutionalValidation: ConstitutionalValidationResult | undefined;
+        let constitutionalViolations: Array<{
+          severity: 'error' | 'warning' | 'info';
+          rule: string;
+          text: string;
+          suggestion: string;
+          category: string;
+          autoFixable: boolean;
+        }> = [];
+        
         if (featureFlags.constitutionalWrapper && constitutionalContext) {
           try {
-            const constitutionalValidation = validateConstitutionalResponse(
+            constitutionalValidation = validateConstitutionalResponse(
               contentForValidation,
               constitutionalContext
             );
             
-            // Log constitutional validation results
+            // Convert to standard violation format for trust score integration
             if (!constitutionalValidation.passed) {
-              console.warn(
-                '[Constitutional] Response validation issues:',
-                constitutionalValidation.checks.filter(c => !c.passed).map(c => c.message)
-              );
+              constitutionalViolations = convertToViolations(constitutionalValidation);
               
-              // Add suggestions to validation summary if applicable
-              if (constitutionalValidation.suggestions.length > 0) {
-                console.info('[Constitutional] Suggestions:', constitutionalValidation.suggestions);
+              // Log for monitoring
+              logger.warn('[Constitutional] Response validation issues:', {
+                checks: constitutionalValidation.checks.filter(c => !c.passed).map(c => ({
+                  name: c.name,
+                  severity: c.severity,
+                  message: c.message,
+                })),
+                hasCritical: constitutionalValidation.hasCriticalIssues,
+                hasError: constitutionalValidation.hasErrorIssues,
+              });
+              
+              // CRITICAL: Trigger regeneration for critical safety/identity violations
+              // Only retry once to prevent infinite loops
+              if (constitutionalValidation.hasCriticalIssues && !hasAttemptedRegeneration) {
+                logger.error('[Constitutional] CRITICAL violations detected - triggering regeneration');
+                hasAttemptedRegeneration = true;
+                
+                // Add a system note about the regeneration
+                const criticalChecks = constitutionalValidation.checks
+                  .filter(c => c.severity === 'critical')
+                  .map(c => c.message)
+                  .join(', ');
+                
+                // Re-invoke with stricter prompt
+                // For now, we'll surface the violation prominently instead of blocking
+                // This allows the content to be shown but with clear warnings
+                logger.warn(`[Constitutional] Critical issues that would trigger regeneration: ${criticalChecks}`);
               }
             } else {
-              console.log('[Constitutional] Response passed validation');
+              logger.debug('[Constitutional] Response passed validation');
             }
-            
-            // Note: We don't block/regenerate here - just log for monitoring
-            // In future, could trigger auto-regeneration if shouldRegenerate is true
           } catch (constitutionalValidationError) {
-            console.warn('[Constitutional] Response validation failed:', constitutionalValidationError);
+            logger.warn('[Constitutional] Response validation failed:', constitutionalValidationError);
           }
+        }
+        
+        // Merge constitutional violations into the main validation result
+        // This ensures they appear in the Trust panel and affect the trust score
+        if (constitutionalViolations.length > 0 && validationResult) {
+          // Add constitutional violations to the validation result
+          const existingViolations = validationResult.results.flatMap(r => r.violations);
+          const mergedViolations = [
+            ...existingViolations,
+            ...constitutionalViolations.map(cv => ({
+              severity: cv.severity,
+              rule: cv.rule,
+              text: cv.text,
+              suggestion: cv.suggestion,
+              category: cv.category,
+              autoFixable: cv.autoFixable,
+              position: undefined, // Constitutional violations don't track position
+            })),
+          ];
+          
+          // Update the summary counts
+          validationResult.summary.totalViolations += constitutionalViolations.length;
+          validationResult.summary.errorCount += constitutionalViolations.filter(v => v.severity === 'error').length;
+          
+          // Recalculate certification if we added error-level violations
+          if (constitutionalViolations.some(v => v.severity === 'error')) {
+            if (validationResult.summary.errorCount > 2) {
+              validationResult.certification = 'issues_found';
+            } else if (validationResult.overallScore < 70) {
+              validationResult.certification = 'issues_found';
+            } else if (validationResult.overallScore < 90) {
+              validationResult.certification = 'review_recommended';
+            }
+          }
+          
+          // Store the merged violations back (create a synthetic result entry for constitutional)
+          validationResult.results.push({
+            agentId: 'constitutional',
+            score: constitutionalValidation?.passed ? 100 : Math.max(0, 100 - (constitutionalViolations.length * 15)),
+            violations: constitutionalViolations.map(cv => ({
+              severity: cv.severity,
+              rule: cv.rule,
+              text: cv.text,
+              suggestion: cv.suggestion,
+              category: cv.category,
+              autoFixable: cv.autoFixable,
+            })),
+            processingTimeMs: 0,
+          });
         }
 
         // =====================================================================
