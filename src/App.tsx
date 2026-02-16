@@ -23,7 +23,6 @@ import {
   ChatPanel,
   ErrorBoundary,
   ModelSelector,
-  DesignSystemLibrary,
   HowItWorksPage,
   AIOrb,
   DSIcon,
@@ -2976,8 +2975,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       >
         <ProjectSidebar 
           onProjectSelect={() => setActiveView('main')}
-          onNavigateToDesignSystem={() => setActiveView('design-system')}
-          isDesignSystemActive={false}
           onNavigateToHowItWorks={() => setActiveView('how-it-works')}
           isHowItWorksActive={false}
           colorMode={colorMode}
@@ -3021,22 +3018,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           disabled={appState !== AppState.IDLE}
           isCollapsed={isConfigPanelCollapsed}
           onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
-          onShowDesignSystem={() => setActiveView('design-system')}
-        />
-      </div>
-    );
-  }
-
-  // Render design system library view
-  if (activeView === 'design-system') {
-    return (
-      <div 
-        className="flex h-screen"
-        style={{ backgroundColor: theme.background.ghost }}
-      >
-        <DesignSystemLibrary 
-          onBack={() => setActiveView('main')} 
-          colorMode={colorMode}
         />
       </div>
     );
@@ -3051,8 +3032,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       >
         <ProjectSidebar 
           onProjectSelect={() => setActiveView('main')}
-          onNavigateToDesignSystem={() => setActiveView('design-system')}
-          isDesignSystemActive={false}
           onNavigateToHowItWorks={() => setActiveView('how-it-works')}
           isHowItWorksActive={true}
           colorMode={colorMode}
@@ -3079,8 +3058,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       {/* Left Sidebar - Projects */}
       <ProjectSidebar 
         onProjectSelect={() => setActiveView('main')}
-        onNavigateToDesignSystem={() => setActiveView('design-system')}
-        isDesignSystemActive={false}
         onNavigateToHowItWorks={() => setActiveView('how-it-works')}
         isHowItWorksActive={false}
         colorMode={colorMode}
@@ -3278,7 +3255,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         disabled={appState !== AppState.IDLE && chatMode === 'voice'}
         isCollapsed={isConfigPanelCollapsed}
         onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
-        onShowDesignSystem={() => setActiveView('design-system')}
       />
 
       {/* Trust Context Panel - Slide-out */}

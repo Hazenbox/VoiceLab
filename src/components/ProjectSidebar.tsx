@@ -35,8 +35,6 @@ function formatRole(role?: string): string {
 
 interface ProjectSidebarProps {
   onProjectSelect?: () => void;
-  onNavigateToDesignSystem?: () => void;
-  isDesignSystemActive?: boolean;
   onNavigateToHowItWorks?: () => void;
   isHowItWorksActive?: boolean;
   colorMode: ColorMode;
@@ -177,8 +175,6 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
  */
 export const ProjectSidebar = memo(function ProjectSidebar({ 
   onProjectSelect,
-  onNavigateToDesignSystem,
-  isDesignSystemActive: _isDesignSystemActive = false,
   onNavigateToHowItWorks,
   isHowItWorksActive = false,
   colorMode,
@@ -187,8 +183,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   userRole,
   onEditProfile,
 }: ProjectSidebarProps) {
-  // Note: _isDesignSystemActive is available but not currently used
-  void _isDesignSystemActive;
+  void isHowItWorksActive; // Available for future use
   const theme = useThemeColors();
   const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
   
@@ -257,11 +252,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       label: 'Edit Profile',
       icon: <DSIcon name="IcUser" size="S" attention="high" appearance="neutral" />,
     },
-    ...(onNavigateToDesignSystem ? [{
-      value: 'design-system',
-      label: 'Design System',
-      icon: <DSIcon name="IcLayout" size="S" attention="high" appearance="neutral" />,
-    }] : []),
     ...(onNavigateToHowItWorks ? [{
       value: 'how-it-works',
       label: 'How it Works',
@@ -282,9 +272,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       case 'edit-profile':
         onEditProfile?.();
         break;
-      case 'design-system':
-        onNavigateToDesignSystem?.();
-        break;
       case 'how-it-works':
         onNavigateToHowItWorks?.();
         break;
@@ -293,7 +280,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         break;
     }
     setIsUserMenuOpen(false);
-  }, [onEditProfile, onNavigateToDesignSystem, onNavigateToHowItWorks, onColorModeChange, colorMode]);
+  }, [onEditProfile, onNavigateToHowItWorks, onColorModeChange, colorMode]);
 
   return (
     <SidebarContainer>

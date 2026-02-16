@@ -517,16 +517,13 @@ export interface AppError {
 }
 
 // Active view type
-export type ActiveView = 'main' | 'docs' | 'design-system' | 'how-it-works';
+export type ActiveView = 'main' | 'docs' | 'how-it-works';
 
 // Active tab type
 export type ActiveTab = 'tts' | 'talk' | 'copy';
 
 // Color mode
 export type ColorMode = 'Light' | 'Dark';
-
-// Design system type
-export type DesignSystem = 'jio' | 'tailwind';
 
 // Documentation section
 export interface DocSection {
@@ -740,34 +737,6 @@ export interface InworldConfig {
   apiKey: string;
   character: string;
   workspaceId?: string;
-}
-
-// Design System Library Types
-export type DesignSystemCategory = 'variables' | 'components' | 'patterns' | 'guidelines' | 'densities';
-
-export type DesignSystemItemType = 'token' | 'component' | 'pattern' | 'guideline' | 'density';
-
-export interface DesignSystemNavItem {
-  id: string;
-  label: string;
-  type: DesignSystemItemType;
-  category: DesignSystemCategory;
-  children?: DesignSystemNavItem[];
-}
-
-export interface TokenInfo {
-  name: string;
-  value: string;
-  cssValue?: string;
-  context?: Record<string, string>;
-}
-
-export interface ComponentInfo {
-  name: string;
-  platform: 'react' | 'native';
-  code?: string;
-  description?: string;
-  props?: Record<string, unknown>;
 }
 
 // =============================================================================

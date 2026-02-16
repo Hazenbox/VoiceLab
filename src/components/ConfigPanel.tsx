@@ -17,7 +17,6 @@ interface ConfigPanelProps {
   colorMode: ColorMode;
   onColorModeChange: (mode: ColorMode) => void;
   onShowDocs: () => void;
-  onShowDesignSystem?: () => void;
   disabled?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
@@ -35,14 +34,12 @@ export const ConfigPanel = memo(function ConfigPanel({
   colorMode: _colorMode, // Prefix with _ to indicate intentionally unused
   onColorModeChange: _onColorModeChange, // Prefix with _ to indicate intentionally unused
   onShowDocs: _onShowDocs, // Prefix with _ to indicate intentionally unused
-  onShowDesignSystem: _onShowDesignSystem, // Prefix with _ to indicate intentionally unused
   disabled = false,
   isCollapsed = false,
   onToggleCollapse,
 }: ConfigPanelProps) {
   // Theme colors from DS tokens
   const theme = useThemeColors();
-  // Design system toggle removed - moved to navigation
   
   // Helper to update nested config
   const updatePersona = useCallback((key: string, value: unknown) => {

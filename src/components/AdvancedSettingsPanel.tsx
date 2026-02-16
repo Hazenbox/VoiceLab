@@ -80,7 +80,6 @@ interface AdvancedSettingsPanelProps {
   disabled?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
-  onShowDesignSystem?: () => void;
 }
 
 // Inline components removed - now using dedicated Slider and Toggle components
@@ -128,10 +127,8 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
   disabled = false,
   isCollapsed = false,
   onToggleCollapse,
-  onShowDesignSystem: _onShowDesignSystem, // Prefix with _ to indicate intentionally unused
 }: AdvancedSettingsPanelProps) {
   const theme = useThemeColors();
-  // Design system toggle removed - moved to navigation
   
   // Get options
   const ecosystemOptions = getEcosystemOptions().map(o => ({ value: o.value, label: o.label }));
