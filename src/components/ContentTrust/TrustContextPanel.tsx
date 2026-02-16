@@ -23,7 +23,7 @@ import { getContextSummary } from '../../services/context';
 import { Accordion } from '../ui/Accordion';
 import { Badge } from '../ui/Badge';
 import { DSIcon } from '../DSIcon';
-import { Title, Tabs, TabList, Tab, Label, Text } from '@marcelinodzn/ds-react';
+import { Title, Tabs, TabList, Tab, Label, Text, Chip } from '@marcelinodzn/ds-react';
 
 interface TrustContextPanelProps {
   isOpen: boolean;
@@ -345,46 +345,91 @@ const ComplianceJustificationSection: React.FC<{
 // =============================================================================
 
 /**
+ * Evidence Flow Step Item - A single row in a workflow step
+ */
+interface EvidenceFlowStepItem {
+  label: string;
+  value: string | number;
+  /** Optional inline tags to display below the item */
+  tags?: string[];
+}
+
+/**
  * Evidence Flow Step - Visual workflow step showing what was applied
+ * Uses pure DS components and inline styles (no Tailwind)
  */
 const EvidenceFlowStep: React.FC<{
   icon: string;
   title: string;
-  items: Array<{ label: string; value: string | number }>;
+  stepNumber: number;
+  items: EvidenceFlowStepItem[];
   isLast?: boolean;
-}> = ({ icon, title, items, isLast = false }) => {
+}> = ({ icon, title, stepNumber, items, isLast = false }) => {
   const theme = useThemeColors();
   
   return (
-    <div className="relative">
-      {/* Connector line */}
+    <div style={{ position: 'relative' }}>
+      {/* Connector line to next step */}
       {!isLast && (
         <div 
-          className="absolute left-5 top-12 w-0.5 h-6"
-          style={{ backgroundColor: theme.stroke.medium }}
+          style={{ 
+            position: 'absolute',
+            left: '19px',
+            top: '40px',
+            width: '2px',
+            height: '24px',
+            backgroundColor: theme.stroke.medium,
+          }}
         />
       )}
       
       {/* Step content */}
       <div 
-        className="p-3 rounded-lg"
-        style={{ backgroundColor: theme.stroke.low }}
+        style={{ 
+          backgroundColor: theme.stroke.low,
+          borderRadius: '12px',
+          padding: '12px',
+        }}
       >
-        <div className="flex items-center gap-2 mb-2">
+        {/* Step header with icon and title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
           <div 
-            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
+            style={{ 
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              backgroundColor: theme.background.ghost,
+              border: `1px solid ${theme.stroke.medium}`,
+            }}
           >
             <DSIcon name={icon as 'IcDatabase' | 'IcLightbulb' | 'IcStar'} size="S" attention="medium" />
           </div>
-          <Label size="S" weight="high" color="high">{title}</Label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Label size="XS" weight="medium" color="low">Step {stepNumber}</Label>
+            <Label size="S" weight="high" color="high">{title}</Label>
+          </div>
         </div>
         
-        <div className="ml-12 space-y-1">
+        {/* Items list */}
+        <div style={{ marginLeft: '50px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {items.map((item, i) => (
-            <div key={i} className="flex items-center justify-between">
-              <Text size="XS" color="low">{item.label}</Text>
-              <Text size="XS" color="high" style={{ fontWeight: 500 }}>{item.value}</Text>
+            <div key={i}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text size="XS" color="low">{item.label}</Text>
+                <Text size="XS" color="high" style={{ fontWeight: 500 }}>{item.value}</Text>
+              </div>
+              {/* Inline tags */}
+              {item.tags && item.tags.length > 0 && (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+                  {item.tags.map((tag, idx) => (
+                    <Chip key={idx} size="S" appearance="neutral">{tag}</Chip>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -395,6 +440,7 @@ const EvidenceFlowStep: React.FC<{
 
 /**
  * Evidence Section - Main evidence display with workflow visualization
+ * Uses pure DS components and inline styles (no Tailwind)
  */
 const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence }) => {
   const theme = useThemeColors();
@@ -411,12 +457,18 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
   
   const totalInfluences = (hasKnowledge ? 1 : 0) + (hasLearnings ? 1 : 0) + (hasAutoFixes ? 1 : 0);
   
+  // Calculate step numbers dynamically
+  let stepNumber = 0;
+  
   return (
-    <div className="space-y-4">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Summary Header */}
       <div 
-        className="p-3 rounded-lg"
-        style={{ backgroundColor: `${SEMANTIC_COLORS.positive}1A` }}
+        style={{ 
+          backgroundColor: `${SEMANTIC_COLORS.positive}1A`,
+          borderRadius: '12px',
+          padding: '12px',
+        }}
       >
         <Label size="S" weight="high" color="high" style={{ color: SEMANTIC_COLORS.positive }}>
           {totalInfluences} influence{totalInfluences !== 1 ? 's' : ''} shaped this response
@@ -431,11 +483,18 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
         <EvidenceFlowStep
           icon="IcDatabase"
           title="knowledge base"
+          stepNumber={++stepNumber}
           items={[
-            { label: 'avoid words matched', value: evidence.knowledgeUsed.avoidWordsMatched.length },
+            { 
+              label: 'avoid words matched', 
+              value: evidence.knowledgeUsed.avoidWordsMatched.length,
+              tags: evidence.knowledgeUsed.avoidWordsMatched.length > 0 
+                ? evidence.knowledgeUsed.avoidWordsMatched.slice(0, 5) 
+                : undefined,
+            },
             { label: 'preferred terms available', value: evidence.knowledgeUsed.preferredWordsUsed.length },
             { label: 'auto-fix rules', value: evidence.knowledgeUsed.autoFixRulesCount },
-            { label: 'source', value: evidence.knowledgeUsed.source.replace('_', ' ') },
+            { label: 'source', value: evidence.knowledgeUsed.source.replace(/_/g, ' ') },
           ]}
           isLast={!hasLearnings && !hasAutoFixes}
         />
@@ -446,10 +505,23 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
         <EvidenceFlowStep
           icon="IcLightbulb"
           title="learnings applied"
+          stepNumber={++stepNumber}
           items={[
             { label: 'correction pairs', value: evidence.learningsApplied.correctionsCount },
-            { label: 'avoid patterns', value: evidence.learningsApplied.avoidPatterns.length },
-            { label: 'style preferences', value: evidence.learningsApplied.stylePreferences.length },
+            { 
+              label: 'avoid patterns', 
+              value: evidence.learningsApplied.avoidPatterns.length,
+              tags: evidence.learningsApplied.avoidPatterns.length > 0 
+                ? evidence.learningsApplied.avoidPatterns.slice(0, 5) 
+                : undefined,
+            },
+            { 
+              label: 'style preferences', 
+              value: evidence.learningsApplied.stylePreferences.length,
+              tags: evidence.learningsApplied.stylePreferences.length > 0 
+                ? evidence.learningsApplied.stylePreferences.slice(0, 3) 
+                : undefined,
+            },
           ]}
           isLast={!hasAutoFixes}
         />
@@ -460,59 +532,45 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
         <EvidenceFlowStep
           icon="IcStar"
           title="auto-fixes applied"
+          stepNumber={++stepNumber}
           items={[
             { label: 'total replacements', value: evidence.autoFixes.totalCount },
             ...evidence.autoFixes.applied.slice(0, 3).map(fix => ({
               label: `"${fix.from}"`,
-              value: `"${fix.to}"`,
+              value: `→ "${fix.to}"`,
             })),
           ]}
           isLast={true}
         />
       )}
       
-      {/* Detailed Lists (Collapsible) */}
-      {evidence.knowledgeUsed.avoidWordsMatched.length > 0 && (
-        <Accordion title="avoid words detected" defaultOpen={false} badge={evidence.knowledgeUsed.avoidWordsMatched.length} variant="card">
-          <div className="flex flex-wrap gap-1.5">
-            {evidence.knowledgeUsed.avoidWordsMatched.map((word, i) => (
-              <Badge key={i} variant="negative">{word}</Badge>
-            ))}
-          </div>
-        </Accordion>
-      )}
-      
-      {evidence.learningsApplied.avoidPatterns.length > 0 && (
-        <Accordion title="learned avoid patterns" defaultOpen={false} badge={evidence.learningsApplied.avoidPatterns.length} variant="card">
-          <div className="flex flex-wrap gap-1.5">
-            {evidence.learningsApplied.avoidPatterns.map((pattern, i) => (
-              <Badge key={i} variant="warning">{pattern}</Badge>
-            ))}
-          </div>
-        </Accordion>
-      )}
-      
-      {evidence.learningsApplied.stylePreferences.length > 0 && (
-        <Accordion title="style preferences" defaultOpen={false} badge={evidence.learningsApplied.stylePreferences.length} variant="card">
-          <div className="space-y-1.5">
-            {evidence.learningsApplied.stylePreferences.map((pref, i) => (
-              <Text key={i} size="XS" color="medium">"{pref}"</Text>
-            ))}
-          </div>
-        </Accordion>
-      )}
-      
       {/* No Evidence State */}
       {!hasKnowledge && !hasLearnings && !hasAutoFixes && (
-        <div className="text-center py-8">
+        <div 
+          style={{ 
+            textAlign: 'center', 
+            paddingTop: '32px', 
+            paddingBottom: '32px',
+          }}
+        >
           <div 
-            className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
-            style={{ backgroundColor: theme.stroke.low }}
+            style={{ 
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              margin: '0 auto 12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: theme.stroke.low,
+            }}
           >
             <DSIcon name="IcInfo" size="M" attention="low" />
           </div>
           <Text size="S" color="medium">No specific rules or learnings were applied</Text>
-          <Text size="XS" color="low">This response used default generation settings</Text>
+          <div style={{ marginTop: '4px' }}>
+            <Text size="XS" color="low">This response used default generation settings</Text>
+          </div>
         </div>
       )}
     </div>
