@@ -968,12 +968,12 @@ function AdminLearningCenter() {
 
         <AdminTable
           columns={[
-            { key: 'type', label: 'type' },
-            { key: 'original', label: 'original content' },
-            { key: 'edited', label: 'edited / comment' },
-            { key: 'eco', label: 'ecosystem' },
-            { key: 'channel', label: 'channel' },
-            { key: 'time', label: 'time' },
+            { key: 'type', label: 'Type' },
+            { key: 'original', label: 'Original content' },
+            { key: 'edited', label: 'Edited / comment' },
+            { key: 'eco', label: 'Ecosystem' },
+            { key: 'channel', label: 'Channel' },
+            { key: 'time', label: 'Time' },
           ]}
           isEmpty={(feedbackTypeFilter === 'all' ? corrections : corrections.filter(c => c.feedbackType === feedbackTypeFilter)).length === 0}
           emptyMessage="No feedback recorded yet."

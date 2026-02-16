@@ -354,11 +354,11 @@ export function CorrectionApprovalList({ deviceId, feedbackCounts }: CorrectionA
       {/* Corrections Table */}
       <AdminTable
         columns={[
-          { key: 'type', label: 'type' },
-          { key: 'content', label: 'content' },
-          { key: 'context', label: 'context' },
-          { key: 'status', label: 'status' },
-          { key: 'time', label: 'time' },
+          { key: 'type', label: 'Type' },
+          { key: 'content', label: 'Content' },
+          { key: 'context', label: 'Context' },
+          { key: 'status', label: 'Status' },
+          { key: 'time', label: 'Time' },
           { key: 'action', label: '' },
         ]}
         isEmpty={filteredCorrections.length === 0}
