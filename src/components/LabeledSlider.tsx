@@ -3,9 +3,9 @@ import { useThemeColors } from '../theme';
 import { Label } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
-/** Slider track colors -- keep in sync with Slider */
-const TRACK_ACTIVE_LIGHT = '#fa7d19';
-const TRACK_ACTIVE_DARK = '#ea580c';
+/** Slider track colors -- matches DS Switch component color */
+const TRACK_ACTIVE_LIGHT = '#f7ab21';
+const TRACK_ACTIVE_DARK = '#f7ab21';
 
 interface LabeledSliderProps {
   label: string;
