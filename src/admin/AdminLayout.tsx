@@ -466,116 +466,166 @@ function AdminDashboard() {
       <PageHeader title="Dashboard" description="System health and value delivery — last 24 hours" />
 
       {/* Overview Section */}
-      <CardLabel>Overview</CardLabel>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="total generations"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: String(dashboardStats.totalGenerations ?? 0),
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
-        </div>
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="avg trust score"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
-        </div>
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="content copied"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: String(dashboardStats.copyCount ?? 0),
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
-        </div>
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="learnings applied"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: String(learningStats.totalPatternsApplied ?? 0),
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
+      <div 
+        className="rounded-xl mb-5"
+        style={{ 
+          border: `1px solid ${theme.stroke.medium}`,
+          padding: '16px',
+        }}
+      >
+        <h2 
+          style={{ 
+            fontWeight: 800, 
+            lineHeight: 1, 
+            fontFamily: 'JioType Var', 
+            color: theme.text.high, 
+            margin: 0,
+            paddingBottom: '16px',
+            fontSize: '14px',
+          }}
+        >
+          Overview
+        </h2>
+        <div 
+          className="flex flex-col lg:flex-row"
+          style={{ 
+            borderTop: `1px solid ${theme.stroke.medium}`,
+          }}
+        >
+          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium }}>
+            <DataCard 
+              title="total generations"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: String(dashboardStats.totalGenerations ?? 0),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
+          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium }}>
+            <DataCard 
+              title="avg trust score"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
+          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium }}>
+            <DataCard 
+              title="content copied"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: String(dashboardStats.copyCount ?? 0),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
+          <div className="flex-1">
+            <DataCard 
+              title="learnings applied"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: String(learningStats.totalPatternsApplied ?? 0),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Content Quality Section */}
-      <CardLabel>Content quality</CardLabel>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="regeneration rate"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: `${dashboardStats.regenerationRate}%`,
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
-        </div>
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="completion rate"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: `${completionRate}%`,
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
-        </div>
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="regenerations"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: String(dashboardStats.regenerationCount),
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
-        </div>
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="errors"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: String(dashboardStats.errorCount),
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
+      <div 
+        className="rounded-xl mb-5"
+        style={{ 
+          border: `1px solid ${theme.stroke.medium}`,
+          padding: '16px',
+        }}
+      >
+        <h2 
+          style={{ 
+            fontWeight: 800, 
+            lineHeight: 1, 
+            fontFamily: 'JioType Var', 
+            color: theme.text.high, 
+            margin: 0,
+            paddingBottom: '16px',
+            fontSize: '14px',
+          }}
+        >
+          Content quality
+        </h2>
+        <div 
+          className="flex flex-col lg:flex-row"
+          style={{ 
+            borderTop: `1px solid ${theme.stroke.medium}`,
+          }}
+        >
+          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium }}>
+            <DataCard 
+              title="regeneration rate"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: `${dashboardStats.regenerationRate}%`,
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
+          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium }}>
+            <DataCard 
+              title="completion rate"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: `${completionRate}%`,
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
+          <div className="flex-1 lg:border-r" style={{ borderColor: theme.stroke.medium }}>
+            <DataCard 
+              title="regenerations"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: String(dashboardStats.regenerationCount),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
+          <div className="flex-1">
+            <DataCard 
+              title="errors"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: String(dashboardStats.errorCount),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
         </div>
       </div>
 
