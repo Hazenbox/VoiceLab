@@ -14,24 +14,44 @@ export const featureFlags = {
     return true;  // Always enabled for production
   },
 
-  /** Role-based persona auto-configuration (channel, warmth, prompt personality) */
+  /** 
+   * Role-based persona auto-configuration (channel, warmth, prompt personality)
+   * Default: true (core intelligence feature, opt-out)
+   * Set VITE_ENABLE_PERSONA=false to disable
+   */
   get persona(): boolean {
-    return import.meta.env.VITE_ENABLE_PERSONA === 'true';
+    const env = import.meta.env.VITE_ENABLE_PERSONA;
+    return env !== 'false';
   },
 
-  /** Dynamic knowledge retrieval from Convex (avoid words, vocabulary, auto-fix) */
+  /** 
+   * Dynamic knowledge retrieval from Convex (avoid words, vocabulary, auto-fix)
+   * Default: true (core intelligence feature, opt-out)
+   * Set VITE_ENABLE_KNOWLEDGE_BASE=false to disable
+   */
   get knowledgeBase(): boolean {
-    return import.meta.env.VITE_ENABLE_KNOWLEDGE_BASE === 'true';
+    const env = import.meta.env.VITE_ENABLE_KNOWLEDGE_BASE;
+    return env !== 'false';
   },
 
-  /** Learning from user feedback (edits, thumbs down, comments injected into prompt) */
+  /** 
+   * Learning from user feedback (edits, thumbs down, comments injected into prompt)
+   * Default: true (core intelligence feature, opt-out)
+   * Set VITE_ENABLE_LEARNING=false to disable
+   */
   get learning(): boolean {
-    return import.meta.env.VITE_ENABLE_LEARNING === 'true';
+    const env = import.meta.env.VITE_ENABLE_LEARNING;
+    return env !== 'false';
   },
 
-  /** Conversational-first mode: general-purpose assistant with conditional Jio guardrails */
+  /** 
+   * Conversational-first mode: general-purpose assistant with conditional Jio guardrails
+   * Default: true (core intelligence feature, opt-out)
+   * Set VITE_ENABLE_CONVERSATIONAL_MODE=false to disable
+   */
   get conversationalMode(): boolean {
-    return import.meta.env.VITE_ENABLE_CONVERSATIONAL_MODE === 'true';
+    const env = import.meta.env.VITE_ENABLE_CONVERSATIONAL_MODE;
+    return env !== 'false';
   },
 
   // ── Analytics Feature Flags ──────────────────────────────────────────
