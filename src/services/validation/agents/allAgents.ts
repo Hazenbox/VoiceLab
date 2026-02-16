@@ -344,6 +344,30 @@ const BRAND_PATTERNS: PatternRule[] = [
   // Shame-inducing words (Training 1.pdf)
   { id: 'ba-017', pattern: /\b(you forgot|you missed|you failed to)\b/gi, severity: 'warning', rule: 'Avoid blame language', suggestion: 'Here\'s a reminder, Still time to', category: 'shame' },
   { id: 'ba-018', pattern: /\b(your fault|your mistake)\b/gi, severity: 'error', rule: 'Never blame the user', suggestion: 'Something went wrong, let us help', category: 'shame' },
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Phase 2.2: Plan Naming Validation (PDF: Plan + Price format)
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Flag tier-based naming (Bronze/Silver/Gold/Platinum)
+  // Jio uses "Plan + Price" format, not tiered names
+  { id: 'ba-019', pattern: /\b(bronze|silver|gold|platinum|diamond)\s+(plan|package|tier|subscription)\b/gi, severity: 'error', rule: 'Use "Plan + Price" naming (e.g., ₹199 Plan)', suggestion: 'Replace with price-based name: ₹XXX Plan', category: 'plan_naming' },
+  
+  // Flag "Pack" terminology - Jio uses "Plan" not "Pack"
+  { id: 'ba-020', pattern: /\b(data|recharge|combo|value|super|mega)\s+pack\b/gi, severity: 'error', rule: 'Use "Plan" not "Pack" for Jio products', suggestion: 'Replace "Pack" with "Plan"', category: 'plan_naming' },
+  
+  // Flag generic "Pack" references that should be "Plan"
+  { id: 'ba-021', pattern: /\bpack\b(?!\s*(of|up|age|ing|ed|s\s+of))/gi, severity: 'warning', rule: 'Use "Plan" terminology for Jio offerings', suggestion: 'Consider using "Plan" instead of "Pack"', category: 'plan_naming' },
+  
+  // Flag plan references without price context (info level as sometimes acceptable)
+  // Pattern: "our plan" or "this plan" without ₹ nearby
+  { id: 'ba-022', pattern: /\b(this|our|the|your)\s+plan\b(?!.*₹\d)/gi, severity: 'info', rule: 'Include price when mentioning plans', suggestion: 'Add price for clarity: "₹XXX Plan"', category: 'plan_naming' },
+  
+  // Flag "unlimited" claims without qualification
+  { id: 'ba-023', pattern: /\bunlimited\s+(data|calls?|sms|minutes?)\b(?!\s*\*)/gi, severity: 'warning', rule: 'Qualify unlimited claims with FUP/T&C reference', suggestion: 'Add asterisk and refer to T&C', category: 'plan_naming' },
+  
+  // Flag old-style plan naming (like "Jio Prime", "Jio Plus")
+  { id: 'ba-024', pattern: /\bjio\s+(prime|plus|pro|max|ultra|super)\b(?!\s*(cinema|fiber|mart|tv))/gi, severity: 'warning', rule: 'Use current plan naming conventions', suggestion: 'Use ₹XXX Plan format', category: 'plan_naming' },
 ];
 
 export const brandAlignmentAgent: ValidationAgent = {
