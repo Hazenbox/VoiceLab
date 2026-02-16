@@ -433,7 +433,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
             <Tabs 
               selectedKey={activeTab} 
               onSelectionChange={(key) => setActiveTab(key as 'score' | 'context' | 'violations')}
-              size="M"
+              size="S"
             >
               <TabList>
                 <Tab id="score">Score</Tab>
