@@ -443,7 +443,7 @@ function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
         <DataCard 
           title="total generations"
-          fillEmphasis="Minimal"
+          fillEmphasis="Ghost"
           dataHead={{
             leadValue: String(dashboardStats.totalGenerations ?? 0),
             showDataSupporting: false,
@@ -453,7 +453,7 @@ function AdminDashboard() {
         />
         <DataCard 
           title="avg trust score"
-          fillEmphasis="Minimal"
+          fillEmphasis="Ghost"
           dataHead={{
             leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
             showDataSupporting: false,
@@ -463,7 +463,7 @@ function AdminDashboard() {
         />
         <DataCard 
           title="content copied"
-          fillEmphasis="Minimal"
+          fillEmphasis="Ghost"
           dataHead={{
             leadValue: String(dashboardStats.copyCount ?? 0),
             showDataSupporting: false,
@@ -473,7 +473,7 @@ function AdminDashboard() {
         />
         <DataCard 
           title="learnings applied"
-          fillEmphasis="Minimal"
+          fillEmphasis="Ghost"
           dataHead={{
             leadValue: String(learningStats.totalPatternsApplied ?? 0),
             showDataSupporting: false,
