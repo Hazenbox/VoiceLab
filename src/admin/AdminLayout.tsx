@@ -441,46 +441,54 @@ function AdminDashboard() {
 
       {/* Hero KPIs - 4 cards using DS DataCard */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-5">
-        <DataCard 
-          title="total generations"
-          fillEmphasis="Ghost"
-          dataHead={{
-            leadValue: String(dashboardStats.totalGenerations ?? 0),
-            showDataSupporting: false,
-            showSupportingLabel: false,
-          }}
-          modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-        />
-        <DataCard 
-          title="avg trust score"
-          fillEmphasis="Ghost"
-          dataHead={{
-            leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
-            showDataSupporting: false,
-            showSupportingLabel: false,
-          }}
-          modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-        />
-        <DataCard 
-          title="content copied"
-          fillEmphasis="Ghost"
-          dataHead={{
-            leadValue: String(dashboardStats.copyCount ?? 0),
-            showDataSupporting: false,
-            showSupportingLabel: false,
-          }}
-          modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-        />
-        <DataCard 
-          title="learnings applied"
-          fillEmphasis="Ghost"
-          dataHead={{
-            leadValue: String(learningStats.totalPatternsApplied ?? 0),
-            showDataSupporting: false,
-            showSupportingLabel: false,
-          }}
-          modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-        />
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="total generations"
+            fillEmphasis="Ghost"
+            dataHead={{
+              leadValue: String(dashboardStats.totalGenerations ?? 0),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="avg trust score"
+            fillEmphasis="Ghost"
+            dataHead={{
+              leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="content copied"
+            fillEmphasis="Ghost"
+            dataHead={{
+              leadValue: String(dashboardStats.copyCount ?? 0),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
+        <div className="rounded-lg" style={{ border: `1px solid ${theme.stroke.low}` }}>
+          <DataCard 
+            title="learnings applied"
+            fillEmphasis="Ghost"
+            dataHead={{
+              leadValue: String(learningStats.totalPatternsApplied ?? 0),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+          />
+        </div>
       </div>
 
       {/* Quality & Engagement Row */}
