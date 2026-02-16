@@ -821,37 +821,6 @@ function AdminLearningCenter() {
         </div>
       </div>
 
-      {/* Feedback Distribution */}
-      <AdminCard className="p-4 mb-5">
-        <CardLabel>Feedback distribution</CardLabel>
-        <div className="grid grid-cols-4 gap-4">
-          {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
-            <div 
-              key={type}
-              className="text-center p-3 rounded-lg cursor-pointer transition-all"
-              style={{ 
-                backgroundColor: filter === type ? theme.accent : theme.background.ghost,
-                opacity: filter === type ? 1 : 0.7,
-              }}
-              onClick={() => setFilter(filter === type ? 'all' : type)}
-            >
-              <span 
-                className="block text-2xl font-bold" 
-                style={{ color: filter === type ? '#fff' : theme.text.high }}
-              >
-                {feedbackCounts?.[type] ?? 0}
-              </span>
-              <span 
-                className="text-xs" 
-                style={{ color: filter === type ? '#fff' : theme.text.low }}
-              >
-                {type.replace('_', ' ')}
-              </span>
-            </div>
-          ))}
-        </div>
-      </AdminCard>
-
       {/* Top Avoid Patterns */}
       {learningStats.topAvoidReasons.length > 0 && (
         <AdminCard className="p-4 mb-5">
@@ -916,6 +885,37 @@ function AdminLearningCenter() {
             showing 50 of {filtered.length} items.
           </span>
         )}
+      </AdminCard>
+
+      {/* Feedback Distribution */}
+      <AdminCard className="p-4 mb-5">
+        <CardLabel>Feedback distribution</CardLabel>
+        <div className="grid grid-cols-4 gap-4">
+          {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
+            <div 
+              key={type}
+              className="text-center p-3 rounded-lg cursor-pointer transition-all"
+              style={{ 
+                backgroundColor: filter === type ? theme.accent : theme.background.ghost,
+                opacity: filter === type ? 1 : 0.7,
+              }}
+              onClick={() => setFilter(filter === type ? 'all' : type)}
+            >
+              <span 
+                className="block text-2xl font-bold" 
+                style={{ color: filter === type ? '#fff' : theme.text.high }}
+              >
+                {feedbackCounts?.[type] ?? 0}
+              </span>
+              <span 
+                className="text-xs" 
+                style={{ color: filter === type ? '#fff' : theme.text.low }}
+              >
+                {type.replace('_', ' ')}
+              </span>
+            </div>
+          ))}
+        </div>
       </AdminCard>
 
       {/* Correction Approval Section */}
