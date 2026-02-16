@@ -867,7 +867,7 @@ export const ChatPanel = memo(function ChatPanel({
           <p 
             className="text-center"
             style={{ 
-              color: theme.text.low,
+              color: theme.text.high,
               animation: 'fadeIn 300ms ease-in-out',
               fontWeight: 900,
               fontSize: '19px',
@@ -881,7 +881,9 @@ export const ChatPanel = memo(function ChatPanel({
             {emptyStateMessage}
           </p>
           
-          {renderInputArea()}
+          <div className="max-w-3xl mx-auto w-full px-4">
+            {renderInputArea()}
+          </div>
         </div>
       ) : (
         /* Active State: Scrollable Messages + Fixed Input at Bottom */
