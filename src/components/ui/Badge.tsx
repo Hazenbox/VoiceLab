@@ -27,10 +27,12 @@ export const Badge = memo(function Badge({ children, variant = 'neutral' }: Badg
 
   return (
     <span style={{
-      display: 'inline-block',
+      display: 'inline-flex',
+      alignItems: 'center',
       backgroundColor: colorMap[variant],
       borderRadius: '4px',
-      padding: '2px 6px',
+      padding: '0 6px',
+      height: '20px',
     }}>
       <Label size="XS" weight="medium" attention="high" as="span">
         {children}
