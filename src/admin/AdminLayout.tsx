@@ -845,58 +845,79 @@ function AdminLearningCenter() {
       />
 
       {/* Learning Stats Hero */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-5">
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="learnings applied"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: String(learningStats.totalPatternsApplied ?? 0),
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
-        </div>
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="edit corrections"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: String(learningStats.byFeedbackType.edits ?? 0),
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
-        </div>
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="avoid patterns"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: String(learningStats.uniqueAvoidPatterns ?? 0),
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
-        </div>
-        <div className="rounded-xl" style={{ border: `1px solid ${theme.stroke.medium}` }}>
-          <DataCard 
-            title="total feedback"
-            fillEmphasis="Ghost"
-            width="100%"
-            dataHead={{
-              leadValue: String(corrections.length ?? 0),
-              showDataSupporting: false,
-              showSupportingLabel: false,
-            }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
+      <div 
+        className="rounded-xl mb-5"
+        style={{ 
+          border: `1px solid ${theme.stroke.medium}`,
+          padding: '16px',
+        }}
+      >
+        <h2 
+          style={{ 
+            fontWeight: 800, 
+            lineHeight: 1, 
+            fontFamily: 'JioType Var', 
+            color: theme.text.high, 
+            margin: 0,
+            paddingBottom: '16px',
+            fontSize: '14px',
+          }}
+        >
+          Overview
+        </h2>
+        <div className="flex flex-col lg:flex-row">
+          <div className="flex-1">
+            <DataCard 
+              title="learnings applied"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: String(learningStats.totalPatternsApplied ?? 0),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
+          <div className="flex-1">
+            <DataCard 
+              title="edit corrections"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: String(learningStats.byFeedbackType.edits ?? 0),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
+          <div className="flex-1">
+            <DataCard 
+              title="avoid patterns"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: String(learningStats.uniqueAvoidPatterns ?? 0),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
+          <div className="flex-1">
+            <DataCard 
+              title="total feedback"
+              fillEmphasis="Ghost"
+              width="100%"
+              dataHead={{
+                leadValue: String(corrections.length ?? 0),
+                showDataSupporting: false,
+                showSupportingLabel: false,
+              }}
+              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+            />
+          </div>
         </div>
       </div>
 
