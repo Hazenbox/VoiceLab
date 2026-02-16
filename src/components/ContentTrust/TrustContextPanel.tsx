@@ -77,7 +77,7 @@ const ViolationItem: React.FC<{ violation: Violation }> = ({ violation }) => {
           {violation.text && (
             <span 
               className="inline-block px-2 py-1 rounded"
-              style={{ backgroundColor: theme.stroke.medium, fontFamily: 'var(--font-mono)', fontSize: '12px', color: theme.text.low }}
+              style={{ backgroundColor: theme.stroke.medium, fontFamily: 'var(--font-mono)', fontSize: '12px', color: theme.text.medium }}
             >
               "{violation.text}"
             </span>
