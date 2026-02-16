@@ -52,7 +52,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
             >
-              <DSIcon name="IcInfo" size="XS" attention="low" />
+              <DSIcon name="IcInfo" size="XS" attention="medium" />
             </div>
             {showTooltip && (
               <div

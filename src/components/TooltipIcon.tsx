@@ -32,7 +32,7 @@ export const TooltipIcon: React.FC<TooltipIconProps> = ({ tooltip }) => {
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       >
-        <DSIcon name="IcInfo" size="XS" attention="low" aria-label="Information" />
+        <DSIcon name="IcInfo" size="XS" attention="medium" aria-label="Information" />
       </div>
       {showTooltip && (
         <div
