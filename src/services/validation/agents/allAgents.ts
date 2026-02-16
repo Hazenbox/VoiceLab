@@ -291,7 +291,7 @@ const BRAND_PATTERNS: PatternRule[] = [
   
   // Boastful language (Training 1.pdf - "We are modest")
   { id: 'ba-008', pattern: /\b(best in India|number one|#1|most trusted)\b/gi, severity: 'warning', rule: 'Avoid boastful claims', suggestion: 'Our customers trust us', category: 'modesty' },
-  { id: 'ba-009', pattern: /\b(world[-\s]?class|cutting[-\s]?edge|state[-\s]?of[-\s]?the[-\s]?art)\b/gi, severity: 'warning', rule: 'Avoid buzzwords', suggestion: 'Describe specific benefit', category: 'modesty' },
+  { id: 'ba-009', pattern: /\b(world[-\s]?class|cutting[-\s]?edge|state[-\s]?of[-\s]?the[-\s]?art|best[-\s]?in[-\s]?class)\b/gi, severity: 'warning', rule: 'Avoid buzzwords', suggestion: 'Describe specific benefit', category: 'modesty' },
   { id: 'ba-010', pattern: /\b(revolutionary|game[-\s]?changing|disruptive)\b/gi, severity: 'warning', rule: 'Avoid hyperbole', suggestion: 'Describe actual improvement', category: 'modesty' },
   
   // Complex/jargon (Training 1.pdf - "We are simple")
