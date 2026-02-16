@@ -64,19 +64,19 @@ const ViolationItem: React.FC<{ violation: Violation }> = ({ violation }) => {
   const severityVariant = { error: 'negative', warning: 'warning', info: 'informative' } as const;
   
   return (
-    <div className="p-3 rounded-lg mb-2" style={{ backgroundColor: theme.stroke.low }}>
+    <div className="p-4 rounded-lg mb-3" style={{ backgroundColor: theme.stroke.low }}>
       <div className="flex items-start gap-3">
         <Badge variant={severityVariant[violation.severity]}>
           {violation.severity}
         </Badge>
-        <div className="flex-1 space-y-3">
+        <div className="flex-1 flex flex-col gap-3">
           <Text size="S" color="high">{violation.rule}</Text>
           {violation.suggestion && (
             <Text size="XS" color="medium">{violation.suggestion}</Text>
           )}
           {violation.text && (
             <span 
-              className="inline-block px-2 py-1 rounded"
+              className="inline-block px-2 py-1.5 rounded mt-1"
               style={{ backgroundColor: theme.stroke.medium, fontFamily: 'var(--font-mono)', fontSize: '12px', color: theme.text.medium }}
             >
               "{violation.text}"
