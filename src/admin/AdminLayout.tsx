@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
-import { Title, Text, Badge } from '@marcelinodzn/ds-react';
+import { Title, Text } from '@marcelinodzn/ds-react';
 
 /** Chart accent for branded chart bars */
 const CHART_ACCENT = '#f97316';
@@ -208,17 +208,30 @@ function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
   );
 }
 
-// ── Utility: Feedback badge (DS Badge) ───────────────────────────
-const FEEDBACK_APPEARANCE: Record<string, 'success' | 'error' | 'primary' | 'warning' | 'secondary'> = {
-  thumbs_up: 'success',
-  thumbs_down: 'error',
-  edit: 'primary',
-  comment: 'warning',
+// ── Utility: Feedback badge ──────────────────────────────────────
+const FEEDBACK_COLORS: Record<string, { bg: string; fg: string }> = {
+  thumbs_up:   { bg: `${SEMANTIC_COLORS.positive}1F`, fg: SEMANTIC_COLORS.positive },
+  thumbs_down: { bg: `${SEMANTIC_COLORS.negative}1F`, fg: SEMANTIC_COLORS.negative },
+  edit:        { bg: `${SEMANTIC_COLORS.informative}1F`, fg: SEMANTIC_COLORS.informative },
+  comment:     { bg: `${SEMANTIC_COLORS.warning}1F`, fg: SEMANTIC_COLORS.warning },
 };
+const FEEDBACK_FALLBACK = { bg: `${MUTED_GRAY}1F`, fg: MUTED_GRAY };
 
 function FeedbackBadge({ type }: { type: string }) {
+  const c = FEEDBACK_COLORS[type] || FEEDBACK_FALLBACK;
   return (
-    <Badge content={type.replace('_', ' ')} appearance={FEEDBACK_APPEARANCE[type] || 'secondary'} />
+    <span
+      className="inline-block font-medium whitespace-nowrap"
+      style={{
+        fontSize: '11px',
+        borderRadius: '4px',
+        padding: '2px 6px',
+        backgroundColor: c.bg,
+        color: c.fg,
+      }}
+    >
+      {type.replace('_', ' ')}
+    </span>
   );
 }
 
