@@ -21,7 +21,7 @@ import {
 import { getContextSummary } from '../../services/context';
 import { Accordion } from '../ui/Accordion';
 import { DSIcon } from '../DSIcon';
-import { Title, Tabs, TabList, Tab } from '@marcelinodzn/ds-react';
+import { Title, Tabs, TabList, Tab, Label, Text } from '@marcelinodzn/ds-react';
 
 interface TrustContextPanelProps {
   isOpen: boolean;
@@ -243,15 +243,15 @@ const ContentPreview: React.FC<{ content: string }> = ({ content }) => {
   
   return (
     <div 
-      className="p-3 rounded-lg text-sm" 
+      className="p-3 rounded-lg" 
       style={{ 
-        backgroundColor: theme.stroke.low, 
-        color: theme.text.high,
-        letterSpacing: '-0.12px',
-        lineHeight: '22px'
+        backgroundColor: theme.background.ghost,
+        border: `1px solid ${theme.stroke.low}`,
       }}
     >
-      "{content}"
+      <Text size="S" color="medium">
+        "{content}"
+      </Text>
     </div>
   );
 };
@@ -265,11 +265,11 @@ const GuardrailItem: React.FC<{ guardrail: GuardrailStatus }> = ({ guardrail }) 
   
   return (
     <div 
-      className="flex items-start gap-2 py-2 border-b last:border-b-0"
+      className="flex items-center gap-2 py-2 border-b last:border-b-0"
       style={{ borderColor: theme.stroke.low }}
     >
-      {/* Icon without background circle - colored icons are self-contained */}
-      <div className="flex-shrink-0 mt-0.5">
+      {/* Icon aligned with text */}
+      <div className="flex-shrink-0">
         {isFollowed ? (
           <DSIcon name="IcSuccessColored" size="XS" attention="high" />
         ) : (
@@ -277,10 +277,8 @@ const GuardrailItem: React.FC<{ guardrail: GuardrailStatus }> = ({ guardrail }) 
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium" style={{ color: theme.text.high }}>{guardrail.rule}</p>
-        <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: theme.text.low }}>
-          {guardrail.description}
-        </p>
+        <Label size="S" weight="medium" color="high">{guardrail.rule}</Label>
+        <Text size="XS" color="low">{guardrail.description}</Text>
       </div>
     </div>
   );
