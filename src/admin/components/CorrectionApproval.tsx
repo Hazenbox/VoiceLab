@@ -1,26 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
-import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
+import { useThemeColors } from '../../theme/useColors';
 import { AdminTable, AdminTableRow, AdminTableCell } from './AdminTable';
 import { formatRelativeTime } from '../utils/formatters';
 import type { Id } from '../../../convex/_generated/dataModel';
-import { Chip, Divider, Badge } from '@marcelinodzn/ds-react';
-
-/** DS Badge appearance mapping for feedback types */
-const FEEDBACK_APPEARANCE: Record<string, 'success' | 'error' | 'primary' | 'warning' | 'secondary'> = {
-  thumbs_up: 'success',
-  thumbs_down: 'error',
-  edit: 'primary',
-  comment: 'warning',
-};
-
-/** DS Badge appearance mapping for admin statuses */
-const STATUS_APPEARANCE: Record<string, 'success' | 'error' | 'warning'> = {
-  approved: 'success',
-  rejected: 'error',
-  pending: 'warning',
-};
+import { Chip, Divider, Label } from '@marcelinodzn/ds-react';
 
 // ── Types ────────────────────────────────────────────────────────
 interface Correction {
@@ -36,17 +21,59 @@ interface Correction {
   timestamp: number;
 }
 
-// ── Feedback Type Badge (DS Badge) ───────────────────────────────
+// ── Feedback Type Badge ─────────────────────────────────────────
 function FeedbackBadge({ type }: { type: string }) {
+  const theme = useThemeColors();
+  
+  const colorMap: Record<string, { bg: string; fg: string }> = {
+    thumbs_up:   { bg: `${theme.semantic.positive}1F`, fg: theme.semantic.positive },
+    thumbs_down: { bg: `${theme.semantic.negative}1F`, fg: theme.semantic.negative },
+    edit:        { bg: `${theme.semantic.informative}1F`, fg: theme.semantic.informative },
+    comment:     { bg: `${theme.semantic.warning}1F`, fg: theme.semantic.warning },
+  };
+  const fallback = { bg: 'rgba(107,114,128,0.12)', fg: theme.text.low };
+  const c = colorMap[type] || fallback;
+
   return (
-    <Badge content={type.replace('_', ' ')} appearance={FEEDBACK_APPEARANCE[type] || 'secondary'} />
+    <span
+      style={{
+        display: 'inline-block',
+        backgroundColor: c.bg,
+        borderRadius: '9999px',
+        padding: '1px 8px',
+      }}
+    >
+      <Label size="3XS" weight="medium" attention="high" as="span" style={{ color: c.fg }}>
+        {type.replace('_', ' ')}
+      </Label>
+    </span>
   );
 }
 
-// ── Status Badge (DS Badge) ──────────────────────────────────────
+// ── Status Badge ────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
+  const theme = useThemeColors();
+  
+  const statusMap: Record<string, { bg: string; fg: string }> = {
+    approved: { bg: `${theme.semantic.positive}1F`, fg: theme.semantic.positive },
+    rejected: { bg: `${theme.semantic.negative}1F`, fg: theme.semantic.negative },
+    pending:  { bg: `${theme.semantic.warning}1F`, fg: theme.semantic.warning },
+  };
+  const c = statusMap[status] || statusMap.pending;
+
   return (
-    <Badge content={status} appearance={STATUS_APPEARANCE[status] || 'warning'} />
+    <span
+      style={{
+        display: 'inline-block',
+        backgroundColor: c.bg,
+        borderRadius: '9999px',
+        padding: '1px 8px',
+      }}
+    >
+      <Label size="3XS" weight="medium" attention="high" as="span" style={{ color: c.fg }}>
+        {status}
+      </Label>
+    </span>
   );
 }
 
