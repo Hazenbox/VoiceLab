@@ -597,21 +597,20 @@ function AdminDashboard() {
                 <AdminTableCell>{session.projectName}</AdminTableCell>
                 <AdminTableCell>
                   <span
-                    className="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
                     style={{
+                      display: 'inline-block',
                       backgroundColor: session.status === 'active' 
-                        ? `${SEMANTIC_COLORS.positive}1F` 
+                        ? (theme.isLight ? '#DCFCE7' : 'rgba(34, 197, 94, 0.2)')
                         : session.status === 'completed'
-                          ? `${SEMANTIC_COLORS.informative}1F`
-                          : `${SEMANTIC_COLORS.warning}1F`,
-                      color: session.status === 'active' 
-                        ? SEMANTIC_COLORS.positive 
-                        : session.status === 'completed'
-                          ? SEMANTIC_COLORS.informative
-                          : SEMANTIC_COLORS.warning,
+                          ? (theme.isLight ? '#DBEAFE' : 'rgba(59, 130, 246, 0.2)')
+                          : (theme.isLight ? '#FEF3C7' : 'rgba(234, 179, 8, 0.2)'),
+                      borderRadius: '4px',
+                      padding: '2px 6px',
                     }}
                   >
-                    {session.status}
+                    <Label size="XS" weight="medium" attention="high" as="span">
+                      {session.status}
+                    </Label>
                   </span>
                 </AdminTableCell>
                 <AdminTableCell>{session.messageCount}</AdminTableCell>
