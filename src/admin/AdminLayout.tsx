@@ -952,20 +952,13 @@ function AdminLearningCenter() {
             onChange={setFeedbackTypeFilter}
             aria-label="filter by feedback type"
             size="S"
+            emphasis="low"
           >
             <SegmentedControlItem value="all">all</SegmentedControlItem>
-            <SegmentedControlItem value="thumbs_up">
-              {feedbackCounts?.thumbs_up ?? 0} thumbs up
-            </SegmentedControlItem>
-            <SegmentedControlItem value="thumbs_down">
-              {feedbackCounts?.thumbs_down ?? 0} thumbs down
-            </SegmentedControlItem>
-            <SegmentedControlItem value="edit">
-              {feedbackCounts?.edit ?? 0} edit
-            </SegmentedControlItem>
-            <SegmentedControlItem value="comment">
-              {feedbackCounts?.comment ?? 0} comment
-            </SegmentedControlItem>
+            <SegmentedControlItem value="thumbs_up">thumbs up</SegmentedControlItem>
+            <SegmentedControlItem value="thumbs_down">thumbs down</SegmentedControlItem>
+            <SegmentedControlItem value="edit">edit</SegmentedControlItem>
+            <SegmentedControlItem value="comment">comment</SegmentedControlItem>
           </SegmentedControl>
         </div>
 
