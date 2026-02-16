@@ -346,27 +346,33 @@ const ComplianceJustificationSection: React.FC<{
 
 /**
  * Evidence Timeline Item - A single step in the timeline
- * Clean, minimal design with connected dots
+ * Clean, minimal design with numbered steps and connected line
  */
 const EvidenceTimelineItem: React.FC<{
   title: string;
+  stepNumber: number;
   items: Array<{ label: string; value: string | number }>;
   tags?: string[];
   isLast?: boolean;
-}> = ({ title, items, tags, isLast = false }) => {
+}> = ({ title, stepNumber, items, tags, isLast = false }) => {
   const theme = useThemeColors();
   
   return (
-    <div style={{ display: 'flex', gap: '12px' }}>
-      {/* Timeline indicator: dot + line */}
+    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      {/* Timeline indicator: numbered circle + line */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ 
-          width: '10px', 
-          height: '10px', 
+          width: '20px', 
+          height: '20px', 
           borderRadius: '50%',
           backgroundColor: theme.accent, 
           flexShrink: 0,
-        }} />
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <span style={{ color: '#ffffff', fontSize: '11px', fontWeight: 600 }}>{stepNumber}</span>
+        </div>
         {!isLast && (
           <div style={{ 
             width: '2px', 
@@ -377,8 +383,8 @@ const EvidenceTimelineItem: React.FC<{
         )}
       </div>
       
-      {/* Content */}
-      <div style={{ flex: 1, paddingBottom: isLast ? 0 : '16px' }}>
+      {/* Content - marginTop to align with center of circle */}
+      <div style={{ flex: 1, paddingBottom: isLast ? 0 : '16px', marginTop: '2px' }}>
         <Label size="S" weight="high" color="high">{title}</Label>
         <div style={{ marginTop: '4px' }}>
           <Text size="XS" color="medium">
@@ -431,7 +437,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
   
   if (hasKnowledge) {
     timelineItems.push({
-      title: 'knowledge base',
+      title: 'Knowledge Base',
       items: [
         { label: 'avoid words', value: evidence.knowledgeUsed.avoidWordsMatched.length },
         { label: 'preferred', value: evidence.knowledgeUsed.preferredWordsUsed.length },
@@ -445,7 +451,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
   
   if (hasLearnings) {
     timelineItems.push({
-      title: 'learnings applied',
+      title: 'Learnings Applied',
       items: [
         { label: 'corrections', value: evidence.learningsApplied.correctionsCount },
         { label: 'avoid patterns', value: evidence.learningsApplied.avoidPatterns.length },
@@ -458,7 +464,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
   
   if (hasAutoFixes) {
     timelineItems.push({
-      title: 'auto-fixes applied',
+      title: 'Auto-Fixes Applied',
       items: [
         { label: 'replacements', value: evidence.autoFixes.totalCount },
         ...evidence.autoFixes.applied.slice(0, 2).map(fix => ({
@@ -493,6 +499,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
           {timelineItems.map((item, index) => (
             <EvidenceTimelineItem
               key={index}
+              stepNumber={index + 1}
               title={item.title}
               items={item.items}
               tags={item.tags}
@@ -715,11 +722,10 @@ export const TrustContextPanel = memo(function TrustContextPanel({
           }}>
             <Button 
               appearance="primary" 
-              size="M" 
+              size="S" 
               onPress={onAutoFix}
               style={{ width: '100%' }}
             >
-              <DSIcon name="IcStar" size="XS" attention="high" />
               Auto-Fix ({trustScore.autoFixableCount} fixable)
             </Button>
           </div>
