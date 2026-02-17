@@ -425,4 +425,130 @@ export default defineSchema({
     .index("by_priority", ["priority"])
     .index("by_category", ["category"])
     .index("by_ruleType", ["ruleType"]),
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 6D: DYNAMIC GUIDELINES TABLES
+  // Admin-editable guidelines that were previously hardcoded in TypeScript.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Core Voice Traits ─────────────────────────────────────────────────────
+  // Previously hardcoded in src/services/constitutional/coreRules.ts
+  // Each trait defines a characteristic of Jio's brand voice.
+  coreVoiceTraits: defineTable({
+    traitKey: v.string(),           // e.g., "direct", "helpful", "human_optimized"
+    name: v.string(),               // Display name: "Direct", "Helpful"
+    description: v.string(),        // What this trait means
+    violations: v.array(v.string()), // Examples of violations
+    positiveExamples: v.optional(v.array(v.string())), // Good examples
+    ecosystem: v.optional(v.string()), // Optional ecosystem-specific trait
+    channel: v.optional(v.string()),   // Optional channel-specific trait
+    priority: v.number(),           // Order in validation (lower = first)
+    isActive: v.boolean(),
+    createdBy: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_traitKey", ["traitKey"])
+    .index("by_isActive", ["isActive"])
+    .index("by_ecosystem", ["ecosystem"])
+    .index("by_ecosystem_channel", ["ecosystem", "channel"])
+    .index("by_priority", ["priority"]),
+
+  // ── Brand Guardrails ──────────────────────────────────────────────────────
+  // Previously hardcoded in src/config/brandGuardrails.ts
+  // Rules that protect brand consistency and compliance.
+  brandGuardrails: defineTable({
+    ruleKey: v.string(),            // Unique identifier for the rule
+    ruleName: v.string(),           // Human-readable name
+    ruleType: v.string(),           // "must_include" | "must_avoid" | "format" | "tone" | "legal"
+    rule: v.string(),               // The actual rule statement
+    examples: v.array(v.string()),  // Examples of violations or correct usage
+    ecosystem: v.optional(v.string()), // Optional ecosystem scope (null = all)
+    channel: v.optional(v.string()),   // Optional channel scope (null = all)
+    severity: v.string(),           // "error" | "warning" | "info"
+    autoFixSuggestion: v.optional(v.string()), // Suggested fix for violations
+    isActive: v.boolean(),
+    priority: v.number(),           // Order of application (higher = more important)
+    createdBy: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_ruleKey", ["ruleKey"])
+    .index("by_ruleType", ["ruleType"])
+    .index("by_isActive", ["isActive"])
+    .index("by_ecosystem", ["ecosystem"])
+    .index("by_ecosystem_channel", ["ecosystem", "channel"])
+    .index("by_severity", ["severity"])
+    .index("by_priority", ["priority"]),
+
+  // ── Safety Keywords ───────────────────────────────────────────────────────
+  // Previously hardcoded in src/services/safety/safetyClassifier.ts
+  // Keywords and patterns that trigger safety classification.
+  safetyKeywords: defineTable({
+    domain: v.string(),             // "crisis" | "legal" | "medical" | "financial" | "security" | "harassment"
+    domainDisplayName: v.string(),  // Human-readable domain name
+    keywords: v.array(v.string()),  // Exact match keywords
+    patterns: v.array(v.string()),  // Regex patterns
+    severity: v.string(),           // "critical" | "high" | "medium" | "low"
+    responseType: v.string(),       // "emergency_response" | "safe_response" | "escalate" | "flag"
+    emergencyTemplate: v.optional(v.string()), // Template for emergency responses
+    requiresHuman: v.boolean(),     // Whether to escalate to human support
+    isActive: v.boolean(),
+    notes: v.optional(v.string()),  // Admin notes about this domain
+    createdBy: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_domain", ["domain"])
+    .index("by_isActive", ["isActive"])
+    .index("by_severity", ["severity"])
+    .index("by_responseType", ["responseType"]),
+
+  // ── Pipeline Metrics ──────────────────────────────────────────────────────
+  // Phase 6E: Server-side pipeline execution metrics for analysis.
+  pipelineMetrics: defineTable({
+    requestId: v.string(),          // Unique request identifier
+    inputHash: v.string(),          // Hash of input for deduplication analysis
+    
+    // Request context
+    ecosystem: v.string(),
+    channel: v.string(),
+    pipelinePath: v.string(),       // "content_generation" | "general_chat" | "jio_inquiry" | "safety_blocked"
+    model: v.string(),              // LLM model used
+    
+    // Timing metrics
+    totalMs: v.number(),            // Total pipeline duration
+    stepTimings: v.optional(v.object({
+      classify: v.optional(v.number()),
+      safety: v.optional(v.number()),
+      retrieve: v.optional(v.number()),
+      assemble: v.optional(v.number()),
+      generate: v.optional(v.number()),
+      validate: v.optional(v.number()),
+      finalize: v.optional(v.number()),
+    })),
+    
+    // Results
+    retrievalCount: v.number(),     // Number of knowledge items retrieved
+    validationScore: v.optional(v.number()), // Trust score (0-100)
+    retryCount: v.number(),         // Number of retry attempts
+    
+    // Status
+    success: v.boolean(),
+    errorCode: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+    
+    // Source
+    source: v.string(),             // "client" | "server" - where pipeline ran
+    vercelRegion: v.optional(v.string()), // Vercel edge region if server-side
+    
+    timestamp: v.number(),
+  })
+    .index("by_requestId", ["requestId"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_ecosystem", ["ecosystem"])
+    .index("by_pipelinePath", ["pipelinePath"])
+    .index("by_model", ["model"])
+    .index("by_success", ["success"])
+    .index("by_source", ["source"]),
 });
