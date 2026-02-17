@@ -260,3 +260,19 @@ export const SELECTION_COLORS = {
     text: '#fdba74',
   },
 } as const;
+
+/**
+ * Highlight colors for interactive text highlighting in chat.
+ * Used when clicking auto-fix rows or violations to highlight text in messages.
+ * Yellow-tinted for visibility without being intrusive.
+ */
+export const HIGHLIGHT_COLORS = {
+  light: {
+    background: '#fef9c3',  // yellow-100
+    text: '#854d0e',        // yellow-800
+  },
+  dark: {
+    background: '#854d0e',  // yellow-800
+    text: '#fef9c3',        // yellow-100
+  },
+} as const;

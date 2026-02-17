@@ -6,12 +6,12 @@
  * re-parsing of markdown on every render. Only regenerates when theme changes.
  */
 
-import { memo, useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import { CodeBlock, InlineCode } from './CodeBlock';
-import { useThemeColors, chatTypography } from '../theme';
+import { useThemeColors, chatTypography, HIGHLIGHT_COLORS } from '../theme';
 import { Divider } from '@marcelinodzn/ds-react';
 import type { Components } from 'react-markdown';
 import type { ThemeColors } from '../theme';
@@ -25,6 +25,8 @@ const BRAND_ACCENT = '#f97316';
 interface MessageContentProps {
   content: string;
   role: 'user' | 'assistant';
+  /** Text to highlight in the message (from trust panel interactions) */
+  highlightedText?: string;
 }
 
 /**
@@ -379,10 +381,67 @@ function normalizeMarkdown(content: string): string {
 }
 
 /**
+ * Apply text highlighting by wrapping matched text with special markers.
+ * These markers are processed after markdown rendering.
+ */
+function applyHighlighting(content: string, highlightText: string | undefined): string {
+  if (!highlightText) return content;
+  
+  // Escape regex special characters in the search text
+  const escaped = highlightText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`(${escaped})`, 'gi');
+  
+  // Wrap with markers that won't be parsed as markdown
+  return content.replace(regex, '==HL_S==$1==HL_E==');
+}
+
+/**
+ * Highlight component for rendering highlighted text spans
+ */
+const HighlightSpan: React.FC<{ text: string; isLight: boolean }> = ({ text, isLight }) => (
+  <span 
+    style={{
+      backgroundColor: isLight ? HIGHLIGHT_COLORS.light.background : HIGHLIGHT_COLORS.dark.background,
+      color: isLight ? HIGHLIGHT_COLORS.light.text : HIGHLIGHT_COLORS.dark.text,
+      padding: '1px 4px',
+      borderRadius: '2px',
+      transition: 'background-color 300ms ease-out',
+    }}
+  >
+    {text}
+  </span>
+);
+
+/**
+ * Process text content to render highlight markers as styled spans
+ */
+function processHighlightedText(text: string, isLight: boolean): React.ReactNode {
+  if (!text.includes('==HL_S==')) {
+    return text;
+  }
+  
+  const parts = text.split(/(==HL_S==.*?==HL_E==)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith('==HL_S==')) {
+          const highlightedText = part.replace('==HL_S==', '').replace('==HL_E==', '');
+          return <HighlightSpan key={i} text={highlightedText} isLight={isLight} />;
+        }
+        return part;
+      })}
+    </>
+  );
+}
+
+/**
  * MessageContent renders markdown with custom theming.
  * Memoized to prevent re-renders when parent state changes but content is same.
  */
-export const MessageContent = memo(function MessageContent({ content }: MessageContentProps) {
+export const MessageContent = memo(function MessageContent({ 
+  content,
+  highlightedText,
+}: MessageContentProps) {
   const theme = useThemeColors();
 
   // Memoize components object - only recreate when theme changes
@@ -397,6 +456,56 @@ export const MessageContent = memo(function MessageContent({ content }: MessageC
     () => normalizeMarkdown(content),
     [content]
   );
+  
+  // Apply highlighting if text is specified
+  const processedContent = useMemo(
+    () => applyHighlighting(normalizedContent, highlightedText),
+    [normalizedContent, highlightedText]
+  );
+
+  // Check if we need to process highlights in the rendered output
+  const hasHighlights = highlightedText && processedContent.includes('==HL_S==');
+
+  // If we have highlights, we need a custom text renderer
+  const componentsWithHighlight = useMemo(() => {
+    if (!hasHighlights) return components;
+    
+    return {
+      ...components,
+      // Override paragraph to process highlights
+      p: ({ children }: { children?: React.ReactNode }) => {
+        const processedChildren = processChildren(children, theme.isLight);
+        return (
+          <p 
+            className="mb-3 last:mb-0"
+            style={{ 
+              fontSize: chatTypography.body.fontSize,
+              lineHeight: chatTypography.body.lineHeight,
+              fontWeight: chatTypography.body.fontWeight,
+              color: theme.text.high, 
+              letterSpacing: chatTypography.letterSpacing.tight,
+            }}
+          >
+            {processedChildren}
+          </p>
+        );
+      },
+      // Override list items to process highlights
+      li: ({ children }: { children?: React.ReactNode }) => {
+        const processedChildren = processChildren(children, theme.isLight);
+        return (
+          <li 
+            style={{ 
+              fontSize: chatTypography.body.fontSize,
+              lineHeight: chatTypography.body.lineHeight,
+            }}
+          >
+            {processedChildren}
+          </li>
+        );
+      },
+    };
+  }, [components, hasHighlights, theme.isLight, theme.text.high]);
 
   return (
     <div className="markdown-content">
@@ -404,10 +513,28 @@ export const MessageContent = memo(function MessageContent({ content }: MessageC
         remarkPlugins={remarkPlugins}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         rehypePlugins={rehypePlugins as any}
-        components={components}
+        components={componentsWithHighlight}
       >
-        {normalizedContent}
+        {processedContent}
       </ReactMarkdown>
     </div>
   );
 });
+
+/**
+ * Process React children to handle highlight markers in text nodes
+ */
+function processChildren(children: React.ReactNode, isLight: boolean): React.ReactNode {
+  if (typeof children === 'string') {
+    return processHighlightedText(children, isLight);
+  }
+  if (Array.isArray(children)) {
+    return children.map((child, i) => {
+      if (typeof child === 'string') {
+        return <React.Fragment key={i}>{processHighlightedText(child, isLight)}</React.Fragment>;
+      }
+      return child;
+    });
+  }
+  return children;
+}

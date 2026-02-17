@@ -13,9 +13,11 @@
  */
 
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, memo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import type { ChatMessage, ChatMode, FeedbackPayload } from '../types';
 import { getDisplayContent } from '../types';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme';
+import { useUIStore } from '../stores/uiStore';
 import { MessageContent } from './MessageContent';
 import { AudioBubble } from './AudioBubble';
 import { TrustBadge } from './ContentTrust';
@@ -362,6 +364,18 @@ export const ChatPanel = memo(function ChatPanel({
   // User message bubble: Dynamic multi-line detection (ChatGPT approach)
   const userMessageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [multiLineMessages, setMultiLineMessages] = useState<Set<string>>(new Set());
+  
+  // Highlight state from trust panel interactions
+  const { highlightedText, highlightedMessageId, clearHighlight } = useUIStore(
+    useShallow((s) => ({
+      highlightedText: s.highlightedText,
+      highlightedMessageId: s.highlightedMessageId,
+      clearHighlight: s.clearHighlight,
+    }))
+  );
+  
+  // Ref for scrolling to highlighted message
+  const highlightedMessageRef = useRef<HTMLDivElement>(null);
 
   // ChatGPT-like word-by-word streaming animation for AI responses
   const { displayedText: streamingDisplayText, isComplete: streamingComplete } = useStreamingText(
@@ -373,6 +387,24 @@ export const ChatPanel = memo(function ChatPanel({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingUserTranscript, streamingAIResponse, streamingDisplayText]);
+  
+  // Scroll to highlighted message when highlight changes
+  useEffect(() => {
+    if (highlightedMessageId && highlightedMessageRef.current) {
+      highlightedMessageRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
+  }, [highlightedMessageId]);
+  
+  // Auto-clear highlight after 3 seconds
+  useEffect(() => {
+    if (highlightedText) {
+      const timer = setTimeout(clearHighlight, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedText, clearHighlight]);
 
   // Detect multi-line wrapping for user messages (ChatGPT approach)
   useLayoutEffect(() => {
@@ -662,9 +694,12 @@ export const ChatPanel = memo(function ChatPanel({
     }
     
     // Regular assistant message (no auto-fix preview)
+    const isHighlighted = message.id === highlightedMessageId;
+    
     return (
       <div
         key={message.id}
+        ref={isHighlighted ? highlightedMessageRef : undefined}
         className="flex justify-start"
         role="listitem"
       >
@@ -674,7 +709,11 @@ export const ChatPanel = memo(function ChatPanel({
             color: theme.text.high,
           }}
         >
-          <MessageContent content={message.content} role="assistant" />
+          <MessageContent 
+            content={message.content} 
+            role="assistant" 
+            highlightedText={isHighlighted ? highlightedText ?? undefined : undefined}
+          />
           
           {/* Actions row: Trust Badge + Message Actions */}
           <div className="flex items-center gap-0 mt-1.5 -ml-2">

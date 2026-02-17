@@ -4,7 +4,8 @@
  * Slide-out panel showing detailed trust information.
  */
 
-import { memo, useState, useMemo } from 'react';
+import { memo, useState, useMemo, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useThemeColors, SEMANTIC_COLORS } from '../../theme';
 import type { 
   TrustScore, 
@@ -20,6 +21,7 @@ import {
   getComplianceJustification,
 } from '../../services/trust';
 import { getContextSummary } from '../../services/context';
+import { useUIStore } from '../../stores/uiStore';
 import { Accordion } from '../ui/Accordion';
 import { Badge } from '../ui/Badge';
 import { DSIcon } from '../DSIcon';
@@ -35,6 +37,8 @@ interface TrustContextPanelProps {
   autoFixAvailable?: boolean;
   /** Evidence of what influenced the generation */
   evidence?: GenerationEvidence;
+  /** The message ID being viewed (for highlighting) */
+  messageId?: string;
 }
 
 const ScoreIndicator: React.FC<{
@@ -62,12 +66,26 @@ const ScoreIndicator: React.FC<{
   );
 };
 
-const ViolationItem: React.FC<{ violation: Violation }> = ({ violation }) => {
+const ViolationItem: React.FC<{ 
+  violation: Violation;
+  onClick?: () => void;
+}> = ({ violation, onClick }) => {
   const theme = useThemeColors();
   const severityVariant = { error: 'negative', warning: 'warning', info: 'informative' } as const;
+  const isClickable = onClick && violation.text;
   
   return (
-    <div className="p-3 rounded-lg mb-2" style={{ backgroundColor: theme.stroke.low }}>
+    <div 
+      className="p-3 rounded-lg mb-2" 
+      onClick={isClickable ? onClick : undefined}
+      onMouseEnter={(e) => { if (isClickable) e.currentTarget.style.opacity = '0.8'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+      style={{ 
+        backgroundColor: theme.stroke.low,
+        cursor: isClickable ? 'pointer' : 'default',
+        transition: 'opacity 150ms',
+      }}
+    >
       <div className="flex items-start gap-3">
         <Badge variant={severityVariant[violation.severity]}>
           {violation.severity}
@@ -354,8 +372,9 @@ const EvidenceTimelineItem: React.FC<{
   items: Array<{ label: string; value: string | number }>;
   tags?: string[];
   fixes?: Array<{ from: string; to: string }>;
+  onFixClick?: (fixTo: string) => void;
   isLast?: boolean;
-}> = ({ title, stepNumber, items, tags, fixes, isLast = false }) => {
+}> = ({ title, stepNumber, items, tags, fixes, onFixClick, isLast = false }) => {
   const theme = useThemeColors();
   
   return (
@@ -406,9 +425,17 @@ const EvidenceTimelineItem: React.FC<{
             {fixes.map((fix, idx) => (
               <div 
                 key={idx}
+                onClick={() => onFixClick?.(fix.to)}
+                onMouseEnter={(e) => { if (onFixClick) e.currentTarget.style.backgroundColor = theme.stroke.low; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
                 style={{ 
-                  padding: '8px 0',
+                  padding: '8px 4px',
+                  marginLeft: '-4px',
+                  marginRight: '-4px',
+                  borderRadius: '4px',
                   borderBottom: idx < fixes.length - 1 ? `1px solid ${theme.stroke.low}` : 'none',
+                  cursor: onFixClick ? 'pointer' : 'default',
+                  transition: 'background-color 150ms',
                 }}
               >
                 <Text size="XS" color="medium">
@@ -437,7 +464,10 @@ const EvidenceTimelineItem: React.FC<{
  * Evidence Section - Main evidence display with clean timeline
  * Uses pure DS components and inline styles (no Tailwind)
  */
-const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence }) => {
+const EvidenceSection: React.FC<{ 
+  evidence: GenerationEvidence;
+  onFixClick?: (fixTo: string) => void;
+}> = ({ evidence, onFixClick }) => {
   const theme = useThemeColors();
   
   const hasKnowledge = evidence.knowledgeUsed.avoidWordsMatched.length > 0 || 
@@ -536,6 +566,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
               items={item.items}
               tags={item.tags}
               fixes={item.fixes}
+              onFixClick={item.fixes ? onFixClick : undefined}
               isLast={index === timelineItems.length - 1}
             />
           ))}
@@ -584,9 +615,38 @@ export const TrustContextPanel = memo(function TrustContextPanel({
   onAutoFix,
   autoFixAvailable = false,
   evidence,
+  messageId,
 }: TrustContextPanelProps) {
   const theme = useThemeColors();
-  const [activeTab, setActiveTab] = useState<'score' | 'context' | 'violations' | 'evidence'>('score');
+  const [activeTab, setActiveTab] = useState<'score' | 'context' | 'violations' | 'autofix'>('score');
+  
+  // Highlight state for interactive rows
+  const { setHighlightedText, clearHighlight } = useUIStore(
+    useShallow((s) => ({
+      setHighlightedText: s.setHighlightedText,
+      clearHighlight: s.clearHighlight,
+    }))
+  );
+  
+  // Handle fix click - highlight the replacement text in chat
+  const handleFixClick = useCallback((fixTo: string) => {
+    if (messageId) {
+      setHighlightedText(fixTo, messageId);
+    }
+  }, [messageId, setHighlightedText]);
+  
+  // Handle violation click - highlight the problematic text in chat
+  const handleViolationClick = useCallback((violationText: string) => {
+    if (messageId) {
+      setHighlightedText(violationText, messageId);
+    }
+  }, [messageId, setHighlightedText]);
+  
+  // Handle close - clear highlights
+  const handleClose = useCallback(() => {
+    clearHighlight();
+    onClose();
+  }, [clearHighlight, onClose]);
   
   const explanation = trustScore ? getScoreExplanation(trustScore) : null;
   
@@ -625,7 +685,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
               Content trust
             </Title>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
               style={{
                 backgroundColor: theme.background.ghost,
@@ -645,7 +705,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
           <div className="flex-shrink-0 px-4 border-b" style={{ borderColor: theme.stroke.medium }}>
             <Tabs 
               selectedKey={activeTab} 
-              onSelectionChange={(key) => setActiveTab(key as 'score' | 'context' | 'violations' | 'evidence')}
+              onSelectionChange={(key) => setActiveTab(key as 'score' | 'context' | 'violations' | 'autofix')}
               size="S"
             >
               <TabList>
@@ -659,7 +719,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                     )}
                   </span>
                 </Tab>
-                <Tab id="evidence">Evidence</Tab>
+                <Tab id="autofix">Auto-fix</Tab>
               </TabList>
             </Tabs>
           </div>
@@ -715,13 +775,19 @@ export const TrustContextPanel = memo(function TrustContextPanel({
                   <p className="text-sm" style={{ color: theme.text.medium }}>No violations found!</p>
                 </div>
               ) : (
-                allViolations.map((violation, i) => <ViolationItem key={i} violation={violation} />)
+                allViolations.map((violation, i) => (
+                  <ViolationItem 
+                    key={i} 
+                    violation={violation} 
+                    onClick={violation.text ? () => handleViolationClick(violation.text) : undefined}
+                  />
+                ))
               )}
             </div>
           )}
           
-          {activeTab === 'evidence' && evidence && <EvidenceSection evidence={evidence} />}
-          {activeTab === 'evidence' && !evidence && (
+          {activeTab === 'autofix' && evidence && <EvidenceSection evidence={evidence} onFixClick={handleFixClick} />}
+          {activeTab === 'autofix' && !evidence && (
             <div style={{ textAlign: 'center', paddingTop: '32px', paddingBottom: '32px' }}>
               <div 
                 style={{ 
@@ -737,9 +803,9 @@ export const TrustContextPanel = memo(function TrustContextPanel({
               >
                 <DSIcon name="IcInfo" size="M" attention="low" />
               </div>
-              <Text size="S" color="medium">No evidence available</Text>
+              <Text size="S" color="medium">No auto-fixes applied</Text>
               <div style={{ marginTop: '4px' }}>
-                <Text size="XS" color="low">Evidence is captured during content generation</Text>
+                <Text size="XS" color="low">Auto-fixes are applied during content generation</Text>
               </div>
             </div>
           )}

@@ -392,6 +392,7 @@ export function MainLayout({
           (selectedMessageForTrustPanel?.trustScore?.autoFixableCount ?? 0) > 0
         }
         evidence={selectedMessageForTrustPanel?.evidence}
+        messageId={selectedMessageForTrustPanel?.id}
       />
 
       {/* Onboarding Modal */}

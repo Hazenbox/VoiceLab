@@ -37,6 +37,10 @@ interface UIState {
   // loading / status
   isAutoFixing: boolean;
   error: AppError | null;
+
+  // highlight state for trust panel interactions
+  highlightedText: string | null;
+  highlightedMessageId: string | null;
 }
 
 interface UIActions {
@@ -52,6 +56,8 @@ interface UIActions {
   setIsAutoFixing: (fixing: boolean) => void;
   setError: (error: AppError | null) => void;
   clearError: () => void;
+  setHighlightedText: (text: string | null, messageId: string | null) => void;
+  clearHighlight: () => void;
 }
 
 export const useUIStore = create<UIState & UIActions>()((set) => ({
@@ -74,6 +80,8 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   editValue: '',
   isAutoFixing: false,
   error: null,
+  highlightedText: null,
+  highlightedMessageId: null,
 
   // actions
   setActiveView: (view) => set({ activeView: view }),
@@ -91,4 +99,6 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   setIsAutoFixing: (fixing) => set({ isAutoFixing: fixing }),
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
+  setHighlightedText: (text, messageId) => set({ highlightedText: text, highlightedMessageId: messageId }),
+  clearHighlight: () => set({ highlightedText: null, highlightedMessageId: null }),
 }));

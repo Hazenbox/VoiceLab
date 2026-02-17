@@ -14,6 +14,7 @@ import type {
   TrustScore,
   GenerationEvidence,
   AutoFixPreview,
+  GenerationContext,
 } from '../../../types';
 import type { LLMProviderType } from '../../providers/llm';
 import type { PipelineValidationResult } from '../../validation/types';
@@ -155,6 +156,9 @@ export interface ServerPipelineResult {
 
   /** Generation evidence for transparency */
   evidence: GenerationEvidence | null;
+
+  /** Generation context for transparency display (full or minimal) */
+  generationContext: GenerationContext | { ecosystem: EcosystemType; channel: ContentChannelType } | null;
 
   /** Auto-fix preview (if fixes were applied) */
   autoFixPreview: AutoFixPreview | null;

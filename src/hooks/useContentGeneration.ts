@@ -326,7 +326,7 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
           ...createTextMessage('assistant', result.output, chatMode, userMessageId),
           messageIntent: (result.intent || 'content_generation') as 'content_generation' | 'general_chat' | 'jio_inquiry',
           trustScore: result.trustScore || undefined,
-          generationContext: undefined,
+          generationContext: result.generationContext || undefined,
           validationSummary: result.validationSummary || undefined,
           autoFixPreview: result.autoFixPreview || undefined,
           evidence: result.evidence || undefined,
