@@ -1,31 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useShallow } from 'zustand/shallow';
 import type { 
-  ActiveView, 
   ColorMode,
-  AppError,
   ChatMode,
-  EcosystemType,
-  ContentChannelType,
-  TrustSettings,
 } from './types';
-import { 
-  AppState,
-} from './types';
-import { 
-  DocumentationPanel,
-  ProjectSidebar,
-  ChatPanel,
-  ErrorBoundary,
-  ModelSelector,
-  HowItWorksPage,
-  AIOrb,
-  DSIcon,
-  // Content Trust System components
-  ContentContextSelector,
-  TrustContextPanel,
-  AdvancedSettingsPanel,
-} from './components';
+import { AppState } from './types';
+import { MainLayout, DocsLayout, HowItWorksLayout } from './components/layouts';
 import { useChatPersistence, useVoiceConversation, useMessageInteractions, useTrustPanel, useContentGeneration, useConvexData, useProfileSync } from './hooks';
 import { useThemeColors } from './theme';
 // Design system context removed - locked to Jio only
@@ -35,7 +15,7 @@ import { useAbortController } from './hooks';
 import { useConversationStore } from './stores/conversationStore';
 import { useUIStore } from './stores/uiStore';
 // Onboarding & Sync
-import OnboardingModal, { loadUserProfile, getDeviceId, type UserProfile } from './components/OnboardingModal';
+import { loadUserProfile, type UserProfile } from './components/OnboardingModal';
 import { getSyncService } from './services/sync/convexSync';
 // Persona Engine (Phase 1)
 import { getAutoConfig, type PersonaRole } from './services/persona';
@@ -395,63 +375,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     }
   }, [error, clearError]);
 
-  // Get TTS provider
-  // const getTTSProvider = useCallback((): TTSProvider => {
-  //   if (!ttsProviderRef.current) {
-  //     ttsProviderRef.current = createTTSProvider();
-  //   }
-  //   return ttsProviderRef.current;
-  // }, []);
-
-  // Handle TTS generation (disabled)
-  // const handleGenerateTTS = async () => {
-  //   if (!ttsText.trim()) {
-  //     setError({ code: 'NO_TEXT', message: 'Please enter some text to generate' });
-  //     return;
-  //   }
-
-  //   if (!activeProject) {
-  //     setError({ code: 'NO_PROJECT', message: 'No active project' });
-  //     return;
-  //   }
-
-  //   // Validate config
-  //   const configValidation = validateConfig();
-  //   if (!configValidation.valid) {
-  //     setError({ 
-  //       code: 'CONFIG_ERROR', 
-  //       message: configValidation.errors.join('. ')
-  //     });
-  //     return;
-  //   }
-
-  //   setIsTtsLoading(true);
-  //   setError(null);
-
-  //   try {
-  //     const provider = getTTSProvider();
-  //     const voice = provider.getDefaultVoice(activeProject.voiceGender === VoiceGender.FEMALE ? 'female' : 'male');
-      
-  //     const audioBuffer = await provider.synthesize(ttsText, {
-  //       voice,
-  //       format: 'mp3',
-  //       sampleRate: AUDIO_CONFIG.alibabaOutputSampleRate,
-  //     });
-
-  //     setGeneratedAudio(audioBuffer);
-  //     setLastGeneratedVoice(voice);
-  //   } catch (err) {
-  //     console.error('TTS generation error:', err);
-  //     setError({
-  //       code: 'TTS_ERROR',
-  //       message: err instanceof Error ? err.message : 'Failed to generate audio',
-  //     });
-  //   } finally {
-  //     setIsTtsLoading(false);
-  //   }
-  // };
-
-
   // Trust panel handlers extracted to useTrustPanel hook
   const {
     showTrustPanel,
@@ -477,10 +400,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     handleVoiceModeChange(newMode, setChatMode);
   }, [handleVoiceModeChange, setChatMode]);
 
-  // Don't render until we have an active project
+  // ── Layout Rendering ─────────────────────────────────────────────────
+
+  // Loading state
   if (!activeProject) {
     return (
-      <div 
+      <div
         className="flex h-screen items-center justify-center"
         style={{ backgroundColor: theme.background.ghost }}
       >
@@ -489,347 +414,64 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     );
   }
 
-  // Render documentation view
+  // Shared sidebar props
+  const sidebarProps = {
+    colorMode,
+    onColorModeChange,
+    userName: userProfile?.name,
+    userRole: userProfile?.role,
+    onEditProfile: () => setShowOnboarding(true),
+  };
+
   if (activeView === 'docs') {
-    const DocPanelComponent = DocumentationPanel;
-    
-    return (
-      <div 
-        className="flex h-screen"
-        style={{ backgroundColor: theme.background.ghost }}
-      >
-        <ProjectSidebar 
-          onProjectSelect={() => setActiveView('main')}
-          onNavigateToHowItWorks={() => setActiveView('how-it-works')}
-          isHowItWorksActive={false}
-          colorMode={colorMode}
-          onColorModeChange={onColorModeChange}
-          userName={userProfile?.name}
-          userRole={userProfile?.role}
-          onEditProfile={() => setShowOnboarding(true)}
-        />
-        <main className="flex-1 overflow-hidden">
-          <DocPanelComponent onBack={() => setActiveView('main')} />
-        </main>
-        <AdvancedSettingsPanel
-          voiceGender={activeProject.voiceGender}
-          onVoiceGenderChange={updateProjectVoiceGender}
-          config={activeProject.config}
-          onConfigChange={updateProjectConfig}
-          defaultEcosystem={ecosystem}
-          defaultChannel={contentChannel}
-          defaultLanguage={activeProject.defaultLanguage || 'english'}
-          defaultRegion={activeProject.defaultRegion || 'pan_india'}
-          onDefaultEcosystemChange={(eco) => {
-            setEcosystem(eco);
-            updateProjectDefaultEcosystem(eco);
-          }}
-          onDefaultChannelChange={(ch) => {
-            setContentChannel(ch);
-            updateProjectDefaultChannel(ch);
-          }}
-          onDefaultLanguageChange={updateProjectDefaultLanguage}
-          onDefaultRegionChange={updateProjectDefaultRegion}
-          trustSettings={trustSettings}
-          onTrustSettingsChange={setTrustSettings}
-          colorMode={colorMode}
-          onColorModeChange={onColorModeChange}
-          temperature={temperature}
-          maxTokens={maxTokens}
-          streamResponse={streamResponse}
-          onTemperatureChange={setTemperature}
-          onMaxTokensChange={setMaxTokens}
-          onStreamResponseChange={setStreamResponse}
-          disabled={appState !== AppState.IDLE}
-          isCollapsed={isConfigPanelCollapsed}
-          onToggleCollapse={() => setConfigPanelCollapsed(!isConfigPanelCollapsed)}
-        />
-      </div>
-    );
+    return <DocsLayout {...sidebarProps} voiceAppState={appState} />;
   }
 
-  // Render how it works view
   if (activeView === 'how-it-works') {
-    return (
-      <div 
-        className="flex h-screen"
-        style={{ backgroundColor: theme.background.ghost }}
-      >
-        <ProjectSidebar 
-          onProjectSelect={() => setActiveView('main')}
-          onNavigateToHowItWorks={() => setActiveView('how-it-works')}
-          isHowItWorksActive={true}
-          colorMode={colorMode}
-          onColorModeChange={onColorModeChange}
-          userName={userProfile?.name}
-          userRole={userProfile?.role}
-          onEditProfile={() => setShowOnboarding(true)}
-        />
-        <main className="flex-1 overflow-hidden">
-          <HowItWorksPage onBack={() => setActiveView('main')} />
-        </main>
-      </div>
-    );
+    return <HowItWorksLayout {...sidebarProps} />;
   }
 
-  // Render main view - Always use Jio components
-  const ChatPanelComponent = ChatPanel;
-  
   return (
-    <div 
-      className="flex h-screen"
-      style={{ backgroundColor: theme.background.ghost }}
-    >
-      {/* Left Sidebar - Projects */}
-      <ProjectSidebar 
-        onProjectSelect={() => setActiveView('main')}
-        onNavigateToHowItWorks={() => setActiveView('how-it-works')}
-        isHowItWorksActive={false}
-        colorMode={colorMode}
-        onColorModeChange={onColorModeChange}
-        userName={userProfile?.name}
-        userRole={userProfile?.role}
-        onEditProfile={() => setShowOnboarding(true)}
-      />
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Screen reader announcements for mode changes */}
-        <div 
-          role="status" 
-          aria-live="polite" 
-          aria-atomic="true"
-          className="sr-only"
-        >
-          {chatMode === 'voice' ? 'Voice chat mode activated' : 'Text chat mode activated'}
-        </div>
-
-        {/* Mode Content */}
-        <ErrorBoundary>
-            <div className="h-full flex flex-col">
-
-              {/* Voice Mode: AI Orb Visualization + Chat History */}
-              {chatMode === 'voice' && (
-                <div 
-                  className="voice-panel px-4 py-6 flex flex-col items-center gap-4 relative"
-                >
-
-                  {/* AI Orb - Central interaction point */}
-                  <AIOrb
-                    state={appState}
-                    audioAnalyzer={audioAnalyzerRef.current}
-                    onClick={handleToggleConversation}
-                    size={105}
-                    disabled={false}
-                  />
-
-                  {/* Status text */}
-                  <p 
-                    className="text-sm font-medium"
-                    style={{ color: theme.text.medium }}
-                  >
-                    {appState === AppState.IDLE
-                      ? 'Tap orb to talk'
-                      : appState === AppState.CONNECTING
-                      ? 'Connecting...'
-                      : appState === AppState.LISTENING
-                      ? 'Listening...'
-                      : appState === AppState.SPEAKING
-                      ? 'AI is speaking...'
-                      : 'Error - tap to retry'}
-                  </p>
-                </div>
-              )}
-
-              {/* Chat Panel (shared for both modes) */}
-              <div className="flex-1 overflow-hidden">
-                <ChatPanelComponent
-                  messages={filteredMessages}
-                  onSendMessage={handleSendChatMessage}
-                  isLoading={isChatLoading}
-                  mode={chatMode}
-                  placeholder={featureFlags.conversationalMode
-                    ? 'Chat about anything, or say "write an SMS for..." to generate content'
-                    : 'Ask or describe what you need...'}
-                  showEmptyState={chatMode !== 'voice'}
-                  emptyStateMessage={chatMode === 'copy'
-                    ? (featureFlags.conversationalMode
-                      ? 'Ask anything or create content'
-                      : 'What would you like to create today?')
-                    : 'Start a voice conversation or type a message'}
-                  inputDisabled={chatMode === 'voice' && appState !== AppState.IDLE && appState !== AppState.ERROR}
-                  id={`${chatMode}-panel`}
-                  onVoiceClick={() => handleModeChange(chatMode === 'voice' ? 'copy' : 'voice')}
-                  voiceSupported={voiceSupported ?? true}
-                  // Streaming transcription/response props
-                  streamingUserTranscript={chatMode === 'voice' && appState === AppState.LISTENING ? transcript : undefined}
-                  streamingAIResponse={streamingAIResponse || undefined}
-                  modelSelector={
-                    <ModelSelector
-                      value={chatMode === 'copy' ? selectedLLMProvider : selectedTalkLLMProvider}
-                      onChange={chatMode === 'copy' ? setSelectedLLMProvider : setSelectedTalkLLMProvider}
-                      ttsValue={selectedTTSProvider}
-                      onTTSChange={setSelectedTTSProvider}
-                      showHealth={false}
-                      size="sm"
-                      disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
-                    />
-                  }
-                  // Content Trust System: Context selector
-                  // In conversational mode, hide from chat input (auto-detected from message)
-                  // In legacy mode, show ecosystem + channel dropdowns
-                  contextSelector={featureFlags.conversationalMode ? undefined : (
-                    <div className="flex items-center gap-2">
-                      <ContentContextSelector
-                        ecosystem={ecosystem}
-                        channel={contentChannel}
-                        onEcosystemChange={(eco) => {
-                          setEcosystem(eco);
-                          updateProjectDefaultEcosystem(eco);
-                        }}
-                        onChannelChange={(ch) => {
-                          setContentChannel(ch);
-                          updateProjectDefaultChannel(ch);
-                        }}
-                        compact={true}
-                        disabled={isChatLoading}
-                      />
-                    </div>
-                  )}
-                  // Settings trigger
-                  settingsTrigger={
-                    <button
-                      onClick={() => setConfigPanelCollapsed(!isConfigPanelCollapsed)}
-                      className="w-[28px] h-[28px] rounded-full flex items-center justify-center transition-colors hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: theme.text.medium,
-                      }}
-                      aria-label="Open settings"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = theme.stroke.low;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      <DSIcon name="IcSettings" size="XS" attention="medium" />
-                    </button>
-                  }
-                  // Content Trust System: Trust badge click handler
-                  onTrustBadgeClick={handleTrustBadgeClick}
-                  // Phase 3: Feedback & Learning (deprecated - kept for backward compat)
-                  onMessageFeedback={handleMessageFeedback}
-                  onSaveAsExample={handleSaveAsExample}
-                  // ChatGPT-style message actions
-                  onLike={handleLike}
-                  onDislike={handleDislike}
-                  onTryAgain={handleTryAgain}
-                  // Edit flow
-                  editingMessageId={editingMessageId}
-                  editValue={editValue}
-                  onStartEdit={handleStartEdit}
-                  onEditChange={setEditValue}
-                  onSubmitEdit={handleSubmitEdit}
-                  onCancelEdit={handleCancelEdit}
-                  onVersionChange={handleVersionChange}
-                  // Stop generation handler
-                  onStopGeneration={handleStopGeneration}
-                  // Dislike feedback modal
-                  dislikeModalMessageId={dislikeModalMessageId}
-                  onDislikeModalSubmit={handleDislikeModalSubmit}
-                  onDislikeModalClose={handleDislikeModalClose}
-                  // Auto-fix preview accept handler
-                  onAcceptAutoFix={handleAcceptAutoFix}
-                />
-              </div>
-            </div>
-        </ErrorBoundary>
-      </main>
-
-      {/* Right Sidebar - Advanced Settings */}
-      <AdvancedSettingsPanel
-        voiceGender={activeProject.voiceGender}
-        onVoiceGenderChange={updateProjectVoiceGender}
-        config={activeProject.config}
-        onConfigChange={updateProjectConfig}
-        defaultEcosystem={ecosystem}
-        defaultChannel={contentChannel}
-        defaultLanguage={activeProject.defaultLanguage || 'english'}
-        defaultRegion={activeProject.defaultRegion || 'pan_india'}
-        onDefaultEcosystemChange={(eco) => {
-          setEcosystem(eco);
-          updateProjectDefaultEcosystem(eco);
-        }}
-        onDefaultChannelChange={(ch) => {
-          setContentChannel(ch);
-          updateProjectDefaultChannel(ch);
-        }}
-        onDefaultLanguageChange={updateProjectDefaultLanguage}
-        onDefaultRegionChange={updateProjectDefaultRegion}
-        trustSettings={trustSettings}
-        onTrustSettingsChange={setTrustSettings}
-        colorMode={colorMode}
-        onColorModeChange={onColorModeChange}
-        temperature={temperature}
-        maxTokens={maxTokens}
-        streamResponse={streamResponse}
-        onTemperatureChange={setTemperature}
-        onMaxTokensChange={setMaxTokens}
-        onStreamResponseChange={setStreamResponse}
-        disabled={appState !== AppState.IDLE && chatMode === 'voice'}
-        isCollapsed={isConfigPanelCollapsed}
-        onToggleCollapse={() => setConfigPanelCollapsed(!isConfigPanelCollapsed)}
-      />
-
-      {/* Trust Context Panel - Slide-out */}
-      <TrustContextPanel
-        isOpen={showTrustPanel}
-        onClose={() => {
-          setShowTrustPanel(false);
-          setSelectedMessageForTrust(null);
-        }}
-        trustScore={selectedMessageForTrustPanel?.trustScore}
-        generationContext={selectedMessageForTrustPanel?.generationContext}
-        analyzedContent={selectedMessageForTrustPanel?.content}
-        onAutoFix={handleAutoFix}
-        autoFixAvailable={
-          !isAutoFixing && 
-          (selectedMessageForTrustPanel?.trustScore?.autoFixableCount ?? 0) > 0
-        }
-        evidence={selectedMessageForTrustPanel?.evidence}
-      />
-
-
-      {/* Onboarding Modal */}
-      {showOnboarding && (
-        <OnboardingModal
-          onComplete={handleOnboardingComplete}
-          existingProfile={userProfile ?? undefined}
-          onClose={userProfile ? () => setShowOnboarding(false) : undefined}
-        />
-      )}
-
-      {/* Error Toast */}
-      {error && (
-          <div className="fixed bottom-3 left-1/2 -translate-x-1/2 max-w-md w-full mx-auto px-4">
-            <div className="bg-red-500 text-white px-3 py-2 rounded-full shadow-lg flex items-center gap-2">
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <p className="flex-1 text-xs">{error.message}</p>
-              <button
-                onClick={() => setError(null)}
-                className="p-1 hover:bg-red-600 rounded-full"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
-    </div>
+    <MainLayout
+      {...sidebarProps}
+      userProfile={userProfile}
+      onOnboardingComplete={handleOnboardingComplete}
+      filteredMessages={filteredMessages}
+      onSendMessage={handleSendChatMessage}
+      voiceSupported={voiceSupported}
+      appState={appState}
+      transcript={transcript}
+      streamingAIResponse={streamingAIResponse}
+      audioAnalyzerRef={audioAnalyzerRef}
+      onToggleConversation={handleToggleConversation}
+      onModeChange={handleModeChange}
+      editingMessageId={editingMessageId}
+      editValue={editValue}
+      onEditChange={setEditValue}
+      onStartEdit={handleStartEdit}
+      onCancelEdit={handleCancelEdit}
+      onSubmitEdit={handleSubmitEdit}
+      onVersionChange={handleVersionChange}
+      onLike={handleLike}
+      onDislike={handleDislike}
+      onTryAgain={handleTryAgain}
+      dislikeModalMessageId={dislikeModalMessageId}
+      onDislikeModalSubmit={handleDislikeModalSubmit}
+      onDislikeModalClose={handleDislikeModalClose}
+      showTrustPanel={showTrustPanel}
+      onTrustPanelClose={() => {
+        setShowTrustPanel(false);
+        setSelectedMessageForTrust(null);
+      }}
+      selectedMessageForTrustPanel={selectedMessageForTrustPanel}
+      isAutoFixing={isAutoFixing}
+      onTrustBadgeClick={handleTrustBadgeClick}
+      onAutoFix={handleAutoFix}
+      onAcceptAutoFix={handleAcceptAutoFix}
+      onMessageFeedback={handleMessageFeedback}
+      onSaveAsExample={handleSaveAsExample}
+      onStopGeneration={handleStopGeneration}
+    />
   );
 }
 
