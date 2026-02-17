@@ -643,7 +643,7 @@ export const ChatPanel = memo(function ChatPanel({
             highlightedText={isHighlighted ? highlightedText ?? undefined : undefined}
           />
           
-          {/* Actions row: Trust Badge + Auto-fixed badge + Message Actions */}
+          {/* Actions row: Trust Badge + Message Actions + Auto-fixed badge */}
           <div className="flex items-center gap-0 mt-1.5 -ml-2">
             {message.trustScore && (
               <TrustBadge
@@ -652,9 +652,6 @@ export const ChatPanel = memo(function ChatPanel({
                 size="sm"
                 showScore={true}
               />
-            )}
-            {hasAutoFixPreview && (
-              <Badge variant="positive">auto-fixed</Badge>
             )}
             {onLike && onDislike && onTryAgain && (
               <AssistantMessageActions
@@ -666,6 +663,9 @@ export const ChatPanel = memo(function ChatPanel({
                 disabled={isLoading}
                 feedbackGiven={message.userFeedback}
               />
+            )}
+            {hasAutoFixPreview && (
+              <Badge variant="positive">auto-fixed</Badge>
             )}
           </div>
         </div>
