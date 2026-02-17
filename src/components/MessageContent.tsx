@@ -523,6 +523,7 @@ export const MessageContent = memo(function MessageContent({
 
 /**
  * Process React children to handle highlight markers in text nodes
+ * Recursively processes nested React elements (like <strong>, <em>) to find text nodes
  */
 function processChildren(children: React.ReactNode, isLight: boolean): React.ReactNode {
   if (typeof children === 'string') {
@@ -533,7 +534,22 @@ function processChildren(children: React.ReactNode, isLight: boolean): React.Rea
       if (typeof child === 'string') {
         return <React.Fragment key={i}>{processHighlightedText(child, isLight)}</React.Fragment>;
       }
+      // Recursively process React elements with children (e.g., <strong>, <em>)
+      if (React.isValidElement(child) && child.props.children) {
+        return React.cloneElement(child, { 
+          ...child.props, 
+          key: i,
+          children: processChildren(child.props.children, isLight) 
+        });
+      }
       return child;
+    });
+  }
+  // Handle single React element with children
+  if (React.isValidElement(children) && children.props.children) {
+    return React.cloneElement(children, { 
+      ...children.props, 
+      children: processChildren(children.props.children, isLight) 
     });
   }
   return children;
