@@ -5,24 +5,16 @@
  * - Edit flow (start, cancel, submit, version change)
  * - Like/Dislike feedback with modal
  * - Try Again (regeneration)
+ *
+ * State is managed via useUIStore (editingMessageId, editValue, dislikeModalMessageId).
  */
 
-import { useState, useRef, useCallback } from 'react';
-import type { PromptVersion, SendMessageOptions, SendMessageResult } from '../types';
+import { useRef, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+import type { ChatMessage, PromptVersion, SendMessageOptions, SendMessageResult, FeedbackPayload } from '../types';
 import { featureFlags } from '../services/featureFlags';
 import { getConstitutionalWrapper } from '../services/generation/constitutionalWrapper';
-import type { FeedbackPayload } from '../types';
-
-interface ChatMessage {
-  id: string;
-  role: string;
-  content: string;
-  parentMessageId?: string;
-  userFeedback?: string;
-  promptVersions?: PromptVersion[];
-  timestamp?: number;
-  [key: string]: unknown;
-}
+import { useUIStore } from '../stores/uiStore';
 
 interface UseMessageInteractionsParams {
   chatMessages: ChatMessage[];
@@ -40,26 +32,36 @@ export function useMessageInteractions({
   handleSendChatMessage,
   handleMessageFeedback,
 }: UseMessageInteractionsParams) {
-  // ── Edit Flow State ──────────────────────────────────────────────────
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState<string>('');
-  const editTriggerRef = useRef<string | null>(null);
+  // ── State from uiStore ───────────────────────────────────────────────
+  const {
+    editingMessageId,
+    editValue,
+    setEditingMessage,
+    setEditValue,
+    dislikeModalMessageId,
+    setDislikeModalMessageId,
+  } = useUIStore(useShallow((s) => ({
+    editingMessageId: s.editingMessageId,
+    editValue: s.editValue,
+    setEditingMessage: s.setEditingMessage,
+    setEditValue: s.setEditValue,
+    dislikeModalMessageId: s.dislikeModalMessageId,
+    setDislikeModalMessageId: s.setDislikeModalMessageId,
+  })));
 
-  // ── Dislike Modal State ──────────────────────────────────────────────
-  const [dislikeModalMessageId, setDislikeModalMessageId] = useState<string | null>(null);
+  // Local ref for triggering edit (not in store - transient)
+  const editTriggerRef = useRef<string | null>(null);
 
   // ── Edit Handlers ────────────────────────────────────────────────────
 
   const handleStartEdit = useCallback((messageId: string, content: string) => {
-    setEditingMessageId(messageId);
-    setEditValue(content);
+    setEditingMessage(messageId, content);
     editTriggerRef.current = messageId;
-  }, []);
+  }, [setEditingMessage]);
 
   const handleCancelEdit = useCallback(() => {
-    setEditingMessageId(null);
-    setEditValue('');
-  }, []);
+    setEditingMessage(null);
+  }, [setEditingMessage]);
 
   const handleSubmitEdit = useCallback(async (messageId: string, newContent: string) => {
     const originalMessage = chatMessages.find(m => m.id === messageId);
@@ -70,8 +72,7 @@ export function useMessageInteractions({
     );
     const currentAiResponse = aiResponseIndex >= 0 ? chatMessages[aiResponseIndex] : null;
 
-    setEditingMessageId(null);
-    setEditValue('');
+    setEditingMessage(null);
 
     const result = await handleSendChatMessage(newContent, {
       parentMessageId: messageId,
@@ -101,7 +102,7 @@ export function useMessageInteractions({
         };
       });
     }
-  }, [chatMessages, handleSendChatMessage, updateMessage]);
+  }, [chatMessages, handleSendChatMessage, updateMessage, setEditingMessage]);
 
   const handleVersionChange = useCallback((messageId: string, newVersion: number) => {
     updateMessage(messageId, (msg) => ({
@@ -151,7 +152,7 @@ export function useMessageInteractions({
     }));
 
     setDislikeModalMessageId(messageId);
-  }, [chatMessages, updateMessage]);
+  }, [chatMessages, updateMessage, setDislikeModalMessageId]);
 
   const handleDislikeModalSubmit = useCallback((reasons: string[], comment: string) => {
     if (!dislikeModalMessageId) return;
@@ -181,7 +182,7 @@ export function useMessageInteractions({
     });
 
     setDislikeModalMessageId(null);
-  }, [dislikeModalMessageId, chatMessages, handleMessageFeedback]);
+  }, [dislikeModalMessageId, chatMessages, handleMessageFeedback, setDislikeModalMessageId]);
 
   const handleDislikeModalClose = useCallback(() => {
     if (!dislikeModalMessageId) return;
@@ -196,7 +197,7 @@ export function useMessageInteractions({
     });
 
     setDislikeModalMessageId(null);
-  }, [dislikeModalMessageId, chatMessages, handleMessageFeedback]);
+  }, [dislikeModalMessageId, chatMessages, handleMessageFeedback, setDislikeModalMessageId]);
 
   // ── Try Again ────────────────────────────────────────────────────────
 

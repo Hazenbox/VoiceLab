@@ -13,6 +13,7 @@ import type {
   ColorMode,
   AppError,
   ChatMode,
+  ChatMessage,
   SendMessageOptions,
   SendMessageResult,
   FeedbackPayload,
@@ -38,14 +39,6 @@ import { useConversationStore } from '../../stores/conversationStore';
 import { useUIStore } from '../../stores/uiStore';
 
 // ── Props Interface ───────────────────────────────────────────────────
-
-interface ChatMessage {
-  id: string;
-  role: string;
-  content: string;
-  sourceMode?: string;
-  [key: string]: unknown;
-}
 
 export interface MainLayoutProps {
   // App-level props (not in stores)
@@ -76,15 +69,15 @@ export interface MainLayoutProps {
   editingMessageId: string | null;
   editValue: string;
   onEditChange: (value: string) => void;
-  onStartEdit: (id: string) => void;
+  onStartEdit: (id: string, content: string) => void;
   onCancelEdit: () => void;
-  onSubmitEdit: () => void;
+  onSubmitEdit: (messageId: string, newContent: string) => void;
   onVersionChange: (messageId: string, versionIndex: number) => void;
   onLike: (messageId: string) => void;
   onDislike: (messageId: string) => void;
   onTryAgain: (messageId: string) => void;
   dislikeModalMessageId: string | null;
-  onDislikeModalSubmit: (messageId: string, reasons: string[], comment: string) => void;
+  onDislikeModalSubmit: (reasons: string[], comment: string) => void;
   onDislikeModalClose: () => void;
 
   // Trust panel (from useTrustPanel)

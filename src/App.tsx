@@ -4,7 +4,6 @@ import type {
   ColorMode,
   ChatMode,
 } from './types';
-import { AppState } from './types';
 import { MainLayout, DocsLayout, HowItWorksLayout } from './components/layouts';
 import { useChatPersistence, useVoiceConversation, useMessageInteractions, useTrustPanel, useContentGeneration, useConvexData, useProfileSync } from './hooks';
 import { useThemeColors } from './theme';
@@ -52,18 +51,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Theme colors from DS tokens
   const theme = useThemeColors();
   
-  // Project context
-  const { 
-    activeProject,
-    updateProject,
-    updateProjectConfig, 
-    updateProjectVoiceGender, 
-    // New Content Trust methods
-    updateProjectDefaultChannel,
-    updateProjectDefaultEcosystem,
-    updateProjectDefaultLanguage,
-    updateProjectDefaultRegion,
-  } = useProject();
+  // Project context (layouts read other methods directly from useProject())
+  const { activeProject, updateProject } = useProject();
   
   // ── Auto-rename Project (ChatGPT-style) ────────────────────────
   // Automatically rename "Untitled N" projects based on first message exchange
@@ -85,6 +74,37 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Sync user profile to Convex (extracted to hook)
   useProfileSync(userProfile);
 
+  // ==========================================================================
+  // Zustand Store Selectors (replaces 15+ useState + persistence useEffects)
+  // ==========================================================================
+
+  // Conversation store -- only fields used directly by App.tsx logic
+  // (Layouts + hooks read other fields from the store directly)
+  const {
+    ecosystem, setEcosystem,
+    contentChannel, setContentChannel,
+    setIsChatLoading,
+  } = useConversationStore(useShallow((s) => ({
+    ecosystem: s.ecosystem, setEcosystem: s.setEcosystem,
+    contentChannel: s.contentChannel, setContentChannel: s.setContentChannel,
+    setIsChatLoading: s.setIsChatLoading,
+  })));
+
+  // UI store -- only fields used directly by App.tsx logic
+  // (Layouts read activeView, isConfigPanelCollapsed, showOnboarding directly)
+  const {
+    chatMode, setChatMode,
+    activeView,
+    error, clearError,
+    setShowOnboarding,
+  } = useUIStore(useShallow((s) => ({
+    chatMode: s.chatMode, setChatMode: s.setChatMode,
+    activeView: s.activeView,
+    error: s.error, clearError: s.clearError,
+    setShowOnboarding: s.setShowOnboarding,
+  })));
+
+  // Onboarding complete handler (after store selectors so dependencies are in scope)
   const handleOnboardingComplete = useCallback((profile: UserProfile) => {
     setUserProfile(profile);
     setShowOnboarding(false);
@@ -100,39 +120,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       setContentChannel(autoConfig.channel);
     }
   }, [setShowOnboarding, setEcosystem, setContentChannel]);
-
-  // ==========================================================================
-  // Zustand Store Selectors (replaces 15+ useState + persistence useEffects)
-  // ==========================================================================
-
-  // Conversation store -- only fields used directly by App.tsx logic
-  // (Layouts + useContentGeneration read other fields from the store directly)
-  const {
-    ecosystem, setEcosystem,
-    contentChannel, setContentChannel,
-    trustSettings,
-    setIsChatLoading,
-  } = useConversationStore(useShallow((s) => ({
-    ecosystem: s.ecosystem, setEcosystem: s.setEcosystem,
-    contentChannel: s.contentChannel, setContentChannel: s.setContentChannel,
-    trustSettings: s.trustSettings,
-    setIsChatLoading: s.setIsChatLoading,
-  })));
-
-  // UI store -- navigation, modals, error
-  const {
-    chatMode, setChatMode,
-    activeView, setActiveView,
-    error, setError, clearError,
-    isConfigPanelCollapsed, setConfigPanelCollapsed,
-    showOnboarding, setShowOnboarding,
-  } = useUIStore(useShallow((s) => ({
-    chatMode: s.chatMode, setChatMode: s.setChatMode,
-    activeView: s.activeView, setActiveView: s.setActiveView,
-    error: s.error, setError: s.setError, clearError: s.clearError,
-    isConfigPanelCollapsed: s.isConfigPanelCollapsed, setConfigPanelCollapsed: s.setConfigPanelCollapsed,
-    showOnboarding: s.showOnboarding, setShowOnboarding: s.setShowOnboarding,
-  })));
 
   // Initialize session memory on mount
   useEffect(() => {
@@ -186,16 +173,14 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const { reset: resetChatAbort, getSignal: getChatAbortSignal } = useAbortController();
 
   // Voice conversation -- extracted to hook (refs + state + handlers)
+  // (voiceError, handleStartConversation, handleStopConversation unused here)
   const {
     voiceSupported,
     appState,
     transcript,
     streamingAIResponse,
     setStreamingAIResponse,
-    voiceError,
     audioAnalyzerRef,
-    handleStartConversation,
-    handleStopConversation,
     handleToggleConversation,
     handleModeChange: handleVoiceModeChange,
   } = useVoiceConversation({
@@ -312,7 +297,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     editingMessageId,
     editValue,
     setEditValue,
-    editTriggerRef,
     dislikeModalMessageId,
     handleStartEdit,
     handleCancelEdit,
@@ -354,7 +338,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   const {
     showTrustPanel,
     setShowTrustPanel,
-    selectedMessageForTrust,
     setSelectedMessageForTrust,
     selectedMessageForTrustPanel,
     isAutoFixing,
@@ -363,7 +346,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     handleAcceptAutoFix,
   } = useTrustPanel({
     chatMessages,
-    trustSettings,
     setMessages,
     convexAutoFixRules: convexKnowledge?.autoFixRules,
   });

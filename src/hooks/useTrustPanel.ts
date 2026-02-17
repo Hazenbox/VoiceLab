@@ -5,41 +5,21 @@
  * - Trust panel visibility and message selection
  * - Auto-fix generation and acceptance
  * - Re-validation after fixes
+ *
+ * State is managed via useUIStore (showTrustPanel, selectedMessageForTrust, isAutoFixing).
+ * trustSettings is read directly from useConversationStore.
  */
 
-import { useState, useCallback, useMemo } from 'react';
-import type { TrustSettings } from '../types';
+import { useCallback, useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+import type { ChatMessage } from '../types';
 import { runValidationPipeline } from '../services/validation';
 import { calculateTrustScore, generateAutoFixes, applyAutoFixes } from '../services/trust';
-
-interface ChatMessage {
-  id: string;
-  content: string;
-  trustScore?: {
-    validationResults: Array<{
-      violations: Array<{
-        severity: string;
-        autoFixable?: boolean;
-        [key: string]: unknown;
-      }>;
-      passed: boolean;
-      [key: string]: unknown;
-    }>;
-    [key: string]: unknown;
-  };
-  generationContext?: unknown;
-  autoFixPreview?: {
-    isPending: boolean;
-    fixedContent: string;
-    appliedFixes: unknown[];
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-}
+import { useUIStore } from '../stores/uiStore';
+import { useConversationStore } from '../stores/conversationStore';
 
 interface UseTrustPanelParams {
   chatMessages: ChatMessage[];
-  trustSettings: TrustSettings;
   setMessages: (updater: (prev: ChatMessage[]) => ChatMessage[]) => void;
   convexAutoFixRules?: Array<{
     content: string;
@@ -49,20 +29,34 @@ interface UseTrustPanelParams {
 
 export function useTrustPanel({
   chatMessages,
-  trustSettings,
   setMessages,
   convexAutoFixRules,
 }: UseTrustPanelParams) {
-  // ── State ────────────────────────────────────────────────────────────
-  const [showTrustPanel, setShowTrustPanel] = useState(false);
-  const [selectedMessageForTrust, setSelectedMessageForTrust] = useState<string | null>(null);
-  const [isAutoFixing, setIsAutoFixing] = useState(false);
+  // ── State from stores ────────────────────────────────────────────────
+  const {
+    showTrustPanel,
+    setShowTrustPanel,
+    selectedMessageForTrust,
+    setSelectedMessageForTrust,
+    isAutoFixing,
+    setIsAutoFixing,
+  } = useUIStore(useShallow((s) => ({
+    showTrustPanel: s.showTrustPanel,
+    setShowTrustPanel: s.setShowTrustPanel,
+    selectedMessageForTrust: s.selectedMessageForTrust,
+    setSelectedMessageForTrust: s.setSelectedMessageForTrust,
+    isAutoFixing: s.isAutoFixing,
+    setIsAutoFixing: s.setIsAutoFixing,
+  })));
+
+  // trustSettings read directly from conversationStore
+  const trustSettings = useConversationStore((s) => s.trustSettings);
 
   // ── Memos ────────────────────────────────────────────────────────────
   const selectedMessageForTrustPanel = useMemo(
     () =>
       selectedMessageForTrust
-        ? chatMessages.find(m => m.id === selectedMessageForTrust)
+        ? chatMessages.find(m => m.id === selectedMessageForTrust) ?? null
         : null,
     [selectedMessageForTrust, chatMessages],
   );
@@ -72,7 +66,7 @@ export function useTrustPanel({
   const handleTrustBadgeClick = useCallback((messageId: string) => {
     setSelectedMessageForTrust(messageId);
     setShowTrustPanel(true);
-  }, []);
+  }, [setSelectedMessageForTrust, setShowTrustPanel]);
 
   const handleAutoFix = useCallback(async () => {
     const message = selectedMessageForTrust
@@ -141,7 +135,7 @@ export function useTrustPanel({
     } finally {
       setIsAutoFixing(false);
     }
-  }, [selectedMessageForTrust, chatMessages, isAutoFixing, trustSettings, setMessages, convexAutoFixRules]);
+  }, [selectedMessageForTrust, chatMessages, isAutoFixing, trustSettings, setMessages, convexAutoFixRules, setIsAutoFixing]);
 
   const handleAcceptAutoFix = useCallback(
     async (messageId: string) => {
