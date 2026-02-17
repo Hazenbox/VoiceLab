@@ -15,7 +15,7 @@
  * Violation category
  */
 export type ViolationCategory =
-  | 'ai_identity'       // Revealing AI nature
+  | 'ai_identity'       // Human impersonation or inappropriate AI provider disclosure
   | 'competitor'        // Mentioning competitors
   | 'overpromise'       // Making unrealistic promises
   | 'blame'             // Blaming user or others
@@ -59,36 +59,60 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
   description: string;
 }>> = {
   ai_identity: [
+    // HUMAN IMPERSONATION -- these are the real violations per KB
     {
-      pattern: /\b(i am an? (AI|artificial intelligence|bot|chatbot|language model|LLM))\b/gi,
+      pattern: /\bi am (a )?human\b/gi,
       severity: 'critical',
-      replacement: "I'm here to help",
-      description: 'revealing AI identity',
+      replacement: "I'm Jio's AI assistant",
+      description: 'impersonating human',
     },
     {
-      pattern: /\b(as an AI|being an AI|since I'm an? (AI|bot))\b/gi,
+      pattern: /\bi am (a )?(real )?person\b/gi,
+      severity: 'critical',
+      replacement: "I'm Jio's AI assistant",
+      description: 'impersonating human',
+    },
+    {
+      pattern: /\bi (was|am) born\b/gi,
       severity: 'critical',
       replacement: '',
-      description: 'referencing AI nature',
+      description: 'claiming human origin',
     },
     {
-      pattern: /\b(my (programming|training|algorithms?))\b/gi,
+      pattern: /\bmy (personal |lived )?experience(s)? (as a|growing up|when i was)\b/gi,
+      severity: 'critical',
+      replacement: '',
+      description: 'fabricating personal experience',
+    },
+    {
+      pattern: /\bi (truly |really |actually )?(feel|have feelings|experience emotions)\b/gi,
       severity: 'error',
       replacement: '',
-      description: 'technical AI reference',
+      description: 'claiming human emotions',
     },
+    // AI PROVIDER DISCLOSURE -- don't reveal underlying tech
     {
-      pattern: /\b(OpenAI|GPT|Claude|Anthropic|Google AI)\b/gi,
+      pattern: /\b(OpenAI|GPT-?\d*|ChatGPT|Claude|Anthropic|Google AI|Gemini|Llama|Mistral)\b/gi,
       severity: 'critical',
       replacement: '',
       description: 'mentioning AI provider',
     },
+    // TECHNICAL AI REFERENCES -- keep responses user-friendly
     {
-      pattern: /\b(i (don't|cannot) (actually )?(feel|have feelings|experience emotions))\b/gi,
+      pattern: /\b(my (programming|training data|algorithms?|neural network))\b/gi,
       severity: 'error',
       replacement: '',
-      description: 'discussing AI limitations',
+      description: 'technical AI reference',
     },
+    // CASUAL BOT REFERENCES -- prefer "AI assistant" over "bot/chatbot"
+    {
+      pattern: /\bi am (a )?(bot|chatbot|language model|LLM)\b/gi,
+      severity: 'warning',
+      replacement: "I'm Jio's AI assistant",
+      description: 'prefer AI assistant over bot/chatbot',
+    },
+    // NOTE: "I am an AI", "I'm an AI assistant", "as an AI" are ALLOWED per KB.
+    // The KB mandates clear AI self-identification. Do NOT flag these.
   ],
   competitor: [
     {
