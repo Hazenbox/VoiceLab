@@ -111,9 +111,14 @@ export async function runPipelineServer(
       return result;
     }
 
-    // 3. Retrieve knowledge context
+    // Check if this is general chat (skip heavy processing)
+    const isGeneralChat = classification.intent === 'general_chat';
+
+    // 3. Retrieve knowledge context (skip for general_chat - no brand rules needed)
     const retrieveStart = Date.now();
-    const retrieval = await retrieve(pipelineInput);
+    const retrieval = isGeneralChat
+      ? { knowledge: null, retrievalCount: 0 }
+      : await retrieve(pipelineInput);
     stepTimings.retrieve = Date.now() - retrieveStart;
 
     if (combinedSignal.aborted) {
@@ -140,40 +145,53 @@ export async function runPipelineServer(
       throw new AbortError('Pipeline aborted');
     }
 
-    // 6. Validate
+    // 6. Validate (skip for general_chat - LLM already uses Jio tone via BASE_PERSONA)
     const validateStart = Date.now();
-    let validation = await validate(pipelineInput, generated.content, assembled);
-    stepTimings.validate = Date.now() - validateStart;
-
-    // Emit validation event
-    options?.onEvent?.({
-      type: 'validation',
-      passed: validation.passed,
-      score: validation.trustScore?.overall ?? null,
-      issueCount: (validation.validationSummary?.warningCount ?? 0) + (validation.validationSummary?.errorCount ?? 0),
-    });
-
-    // 7. Retry if validation failed
-    if (!validation.passed && retryCount < MAX_RETRIES) {
-      retryCount++;
-      console.log(`[ServerPipeline] Validation failed, retrying (${retryCount}/${MAX_RETRIES})`);
-      
-      generated = await generateWithStreaming(
-        pipelineInput,
-        assembled.systemPrompt,
-        classification,
-        combinedSignal,
-        options?.onEvent
-      );
+    let validation;
+    if (isGeneralChat) {
+      // Skip validation for general conversation
+      validation = {
+        content: generated.content,
+        passed: true,
+        validation: null,
+        trustScore: null,
+        autoFixPreview: null,
+        validationSummary: null,
+      };
+    } else {
       validation = await validate(pipelineInput, generated.content, assembled);
-      
+
+      // Emit validation event
       options?.onEvent?.({
         type: 'validation',
         passed: validation.passed,
         score: validation.trustScore?.overall ?? null,
         issueCount: (validation.validationSummary?.warningCount ?? 0) + (validation.validationSummary?.errorCount ?? 0),
       });
+
+      // 7. Retry if validation failed
+      if (!validation.passed && retryCount < MAX_RETRIES) {
+        retryCount++;
+        console.log(`[ServerPipeline] Validation failed, retrying (${retryCount}/${MAX_RETRIES})`);
+        
+        generated = await generateWithStreaming(
+          pipelineInput,
+          assembled.systemPrompt,
+          classification,
+          combinedSignal,
+          options?.onEvent
+        );
+        validation = await validate(pipelineInput, generated.content, assembled);
+        
+        options?.onEvent?.({
+          type: 'validation',
+          passed: validation.passed,
+          score: validation.trustScore?.overall ?? null,
+          issueCount: (validation.validationSummary?.warningCount ?? 0) + (validation.validationSummary?.errorCount ?? 0),
+        });
+      }
     }
+    stepTimings.validate = Date.now() - validateStart;
 
     // 8. Finalize
     const finalizeStart = Date.now();

@@ -58,8 +58,13 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       return result;
     }
 
-    // 3. Retrieve knowledge context (async: includes RAG semantic search)
-    const retrieval = await retrieve(input);
+    // Check if this is general chat (skip heavy processing)
+    const isGeneralChat = classification.intent === 'general_chat';
+
+    // 3. Retrieve knowledge context (skip for general_chat - no brand rules needed)
+    const retrieval = isGeneralChat
+      ? { knowledge: null, retrievalCount: 0 }
+      : await retrieve(input);
 
     // 4. Assemble prompt (tokens resolved here, immutable after this point)
     const assembled = assemble(input, classification, retrieval.knowledge);
@@ -67,15 +72,28 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     // 5. Generate content (supports streaming via callbacks)
     let generated = await generate(input, assembled.systemPrompt, classification);
 
-    // 6. Validate (token enforcement + validation + trust + auto-fix)
-    let validation = await validate(input, generated.content, assembled);
-
-    // 7. Regeneration (max 1 retry, enforced here -- pipeline orchestrator controls retry)
-    if (!validation.passed && retryCount < MAX_RETRIES) {
-      retryCount++;
-      console.log(`[Pipeline] Validation failed (score below threshold), retrying (${retryCount}/${MAX_RETRIES})`);
-      generated = await generate(input, assembled.systemPrompt, classification);
+    // 6. Validate (skip for general_chat - LLM already uses Jio tone via BASE_PERSONA)
+    let validation;
+    if (isGeneralChat) {
+      // Skip validation for general conversation
+      validation = {
+        content: generated.content,
+        passed: true,
+        validation: null,
+        trustScore: null,
+        autoFixPreview: null,
+        validationSummary: null,
+      };
+    } else {
       validation = await validate(input, generated.content, assembled);
+
+      // 7. Regeneration (max 1 retry, only for content generation)
+      if (!validation.passed && retryCount < MAX_RETRIES) {
+        retryCount++;
+        console.log(`[Pipeline] Validation failed (score below threshold), retrying (${retryCount}/${MAX_RETRIES})`);
+        generated = await generate(input, assembled.systemPrompt, classification);
+        validation = await validate(input, generated.content, assembled);
+      }
     }
 
     // 8. Finalize (finishing layer + privacy masking)
