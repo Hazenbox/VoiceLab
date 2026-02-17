@@ -685,6 +685,8 @@ export const ChatPanel = memo(function ChatPanel({
     onSubmitEdit,
     onCancelEdit,
     onVersionChange,
+    highlightedText,
+    highlightedMessageId,
   ]);
 
   // Render input area (reusable for both layouts)
