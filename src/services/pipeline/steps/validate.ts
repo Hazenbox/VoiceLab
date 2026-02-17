@@ -114,7 +114,11 @@ export async function validate(
     }
   }
 
-  const passed = validationResult.overallScore >= 70;
+  // 3-tier validation:
+  // Hard stops (always block): safety violations, PII leakage, human impersonation
+  // Advisory score (threshold 55): everything else guides retry but doesn't block
+  const hasHardStop = checkHardStops(validationResult);
+  const passed = !hasHardStop && validationResult.overallScore >= 55;
 
   return {
     passed,
@@ -125,6 +129,38 @@ export async function validate(
     validationSummary,
     autoFixEvidence,
   };
+}
+
+/**
+ * Check for hard-stop violations that ALWAYS block content.
+ * Only 3 things qualify as hard stops:
+ * 1. Safety violations (critical severity)
+ * 2. PII leakage
+ * 3. Human impersonation
+ * Everything else is advisory.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function checkHardStops(validationResult: any): boolean {
+  if (!validationResult?.agentResults) return false;
+
+  for (const agentResult of validationResult.agentResults) {
+    for (const violation of (agentResult.violations || [])) {
+      // Hard stop 1: Critical safety violations
+      if (violation.severity === 'critical' && violation.category === 'safety') {
+        return true;
+      }
+      // Hard stop 2: PII leakage
+      if (violation.category === 'pii' || violation.rule?.includes('pii')) {
+        return true;
+      }
+      // Hard stop 3: Human impersonation
+      if (violation.category === 'ai_identity' && violation.severity === 'critical') {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 async function applyTokenEnforcement(
