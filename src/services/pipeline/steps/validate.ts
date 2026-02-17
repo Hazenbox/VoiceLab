@@ -39,7 +39,7 @@ export async function validate(
   // 1. Token enforcement (Convex brand protection rules)
   const cachedRules = getCachedEnforcementRules();
   if (cachedRules.length > 0) {
-    processedContent = applyTokenEnforcement(processedContent, input, assembled, cachedRules);
+    processedContent = await applyTokenEnforcement(processedContent, input, assembled, cachedRules);
   }
 
   // 2. Run validation pipeline
@@ -110,12 +110,12 @@ export async function validate(
   };
 }
 
-function applyTokenEnforcement(
+async function applyTokenEnforcement(
   content: string,
   input: PipelineInput,
   assembled: AssembleResult,
   rules: unknown[],
-): string {
+): Promise<string> {
   try {
     const constitutionalContext = assembled.constitutionalContext;
     const activeTokens = {
@@ -134,7 +134,7 @@ function applyTokenEnforcement(
     };
 
     const enforcementAgent = createTokenEnforcementAgent(enforcementContext);
-    const enforcementResult = enforcementAgent.validate(content);
+    const enforcementResult = await enforcementAgent.validate(content);
 
     if (!enforcementResult.passed) {
       const autoFixable = enforcementResult.violations.filter(
