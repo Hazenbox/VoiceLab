@@ -72,36 +72,6 @@ export {
   type PatternValidationResult,
 } from './patternBlockAgent';
 
-// Handoff Trigger Agent
-export {
-  detectHandoffTriggers,
-  mightNeedHandoff,
-  getHandoffMessage,
-  type HandoffTrigger,
-  type HandoffResult,
-  type HandoffReason,
-} from './handoffTriggerAgent';
-
-// Consolidated Agents
-export {
-  validateSafetyPrivacy,
-  validateInclusivity,
-  validateBrandStyle,
-  validateCommerce,
-  runConsolidatedValidation,
-  type AgentValidation,
-  type ConsolidatedValidation,
-} from './consolidatedAgents';
-
-// Self-Check Agent
-export {
-  runSelfCheck,
-  hasCriticalFailures,
-  getSelfCheckSummary,
-  type SelfCheckQuestion,
-  type SelfCheckResult,
-  type SelfCheckContext,
-} from './selfCheckAgent';
 
 // All Agents (individual exports)
 export { ALL_AGENTS } from './allAgents';
