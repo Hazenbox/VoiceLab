@@ -26,9 +26,7 @@ import {
   TrustContextPanel,
   AdvancedSettingsPanel,
 } from './components';
-import { setDynamicAvoidWords } from './services/validation';
-import { setDynamicAutoFixRules } from './services/trust';
-import { useChatPersistence, useVoiceConversation, useMessageInteractions, useTrustPanel, useContentGeneration } from './hooks';
+import { useChatPersistence, useVoiceConversation, useMessageInteractions, useTrustPanel, useContentGeneration, useConvexData, useProfileSync } from './hooks';
 import { useThemeColors } from './theme';
 // Design system context removed - locked to Jio only
 import { useProject } from './context/ProjectContext';
@@ -47,29 +45,15 @@ import { featureFlags } from './services/featureFlags';
 import {
   initSessionMemory,
   hasActiveSession,
-  type MidTermMemory,
 } from './services/memory';
-// Analytics Services (v2)
-import { 
-  getSessionManager,
-  getErrorLogger,
-} from './services/analytics';
 // Session analytics hook (extracted from App.tsx for cleaner separation)
 import { useSessionAnalytics } from './hooks';
-// Convex (Phase 2-4: Knowledge Base & RAG)
-import { useQuery, useAction } from 'convex/react';
-import { api } from '../convex/_generated/api';
 // Knowledge & Learning (Phase 2-3)
 import {
   storeLocalCorrection,
   saveAsExample,
   type CorrectionEntry,
 } from './services/knowledge';
-// Token Enforcement cache (for useEffect injection)
-import {
-  setCachedEnforcementRules,
-} from './services/validation/tokenEnforcementCache';
-import type { TokenEnforcementRule } from './services/validation/tokenEnforcementAgent';
 // Project auto-naming (ChatGPT-style)
 import { generateProjectNameFromExchange } from './services/projectNaming';
 import type { 
@@ -118,61 +102,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // ── Onboarding State ──────────────────────────────────────────
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
   
-  // Sync user profile to Convex when profile changes (always enabled)
-  // NOTE: Sync service is initialized at module level in main.tsx
-  useEffect(() => {
-    const syncService = getSyncService();
-    if (!syncService) {
-      console.warn('[App] Sync service not available');
-      return;
-    }
-    
-    if (userProfile?.deviceId) {
-      syncService.setDeviceId(userProfile.deviceId);
-      // Sync full profile to Convex (non-blocking) -- also handles first-time onboarding
-      syncService.syncUserProfile({
-        deviceId: userProfile.deviceId,
-        name: userProfile.name,
-        role: userProfile.role,
-        product: userProfile.product,
-      });
-      // Heartbeat on mount (non-blocking)
-      syncService.heartbeat();
-      
-      // Log session start event (ecosystem/channel captured at mount time)
-      syncService.logAnalyticsEvent({
-        eventType: 'session_start',
-        ecosystem: userProfile.product as string || 'connectivity',  // Use product as ecosystem proxy at mount
-        channel: 'app_session',  // Generic channel for session events
-        persona: featureFlags.persona ? userProfile.role : 'unknown',
-        timestamp: Date.now(),
-      });
-
-      // v2: Initialize SessionManager for detailed session tracking
-      if (featureFlags.sessionAnalytics) {
-        const sessionManager = getSessionManager();
-        const errorLogger = getErrorLogger();
-        
-        // Wire up the sync callback for Convex operations
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        sessionManager.setSyncCallback(async (action: string, data: Record<string, any>) => {
-          // Route action to appropriate sync service method
-          const [module, method] = action.split(':');
-          if (module === 'sessions') {
-            if (method === 'create') return syncService.createSession(data as Parameters<typeof syncService.createSession>[0]);
-            if (method === 'updateMetrics') return syncService.updateSession(data as Parameters<typeof syncService.updateSession>[0]);
-            if (method === 'end') return syncService.endSession(data.sessionId, data.exitReason);
-          } else if (module === 'interactions') {
-            if (method === 'log') return syncService.logInteraction(data as Parameters<typeof syncService.logInteraction>[0]);
-            if (method === 'batchLog') return syncService.batchLogInteractions(data.events);
-          }
-        });
-        
-        // Also wire up error logger
-        errorLogger.setSyncCallback(sessionManager.setSyncCallback.bind(sessionManager));
-      }
-    }
-  }, [userProfile?.deviceId, userProfile?.name, userProfile?.role, userProfile?.product]);
+  // Sync user profile to Convex (extracted to hook)
+  useProfileSync(userProfile);
 
   const handleOnboardingComplete = useCallback((profile: UserProfile) => {
     setUserProfile(profile);
@@ -310,93 +241,22 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   });
 
   // ========================================================================
-  // Convex Knowledge Base & Learning Integration (Phase 2-4)
+  // Convex Knowledge Base & Learning Integration (extracted to hook)
   // ========================================================================
-  
-  // Fetch knowledge from Convex for prompt injection (gated by knowledgeBase flag)
-  // Returns avoid words, preferred words, auto-fix rules, and approved examples
-  const convexKnowledge = useQuery(
-    featureFlags.knowledgeBase ? api.knowledge.getKnowledgeForPrompt : undefined,
-    featureFlags.knowledgeBase ? { ecosystem, channel: contentChannel } : 'skip'
-  );
-  
-  // Fetch learning corrections from Convex (gated by learning flag)
-  // Returns user edits and thumbs-down feedback for prompt injection
-  const convexCorrections = useQuery(
-    featureFlags.learning ? api.corrections.getLearningCorrections : undefined,
-    featureFlags.learning ? { ecosystem, channel: contentChannel, limit: 20 } : 'skip'
-  );
-  
-  // Fetch user learning profile from Convex (gated by learning flag)
-  // Returns aggregated preferences, avoid patterns, and style preferences
-  const convexUserLearningProfile = useQuery(
-    featureFlags.learning && userProfile?.deviceId ? api.userProfiles.getProfileByDeviceId : undefined,
-    featureFlags.learning && userProfile?.deviceId ? { deviceId: userProfile.deviceId } : 'skip'
-  );
-  
-  // Fetch high-quality training examples for few-shot prompting (wiring orphaned code)
-  // Returns verified examples with high quality scores
-  const convexTrainingExamples = useQuery(
-    featureFlags.learning ? api.seedTrainingExamples.getHighQuality : undefined,
-    featureFlags.learning ? { minScore: 4, limit: 5 } : 'skip'
-  );
-  
-  // Fetch directive overrides from Convex for constitutional AI
-  // Returns active overrides filtered by ecosystem and channel
-  const convexDirectiveOverrides = useQuery(
-    featureFlags.constitutionalWrapper ? api.seedDirectiveOverrides.getByContext : undefined,
-    featureFlags.constitutionalWrapper ? { ecosystem, channel: contentChannel } : 'skip'
-  );
-  
-  // Fetch token enforcement rules from Convex
-  // Used for post-generation validation and auto-fix
-  // NOTE: Always fetch regardless of feature flag - brand protection is critical
-  const convexTokenEnforcementRules = useQuery(
-    api.tokenEnforcement.getActive,
-    {}
-  );
-  
-  // Semantic search action for RAG (called on-demand during message generation)
-  const runSemanticSearch = useAction(api.embeddings.semanticSearch);
+  const {
+    convexKnowledge,
+    convexCorrections,
+    convexUserLearningProfile,
+    convexTrainingExamples,
+    convexDirectiveOverrides,
+    convexTokenEnforcementRules,
+    runSemanticSearch,
+  } = useConvexData(userProfile?.deviceId);
 
   // Inject CSS variables for local tokens
   useEffect(() => {
     document.documentElement.style.setProperty('--local-white', theme.local.white);
   }, [theme.local.white]);
-
-  // Voice support detection moved to useVoiceConversation hook
-
-  // Inject Convex avoid words into validation agent
-  // This enables admin-added avoid words to be used during validation
-  useEffect(() => {
-    if (convexKnowledge?.avoidWords && featureFlags.knowledgeBase) {
-      // Convert Convex avoid words to format expected by validation agent
-      const dynamicWords = convexKnowledge.avoidWords.map(item => ({
-        content: item.content,
-        category: item.category || 'dynamic',
-        severity: item.metadata?.severity || 'warning',
-      }));
-      setDynamicAvoidWords(dynamicWords);
-    }
-  }, [convexKnowledge?.avoidWords]);
-
-  // Inject Convex auto-fix rules into auto-fix engine
-  // This enables admin-added replacements to be used during auto-fix
-  useEffect(() => {
-    if (convexKnowledge?.autoFixRules && featureFlags.knowledgeBase) {
-      setDynamicAutoFixRules(convexKnowledge.autoFixRules);
-    }
-  }, [convexKnowledge?.autoFixRules]);
-
-  // Cache token enforcement rules when they load from Convex
-  // Critical for brand protection - must be cached to avoid race conditions
-  useEffect(() => {
-    if (convexTokenEnforcementRules && convexTokenEnforcementRules.length > 0) {
-      setCachedEnforcementRules(convexTokenEnforcementRules as TokenEnforcementRule[]);
-    }
-  }, [convexTokenEnforcementRules]);
-
-  // Voice cleanup moved to useVoiceConversation hook
 
   // Content generation -- extracted to useContentGeneration hook
   const { sendMessage: handleSendChatMessage } = useContentGeneration({

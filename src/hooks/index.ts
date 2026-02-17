@@ -50,3 +50,7 @@ export { useVoiceConversation } from './useVoiceConversation';
 export { useMessageInteractions } from './useMessageInteractions';
 export { useTrustPanel } from './useTrustPanel';
 export { useContentGeneration, type ContentGenerationDeps } from './useContentGeneration';
+
+// Extracted from App.tsx (Phase 3B)
+export { useConvexData } from './useConvexData';
+export { useProfileSync } from './useProfileSync';
