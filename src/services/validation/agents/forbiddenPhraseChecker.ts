@@ -124,7 +124,7 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
       description: 'absolute prediction',
     },
     {
-      pattern: /\b(immediate(ly)?|instant(ly)?|right away) (refund|credit|resolution))\b/gi,
+      pattern: /\b(immediate(ly)?|instant(ly)?|right away) (refund|credit|resolution)\b/gi,
       severity: 'warning',
       replacement: 'quick',
       description: 'unrealistic timing promise',
