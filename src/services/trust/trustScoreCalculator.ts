@@ -16,7 +16,7 @@ import type {
 } from '../../types';
 import { DEFAULT_TRUST_SETTINGS } from '../../types';
 import type { PipelineValidationResult, ValidationAgentId } from '../validation/types';
-import { BRAND_GUARDRAILS } from '../prompt/promptBuilder';
+import { BRAND_GUARDRAILS } from '../../config/brandGuardrails';
 
 /**
  * Map agent IDs to breakdown fields
