@@ -105,31 +105,18 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Zustand Store Selectors (replaces 15+ useState + persistence useEffects)
   // ==========================================================================
 
-  // Conversation store -- generation config, providers, memory
+  // Conversation store -- only fields used directly by App.tsx logic
+  // (Layouts + useContentGeneration read other fields from the store directly)
   const {
     ecosystem, setEcosystem,
     contentChannel, setContentChannel,
-    trustSettings, setTrustSettings,
-    temperature, setTemperature,
-    maxTokens, setMaxTokens,
-    streamResponse, setStreamResponse,
-    isChatLoading, setIsChatLoading,
-    selectedLLMProvider, setSelectedLLMProvider,
-    selectedTTSProvider, setSelectedTTSProvider,
-    selectedTalkLLMProvider, setSelectedTalkLLMProvider,
-    midTermMemory, setMidTermMemory,
+    trustSettings,
+    setIsChatLoading,
   } = useConversationStore(useShallow((s) => ({
     ecosystem: s.ecosystem, setEcosystem: s.setEcosystem,
     contentChannel: s.contentChannel, setContentChannel: s.setContentChannel,
-    trustSettings: s.trustSettings, setTrustSettings: s.setTrustSettings,
-    temperature: s.temperature, setTemperature: s.setTemperature,
-    maxTokens: s.maxTokens, setMaxTokens: s.setMaxTokens,
-    streamResponse: s.streamResponse, setStreamResponse: s.setStreamResponse,
-    isChatLoading: s.isChatLoading, setIsChatLoading: s.setIsChatLoading,
-    selectedLLMProvider: s.selectedLLMProvider, setSelectedLLMProvider: s.setSelectedLLMProvider,
-    selectedTTSProvider: s.selectedTTSProvider, setSelectedTTSProvider: s.setSelectedTTSProvider,
-    selectedTalkLLMProvider: s.selectedTalkLLMProvider, setSelectedTalkLLMProvider: s.setSelectedTalkLLMProvider,
-    midTermMemory: s.midTermMemory, setMidTermMemory: s.setMidTermMemory,
+    trustSettings: s.trustSettings,
+    setIsChatLoading: s.setIsChatLoading,
   })));
 
   // UI store -- navigation, modals, error
@@ -238,19 +225,11 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     document.documentElement.style.setProperty('--local-white', theme.local.white);
   }, [theme.local.white]);
 
-  // Content generation -- extracted to useContentGeneration hook
+  // Content generation -- reads store values via getState() internally
   const { sendMessage: handleSendChatMessage } = useContentGeneration({
-    chatMode,
     chatMessages,
     addMessage,
     replaceMessage,
-    ecosystem,
-    contentChannel,
-    trustSettings,
-    temperature,
-    maxTokens,
-    streamResponse,
-    selectedLLMProvider,
     userProfile,
     activeProject,
     convexKnowledge,
@@ -260,10 +239,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     convexTokenEnforcementRules,
     convexUserLearningProfile,
     runSemanticSearch,
-    midTermMemory,
-    setMidTermMemory,
-    setIsChatLoading,
-    setError,
     setStreamingAIResponse,
     getChatAbortSignal,
     resetChatAbort,

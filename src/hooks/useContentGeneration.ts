@@ -16,18 +16,13 @@
 import { useCallback } from 'react';
 import { logger } from '../utils/logger';
 import type {
-  AppError,
-  ChatMode,
-  EcosystemType,
-  ContentChannelType,
-  TrustSettings,
   SendMessageOptions,
   SendMessageResult,
 } from '../types';
 import { createTextMessage } from '../types';
 import { run as pipelineRun } from '../services/pipeline';
 import type { PipelineInput, PipelineFeatureFlags, PipelineExternalData } from '../services/pipeline';
-import { createLLMProvider, type LLMProviderType } from '../services/providers/llm';
+import { createLLMProvider } from '../services/providers/llm';
 // Reliability
 import {
   generateIdempotencyKey,
@@ -43,7 +38,6 @@ import {
   extractMemoryContext,
   formatMemoryForPrompt,
   getContinuationGreeting,
-  type MidTermMemory,
 } from '../services/memory';
 // Analytics
 import {
@@ -62,31 +56,25 @@ import type { ChatMessage } from './useChatPersistence';
 // State manager
 import { getConstitutionalWrapper } from '../services/generation/constitutionalWrapper';
 
+// Zustand stores (read directly inside hook)
+import { useConversationStore } from '../stores/conversationStore';
+import { useUIStore } from '../stores/uiStore';
+
 // ── Hook Dependencies Interface ─────────────────────────────────────────────
+// Fields that come from stores are NO LONGER in this interface.
+// The hook reads them via store.getState() at call time.
 
 export interface ContentGenerationDeps {
-  // Chat state
-  chatMode: ChatMode;
+  // Chat state (from useChatPersistence -- must be props)
   chatMessages: ChatMessage[];
   addMessage: (msg: ChatMessage) => void;
   replaceMessage: (id: string, msg: ChatMessage) => void;
 
-  // Content trust config
-  ecosystem: EcosystemType;
-  contentChannel: ContentChannelType;
-  trustSettings: TrustSettings;
-
-  // Generation params
-  temperature: number;
-  maxTokens: number;
-  streamResponse: boolean;
-  selectedLLMProvider: LLMProviderType;
-
-  // User context
+  // User context (local state / context -- must be props)
   userProfile: UserProfile | null;
   activeProject: { defaultUserProfile?: unknown } | null;
 
-  // Convex data (pre-fetched by React hooks in App.tsx)
+  // Convex data (pre-fetched by React hooks -- must be props)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   convexKnowledge: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,16 +90,10 @@ export interface ContentGenerationDeps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   runSemanticSearch: (...args: any[]) => Promise<any>;
 
-  // Memory
-  midTermMemory: MidTermMemory | null;
-  setMidTermMemory: (memory: MidTermMemory) => void;
-
-  // UI state setters
-  setIsChatLoading: (loading: boolean) => void;
-  setError: (error: AppError | null) => void;
+  // Voice-owned state setter (NOT in store)
   setStreamingAIResponse: (text: string) => void;
 
-  // Abort control
+  // Abort control (from useAbortController)
   getChatAbortSignal: () => AbortSignal;
   resetChatAbort: () => void;
 
@@ -123,17 +105,9 @@ export interface ContentGenerationDeps {
 
 export function useContentGeneration(deps: ContentGenerationDeps) {
   const {
-    chatMode,
     chatMessages,
     addMessage,
     replaceMessage,
-    ecosystem,
-    contentChannel,
-    trustSettings,
-    temperature,
-    maxTokens,
-    streamResponse,
-    selectedLLMProvider,
     userProfile,
     activeProject,
     convexKnowledge,
@@ -143,10 +117,6 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
     convexTokenEnforcementRules,
     convexUserLearningProfile,
     runSemanticSearch,
-    midTermMemory,
-    setMidTermMemory,
-    setIsChatLoading,
-    setError,
     setStreamingAIResponse,
     getChatAbortSignal,
     resetChatAbort,
@@ -158,6 +128,12 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
     options: SendMessageOptions = {}
   ): Promise<SendMessageResult | null> => {
     const { parentMessageId, replaceResponseId, skipUserMessage } = options;
+
+    // Read latest store state at call time (not render time)
+    const convState = useConversationStore.getState();
+    const uiState = useUIStore.getState();
+    const { ecosystem, contentChannel, trustSettings, temperature, maxTokens, streamResponse, selectedLLMProvider, midTermMemory, setMidTermMemory, setIsChatLoading } = convState;
+    const { chatMode, setError } = uiState;
 
     // ── Idempotency ─────────────────────────────────────────────────
     const idempotencyKey = generateIdempotencyKey(message.substring(0, 20));
@@ -421,7 +397,7 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
         markIdempotencyKeyProcessed(idempotencyKey);
       }
     }); // End deduplicateRequest wrapper
-  }, [resetChatAbort, chatMode, addMessage, replaceMessage, chatMessages, selectedLLMProvider, getChatAbortSignal, ecosystem, contentChannel, activeProject?.defaultUserProfile, trustSettings, temperature, maxTokens, streamResponse, userProfile, tryAutoRenameProject, setIsChatLoading, setError, setStreamingAIResponse, midTermMemory, setMidTermMemory, convexKnowledge, convexCorrections, convexTrainingExamples, convexDirectiveOverrides, convexTokenEnforcementRules, convexUserLearningProfile, runSemanticSearch]);
+  }, [resetChatAbort, addMessage, replaceMessage, chatMessages, getChatAbortSignal, activeProject?.defaultUserProfile, userProfile, tryAutoRenameProject, setStreamingAIResponse, convexKnowledge, convexCorrections, convexTrainingExamples, convexDirectiveOverrides, convexTokenEnforcementRules, convexUserLearningProfile, runSemanticSearch]);
 
   return { sendMessage };
 }
