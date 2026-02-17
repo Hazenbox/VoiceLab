@@ -387,6 +387,15 @@ function normalizeMarkdown(content: string): string {
 function applyHighlighting(content: string, highlightText: string | undefined): string {
   if (!highlightText) return content;
   
+  // Skip highlighting for problematic patterns:
+  // - Pure whitespace (spaces, tabs, newlines)
+  // - Very short text (1-2 chars) that's likely punctuation or whitespace
+  // - Text containing newlines (would span paragraphs)
+  const trimmed = highlightText.trim();
+  if (!trimmed || trimmed.length < 2 || highlightText.includes('\n')) {
+    return content;
+  }
+  
   // Escape regex special characters in the search text
   const escaped = highlightText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(`(${escaped})`, 'gi');
