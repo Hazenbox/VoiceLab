@@ -483,6 +483,12 @@ export class SessionManager {
           screenHeight: typeof window !== 'undefined' ? window.innerHeight : undefined,
         });
         
+        // Guard against session being cleared during async operation
+        if (!this.session) {
+          console.warn('[SessionManager] Session was cleared during Convex sync, skipping update');
+          return;
+        }
+        
         this.session.sessionId = sessionId;
         this.session.lastSyncAt = Date.now();
         this.saveSessionLocallyImmediate(); // Critical: save Convex ID immediately
@@ -509,6 +515,12 @@ export class SessionManager {
           channel: this.session.channel,
           persona: this.session.persona,
         });
+        
+        // Guard against session being cleared during async operation
+        if (!this.session) {
+          console.warn('[SessionManager] Session was cleared during Convex sync, skipping save');
+          return;
+        }
         
         this.session.lastSyncAt = Date.now();
         this.saveSessionLocallyImmediate(); // Critical: save sync state immediately
