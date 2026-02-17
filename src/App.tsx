@@ -168,25 +168,6 @@ import {
   containsSensitiveData,
   maskForLogging,
 } from './services/privacy/dataMasking';
-// QA Scoring - 5-dimension quality assessment (wiring orphaned code)
-import {
-  scoreResponse as calculateQAScore,
-  meetsThreshold as qaScoreMeetsThreshold,
-  type QAScore,
-  type QAScoringContext,
-} from './services/qa/qaScoring';
-// Anti-Pattern Detector (wiring orphaned code)
-import {
-  detectAntiPatterns,
-  hasCriticalAntiPatterns,
-  type AntiPatternResult,
-} from './services/qa/antiPatternDetector';
-// Emotion Intensity Detector (wiring orphaned code)
-import {
-  detectEmotionIntensity,
-  requiresImmediateAttention as emotionRequiresAttention,
-  type IntensityResult,
-} from './services/emotion/emotionIntensity';
 // Domain Playbooks (wiring orphaned code)
 import {
   getPlaybook,
@@ -1230,38 +1211,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           console.warn('[Playbook] Failed to apply:', playbookError);
         }
         
-        // =====================================================================
-        // Emotion Intensity: Detect intensity and adjust response strategy
-        // =====================================================================
-        let emotionIntensityResult: IntensityResult | undefined;
-        try {
-          emotionIntensityResult = detectEmotionIntensity({
-            message,
-            emotion: constitutionalContext?.tokens?.userEmotion || 'shanta',
-            conversationHistory: chatMessages.slice(-5).map(m => ({ role: m.role, content: m.content })),
-            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
-          });
-          
-          if (emotionRequiresAttention(emotionIntensityResult)) {
-            console.warn(`[Emotion] High intensity detected (${emotionIntensityResult.intensity}), escalation may be needed`);
-          }
-          
-          // If high intensity, add strategy guidance to prompt
-          if (emotionIntensityResult.intensity === 'high' || emotionIntensityResult.intensity === 'extreme') {
-            const strategyBlock = [
-              '## emotion intensity alert',
-              `intensity: ${emotionIntensityResult.intensity}`,
-              `warmth level: ${emotionIntensityResult.strategy.warmthLevel}/4`,
-              emotionIntensityResult.strategy.leadWithEmpathy ? 'lead with empathy' : '',
-              emotionIntensityResult.strategy.offerEscalation ? 'offer escalation path' : '',
-              `suggested phrases: ${emotionIntensityResult.strategy.suggestedPhrases.slice(0, 2).join(', ')}`,
-            ].filter(Boolean).join('\n');
-            
-            enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${strategyBlock}`;
-          }
-        } catch (intensityError) {
-          console.warn('[Emotion] Intensity detection failed:', intensityError);
-        }
         
         // =====================================================================
         // Training Examples: Add few-shot examples (wiring orphaned code)
@@ -1637,66 +1586,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           });
         }
 
-        // =====================================================================
-        // QA Scoring: 5-dimension quality assessment (wiring orphaned code)
-        // Dimensions: resolution, language, governance, experience, trust
-        // =====================================================================
-        let qaScore: QAScore | undefined;
-        try {
-          const qaScoringContext: QAScoringContext = {
-            response: contentForValidation,
-            userMessage: message,
-            intent: classifiedIntent || 'general',
-            emotion: constitutionalContext?.tokens?.userEmotion || 'neutral',
-            resolutionStatus: constitutionalContext?.stateContext?.resolutionStatus || 'in_progress',
-            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
-            wasEscalated: constitutionalContext?.stateContext?.wasEscalated || false,
-            previousResponses: chatMessages
-              .filter(m => m.role === 'assistant')
-              .slice(-3)
-              .map(m => m.content),
-          };
-          
-          qaScore = calculateQAScore(qaScoringContext);
-          
-          if (!qaScoreMeetsThreshold(qaScore, 65)) {
-            console.warn(
-              `[QA] Response scored below threshold (${qaScore.overallScore}):`,
-              qaScore.topIssues.slice(0, 3)
-            );
-          } else {
-            console.log(`[QA] Response passed quality check (${qaScore.overallScore})`);
-          }
-        } catch (qaError) {
-          console.warn('[QA] Scoring failed:', qaError);
-        }
 
-        // =====================================================================
-        // Anti-Pattern Detection: Structural, language, trust, emotional issues
-        // =====================================================================
-        let antiPatternResult: AntiPatternResult | undefined;
-        try {
-          antiPatternResult = detectAntiPatterns({
-            response: contentForValidation,
-            userEmotion: constitutionalContext?.tokens?.userEmotion,
-            intent: classifiedIntent,
-            turnNumber: chatMessages.filter(m => m.role === 'user').length + 1,
-          });
-          
-          if (antiPatternResult.hasAntiPatterns) {
-            console.warn(
-              `[AntiPattern] Detected ${antiPatternResult.totalCount} issues:`,
-              antiPatternResult.patterns.slice(0, 3).map(p => p.name)
-            );
-            
-            // Critical patterns could trigger regeneration in future
-            if (hasCriticalAntiPatterns(contentForValidation)) {
-              console.error('[AntiPattern] CRITICAL patterns detected - consider regeneration');
-            }
-          }
-        } catch (antiPatternError) {
-          console.warn('[AntiPattern] Detection failed:', antiPatternError);
-        }
 
         // =================================================================
         // Auto-Fix Preview: Generate side-by-side preview if fixes available
