@@ -67,11 +67,3 @@ export function hasEnforcementRules(): boolean {
 export function clearCachedEnforcementRules(): void {
   cachedEnforcementRules = [];
 }
-
-/**
- * Get brand protection rules specifically
- * Useful for quick brand violation checks
- */
-export function getBrandProtectionRules(): TokenEnforcementRule[] {
-  return cachedEnforcementRules.filter(r => r.category === 'brand');
-}

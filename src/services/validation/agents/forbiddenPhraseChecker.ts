@@ -317,32 +317,6 @@ function cleanResponse(response: string, violations: PhraseMatch[]): string {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Format result for prompt injection
- */
-export function formatForbiddenPhraseForPrompt(result: ForbiddenPhraseResult): string {
-  const lines = [
-    '## forbidden phrase check',
-    `status: ${result.severity}`,
-    `violations: ${result.violations.length}`,
-  ];
-  
-  if (result.violations.length > 0) {
-    lines.push('');
-    lines.push('issues found:');
-    for (const v of result.violations.slice(0, 5)) {
-      const fix = v.replacement ? ` → use "${v.replacement}"` : ' → remove';
-      lines.push(`- [${v.severity}] "${v.phrase}" (${v.category})${fix}`);
-    }
-    
-    if (result.violations.length > 5) {
-      lines.push(`... and ${result.violations.length - 5} more`);
-    }
-  }
-  
-  return lines.join('\n');
-}
-
-/**
  * Quick check if response has critical issues
  */
 export function hasCriticalIssues(response: string): boolean {
@@ -371,33 +345,4 @@ export function getViolationsByCategory(
   }
   
   return byCategory;
-}
-
-/**
- * Check for specific category
- */
-export function hasViolationInCategory(
-  response: string,
-  category: ViolationCategory
-): boolean {
-  const result = checkForbiddenPhrases(response);
-  return result.violations.some(v => v.category === category);
-}
-
-/**
- * Get safe alternatives for common forbidden phrases
- */
-export function getSafeAlternatives(): Record<string, string> {
-  return {
-    "I am an AI": "I'm here to help",
-    "As an AI": "(just remove)",
-    "I guarantee": "This should help",
-    "100% guaranteed": "Highly likely to work",
-    "calm down": "I understand this is frustrating",
-    "that's not my problem": "Let me see how I can help",
-    "you're wrong": "Let me clarify",
-    "obviously": "(just remove)",
-    "at this point in time": "now",
-    "other providers": "(be specific or remove)",
-  };
 }

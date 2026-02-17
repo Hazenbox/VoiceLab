@@ -304,38 +304,4 @@ export function createTokenEnforcementAgent(context: TokenEnforcementContext): V
   };
 }
 
-/**
- * Standalone function to validate content against token rules
- * Can be used outside the validation pipeline
- */
-export function validateWithTokenRules(
-  content: string,
-  rules: TokenEnforcementRule[],
-  activeTokens: ActiveTokens
-): ValidationResult {
-  const agent = createTokenEnforcementAgent({ rules, activeTokens });
-  // For sync use, we return a promise-resolved value
-  // In practice, this agent is sync but returns a Promise for interface consistency
-  return {
-    passed: true,
-    violations: [],
-    metadata: { rulesChecked: 0, activeTokenCount: 0, categories: [] },
-  };
-}
-
-/**
- * Get auto-fix actions from violations
- */
-export function getAutoFixActionsFromViolations(
-  violations: Violation[]
-): Array<{ action: string; value?: string; term: string }> {
-  return violations
-    .filter(v => v.autoFixable && v.autoFixAction)
-    .map(v => ({
-      action: v.autoFixAction!,
-      value: v.autoFixValue,
-      term: v.term,
-    }));
-}
-
 export default createTokenEnforcementAgent;
