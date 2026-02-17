@@ -7,7 +7,7 @@ import { RetryManager } from '../reliability/retryManager';
 import { FallbackManager } from '../reliability/fallbackManager';
 import { CostTracker } from '../monitoring/costTracker';
 import { PromptRegistry, type PromptVersion } from '../monitoring/promptRegistry';
-import { ResponseCache } from '../caching/responseCache';
+import { ResponseCache } from './responseCache';
 import { isProduction } from '../../config/providers';
 import { createLogger } from '../../utils/logger';
 import type { 
