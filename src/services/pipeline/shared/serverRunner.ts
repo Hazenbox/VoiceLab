@@ -275,9 +275,11 @@ export async function runPipelineServer(
 
 /**
  * Default feature flags for server-side pipeline execution.
+ * IMPORTANT: Keep in sync with src/services/featureFlags.ts defaults
  */
 const DEFAULT_FEATURE_FLAGS = {
-  conversationalMode: false,
+  // conversationalMode: true - matches client default from featureFlags.ts:76
+  conversationalMode: true,
   safetyGate: true,
   constitutionalWrapper: true,
   knowledgeBase: true,

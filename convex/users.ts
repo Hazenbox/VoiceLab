@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { requireAdmin, requireAuthenticated } from "./_auth";
 
 // ── Create or update a user profile ──────────────────────────────
 // Called during onboarding (create) and on profile edits (update).
@@ -66,12 +67,17 @@ export const heartbeat = mutation({
   },
 });
 
-// ── List all users (admin) ───────────────────────────────────────
+// ── List all users (admin only) ──────────────────────────────────
+// SECURITY: Requires admin authorization to prevent IDOR
 export const listAll = query({
   args: {
     limit: v.optional(v.number()),
+    deviceId: v.optional(v.string()), // For authorization
   },
   handler: async (ctx, args) => {
+    // Verify admin authorization
+    await requireAdmin(ctx, args.deviceId);
+    
     const limit = args.limit ?? 500; // Default limit for performance
     return await ctx.db
       .query("users")
@@ -80,21 +86,33 @@ export const listAll = query({
   },
 });
 
-// ── Get user by ID (admin) ───────────────────────────────────────
+// ── Get user by ID (admin only) ──────────────────────────────────
+// SECURITY: Requires admin authorization to prevent IDOR
 export const getById = query({
-  args: { userId: v.id("users") },
+  args: { 
+    userId: v.id("users"),
+    deviceId: v.optional(v.string()), // For authorization
+  },
   handler: async (ctx, args) => {
+    // Verify admin authorization
+    await requireAdmin(ctx, args.deviceId);
+    
     return await ctx.db.get(args.userId);
   },
 });
 
-// ── Count active users in a time range (admin analytics) ─────────
+// ── Count active users in a time range (admin only) ──────────────
+// SECURITY: Requires admin authorization
 export const countActive = query({
   args: {
     since: v.number(), // Timestamp: only count users seen after this
     limit: v.optional(v.number()),
+    deviceId: v.optional(v.string()), // For authorization
   },
   handler: async (ctx, args) => {
+    // Verify admin authorization
+    await requireAdmin(ctx, args.deviceId);
+    
     const limit = args.limit ?? 10000; // Default limit for performance
     const users = await ctx.db
       .query("users")

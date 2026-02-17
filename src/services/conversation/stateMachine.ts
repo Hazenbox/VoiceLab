@@ -487,10 +487,16 @@ export class ConversationStateMachine {
 
   /**
    * Restore from serialized context
+   * Returns null if serialized data is corrupted
    */
-  static deserialize(serialized: string): ConversationStateMachine {
-    const context = JSON.parse(serialized) as ConversationContext;
-    return new ConversationStateMachine(context);
+  static deserialize(serialized: string): ConversationStateMachine | null {
+    try {
+      const context = JSON.parse(serialized) as ConversationContext;
+      return new ConversationStateMachine(context);
+    } catch (error) {
+      console.error('[ConversationStateMachine] Failed to deserialize corrupted data:', error);
+      return null;
+    }
   }
 }
 

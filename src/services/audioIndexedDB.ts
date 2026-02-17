@@ -58,17 +58,78 @@ export interface StorageStats {
 }
 
 // =============================================================================
-// Database Initialization
+// Database Initialization & Fallback
 // =============================================================================
 
 let dbPromise: Promise<IDBDatabase> | null = null;
+let isIndexedDBAvailable: boolean | null = null;
+
+/**
+ * Check if IndexedDB is available and working.
+ * Returns false in Safari private mode or other restricted environments.
+ */
+function checkIndexedDBAvailability(): Promise<boolean> {
+  if (isIndexedDBAvailable !== null) {
+    return Promise.resolve(isIndexedDBAvailable);
+  }
+
+  return new Promise((resolve) => {
+    // Check if indexedDB exists at all
+    if (typeof indexedDB === 'undefined') {
+      console.warn('[AudioIndexedDB] IndexedDB not available in this environment');
+      isIndexedDBAvailable = false;
+      resolve(false);
+      return;
+    }
+
+    // Try to open a test database to verify it actually works
+    // Safari private mode will fail here
+    try {
+      const testDbName = '_idb_test_' + Date.now();
+      const request = indexedDB.open(testDbName);
+      
+      request.onerror = () => {
+        console.warn('[AudioIndexedDB] IndexedDB blocked (possibly private browsing mode)');
+        isIndexedDBAvailable = false;
+        resolve(false);
+      };
+      
+      request.onsuccess = () => {
+        // Clean up test database
+        request.result.close();
+        indexedDB.deleteDatabase(testDbName);
+        isIndexedDBAvailable = true;
+        resolve(true);
+      };
+    } catch (e) {
+      console.warn('[AudioIndexedDB] IndexedDB check failed:', e);
+      isIndexedDBAvailable = false;
+      resolve(false);
+    }
+  });
+}
+
+/**
+ * Check if IndexedDB is available (synchronous version, returns cached result)
+ * Call checkIndexedDBAvailability() first to initialize.
+ */
+export function isIndexedDBSupported(): boolean {
+  return isIndexedDBAvailable === true;
+}
 
 function getDB(): Promise<IDBDatabase> {
   if (dbPromise) {
     return dbPromise;
   }
 
-  dbPromise = new Promise((resolve, reject) => {
+  dbPromise = new Promise(async (resolve, reject) => {
+    // Check availability first
+    const available = await checkIndexedDBAvailability();
+    if (!available) {
+      reject(new Error('IndexedDB is not available'));
+      return;
+    }
+
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = () => {
@@ -445,4 +506,6 @@ export const audioIndexedDB = {
   base64ToBlob,
   blobToBase64,
   clearAll: clearAllAudio,
+  isSupported: isIndexedDBSupported,
+  checkAvailability: checkIndexedDBAvailability,
 };

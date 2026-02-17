@@ -82,12 +82,32 @@ export const getLearningCorrections = query({
 });
 
 // ── Get corrections by user ──────────────────────────────────────
+// SECURITY: User can only access their own corrections, admins can access any
 export const getByUser = query({
   args: {
     userId: v.id("users"),
+    deviceId: v.string(), // For authorization
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Get the requesting user
+    const requestingUser = await ctx.db
+      .query("users")
+      .withIndex("by_deviceId", (q) => q.eq("deviceId", args.deviceId))
+      .first();
+    
+    if (!requestingUser) {
+      throw new Error("Unauthorized: User not found");
+    }
+    
+    // Check if requesting own data or is admin
+    const isOwnData = requestingUser._id === args.userId;
+    const isAdmin = requestingUser.role === "leadership";
+    
+    if (!isOwnData && !isAdmin) {
+      throw new Error("Unauthorized: You can only access your own corrections");
+    }
+    
     const limit = args.limit ?? 50;
     return await ctx.db
       .query("corrections")
@@ -97,13 +117,18 @@ export const getByUser = query({
   },
 });
 
-// ── List all corrections (admin, paginated) ──────────────────────
+// ── List all corrections (admin only, paginated) ─────────────────
+// SECURITY: Requires admin authorization to prevent IDOR
 export const listAll = query({
   args: {
     limit: v.optional(v.number()),
     adminStatus: v.optional(v.string()),
+    deviceId: v.optional(v.string()), // For authorization
   },
   handler: async (ctx, args) => {
+    // Verify admin authorization
+    await requireAdmin(ctx, args.deviceId);
+    
     const limit = args.limit ?? 100;
 
     if (args.adminStatus) {

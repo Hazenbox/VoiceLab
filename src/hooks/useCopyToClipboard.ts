@@ -3,7 +3,7 @@
  * Provides clipboard copy functionality with feedback
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 interface UseCopyToClipboardReturn {
   isCopied: boolean;
@@ -15,8 +15,26 @@ interface UseCopyToClipboardReturn {
 export function useCopyToClipboard(resetDelay = 2000): UseCopyToClipboardReturn {
   const [isCopied, setIsCopied] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Track timer for cleanup on unmount
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
 
   const copyToClipboard = useCallback(async (text: string) => {
+    // Clear any existing timer
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = null;
+    }
+    
     try {
       // Modern clipboard API
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -26,8 +44,9 @@ export function useCopyToClipboard(resetDelay = 2000): UseCopyToClipboardReturn 
 
         // Reset after delay
         if (resetDelay > 0) {
-          setTimeout(() => {
+          resetTimerRef.current = setTimeout(() => {
             setIsCopied(false);
+            resetTimerRef.current = null;
           }, resetDelay);
         }
       } else {
@@ -49,8 +68,9 @@ export function useCopyToClipboard(resetDelay = 2000): UseCopyToClipboardReturn 
           setError(null);
           
           if (resetDelay > 0) {
-            setTimeout(() => {
+            resetTimerRef.current = setTimeout(() => {
               setIsCopied(false);
+              resetTimerRef.current = null;
             }, resetDelay);
           }
         } else {
@@ -66,6 +86,10 @@ export function useCopyToClipboard(resetDelay = 2000): UseCopyToClipboardReturn 
   }, [resetDelay]);
 
   const resetCopyState = useCallback(() => {
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = null;
+    }
     setIsCopied(false);
     setError(null);
   }, []);

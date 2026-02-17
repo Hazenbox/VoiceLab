@@ -484,10 +484,16 @@ ${suggestions.actions.map(a => `- ${a}`).join('\n')}`;
 
   /**
    * Restore from serialized state
+   * Returns null if serialized data is corrupted
    */
-  static restore(serialized: string, config: StateManagerConfig = {}): StateManager {
-    const context = JSON.parse(serialized) as ConversationContext;
-    return new StateManager(config, context);
+  static restore(serialized: string, config: StateManagerConfig = {}): StateManager | null {
+    try {
+      const context = JSON.parse(serialized) as ConversationContext;
+      return new StateManager(config, context);
+    } catch (error) {
+      console.error('[StateManager] Failed to restore state from corrupted data:', error);
+      return null;
+    }
   }
 
   /**
