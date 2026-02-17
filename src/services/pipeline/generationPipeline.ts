@@ -5,7 +5,7 @@
  * App.tsx calls this one function. Nothing else.
  *
  * Pipeline flow:
- *   classify -> safetyCheck -> retrieve -> assemble -> generate -> validate -> finalize
+ *   classify -> safetyCheck -> retrieve -> assemble -> generate -> validate -> complianceJudge -> finalize
  *
  * Rules:
  * - Orchestrator only -- delegates to step modules
@@ -25,6 +25,7 @@ import { assemble } from './steps/assemble';
 import { generate } from './steps/generate';
 import { validate } from './steps/validate';
 import { finalize } from './steps/finalize';
+import { runComplianceJudge } from '../postprocess/complianceJudge';
 
 const MAX_RETRIES = 1;
 
@@ -96,10 +97,32 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       validation = await validate(input, generated.content, assembled);
     }
 
-    // 8. Finalize (finishing layer + privacy masking)
-    const finalized = finalize(validation.content, input, classification, assembled);
+    // 8. LLM-as-judge compliance check (only for content_generation intent)
+    //    Catches subjective rules: empathy, turn discipline, structure, warmth, responsibility
+    //    If judge fails, silently passes through original content
+    let judgedContent = validation.content;
+    if (classification.intent === 'content_generation' && validation.passed) {
+      try {
+        const judgeResult = await runComplianceJudge(
+          validation.content,
+          input.message,
+          input.llmProvider,
+          input.createLLMProvider,
+          input.abortSignal,
+        );
+        judgedContent = judgeResult.content;
+        if (judgeResult.wasRewritten) {
+          console.log(`[Pipeline] Compliance judge rewrote content (failed: ${judgeResult.failedChecks.join(', ')})`);
+        }
+      } catch (judgeError) {
+        console.warn('[Pipeline] Compliance judge failed, using original:', judgeError);
+      }
+    }
 
-    // 9. Build evidence for transparency panel
+    // 9. Finalize (finishing layer + privacy masking)
+    const finalized = finalize(judgedContent, input, classification, assembled);
+
+    // 10. Build evidence for transparency panel
     const evidence = buildEvidence(retrieval, validation, input);
 
     const metadata = buildMetadata(
