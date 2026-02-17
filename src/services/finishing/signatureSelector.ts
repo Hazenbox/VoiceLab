@@ -14,23 +14,8 @@
 /**
  * Signature types
  */
-export type SignatureType =
-  | 'youre_all_set'      // Task completed successfully
-  | 'thank_you'          // Gratitude for interaction
-  | 'with_love'          // Warm, emotional close
-  | 'take_care'          // Caring, personal touch
-  | 'reach_out_anytime'  // Open door for future
-  | 'none';              // No signature needed
-
-/**
- * Signature definition
- */
-export interface Signature {
-  type: SignatureType;
-  variations: string[];
-  emoji?: string;
-  tone: 'professional' | 'warm' | 'casual';
-}
+// Types and data moved to config/signatures.ts
+export type { SignatureType, Signature } from '../../config/signatures';
 
 /**
  * Selection result
@@ -66,67 +51,8 @@ export interface SignatureContext {
 // SIGNATURE LIBRARY
 // ═══════════════════════════════════════════════════════════════════════════════
 
-/**
- * All available signatures
- */
-export const SIGNATURES: Record<SignatureType, Signature> = {
-  youre_all_set: {
-    type: 'youre_all_set',
-    variations: [
-      "you're all set!",
-      "all done!",
-      "that's taken care of!",
-      "you're good to go!",
-      "everything is sorted!",
-    ],
-    tone: 'professional',
-  },
-  thank_you: {
-    type: 'thank_you',
-    variations: [
-      "thank you for reaching out!",
-      "thanks for contacting us!",
-      "thank you for your patience!",
-      "thanks for giving us the chance to help!",
-    ],
-    tone: 'professional',
-  },
-  with_love: {
-    type: 'with_love',
-    variations: [
-      "take care, and stay connected!",
-      "wishing you a great day ahead!",
-      "here's to smooth connectivity!",
-      "stay connected, stay happy!",
-    ],
-    tone: 'warm',
-  },
-  take_care: {
-    type: 'take_care',
-    variations: [
-      "take care!",
-      "have a great day!",
-      "have a wonderful day!",
-      "wishing you all the best!",
-    ],
-    tone: 'warm',
-  },
-  reach_out_anytime: {
-    type: 'reach_out_anytime',
-    variations: [
-      "feel free to reach out anytime you need help!",
-      "i'm here whenever you need assistance!",
-      "don't hesitate to reach out if you have more questions!",
-      "always happy to help - just reach out!",
-    ],
-    tone: 'casual',
-  },
-  none: {
-    type: 'none',
-    variations: [],
-    tone: 'professional',
-  },
-};
+// Signatures are now in shared config -- edit phrases in config/signatures.ts
+export { SIGNATURES } from '../../config/signatures';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SELECTION LOGIC
