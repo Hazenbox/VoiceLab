@@ -353,8 +353,9 @@ const EvidenceTimelineItem: React.FC<{
   stepNumber: number;
   items: Array<{ label: string; value: string | number }>;
   tags?: string[];
+  fixes?: Array<{ from: string; to: string }>;
   isLast?: boolean;
-}> = ({ title, stepNumber, items, tags, isLast = false }) => {
+}> = ({ title, stepNumber, items, tags, fixes, isLast = false }) => {
   const theme = useThemeColors();
   
   return (
@@ -399,6 +400,26 @@ const EvidenceTimelineItem: React.FC<{
             ))}
           </Text>
         </div>
+        {/* Auto-fixes displayed as individual rows with dividers */}
+        {fixes && fixes.length > 0 && (
+          <div style={{ marginTop: '8px' }}>
+            {fixes.map((fix, idx) => (
+              <div 
+                key={idx}
+                style={{ 
+                  padding: '8px 0',
+                  borderBottom: idx < fixes.length - 1 ? `1px solid ${theme.stroke.low}` : 'none',
+                }}
+              >
+                <Text size="XS" color="medium">
+                  <span style={{ color: theme.text.high, fontWeight: 500 }}>"{fix.from}"</span>
+                  <span style={{ margin: '0 8px' }}>→</span>
+                  <span style={{ color: theme.text.high, fontWeight: 500 }}>"{fix.to}"</span>
+                </Text>
+              </div>
+            ))}
+          </div>
+        )}
         {/* Inline tags */}
         {tags && tags.length > 0 && (
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
@@ -436,6 +457,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
     title: string;
     items: Array<{ label: string; value: string | number }>;
     tags?: string[];
+    fixes?: Array<{ from: string; to: string }>;
   }> = [];
   
   if (hasKnowledge) {
@@ -470,11 +492,8 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
       title: 'Auto-fixes applied',
       items: [
         { label: 'replacements', value: evidence.autoFixes.totalCount },
-        ...evidence.autoFixes.applied.map(fix => ({
-          label: `"${fix.from}"`,
-          value: `→ "${fix.to}"`,
-        })),
       ],
+      fixes: evidence.autoFixes.applied,
     });
   }
   
@@ -516,6 +535,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
               title={item.title}
               items={item.items}
               tags={item.tags}
+              fixes={item.fixes}
               isLast={index === timelineItems.length - 1}
             />
           ))}
