@@ -151,9 +151,9 @@ export interface AssemblyInput {
 
 const DEFAULT_USER_TOKENS: UserTokens = {
   goal: 'unknown',
-  segment: 'general',
+  segment: 'unknown',
   plan: 'unknown',
-  relationshipStage: 'active',
+  relationshipStage: 'unknown',
   state: 'unknown',
   city: 'unknown',
   locale: 'en-IN',
@@ -161,7 +161,7 @@ const DEFAULT_USER_TOKENS: UserTokens = {
 };
 
 const DEFAULT_CONVERSATION_TOKENS: ConversationTokens = {
-  state: 'opening',
+  state: 'triage',
   resolutionStatus: 'not_started',
   turnNumber: 1,
   turnPhase: 'opening',
@@ -181,7 +181,7 @@ const DEFAULT_CONTEXT_TOKENS: ContextTokens = {
 const DEFAULT_RESPONSE_TOKENS: ResponseTokens = {
   routeMode: 'jio_task',
   actionType: 'guide',
-  nudgePermission: 'allowed',
+  nudgePermission: 'blocked',
   detailLevel: 'standard',
   maxWords: 150,
 };
@@ -348,7 +348,7 @@ function inferTurnPhase(turnNumber: number): string {
  */
 function inferUrgency(classification: TokenClassification): string {
   // High urgency emotions
-  const highUrgencyEmotions = ['raudra', 'bhayanak'];
+  const highUrgencyEmotions = ['raudra', 'bhayanaka'];
   if (highUrgencyEmotions.includes(classification.emotion)) {
     return 'high';
   }
