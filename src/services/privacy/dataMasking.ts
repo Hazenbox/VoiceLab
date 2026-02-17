@@ -279,8 +279,8 @@ export function maskSensitiveData(
         confidence,
       });
       
-      // Replace in masked text
-      maskedText = maskedText.replace(original, masked);
+      // Replace ALL occurrences in masked text (not just first)
+      maskedText = maskedText.replaceAll(original, masked);
     }
   }
   

@@ -764,7 +764,7 @@ export interface ChatMessage {
    * 
    * Undefined for legacy messages or when conversational mode is disabled.
    */
-  messageIntent?: 'general_chat' | 'content_generation' | 'jio_inquiry';
+  messageIntent?: 'general_chat' | 'content_generation' | 'jio_inquiry' | 'safety_response';
   
   // ==========================================================================
   // AUTO-FIX PREVIEW (inline side-by-side display)

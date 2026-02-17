@@ -158,6 +158,13 @@ export async function runPipelineServer(
         autoFixPreview: null,
         validationSummary: null,
       };
+      // Emit validation event for consistency (UI expects this event)
+      options?.onEvent?.({
+        type: 'validation',
+        passed: true,
+        score: null,
+        issueCount: 0,
+      });
     } else {
       validation = await validate(pipelineInput, generated.content, assembled);
 
