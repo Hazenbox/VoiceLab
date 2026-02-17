@@ -91,6 +91,7 @@ export interface PipelineExternalData {
     outputContent: string;
     ecosystem?: string;
     channel?: string;
+    tags?: string[];
   }>;
   directiveOverrides?: Array<{
     directiveType: string;

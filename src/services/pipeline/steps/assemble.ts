@@ -54,6 +54,7 @@ import {
   formatFewShotForPrompt,
   type TrainingExample,
 } from '../../fewshot/fewShotSelector';
+import { getTrainingExamplesForPipeline } from '../../../data/kbTrainingExamples';
 import type { PipelineInput, ClassifyResult, AssembleResult } from '../types';
 import type { RetrievedKnowledge, CorrectionEntry } from '../../knowledge';
 
@@ -311,9 +312,14 @@ export function assemble(
   // Few-shot example (priority 1 -- shed first)
   // Only for complaint/multi-step/escalation intents with similarity >= 0.7
   // NOT injected for SMS, push, or short-response channels
-  if (input.featureFlags.learning && input.externalData?.trainingExamples?.length) {
+  // Falls back to local KB training examples if no Convex data available
+  if (input.featureFlags.learning) {
     try {
-      const examples: TrainingExample[] = input.externalData.trainingExamples.map(ex => ({
+      const rawExamples = input.externalData?.trainingExamples?.length
+        ? input.externalData.trainingExamples
+        : getTrainingExamplesForPipeline();
+
+      const examples: TrainingExample[] = rawExamples.map(ex => ({
         inputContext: ex.inputContext,
         outputContent: ex.outputContent,
         tags: ex.tags || [],
