@@ -49,3 +49,4 @@ export { useSessionAnalytics } from './useSessionAnalytics';
 export { useVoiceConversation } from './useVoiceConversation';
 export { useMessageInteractions } from './useMessageInteractions';
 export { useTrustPanel } from './useTrustPanel';
+export { useContentGeneration, type ContentGenerationDeps } from './useContentGeneration';
