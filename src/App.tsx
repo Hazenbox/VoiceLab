@@ -40,7 +40,7 @@ import { buildGenerationContext } from './services/context';
 import { runValidationPipeline, setDynamicAvoidWords } from './services/validation';
 import { calculateTrustScore, generateAutoFixes, applyAutoFixes, setDynamicAutoFixRules } from './services/trust';
 import { storageTrustSettings, storageProjectDefaults, DEFAULT_PROJECT_DEFAULTS } from './services/trustStorage';
-import { useChatPersistence } from './hooks';
+import { useChatPersistence, useVoiceConversation, useMessageInteractions, useTrustPanel } from './hooks';
 import { audioBufferManager } from './services/audioBufferManager';
 // Tailwind components removed - using single Jio DS
 import { 
@@ -392,9 +392,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   );
   
   // Trust panel state
-  const [showTrustPanel, setShowTrustPanel] = useState(false);
-  const [selectedMessageForTrust, setSelectedMessageForTrust] = useState<string | null>(null);
-  const [isAutoFixing, setIsAutoFixing] = useState(false);
+  // showTrustPanel, selectedMessageForTrust, isAutoFixing moved to useTrustPanel hook
   
   // Mid-term memory state (Phase F)
   const [midTermMemory, setMidTermMemory] = useState<MidTermMemory | null>(() => {
@@ -468,13 +466,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   
   // ==========================================================================
   
-  // Voice feature support detection
-  const [voiceSupported, setVoiceSupported] = useState<boolean | null>(null);
-
-  // Conversation State
-  const [appState, setAppState] = useState<AppState>(AppState.IDLE);
-  const [transcript, setTranscript] = useState('');
-  const [streamingAIResponse, setStreamingAIResponse] = useState('');
+  // (Voice hook call is below, after useChatPersistence which provides addMessage)
 
   // Chat Persistence - automatically syncs with localStorage
   const {
@@ -512,21 +504,27 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // Request cancellation - use getSignal() to get fresh signal after reset
   const { reset: resetChatAbort, getSignal: getChatAbortSignal } = useAbortController();
 
-  // Refs for audio handling
-  const ttsProviderRef = useRef<TTSProvider | null>(null);
-  const conversationProviderRef = useRef<ConversationProvider | null>(null);
-  const inputAudioContextRef = useRef<AudioContext | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
-  const audioAnalyzerRef = useRef<AnalyserNode | null>(null);
-  const noiseSuppressionRef = useRef<NoiseSuppressionService | null>(null);
-  
-  // Refs for conversation turn tracking (to link user message to AI response)
-  const currentTurnRef = useRef<{
-    userMessageId: string | null;
-    userText: string;  // User's transcript text for auto-rename
-    responseText: string;
-  }>({ userMessageId: null, userText: '', responseText: '' });
+  // Voice conversation -- extracted to hook (refs + state + handlers)
+  const {
+    voiceSupported,
+    appState,
+    transcript,
+    streamingAIResponse,
+    setStreamingAIResponse,
+    voiceError,
+    audioAnalyzerRef,
+    handleStartConversation,
+    handleStopConversation,
+    handleToggleConversation,
+    handleModeChange: handleVoiceModeChange,
+  } = useVoiceConversation({
+    activeProject: activeProject ? {
+      voiceGender: activeProject.voiceGender,
+      config: activeProject.config,
+    } : null,
+    addMessage,
+    tryAutoRenameProject,
+  });
 
   // ========================================================================
   // Convex Knowledge Base & Learning Integration (Phase 2-4)
@@ -583,14 +581,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     document.documentElement.style.setProperty('--local-white', theme.local.white);
   }, [theme.local.white]);
 
-  // Feature detection for voice support
-  useEffect(() => {
-    const support = checkAudioSupport();
-    setVoiceSupported(support.supported);
-    if (!support.supported) {
-      console.warn('[App] Voice not supported:', support.message);
-    }
-  }, []);
+  // Voice support detection moved to useVoiceConversation hook
 
   // Persist chatMode to localStorage
   useEffect(() => {
@@ -631,23 +622,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     }
   }, [convexTokenEnforcementRules]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (ttsProviderRef.current) {
-        ttsProviderRef.current.disconnect();
-      }
-      if (conversationProviderRef.current) {
-        conversationProviderRef.current.disconnect();
-      }
-      if (inputAudioContextRef.current) {
-        inputAudioContextRef.current.close();
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
+  // Voice cleanup moved to useVoiceConversation hook
 
   // Handle sending chat message via LLM Orchestrator
   // Extended with options for edit/regeneration flows
@@ -2287,35 +2262,29 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   }, [ecosystem, contentChannel, userProfile]);
 
   // ========================================================================
-  // ChatGPT-Style Edit Flow State & Handlers
+  // Message interactions -- extracted to useMessageInteractions hook
   // ========================================================================
-  
-  // Edit flow state - controlled at App level for ChatPanel
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState<string>('');
-  // Ref to track which button triggered edit for focus restoration
-  const editTriggerRef = useRef<string | null>(null);
-  
-  // ========================================================================
-  // Dislike Feedback Modal State
-  // ========================================================================
-  
-  // Message ID for which dislike modal is open (null = modal closed)
-  const [dislikeModalMessageId, setDislikeModalMessageId] = useState<string | null>(null);
-  
-  // Start editing a user message
-  const handleStartEdit = useCallback((messageId: string, content: string) => {
-    setEditingMessageId(messageId);
-    setEditValue(content);
-    editTriggerRef.current = messageId; // Track for focus restoration
-  }, []);
-  
-  // Cancel editing
-  const handleCancelEdit = useCallback(() => {
-    setEditingMessageId(null);
-    setEditValue('');
-    // Focus restoration handled by ChatPanel
-  }, []);
+  const {
+    editingMessageId,
+    editValue,
+    setEditValue,
+    editTriggerRef,
+    dislikeModalMessageId,
+    handleStartEdit,
+    handleCancelEdit,
+    handleSubmitEdit,
+    handleVersionChange,
+    handleLike,
+    handleDislike,
+    handleDislikeModalSubmit,
+    handleDislikeModalClose,
+    handleTryAgain,
+  } = useMessageInteractions({
+    chatMessages,
+    updateMessage,
+    handleSendChatMessage,
+    handleMessageFeedback,
+  });
   
   // Stop generation - cancels ongoing streaming request
   const handleStopGeneration = useCallback(() => {
@@ -2325,183 +2294,9 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     console.log('[Chat] Generation stopped by user');
   }, [resetChatAbort]);
   
-  // Submit edit - creates new version and regenerates AI response
-  const handleSubmitEdit = useCallback(async (messageId: string, newContent: string) => {
-    // Find original message
-    const originalMessage = chatMessages.find(m => m.id === messageId);
-    if (!originalMessage) return;
-    
-    // Find the current AI response (the one we'll replace)
-    const aiResponseIndex = chatMessages.findIndex(
-      m => m.parentMessageId === messageId && m.role === 'assistant'
-    );
-    const currentAiResponse = aiResponseIndex >= 0 ? chatMessages[aiResponseIndex] : null;
-    
-    // Clear edit state first
-    setEditingMessageId(null);
-    setEditValue('');
-    
-    // Generate new response with edited content
-    const result = await handleSendChatMessage(newContent, {
-      parentMessageId: messageId,
-      replaceResponseId: currentAiResponse?.id,
-      skipUserMessage: true,
-    });
-    
-    if (result?.success) {
-      // Update user message with new version history (atomic update)
-      updateMessage(messageId, (msg) => {
-        const existingVersions = msg.promptVersions || [{
-          content: msg.content,
-          timestamp: msg.timestamp,
-          responseId: currentAiResponse?.id || '',
-        }];
-        
-        const newVersion: PromptVersion = {
-          content: newContent,
-          timestamp: Date.now(),
-          responseId: result.aiMessageId,
-        };
-        
-        return {
-          ...msg,
-          content: newContent, // Update base content to latest
-          promptVersions: [...existingVersions, newVersion],
-          displayVersion: existingVersions.length + 1, // Show new version
-        };
-      });
-    }
-  }, [chatMessages, handleSendChatMessage, updateMessage]);
+  // Edit/version handlers extracted to useMessageInteractions hook
   
-  // Handle version navigation
-  const handleVersionChange = useCallback((messageId: string, newVersion: number) => {
-    updateMessage(messageId, (msg) => ({
-      ...msg,
-      displayVersion: newVersion,
-    }));
-  }, [updateMessage]);
-  
-  // ========================================================================
-  // Like/Dislike/Try Again Handlers
-  // ========================================================================
-  
-  // Handle "like" feedback
-  const handleLike = useCallback((messageId: string) => {
-    const message = chatMessages.find(m => m.id === messageId);
-    if (!message || message.userFeedback) return; // Already gave feedback
-    
-    // Persist feedback in message
-    updateMessage(messageId, (msg) => ({
-      ...msg,
-      userFeedback: 'like' as const,
-    }));
-    
-    // Wire StateManager: Record positive satisfaction (wiring orphaned code)
-    if (featureFlags.conversationState) {
-      try {
-        const wrapper = getConstitutionalWrapper();
-        const stateManager = wrapper.getStateManager('default');
-        if (stateManager) {
-          stateManager.recordSatisfaction('positive');
-          console.log('[StateManager] Recorded positive satisfaction');
-        }
-      } catch (err) {
-        console.warn('[StateManager] Failed to record satisfaction:', err);
-      }
-    }
-    
-    // Log to learning system (reuse existing feedback handler)
-    handleMessageFeedback({
-      messageId,
-      feedbackType: 'thumbs_up',
-      originalContent: message.content,
-    });
-  }, [chatMessages, updateMessage, handleMessageFeedback]);
-  
-  // Handle "dislike" feedback - opens modal for detailed feedback
-  const handleDislike = useCallback((messageId: string) => {
-    const message = chatMessages.find(m => m.id === messageId);
-    if (!message || message.userFeedback) return; // Already gave feedback
-    
-    // Persist visual feedback immediately (for instant UI update)
-    updateMessage(messageId, (msg) => ({
-      ...msg,
-      userFeedback: 'dislike' as const,
-    }));
-    
-    // Open modal to collect detailed feedback
-    // (actual feedback storage deferred to modal submit/close)
-    setDislikeModalMessageId(messageId);
-  }, [chatMessages, updateMessage]);
-  
-  // Handle dislike modal submit (with reasons + optional comment)
-  const handleDislikeModalSubmit = useCallback((reasons: string[], comment: string) => {
-    if (!dislikeModalMessageId) return;
-    
-    const message = chatMessages.find(m => m.id === dislikeModalMessageId);
-    if (!message) return;
-    
-    // Wire StateManager: Record negative satisfaction (wiring orphaned code)
-    if (featureFlags.conversationState) {
-      try {
-        const wrapper = getConstitutionalWrapper();
-        const stateManager = wrapper.getStateManager('default');
-        if (stateManager) {
-          stateManager.recordSatisfaction('negative');
-          console.log('[StateManager] Recorded negative satisfaction');
-        }
-      } catch (err) {
-        console.warn('[StateManager] Failed to record satisfaction:', err);
-      }
-    }
-    
-    // Store feedback with structured reasons
-    handleMessageFeedback({
-      messageId: dislikeModalMessageId,
-      feedbackType: 'thumbs_down',
-      originalContent: message.content,
-      reasons,
-      comment,
-    });
-    
-    // Close modal
-    setDislikeModalMessageId(null);
-  }, [dislikeModalMessageId, chatMessages, handleMessageFeedback]);
-  
-  // Handle dislike modal close (without detailed feedback)
-  const handleDislikeModalClose = useCallback(() => {
-    if (!dislikeModalMessageId) return;
-    
-    const message = chatMessages.find(m => m.id === dislikeModalMessageId);
-    if (!message) return;
-    
-    // Store bare thumbs_down without reasons
-    handleMessageFeedback({
-      messageId: dislikeModalMessageId,
-      feedbackType: 'thumbs_down',
-      originalContent: message.content,
-    });
-    
-    // Close modal
-    setDislikeModalMessageId(null);
-  }, [dislikeModalMessageId, chatMessages, handleMessageFeedback]);
-  
-  // Handle "try again" - regenerate AI response
-  const handleTryAgain = useCallback(async (messageId: string) => {
-    // Find the AI message and its parent user message
-    const aiMessage = chatMessages.find(m => m.id === messageId);
-    if (!aiMessage || aiMessage.role !== 'assistant') return;
-    
-    const userMessage = chatMessages.find(m => m.id === aiMessage.parentMessageId);
-    if (!userMessage) return;
-    
-    // Regenerate with same user message, replacing AI response
-    await handleSendChatMessage(userMessage.content, {
-      parentMessageId: userMessage.id,
-      replaceResponseId: messageId,
-      skipUserMessage: true,
-    });
-  }, [chatMessages, handleSendChatMessage]);
+  // Like/Dislike/TryAgain handlers extracted to useMessageInteractions hook
 
   // Auto-dismiss error
   useEffect(() => {
@@ -2568,428 +2363,30 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   // };
 
 
-  // Handle trust badge click - opens trust context panel
-  const handleTrustBadgeClick = useCallback((messageId: string) => {
-    setSelectedMessageForTrust(messageId);
-    setShowTrustPanel(true);
-  }, []);
+  // Trust panel handlers extracted to useTrustPanel hook
+  const {
+    showTrustPanel,
+    setShowTrustPanel,
+    selectedMessageForTrust,
+    setSelectedMessageForTrust,
+    selectedMessageForTrustPanel,
+    isAutoFixing,
+    handleTrustBadgeClick,
+    handleAutoFix,
+    handleAcceptAutoFix,
+  } = useTrustPanel({
+    chatMessages,
+    trustSettings,
+    setMessages,
+    convexAutoFixRules: convexKnowledge?.autoFixRules,
+  });
 
-  // Handle auto-fix for a message
-  const handleAutoFix = useCallback(async () => {
-    // Find the currently selected message
-    const message = selectedMessageForTrust 
-      ? chatMessages.find(m => m.id === selectedMessageForTrust)
-      : null;
-    
-    if (!message?.trustScore || isAutoFixing) return;
-    
-    setIsAutoFixing(true);
-    try {
-      // Gather all violations across all agent results
-      const violations = message.trustScore.validationResults
-        .flatMap(r => r.violations)
-        .filter(v => v.autoFixable);
-      
-      if (violations.length === 0) {
-        console.log('[AutoFix] No auto-fixable violations found');
-        return;
-      }
-      
-      // Extract Convex dynamic rules (admin-managed auto-fix rules)
-      // Note: Convex knowledgeItems have content/metadata.suggestion, not from/to
-      const dynamicReplacements = convexKnowledge?.autoFixRules?.map(rule => ({
-        from: rule.content,
-        to: rule.metadata?.suggestion,
-      }));
-      
-      // Generate fixes using the auto-fix engine (with Convex rules)
-      const fixes = generateAutoFixes(violations, dynamicReplacements);
-      
-      // Apply fixes to the content
-      const result = applyAutoFixes(message.content, fixes);
-      
-      if (result.appliedFixes.length === 0) {
-        console.log('[AutoFix] No fixes were applied');
-        return;
-      }
-      
-      // Re-validate the fixed content
-      const newValidation = await runValidationPipeline(
-        result.fixedContent, 
-        message.generationContext
-      );
-      const newTrustScore = calculateTrustScore(newValidation, trustSettings);
-      
-      // Update the message using setMessages functional updater
-      setMessages(prev => prev.map(m =>
-        m.id === message.id
-          ? {
-              ...m,
-              content: result.fixedContent,
-              trustScore: newTrustScore,
-              validationSummary: {
-                passedCount: newValidation.agentResults.filter(r => r.passed).length,
-                warningCount: newValidation.agentResults
-                  .flatMap(r => r.violations)
-                  .filter(v => v.severity === 'warning').length,
-                errorCount: newValidation.agentResults
-                  .flatMap(r => r.violations)
-                  .filter(v => v.severity === 'error').length,
-                autoFixesApplied: result.appliedFixes.length,
-              },
-            }
-          : m
-      ));
-      
-      console.log(`[AutoFix] Applied ${result.appliedFixes.length} fixes, score improved by ${result.scoreImprovement}`);
-    } catch (err) {
-      console.error('[AutoFix] Error applying fixes:', err);
-    } finally {
-      setIsAutoFixing(false);
-    }
-  }, [selectedMessageForTrust, chatMessages, isAutoFixing, trustSettings, setMessages]);
+  // Voice handlers extracted to useVoiceConversation hook
 
-  // Handle accepting the auto-fix preview (inline side-by-side)
-  const handleAcceptAutoFix = useCallback(async (messageId: string) => {
-    const message = chatMessages.find(m => m.id === messageId);
-    
-    if (!message?.autoFixPreview?.isPending) {
-      console.log('[AutoFix Accept] No pending auto-fix preview for message:', messageId);
-      return;
-    }
-    
-    const { fixedContent, appliedFixes } = message.autoFixPreview;
-    
-    try {
-      console.log(`[AutoFix Accept] Accepting ${appliedFixes.length} fixes for message:`, messageId);
-      
-      // Re-validate the fixed content to get updated trust score
-      const newValidation = await runValidationPipeline(
-        fixedContent, 
-        message.generationContext
-      );
-      const newTrustScore = calculateTrustScore(newValidation, trustSettings);
-      
-      // Update the message: replace content, clear autoFixPreview
-      setMessages(prev => prev.map(m =>
-        m.id === messageId
-          ? {
-              ...m,
-              content: fixedContent,
-              trustScore: newTrustScore,
-              validationSummary: {
-                passedCount: newValidation.agentResults.filter(r => r.passed).length,
-                warningCount: newValidation.agentResults
-                  .flatMap(r => r.violations)
-                  .filter(v => v.severity === 'warning').length,
-                errorCount: newValidation.agentResults
-                  .flatMap(r => r.violations)
-                  .filter(v => v.severity === 'error').length,
-                autoFixesApplied: appliedFixes.length,
-              },
-              // Clear the auto-fix preview since user accepted
-              autoFixPreview: undefined,
-            }
-          : m
-      ));
-      
-      console.log(`[AutoFix Accept] Successfully applied ${appliedFixes.length} fixes`);
-    } catch (err) {
-      console.error('[AutoFix Accept] Error accepting fixes:', err);
-    }
-  }, [chatMessages, trustSettings, setMessages]);
-
-  // Get selected message for trust panel
-  const selectedMessageForTrustPanel = useMemo(() => 
-    selectedMessageForTrust 
-      ? chatMessages.find(m => m.id === selectedMessageForTrust) 
-      : null,
-    [selectedMessageForTrust, chatMessages]
-  );
-
-  // Handle microphone access and start conversation
-  const handleStartConversation = async () => {
-    // Double-click guard - prevent multiple simultaneous starts
-    if (appState !== AppState.IDLE && appState !== AppState.ERROR) {
-      return;
-    }
-
-    // Validate config
-    const configValidation = validateConfig();
-    if (!configValidation.valid) {
-      setError({ 
-        code: 'CONFIG_ERROR', 
-        message: configValidation.errors.join('. ')
-      });
-      return;
-    }
-
-    setAppState(AppState.CONNECTING);
-    setError(null);
-    setTranscript('');
-
-    try {
-      // Request microphone access with enhanced audio processing
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: { ideal: AUDIO_CONFIG.inputSampleRate },
-          channelCount: AUDIO_CONFIG.channels,
-          echoCancellation: { ideal: true },
-          noiseSuppression: { ideal: true },
-          autoGainControl: { ideal: true },
-        },
-      });
-      streamRef.current = stream;
-
-      // Create audio context for input
-      inputAudioContextRef.current = createAudioContext(AUDIO_CONFIG.inputSampleRate);
-
-      // Create audio analyzer for the AI Orb visualization
-      const analyzer = inputAudioContextRef.current.createAnalyser();
-      analyzer.fftSize = 256;
-      analyzer.smoothingTimeConstant = 0.8;
-      audioAnalyzerRef.current = analyzer;
-
-      // Connect stream to analyzer for visualization
-      const analyzerSource = inputAudioContextRef.current.createMediaStreamSource(stream);
-      analyzerSource.connect(analyzer);
-
-      // Create conversation provider
-      const provider = createConversationProvider();
-      conversationProviderRef.current = provider;
-
-      // Get voice from TTS provider (not conversation provider) to ensure correct voice IDs
-      const ttsProvider = createTTSProvider();
-      const voice = ttsProvider.getDefaultVoice(activeProject?.voiceGender === VoiceGender.FEMALE ? 'female' : 'male');
-      const systemPrompt = getSystemInstruction(activeProject?.config || { persona: { tone: '', pace: 'medium', confidence: 'medium', vibe: 'warm', language: 'english' }, greeting: '', maxResponseLength: 'short' });
-
-      // Connect to conversation service
-      await provider.connect(
-        {
-          voice,
-          systemPrompt,
-          persona: activeProject?.config.persona || { tone: '', pace: 'medium', confidence: 'medium', vibe: 'warm', language: 'english' },
-          greeting: activeProject?.config.greeting || '',
-          maxResponseLength: activeProject?.config.maxResponseLength || 'short',
-        },
-        {
-          onStateChange: (state) => {
-            switch (state) {
-              case 'listening':
-                setAppState(AppState.LISTENING);
-                // Reset turn tracking when starting to listen
-                currentTurnRef.current = { userMessageId: null, userText: '', responseText: '' };
-                break;
-              case 'speaking':
-                setAppState(AppState.SPEAKING);
-                break;
-              case 'error':
-                setAppState(AppState.ERROR);
-                break;
-              case 'idle':
-                setAppState(AppState.IDLE);
-                break;
-              default:
-                break;
-            }
-          },
-          onTranscript: (text, isFinal) => {
-            setTranscript(text);
-            if (isFinal && text.trim()) {
-              console.log('Final transcript:', text);
-              // Add user message to chat history
-              const userMessage = createTextMessage('user', text, 'voice');
-              addMessage(userMessage);
-              currentTurnRef.current.userMessageId = userMessage.id;
-              currentTurnRef.current.userText = text;  // Store for auto-rename
-              // Clear transcript display after adding to history
-              setTimeout(() => setTranscript(''), 500);
-            }
-          },
-          onResponse: (text) => {
-            console.log('AI response:', text);
-            // Store response text to attach to audio message
-            currentTurnRef.current.responseText = text;
-            // Show streaming AI response in real-time
-            setStreamingAIResponse(text);
-          },
-          onAudioReceived: (audioBuffer) => {
-            console.log('Audio received:', audioBuffer.duration, 'seconds');
-            // Convert AudioBuffer to base64 for persistence
-            const base64 = audioBufferManager.toBase64(audioBuffer);
-            
-            // Create audio message with the response text
-            const aiMessage = createAudioMessage(
-              'assistant',
-              currentTurnRef.current.responseText || '(Audio response)',
-              base64,
-              audioBuffer.duration,
-              audioBuffer.sampleRate,
-              'voice',
-              currentTurnRef.current.userMessageId || undefined
-            );
-            addMessage(aiMessage);
-            
-            // Auto-rename project if still "Untitled" (ChatGPT-style)
-            if (currentTurnRef.current.userText && currentTurnRef.current.responseText) {
-              tryAutoRenameProject(currentTurnRef.current.userText, currentTurnRef.current.responseText);
-            }
-            
-            // Clear streaming AI response after message is created
-            setStreamingAIResponse('');
-            
-            // Reset turn tracking
-            currentTurnRef.current = { userMessageId: null, userText: '', responseText: '' };
-          },
-          onError: (err) => {
-            console.error('Conversation error:', err);
-            setError({
-              code: 'CONVERSATION_ERROR',
-              message: err.message,
-            });
-          },
-        }
-      );
-
-      // Set up audio processing with noise suppression
-      const source = inputAudioContextRef.current.createMediaStreamSource(stream);
-      const processor = inputAudioContextRef.current.createScriptProcessor(
-        AUDIO_CONFIG.bufferSize,
-        AUDIO_CONFIG.channels,
-        AUDIO_CONFIG.channels
-      );
-      processorRef.current = processor;
-
-      processor.onaudioprocess = (event) => {
-        const inputData = event.inputBuffer.getChannelData(0);
-        provider.sendAudio(inputData);
-      };
-
-      // Initialize noise suppression if supported
-      if (isNoiseSuppressionSupported()) {
-        try {
-          console.log('[Voice] Initializing RNNoise noise suppression...');
-          const noiseSuppression = getNoiseSuppressionService();
-          await noiseSuppression.initialize(inputAudioContextRef.current);
-          noiseSuppressionRef.current = noiseSuppression;
-          
-          // Connect: source -> noise suppression -> processor -> destination
-          noiseSuppression.connect(source, processor);
-          processor.connect(inputAudioContextRef.current.destination);
-          console.log('[Voice] Noise suppression enabled');
-        } catch (nsError) {
-          console.warn('[Voice] Failed to initialize noise suppression, using direct connection:', nsError);
-          // Fallback: direct connection without noise suppression
-          source.connect(processor);
-          processor.connect(inputAudioContextRef.current.destination);
-        }
-      } else {
-        console.log('[Voice] AudioWorklet not supported, noise suppression disabled');
-        source.connect(processor);
-        processor.connect(inputAudioContextRef.current.destination);
-      }
-
-    } catch (err) {
-      console.error('Failed to start conversation:', err);
-      setAppState(AppState.ERROR);
-      
-      // Handle specific permission errors with user-friendly messages
-      if (err instanceof DOMException) {
-        if (err.name === 'NotAllowedError') {
-          setError({
-            code: 'PERMISSION_DENIED',
-            message: 'Microphone access was denied. Please allow microphone access in your browser settings and try again.',
-          });
-          return;
-        } else if (err.name === 'NotFoundError') {
-          setError({
-            code: 'NO_MICROPHONE',
-            message: 'No microphone found. Please connect a microphone and try again.',
-          });
-          return;
-        }
-      }
-      
-      setError({
-        code: 'START_ERROR',
-        message: err instanceof Error ? err.message : 'Failed to start conversation',
-      });
-    }
-  };
-
-  // Handle stop conversation
-  const handleStopConversation = useCallback(() => {
-    // Disconnect provider
-    if (conversationProviderRef.current) {
-      conversationProviderRef.current.disconnect();
-      conversationProviderRef.current = null;
-    }
-
-    // Disconnect noise suppression
-    if (noiseSuppressionRef.current) {
-      noiseSuppressionRef.current.disconnect();
-      noiseSuppressionRef.current = null;
-    }
-
-    // Stop audio processing
-    if (processorRef.current) {
-      processorRef.current.disconnect();
-      processorRef.current = null;
-    }
-
-    // Disconnect audio analyzer
-    if (audioAnalyzerRef.current) {
-      audioAnalyzerRef.current.disconnect();
-      audioAnalyzerRef.current = null;
-    }
-
-    // Close audio context
-    if (inputAudioContextRef.current) {
-      inputAudioContextRef.current.close();
-      inputAudioContextRef.current = null;
-    }
-
-    // Stop media stream
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-
-    // Reset turn tracking to prevent stale data
-    currentTurnRef.current = { userMessageId: null, userText: '', responseText: '' };
-
-    setAppState(AppState.IDLE);
-    setTranscript('');
-  }, []);
-
-  // Toggle conversation
-  const handleToggleConversation = useCallback(() => {
-    if (appState === AppState.IDLE || appState === AppState.ERROR) {
-      handleStartConversation();
-    } else {
-      handleStopConversation();
-    }
-  }, [appState]);
-
-  // Safe mode change with cleanup and focus management
+  // Mode change wrapper (voice hook handles cleanup, App handles chatMode)
   const handleModeChange = useCallback((newMode: ChatMode) => {
-    // Cleanup any active voice conversation before mode switch
-    if (appState !== AppState.IDLE && appState !== AppState.ERROR) {
-      handleStopConversation();
-    }
-    setChatMode(newMode);
-    
-    // Move focus after state update for accessibility
-    requestAnimationFrame(() => {
-      if (newMode === 'voice') {
-        // Focus the mic button in voice UI
-        document.querySelector<HTMLButtonElement>('[data-voice-mic-button]')?.focus();
-      } else {
-        // Focus the text input
-        document.querySelector<HTMLTextAreaElement>('[data-chat-input]')?.focus();
-      }
-    });
-  }, [appState]);
+    handleVoiceModeChange(newMode, setChatMode);
+  }, [handleVoiceModeChange, setChatMode]);
 
   // Don't render until we have an active project
   if (!activeProject) {

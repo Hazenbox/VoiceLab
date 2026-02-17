@@ -44,3 +44,8 @@ export { useAudioAnalyzer } from './useAudioAnalyzer';
 export { useChatPersistence } from './useChatPersistence';
 export { useAudioRecorder } from './useAudioRecorder';
 export { useSessionAnalytics } from './useSessionAnalytics';
+
+// Extracted from App.tsx (Phase 1 refactor)
+export { useVoiceConversation } from './useVoiceConversation';
+export { useMessageInteractions } from './useMessageInteractions';
+export { useTrustPanel } from './useTrustPanel';
