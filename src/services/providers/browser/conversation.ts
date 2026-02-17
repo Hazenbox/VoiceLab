@@ -19,6 +19,10 @@ import { createTTSProvider } from '../index';
 import { createLLMProvider, getDefaultLLMProviderType } from '../llm';
 import type { LLMProvider } from '../llm/types';
 import { createAudioContext } from '../../audioUtils';
+// Phase 6C: Safety and PII masking for voice path
+import { checkSafetyGate, type SafetyGateResult } from '../../safety';
+import { maskSensitiveData, containsSensitiveData } from '../../privacy/dataMasking';
+import { featureFlags } from '../../featureFlags';
 
 /**
  * Browser Conversation Provider
@@ -171,6 +175,8 @@ export class BrowserConversationProvider implements ConversationProvider {
 
   /**
    * Process user input and generate response
+   * 
+   * Phase 6C: Added safety gate check and PII masking to match text pipeline
    */
   private async processUserInput(text: string): Promise<void> {
     if (this.isProcessing) {
@@ -181,11 +187,50 @@ export class BrowserConversationProvider implements ConversationProvider {
     this.setState('processing');
 
     try {
+      // Phase 6C: Safety gate check BEFORE generating response
+      // This ensures voice path has same safety protections as text pipeline
+      if (featureFlags.safetyGate) {
+        const safetyResult = checkSafetyGate(text, {
+          ecosystem: 'jio_platforms', // Default ecosystem for voice
+          channel: 'voice_assistant', // Voice-specific channel
+        });
+        
+        if (!safetyResult.passed) {
+          console.log('[BrowserConversation] Safety gate triggered:', safetyResult.result?.routing);
+          
+          // Handle emergency response
+          if (safetyResult.emergencyResponse) {
+            // Speak the emergency response instead of generating one
+            this.callbacks.onResponse?.(safetyResult.emergencyResponse);
+            await this.speakResponse(safetyResult.emergencyResponse);
+            this.setState('listening');
+            return;
+          }
+          
+          // Handle blocked request with safe response
+          const safeResponse = "I'm sorry, but I'm not able to help with that request. Is there something else I can assist you with?";
+          this.callbacks.onResponse?.(safeResponse);
+          await this.speakResponse(safeResponse);
+          this.setState('listening');
+          return;
+        }
+      }
+
       // Add user message to history
       this.conversationHistory.push({ role: 'user', content: text });
 
       // Generate response using LLM
-      const response = await this.generateResponse(text);
+      let response = await this.generateResponse(text);
+
+      // Phase 6C: PII masking BEFORE speaking
+      // Prevents TTS from speaking sensitive data like phone numbers, Aadhaar, etc.
+      if (containsSensitiveData(response)) {
+        const maskResult = maskSensitiveData(response);
+        if (maskResult.wasModified) {
+          console.log('[BrowserConversation] PII masked in voice response');
+          response = maskResult.maskedText;
+        }
+      }
 
       // Add assistant response to history
       this.conversationHistory.push({ role: 'assistant', content: response });
