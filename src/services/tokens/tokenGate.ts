@@ -217,7 +217,7 @@ User expressing sadness/distress.
   {
     id: 'gate_fearful_user',
     tokenKey: 'emotion.rasa.user',
-    triggerValues: ['bhayanak'],
+    triggerValues: ['bhayanaka'],
     action: 'modify',
     promptModification: `
 ## REASSURANCE MODE
@@ -230,6 +230,229 @@ User expressing fear/anxiety.
 `,
     priority: 65,
     category: 'emotion',
+  },
+  {
+    id: 'gate_disgust_user',
+    tokenKey: 'emotion.rasa.user',
+    triggerValues: ['bibhatsa'],
+    action: 'modify',
+    promptModification: `
+## RESPECTFUL EXIT MODE
+User expressing disgust/rejection/aversion.
+- Respect their choice immediately
+- Do NOT argue or persuade
+- Confirm requested action (cancel, pause, opt-out)
+- Keep the door open for return without pressure
+`,
+    priority: 65,
+    category: 'emotion',
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // NUDGE SENSITIVITY OVERRIDES
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: 'gate_nudge_safety_block',
+    tokenKey: 'nudge.sensitivity_override',
+    triggerValues: ['safety_block'],
+    action: 'modify',
+    promptModification: `
+## NUDGE SAFETY OVERRIDE
+Safety-sensitive domain detected. All nudging blocked.
+- ZERO promotional content of any kind
+- ZERO upgrade suggestions
+- ZERO cross-sell mentions
+- Focus entirely on safety and user wellbeing
+`,
+    priority: 85,
+    category: 'nudge',
+  },
+  {
+    id: 'gate_nudge_complaint_block',
+    tokenKey: 'nudge.sensitivity_override',
+    triggerValues: ['complaint_block'],
+    action: 'modify',
+    promptModification: `
+## NUDGE COMPLAINT OVERRIDE
+Active complaint detected. All nudging blocked until fully resolved.
+- Do NOT suggest upgrades or new services
+- Do NOT mention offers or promotions
+- Focus solely on resolving the complaint
+- Only after confirmed resolution may a contextual suggestion appear
+`,
+    priority: 82,
+    category: 'nudge',
+  },
+  {
+    id: 'gate_nudge_emotion_block',
+    tokenKey: 'nudge.sensitivity_override',
+    triggerValues: ['high_emotion_block'],
+    action: 'modify',
+    promptModification: `
+## NUDGE EMOTION OVERRIDE
+High/extreme emotion detected. All nudging blocked until emotional state stabilises.
+- No promotional content during distress
+- No upselling during frustration
+- Focus on empathy and resolution
+`,
+    priority: 82,
+    category: 'nudge',
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // ADVICE BOUNDARY GATES
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: 'gate_advice_refer_professional',
+    tokenKey: 'advice.boundary',
+    triggerValues: ['refer_professional'],
+    action: 'modify',
+    promptModification: `
+## PROFESSIONAL REFERRAL REQUIRED
+This topic requires professional guidance.
+- Share only general context and surface-level information
+- Explicitly recommend consulting a qualified professional
+- Do NOT provide diagnosis, investment advice, or legal strategy
+- Add appropriate disclaimer
+`,
+    priority: 70,
+    category: 'compliance',
+  },
+  {
+    id: 'gate_advice_emergency_redirect',
+    tokenKey: 'advice.boundary',
+    triggerValues: ['emergency_redirect'],
+    action: 'modify',
+    promptModification: `
+## EMERGENCY REDIRECT
+Immediate emergency response needed.
+- Provide emergency numbers/resources IMMEDIATELY
+- Do NOT attempt to resolve the situation yourself
+- Be compassionate but direct
+- Emergency: 112, Police: 100, Ambulance: 108
+`,
+    priority: 95,
+    category: 'safety',
+  },
+  {
+    id: 'gate_advice_refuse',
+    tokenKey: 'advice.boundary',
+    triggerValues: ['refuse_and_redirect'],
+    action: 'block',
+    blockResponse: `I'm not able to help with this request. If you need assistance, please contact the appropriate authority or service.
+
+Is there something else I can help you with?`,
+    priority: 95,
+    category: 'safety',
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // RISK GATES
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: 'gate_risk_account_security',
+    tokenKey: 'risk.category',
+    triggerValues: ['account_security'],
+    action: 'modify',
+    promptModification: `
+## ACCOUNT SECURITY MODE
+Identity/security-sensitive operation detected.
+- Do NOT expose sensitive data (passwords, OTPs, account numbers)
+- Confirm identity steps carefully before proceeding
+- Use precise, unambiguous language
+- Never display full account details
+`,
+    priority: 75,
+    category: 'compliance',
+  },
+  {
+    id: 'gate_risk_finance',
+    tokenKey: 'risk.category',
+    triggerValues: ['finance_regulatory'],
+    action: 'modify',
+    promptModification: `
+## FINANCIAL CAUTION MODE
+Financial/regulatory context detected.
+- Use precise language -- avoid vague guarantees
+- Confirm amounts clearly before any action
+- Add appropriate disclaimers for financial information
+- Never promise specific financial outcomes
+`,
+    priority: 70,
+    category: 'compliance',
+  },
+  {
+    id: 'gate_risk_critical',
+    tokenKey: 'risk.level',
+    triggerValues: ['critical'],
+    action: 'modify',
+    promptModification: `
+## CRITICAL RISK MODE
+Immediate fraud, security, or financial exposure detected.
+- Stabilise the situation first
+- Provide containment steps before resolution
+- No humour, no nudging, no casual tone
+- Confirm every action before executing
+- Offer escalation path
+`,
+    priority: 85,
+    category: 'safety',
+  },
+  {
+    id: 'gate_risk_high',
+    tokenKey: 'risk.level',
+    triggerValues: ['high'],
+    action: 'modify',
+    promptModification: `
+## HIGH RISK MODE
+Data, money, or trust at stake.
+- Slow down -- confirm before every action
+- Use precise, unambiguous language
+- No casual phrasing or humour
+- Increase confirmation checkpoints
+`,
+    priority: 72,
+    category: 'compliance',
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // URGENCY GATES
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: 'gate_urgency_critical',
+    tokenKey: 'context.urgency',
+    triggerValues: ['critical'],
+    action: 'modify',
+    promptModification: `
+## CRITICAL URGENCY
+Service down, safety risk, or financial exposure. User needs immediate resolution.
+- Maximum brevity -- skip pleasantries
+- Lead with the solution or action
+- Provide clear, numbered steps if applicable
+- Offer escalation immediately if cannot resolve
+`,
+    priority: 78,
+    category: 'compliance',
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TURN COUNT FATIGUE GATE
+  // ══════════════════════════════════════════════════════════════════════════
+  {
+    id: 'gate_high_turn_count',
+    tokenKey: 'conversation.turn_count',
+    triggerValues: ['9', '10', '11', '12', '13', '14', '15'],
+    action: 'modify',
+    promptModification: `
+## HIGH FRICTION DETECTED
+This conversation has been going for many turns (9+).
+- Offer a summarised reset of what has been tried
+- Suggest escalation to human support if appropriate
+- Reduce cognitive load -- shorter responses
+- Avoid repeating previously given information
+`,
+    priority: 55,
+    category: 'compliance',
   },
   
   // ══════════════════════════════════════════════════════════════════════════
