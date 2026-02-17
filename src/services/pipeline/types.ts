@@ -159,6 +159,9 @@ export interface PipelineResult {
     autoFixesApplied: number;
   } | null;
 
+  /** Generation context from the assemble step (for UI transparency) */
+  generationContext: unknown;
+
   /** How many times the pipeline retried generation */
   retryCount: number;
 

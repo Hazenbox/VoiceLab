@@ -467,6 +467,7 @@ function convertServerResultToPipelineResult(serverResult: ServerPipelineResult)
     evidence: serverResult.evidence,
     autoFixPreview: serverResult.autoFixPreview,
     validationSummary: serverResult.validationSummary,
+    generationContext: null, // Server doesn't expose generation context
     retryCount: serverResult.retryCount,
     metadata: {
       model: serverResult.metadata.model,
