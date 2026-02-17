@@ -613,87 +613,15 @@ export const ChatPanel = memo(function ChatPanel({
     }
     
     // Text message - Assistant
-    // Check if this message has an auto-fix preview (pending or auto-accepted)
+    // Check if this message has auto-fixes applied
     const hasAutoFixPreview = message.autoFixPreview && message.autoFixPreview.appliedFixes.length > 0;
-    const isAutoFixPending = message.autoFixPreview?.isPending;
     
-    if (hasAutoFixPreview && message.autoFixPreview) {
-      // Side-by-side auto-fix preview layout
-      return (
-        <div
-          key={message.id}
-          className="flex justify-start w-full"
-          role="listitem"
-        >
-          <div className="autofix-preview-container flex gap-3 w-full max-w-[95%]">
-            {/* Original content - left side, muted */}
-            <div 
-              className="flex-1 px-3 py-2 rounded-xl autofix-original"
-              style={{
-                backgroundColor: `${theme.stroke.low}80`,
-                color: theme.text.medium,
-                opacity: 0.7,
-              }}
-            >
-              <MessageContent content={message.autoFixPreview.originalContent} role="assistant" />
-              <div className="flex items-center gap-1 mt-2">
-                <span 
-                  className="text-[10px] px-2 py-0.5 rounded-full"
-                  style={{ 
-                    backgroundColor: theme.stroke.low,
-                    color: theme.text.low,
-                  }}
-                >
-                  original
-                </span>
-              </div>
-            </div>
-            
-            {/* Recommended content - right side, highlighted */}
-            <div 
-              className="flex-1 px-3 py-2 rounded-xl autofix-recommended"
-              style={{
-                backgroundColor: theme.background.ghost,
-                color: theme.text.high,
-                borderLeft: `3px solid ${SEMANTIC_COLORS.positive}`,
-              }}
-            >
-              <MessageContent content={message.autoFixPreview.fixedContent} role="assistant" />
-              
-              {/* Tag row - show accept button only if pending, otherwise show auto-fixed indicator */}
-              <div className="flex items-center justify-between gap-2 mt-2">
-                <Badge variant="positive">
-                  {isAutoFixPending ? 'recommended based on jio rules' : 'auto-fixed based on jio rules'}
-                </Badge>
-                {isAutoFixPending && (
-                  <Button
-                    appearance="primary"
-                    size="S"
-                    onPress={() => onAcceptAutoFix?.(message.id)}
-                  >
-                    accept
-                  </Button>
-                )}
-              </div>
-              
-              {/* Trust Badge for recommended version */}
-              {message.trustScore && (
-                <div className="flex items-center gap-2 mt-2">
-                  <TrustBadge
-                    trustScore={message.trustScore}
-                    onClick={() => onTrustBadgeClick?.(message.id)}
-                    size="sm"
-                    showScore={true}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      );
-    }
+    // Use auto-fixed content if available, otherwise use regular content
+    const displayContent = hasAutoFixPreview && message.autoFixPreview 
+      ? message.autoFixPreview.fixedContent 
+      : message.content;
     
-    // Regular assistant message (no auto-fix preview)
+    // Highlighting support for both regular and auto-fixed messages
     const isHighlighted = message.id === highlightedMessageId;
     
     return (
@@ -710,12 +638,12 @@ export const ChatPanel = memo(function ChatPanel({
           }}
         >
           <MessageContent 
-            content={message.content} 
+            content={displayContent} 
             role="assistant" 
             highlightedText={isHighlighted ? highlightedText ?? undefined : undefined}
           />
           
-          {/* Actions row: Trust Badge + Message Actions */}
+          {/* Actions row: Trust Badge + Auto-fixed badge + Message Actions */}
           <div className="flex items-center gap-0 mt-1.5 -ml-2">
             {message.trustScore && (
               <TrustBadge
@@ -723,13 +651,15 @@ export const ChatPanel = memo(function ChatPanel({
                 onClick={() => onTrustBadgeClick?.(message.id)}
                 size="sm"
                 showScore={true}
-                // messageContent removed - copy now in MessageActions
               />
+            )}
+            {hasAutoFixPreview && (
+              <Badge variant="positive">auto-fixed</Badge>
             )}
             {onLike && onDislike && onTryAgain && (
               <AssistantMessageActions
                 messageId={message.id}
-                content={message.content}
+                content={displayContent}
                 onLike={onLike}
                 onDislike={onDislike}
                 onTryAgain={onTryAgain}
@@ -755,7 +685,6 @@ export const ChatPanel = memo(function ChatPanel({
     onSubmitEdit,
     onCancelEdit,
     onVersionChange,
-    onAcceptAutoFix,
   ]);
 
   // Render input area (reusable for both layouts)
