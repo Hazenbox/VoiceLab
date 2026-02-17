@@ -20,6 +20,7 @@ import {
   calculateIntentAccuracyMetrics,
   getPendingSyncData,
   clearSyncedData,
+  clearAllData,
   DEFAULT_CSAT_CONFIG,
 } from '../csatIntentTracker';
 
@@ -380,7 +381,7 @@ describe('csatIntentTracker', () => {
   
   describe('calculateIntentAccuracyMetrics', () => {
     beforeEach(() => {
-      clearSyncedData();
+      clearAllData(); // Clear ALL logs for clean state
     });
     
     it('should calculate accuracy from known logs', () => {

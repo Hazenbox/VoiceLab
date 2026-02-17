@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { RetryManager } from './retryManager';
-import { ERROR_CODES } from '../providers/llm/types';
+import { ERROR_CODES, LLMError } from '../providers/llm/types';
 
 describe('RetryManager', () => {
   let manager: RetryManager;
@@ -165,17 +165,18 @@ describe('RetryManager', () => {
         onRetry,
       });
       
+      // Create proper LLMError instances (must be Error objects)
+      const createLLMError = () => {
+        const err = new Error('Rate limit') as LLMError;
+        err.code = ERROR_CODES.RATE_LIMIT;
+        err.retryable = true;
+        err.provider = 'openai';
+        return err;
+      };
+      
       const operation = vi.fn()
-        .mockRejectedValueOnce({ 
-          code: ERROR_CODES.RATE_LIMIT, 
-          retryable: true,
-          message: 'Rate limit',
-        })
-        .mockRejectedValueOnce({ 
-          code: ERROR_CODES.RATE_LIMIT, 
-          retryable: true,
-          message: 'Rate limit',
-        })
+        .mockRejectedValueOnce(createLLMError())
+        .mockRejectedValueOnce(createLLMError())
         .mockResolvedValue('success');
       
       await managerWithCallback.executeWithRetry(operation);

@@ -545,6 +545,14 @@ export function clearSyncedData(): void {
   intentLogs.push(...unknown);
 }
 
+/**
+ * Clear ALL data (for testing purposes)
+ */
+export function clearAllData(): void {
+  csatCollections.length = 0;
+  intentLogs.length = 0;
+}
+
 // =============================================================================
 // Helper Functions
 // =============================================================================

@@ -376,14 +376,14 @@ beforeAll(() => {
     revokeObjectURL: vi.fn(),
   });
   
-  // Mock btoa and atob for base64 encoding
+  // Mock btoa and atob for base64 encoding in Node.js
   vi.stubGlobal('btoa', (str: string) => {
-    // Simple base64 encoding for browsers
-    return globalThis.btoa ? globalThis.btoa(str) : btoa(str);
+    // Use Node.js Buffer for base64 encoding
+    return Buffer.from(str, 'binary').toString('base64');
   });
   vi.stubGlobal('atob', (str: string) => {
-    // Simple base64 decoding for browsers
-    return globalThis.atob ? globalThis.atob(str) : atob(str);
+    // Use Node.js Buffer for base64 decoding
+    return Buffer.from(str, 'base64').toString('binary');
   });
 });
 

@@ -187,6 +187,11 @@ interface OldAudioDataStore {
 }
 
 async function migrateOldAudioToIndexedDB(): Promise<void> {
+  // Skip migration in Node.js (test environment)
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+  
   // Check if migration already done
   if (localStorage.getItem(MIGRATION_KEY)) {
     return;
