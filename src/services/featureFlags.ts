@@ -6,7 +6,33 @@
  * 
  * When a flag is disabled (missing or !== 'true'), the feature gracefully
  * falls back to defaults or is skipped entirely -- no crashes.
+ * 
+ * NOTE: Uses isomorphic env helpers to work in both browser and server contexts.
  */
+
+import { getEnv, isServer } from './env';
+
+/**
+ * Get a feature flag from environment (isomorphic).
+ * Handles VITE_ prefix automatically.
+ */
+function getFlag(key: string, defaultEnabled: boolean = true): boolean {
+  // Use getEnv which handles VITE_ prefix and server/client differences
+  const value = getEnv(`ENABLE_${key}`, defaultEnabled ? 'true' : 'false');
+  if (defaultEnabled) {
+    return value !== 'false'; // Opt-out: enabled unless explicitly 'false'
+  } else {
+    return value === 'true'; // Opt-in: disabled unless explicitly 'true'
+  }
+}
+
+/**
+ * Get a debug flag (opt-in by default).
+ */
+function getDebugFlag(key: string): boolean {
+  const value = getEnv(`DEBUG_${key}`, 'false');
+  return value === 'true';
+}
 
 export const featureFlags = {
   /** Background sync of profiles, analytics, corrections to Convex (always enabled) */
@@ -20,8 +46,7 @@ export const featureFlags = {
    * Set VITE_ENABLE_PERSONA=false to disable
    */
   get persona(): boolean {
-    const env = import.meta.env.VITE_ENABLE_PERSONA;
-    return env !== 'false';
+    return getFlag('PERSONA', true);
   },
 
   /** 
@@ -30,8 +55,7 @@ export const featureFlags = {
    * Set VITE_ENABLE_KNOWLEDGE_BASE=false to disable
    */
   get knowledgeBase(): boolean {
-    const env = import.meta.env.VITE_ENABLE_KNOWLEDGE_BASE;
-    return env !== 'false';
+    return getFlag('KNOWLEDGE_BASE', true);
   },
 
   /** 
@@ -40,8 +64,7 @@ export const featureFlags = {
    * Set VITE_ENABLE_LEARNING=false to disable
    */
   get learning(): boolean {
-    const env = import.meta.env.VITE_ENABLE_LEARNING;
-    return env !== 'false';
+    return getFlag('LEARNING', true);
   },
 
   /** 
@@ -50,8 +73,7 @@ export const featureFlags = {
    * Set VITE_ENABLE_CONVERSATIONAL_MODE=false to disable
    */
   get conversationalMode(): boolean {
-    const env = import.meta.env.VITE_ENABLE_CONVERSATIONAL_MODE;
-    return env !== 'false';
+    return getFlag('CONVERSATIONAL_MODE', true);
   },
 
   // ── Analytics Feature Flags ──────────────────────────────────────────
@@ -61,9 +83,7 @@ export const featureFlags = {
    * Default: true for comprehensive analytics
    */
   get sessionAnalytics(): boolean {
-    const env = import.meta.env.VITE_ENABLE_SESSION_ANALYTICS;
-    // Default to true unless explicitly disabled
-    return env !== 'false';
+    return getFlag('SESSION_ANALYTICS', true);
   },
 
   /**
@@ -71,9 +91,7 @@ export const featureFlags = {
    * Default: true for user behavior insights
    */
   get interactionTracking(): boolean {
-    const env = import.meta.env.VITE_ENABLE_INTERACTION_TRACKING;
-    // Default to true unless explicitly disabled
-    return env !== 'false';
+    return getFlag('INTERACTION_TRACKING', true);
   },
 
   /**
@@ -81,9 +99,7 @@ export const featureFlags = {
    * Default: true for performance monitoring
    */
   get responseTimeTracking(): boolean {
-    const env = import.meta.env.VITE_ENABLE_RESPONSE_TIME_TRACKING;
-    // Default to true unless explicitly disabled
-    return env !== 'false';
+    return getFlag('RESPONSE_TIME_TRACKING', true);
   },
 
   // ── Learning & Memory Flags ──────────────────────────────────────────
@@ -94,9 +110,9 @@ export const featureFlags = {
    * Set VITE_AUTO_APPROVE_CORRECTIONS=false to require manual admin approval
    */
   get autoApproveCorrections(): boolean {
-    const env = import.meta.env.VITE_AUTO_APPROVE_CORRECTIONS;
-    // Default to true unless explicitly disabled
-    return env !== 'false';
+    // Special case: different env var pattern (no ENABLE_ prefix)
+    const value = getEnv('AUTO_APPROVE_CORRECTIONS', 'true');
+    return value !== 'false';
   },
 
   // ── Validation Flags ──────────────────────────────────────────────────
@@ -108,9 +124,9 @@ export const featureFlags = {
    * Set VITE_VALIDATE_CONVERSATIONAL=false to disable (not recommended)
    */
   get validateConversational(): boolean {
-    const env = import.meta.env.VITE_VALIDATE_CONVERSATIONAL;
-    // Default to true unless explicitly disabled
-    return env !== 'false';
+    // Special case: different env var pattern (no ENABLE_ prefix)
+    const value = getEnv('VALIDATE_CONVERSATIONAL', 'true');
+    return value !== 'false';
   },
 
   // ── Constitutional AI Flags ────────────────────────────────────────────
@@ -121,8 +137,7 @@ export const featureFlags = {
    * Default: true (safety first)
    */
   get safetyGate(): boolean {
-    const env = import.meta.env.VITE_ENABLE_SAFETY_GATE;
-    return env !== 'false';
+    return getFlag('SAFETY_GATE', true);
   },
 
   /**
@@ -131,8 +146,7 @@ export const featureFlags = {
    * Default: true
    */
   get constitutionalWrapper(): boolean {
-    const env = import.meta.env.VITE_ENABLE_CONSTITUTIONAL_WRAPPER;
-    return env !== 'false';
+    return getFlag('CONSTITUTIONAL_WRAPPER', true);
   },
 
   /**
@@ -141,8 +155,7 @@ export const featureFlags = {
    * Default: true
    */
   get validationAgents(): boolean {
-    const env = import.meta.env.VITE_ENABLE_VALIDATION_AGENTS;
-    return env !== 'false';
+    return getFlag('VALIDATION_AGENTS', true);
   },
 
   /**
@@ -151,8 +164,7 @@ export const featureFlags = {
    * Default: true
    */
   get conversationState(): boolean {
-    const env = import.meta.env.VITE_ENABLE_CONVERSATION_STATE;
-    return env !== 'false';
+    return getFlag('CONVERSATION_STATE', true);
   },
 
   /**
@@ -161,8 +173,7 @@ export const featureFlags = {
    * Default: true
    */
   get handoffDetection(): boolean {
-    const env = import.meta.env.VITE_ENABLE_HANDOFF_DETECTION;
-    return env !== 'false';
+    return getFlag('HANDOFF_DETECTION', true);
   },
 
   // ── RAG Enhancement Flags ──────────────────────────────────────────────
@@ -173,8 +184,7 @@ export const featureFlags = {
    * Default: true
    */
   get ragQueryExpansion(): boolean {
-    const env = import.meta.env.VITE_ENABLE_RAG_QUERY_EXPANSION;
-    return env !== 'false';
+    return getFlag('RAG_QUERY_EXPANSION', true);
   },
 
   /**
@@ -183,8 +193,7 @@ export const featureFlags = {
    * Default: true
    */
   get ragResultRanking(): boolean {
-    const env = import.meta.env.VITE_ENABLE_RAG_RESULT_RANKING;
-    return env !== 'false';
+    return getFlag('RAG_RESULT_RANKING', true);
   },
 
   /**
@@ -193,8 +202,7 @@ export const featureFlags = {
    * Default: true
    */
   get ragResilience(): boolean {
-    const env = import.meta.env.VITE_ENABLE_RAG_RESILIENCE;
-    return env !== 'false';
+    return getFlag('RAG_RESILIENCE', true);
   },
 
   // ── Learning Enhancement Flags ─────────────────────────────────────────
@@ -205,8 +213,7 @@ export const featureFlags = {
    * Default: true
    */
   get correctionWeighting(): boolean {
-    const env = import.meta.env.VITE_ENABLE_CORRECTION_WEIGHTING;
-    return env !== 'false';
+    return getFlag('CORRECTION_WEIGHTING', true);
   },
 
   /**
@@ -215,8 +222,7 @@ export const featureFlags = {
    * Default: true
    */
   get userLearningProfiles(): boolean {
-    const env = import.meta.env.VITE_ENABLE_USER_LEARNING_PROFILES;
-    return env !== 'false';
+    return getFlag('USER_LEARNING_PROFILES', true);
   },
 
   /**
@@ -225,8 +231,7 @@ export const featureFlags = {
    * Default: true
    */
   get adminRejectionSync(): boolean {
-    const env = import.meta.env.VITE_ENABLE_ADMIN_REJECTION_SYNC;
-    return env !== 'false';
+    return getFlag('ADMIN_REJECTION_SYNC', true);
   },
 
   // ── Token Management Flags ─────────────────────────────────────────────
@@ -237,8 +242,7 @@ export const featureFlags = {
    * Default: true
    */
   get tokenClassification(): boolean {
-    const env = import.meta.env.VITE_ENABLE_TOKEN_CLASSIFICATION;
-    return env !== 'false';
+    return getFlag('TOKEN_CLASSIFICATION', true);
   },
 
   /**
@@ -247,8 +251,7 @@ export const featureFlags = {
    * Default: true (reduces prompt size)
    */
   get selectiveDirectives(): boolean {
-    const env = import.meta.env.VITE_ENABLE_SELECTIVE_DIRECTIVES;
-    return env !== 'false';
+    return getFlag('SELECTIVE_DIRECTIVES', true);
   },
 
   // ── Emergency & Safety Flags ───────────────────────────────────────────
@@ -259,8 +262,7 @@ export const featureFlags = {
    * Default: true (NEVER disable in production)
    */
   get emergencyResponses(): boolean {
-    const env = import.meta.env.VITE_ENABLE_EMERGENCY_RESPONSES;
-    return env !== 'false';
+    return getFlag('EMERGENCY_RESPONSES', true);
   },
 
   /**
@@ -269,8 +271,7 @@ export const featureFlags = {
    * Default: true
    */
   get safetyLogging(): boolean {
-    const env = import.meta.env.VITE_ENABLE_SAFETY_LOGGING;
-    return env !== 'false';
+    return getFlag('SAFETY_LOGGING', true);
   },
 
   // ── Server-Side Pipeline Flags ──────────────────────────────────────────
@@ -284,8 +285,7 @@ export const featureFlags = {
    * Phase 6: Gradual rollout capability for server-side migration
    */
   get serverSidePipeline(): boolean {
-    const env = import.meta.env.VITE_SERVER_SIDE_PIPELINE;
-    return env === 'true';
+    return getFlag('SERVER_SIDE_PIPELINE', false);
   },
 
   // ── Debug & Development Flags ──────────────────────────────────────────
@@ -295,7 +295,7 @@ export const featureFlags = {
    * Default: false (only enable in development)
    */
   get debugTokens(): boolean {
-    return import.meta.env.VITE_DEBUG_TOKENS === 'true';
+    return getDebugFlag('TOKENS');
   },
 
   /**
@@ -303,7 +303,7 @@ export const featureFlags = {
    * Default: false (only enable in development)
    */
   get debugValidation(): boolean {
-    return import.meta.env.VITE_DEBUG_VALIDATION === 'true';
+    return getDebugFlag('VALIDATION');
   },
 
   /**
@@ -311,21 +311,16 @@ export const featureFlags = {
    * Default: false (only enable in development)
    */
   get debugStateMachine(): boolean {
-    return import.meta.env.VITE_DEBUG_STATE_MACHINE === 'true';
+    return getDebugFlag('STATE_MACHINE');
   },
 
   // ── Helper Methods ───────────────────────────────────────────────────
 
   /**
-   * Generic flag getter with default value support
+   * Generic flag getter with default value support (using isomorphic env)
+   * @deprecated Use specific flag properties instead for type safety
    */
   getFlag(key: string, defaultValue: boolean = false): boolean {
-    const envKey = `VITE_ENABLE_${key.toUpperCase()}`;
-    const env = import.meta.env[envKey];
-    
-    if (env === undefined) return defaultValue;
-    if (env === 'true') return true;
-    if (env === 'false') return false;
-    return defaultValue;
+    return getFlag(key.toUpperCase(), defaultValue);
   },
 } as const;

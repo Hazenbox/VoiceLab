@@ -10,6 +10,7 @@ import { PromptRegistry, type PromptVersion } from '../monitoring/promptRegistry
 import { ResponseCache } from './responseCache';
 import { isProduction } from '../../config/providers';
 import { createLogger } from '../../utils/logger';
+import { getEnv, getEnvNumber } from '../env';
 import type { 
   LLMProvider, 
   LLMProviderType, 
@@ -417,13 +418,14 @@ let orchestratorInstance: LLMOrchestrator | null = null;
 
 export function getOrchestratorInstance(): LLMOrchestrator {
   if (!orchestratorInstance) {
-    // Get config from environment or defaults
-    const enableRetry = import.meta.env.VITE_ENABLE_RETRY !== 'false';
-    const enableFallback = import.meta.env.VITE_ENABLE_FALLBACK !== 'false';
-    const enableCaching = import.meta.env.VITE_ENABLE_CACHING !== 'false';
+    // Get config from environment or defaults (using isomorphic env helpers)
+    const enableRetry = getEnv('ENABLE_RETRY', 'true') !== 'false';
+    const enableFallback = getEnv('ENABLE_FALLBACK', 'true') !== 'false';
+    const enableCaching = getEnv('ENABLE_CACHING', 'true') !== 'false';
     
-    const fallbackChain = import.meta.env.VITE_LLM_FALLBACK_CHAIN
-      ? import.meta.env.VITE_LLM_FALLBACK_CHAIN.split(',').map((s: string) => s.trim())
+    const fallbackChainEnv = getEnv('LLM_FALLBACK_CHAIN', '');
+    const fallbackChain = fallbackChainEnv
+      ? fallbackChainEnv.split(',').map((s: string) => s.trim())
       : ['qwen-text', 'huggingface']; // Default with qwen (DashScope) as primary
 
     orchestratorInstance = new LLMOrchestrator({
@@ -433,8 +435,8 @@ export function getOrchestratorInstance(): LLMOrchestrator {
       enableCostTracking: true,
       fallbackChain,
       cacheConfig: {
-        maxSize: parseInt(import.meta.env.VITE_CACHE_MAX_SIZE || '100'),
-        ttlMs: parseInt(import.meta.env.VITE_CACHE_TTL_MS || '3600000'),
+        maxSize: getEnvNumber('CACHE_MAX_SIZE', 100),
+        ttlMs: getEnvNumber('CACHE_TTL_MS', 3600000),
       },
     });
   }

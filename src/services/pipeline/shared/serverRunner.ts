@@ -249,6 +249,21 @@ export async function runPipelineServer(
 // ── Helper Functions ───────────────────────────────────────────────────────
 
 /**
+ * Default feature flags for server-side pipeline execution.
+ */
+const DEFAULT_FEATURE_FLAGS = {
+  conversationalMode: false,
+  safetyGate: true,
+  constitutionalWrapper: true,
+  knowledgeBase: true,
+  tokenEnforcement: true,
+  semanticSearch: true,
+  persona: true,
+  learning: true,
+  ragRetrieval: true,
+};
+
+/**
  * Convert ServerPipelineInput to internal PipelineInput format.
  */
 function toInternalInput(
@@ -270,7 +285,11 @@ function toInternalInput(
     llmProvider: serverInput.llmProvider,
     userProfile: serverInput.userProfile,
     conversationHistory: serverInput.conversationHistory,
-    featureFlags: serverInput.featureFlags,
+    // Apply default feature flags, allowing overrides from client
+    featureFlags: {
+      ...DEFAULT_FEATURE_FLAGS,
+      ...serverInput.featureFlags,
+    },
     abortSignal,
     // External data with semantic search function injected
     externalData: {

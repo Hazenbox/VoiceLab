@@ -8,12 +8,17 @@
 import React from 'react';
 import * as Sentry from '@sentry/react';
 
-// Environment detection
-const isProduction = import.meta.env.PROD;
-const isDevelopment = import.meta.env.DEV;
+// Environment detection (isomorphic - works in both browser and server)
+const isServer = typeof window === 'undefined';
+const isProduction = isServer 
+  ? (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production')
+  : (typeof import.meta !== 'undefined' && import.meta.env?.PROD === true);
+const isDevelopment = !isProduction;
 
-// Sentry DSN from environment
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
+// Sentry DSN from environment (isomorphic)
+const SENTRY_DSN = isServer 
+  ? process.env.VITE_SENTRY_DSN 
+  : (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_SENTRY_DSN : undefined);
 
 /**
  * Initialize Sentry error tracking
@@ -35,7 +40,7 @@ export function initSentry(): void {
       environment: isProduction ? 'production' : 'development',
       
       // Release tracking (set via CI/CD)
-      release: import.meta.env.VITE_APP_VERSION || 'unknown',
+      release: (isServer ? process.env.VITE_APP_VERSION : import.meta.env?.VITE_APP_VERSION) || 'unknown',
       
       // Performance monitoring
       tracesSampleRate: isProduction ? 0.1 : 1.0, // 10% in prod, 100% in dev
