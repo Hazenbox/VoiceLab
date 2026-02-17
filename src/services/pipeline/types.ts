@@ -215,6 +215,13 @@ export interface ClassifyResult {
 export interface RetrieveResult {
   knowledge: RetrievedKnowledge | null;
   retrievalCount: number;
+  /** Evidence metadata for transparency */
+  evidenceMetadata?: {
+    avoidWordsCount: number;
+    preferredWordsCount: number;
+    autoFixRulesCount: number;
+    source: 'convex' | 'code_defaults' | 'convex_with_rag';
+  };
 }
 
 export interface AssembleResult {
@@ -250,6 +257,11 @@ export interface ValidateResult {
     errorCount: number;
     autoFixesApplied: number;
   } | null;
+  /** Evidence of auto-fixes applied for transparency */
+  autoFixEvidence?: {
+    applied: Array<{ from: string; to: string }>;
+    totalCount: number;
+  };
 }
 
 export interface FinalizeResult {

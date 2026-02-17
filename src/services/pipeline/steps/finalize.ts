@@ -30,6 +30,13 @@ export function finalize(
   const constitutionalContext = assembled.constitutionalContext;
   const isGeneralChat = classification.intent === 'general_chat';
 
+  // 0. Normalize markdown tables (fix malformed LLM output)
+  try {
+    finalContent = normalizeMarkdownTables(finalContent);
+  } catch (error) {
+    console.warn('[Pipeline:Finalize] Markdown table normalization failed:', error);
+  }
+
   // 1. Finishing layer: Small Joy + Signature
   if (!isGeneralChat) {
     try {
@@ -146,4 +153,72 @@ function applyFinishingLayer(
   }
 
   return finished;
+}
+
+/**
+ * Normalize malformed markdown tables from LLM output.
+ * 
+ * Common issues:
+ * 1. Missing newlines between table rows
+ * 2. Missing spaces around pipe separators
+ * 3. Malformed separator rows (|---|---|)
+ * 4. Concatenated cell values without proper separation
+ */
+function normalizeMarkdownTables(content: string): string {
+  // Only process if content contains pipe characters (potential table)
+  if (!content.includes('|')) {
+    return content;
+  }
+
+  const lines = content.split('\n');
+  const normalized: string[] = [];
+  let inTable = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Detect table lines (contain multiple pipes)
+    const pipeCount = (line.match(/\|/g) || []).length;
+    const isTableLine = pipeCount >= 2;
+
+    if (isTableLine) {
+      inTable = true;
+      
+      // Fix 1: Ensure spaces around pipe separators for readability
+      // |text| -> | text |
+      line = line.replace(/\|([^\s|])/g, '| $1').replace(/([^\s|])\|/g, '$1 |');
+      
+      // Fix 2: Normalize separator row (|---|---|)
+      // Handle mangled separators like |-----|--|------|
+      if (/^\s*\|[\s\-:]+\|/.test(line)) {
+        // This looks like a separator row, normalize it
+        const cellCount = (line.match(/\|/g) || []).length - 1;
+        if (cellCount > 0) {
+          const separator = '| ' + Array(cellCount).fill('---').join(' | ') + ' |';
+          line = separator;
+        }
+      }
+      
+      // Fix 3: Detect and split concatenated rows (rows merged into one line)
+      // Pattern: | ... || ... | (double pipe indicates merged rows)
+      if (/\|\|/.test(line)) {
+        const parts = line.split('||').map(p => p.trim());
+        for (const part of parts) {
+          if (part) {
+            const cleanPart = part.startsWith('|') ? part : '| ' + part;
+            const endPart = cleanPart.endsWith('|') ? cleanPart : cleanPart + ' |';
+            normalized.push(endPart);
+          }
+        }
+        continue;
+      }
+    } else if (inTable && line.trim() === '') {
+      // End of table
+      inTable = false;
+    }
+
+    normalized.push(line);
+  }
+
+  return normalized.join('\n');
 }

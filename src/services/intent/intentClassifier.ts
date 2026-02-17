@@ -42,7 +42,7 @@ const CONTENT_VERBS = /\b(generate|write|create|draft|compose|design|prepare|mak
 /**
  * Content type keywords that, combined with verbs, indicate content generation.
  */
-const CONTENT_TYPES = /\b(sms|email|push\s*notification|notification|banner|ad\s*copy|ad|flyer|whatsapp|social\s*media|social\s*post|post|copy|content|script|announcement|campaign|message\s+for|text\s+for|headline|tagline|subject\s*line|newsletter|memo|training|onboarding|faq|chatbot|ivr|voice\s*menu|voice\s*prompt)\b/i;
+const CONTENT_TYPES = /\b(sms|email|push\s*notification|notification|banner|ad\s*copy|ad|flyer|whatsapp|social\s*media|social\s*post|post|copy|content|script|announcement|campaign|message|text\s+for|headline|tagline|subject\s*line|newsletter|memo|training|onboarding|faq|chatbot|ivr|voice\s*menu|voice\s*prompt)\b/i;
 
 /**
  * Combined pattern: verb + optional filler + content type

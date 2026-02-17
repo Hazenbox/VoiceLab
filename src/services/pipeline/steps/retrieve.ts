@@ -75,7 +75,20 @@ export async function retrieve(input: PipelineInput): Promise<RetrieveResult> {
       + (knowledge.preferredWords?.length ?? 0)
       + (knowledge.corrections?.length ?? 0);
 
-    return { knowledge, retrievalCount: itemCount };
+    // Build evidence metadata for transparency
+    const evidenceMetadata = {
+      avoidWordsCount: knowledge.avoidWords?.length ?? 0,
+      preferredWordsCount: knowledge.preferredWords?.length ?? 0,
+      autoFixRulesCount: knowledge.autoFixRules?.length ?? 0,
+      source: (input.externalData?.knowledge ? 'convex' : 'code_defaults') as 'convex' | 'code_defaults' | 'convex_with_rag',
+    };
+
+    // Update source if RAG was used
+    if (input.externalData?.runSemanticSearch && evidenceMetadata.source === 'convex') {
+      evidenceMetadata.source = 'convex_with_rag';
+    }
+
+    return { knowledge, retrievalCount: itemCount, evidenceMetadata };
   } catch (error) {
     console.warn('[Pipeline:Retrieve] Knowledge retrieval failed:', error);
     return { knowledge: null, retrievalCount: 0 };

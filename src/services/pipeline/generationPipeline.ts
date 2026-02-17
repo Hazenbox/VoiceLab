@@ -15,7 +15,8 @@
  * - Validation fail = soft stop (one retry allowed)
  */
 
-import type { PipelineInput, PipelineResult, PipelineMetadata, ClassifyResult } from './types';
+import type { PipelineInput, PipelineResult, PipelineMetadata, ClassifyResult, RetrieveResult, ValidateResult } from './types';
+import type { GenerationEvidence } from '../../types';
 import { createPipelineTimer, logPipelineRun } from './observability';
 import { classify } from './steps/classify';
 import { safetyCheck } from './steps/safetyCheck';
@@ -99,6 +100,9 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     // 8. Finalize (finishing layer + privacy masking)
     const finalized = finalize(validation.content, input, classification, assembled);
 
+    // 9. Build evidence for transparency panel
+    const evidence = buildEvidence(retrieval, validation, input);
+
     const metadata = buildMetadata(
       input,
       timer.stop(),
@@ -115,7 +119,7 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       pipelinePath: classification.intent,
       validation: validation.validation,
       trustScore: validation.trustScore,
-      evidence: null,
+      evidence,
       autoFixPreview: validation.autoFixPreview,
       validationSummary: validation.validationSummary,
       retryCount,
@@ -172,5 +176,50 @@ function buildMetadata(
     effectiveChannel: (classification?.detectedChannel || input.contentChannel) as PipelineMetadata['effectiveChannel'],
     startedAt,
     completedAt: Date.now(),
+  };
+}
+
+/**
+ * Build evidence object for transparency panel
+ * Assembles data from retrieval and validation steps
+ */
+function buildEvidence(
+  retrieval: RetrieveResult,
+  validation: ValidateResult,
+  input: PipelineInput,
+): GenerationEvidence | null {
+  // Only build evidence if we have meaningful data
+  const hasKnowledge = retrieval.evidenceMetadata && (
+    retrieval.evidenceMetadata.avoidWordsCount > 0 ||
+    retrieval.evidenceMetadata.preferredWordsCount > 0 ||
+    retrieval.evidenceMetadata.autoFixRulesCount > 0
+  );
+  const hasAutoFixes = validation.autoFixEvidence && validation.autoFixEvidence.totalCount > 0;
+  const hasLearnings = input.externalData?.userLearningProfile && (
+    (input.externalData.userLearningProfile.correctionCount ?? 0) > 0 ||
+    (input.externalData.userLearningProfile.avoidPatterns?.length ?? 0) > 0
+  );
+
+  // Return null if no evidence to show
+  if (!hasKnowledge && !hasAutoFixes && !hasLearnings) {
+    return null;
+  }
+
+  return {
+    knowledgeUsed: {
+      avoidWordsMatched: [], // Would need to track during validation which words matched
+      preferredWordsUsed: [], // Would need to track during generation
+      autoFixRulesCount: retrieval.evidenceMetadata?.autoFixRulesCount ?? 0,
+      source: retrieval.evidenceMetadata?.source ?? 'code_defaults',
+    },
+    learningsApplied: {
+      correctionsCount: input.externalData?.userLearningProfile?.correctionCount ?? 0,
+      avoidPatterns: input.externalData?.userLearningProfile?.avoidPatterns ?? [],
+      stylePreferences: input.externalData?.userLearningProfile?.traitPreferences ?? [],
+    },
+    autoFixes: validation.autoFixEvidence ?? {
+      applied: [],
+      totalCount: 0,
+    },
   };
 }

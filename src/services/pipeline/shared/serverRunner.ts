@@ -19,7 +19,8 @@ import type {
   ServerExternalData,
   SSEEvent 
 } from './types';
-import type { PipelineInput, ClassifyResult } from '../types';
+import type { PipelineInput, ClassifyResult, RetrieveResult, ValidateResult } from '../types';
+import type { GenerationEvidence } from '../../../types';
 import type { LLMProviderType, LLMProvider } from '../../providers/llm';
 
 import { classify } from '../steps/classify';
@@ -205,6 +206,9 @@ export async function runPipelineServer(
     const finalized = finalize(validation.content, pipelineInput, classification, assembled);
     stepTimings.finalize = Date.now() - finalizeStart;
 
+    // 9. Build evidence for transparency panel
+    const evidence = buildServerEvidence(retrieval, validation, pipelineInput);
+
     clearTimeout(timeoutId);
 
     const metadata = buildServerMetadata(
@@ -224,7 +228,7 @@ export async function runPipelineServer(
       pipelinePath: classification.intent,
       validation: validation.validation,
       trustScore: validation.trustScore,
-      evidence: null,
+      evidence,
       autoFixPreview: validation.autoFixPreview,
       validationSummary: validation.validationSummary,
       retryCount,
@@ -475,6 +479,51 @@ class AbortError extends Error {
     super(message);
     this.name = 'AbortError';
   }
+}
+
+/**
+ * Build evidence object for transparency panel (server-side)
+ * Assembles data from retrieval and validation steps
+ */
+function buildServerEvidence(
+  retrieval: RetrieveResult,
+  validation: ValidateResult,
+  input: PipelineInput,
+): GenerationEvidence | null {
+  // Only build evidence if we have meaningful data
+  const hasKnowledge = retrieval.evidenceMetadata && (
+    retrieval.evidenceMetadata.avoidWordsCount > 0 ||
+    retrieval.evidenceMetadata.preferredWordsCount > 0 ||
+    retrieval.evidenceMetadata.autoFixRulesCount > 0
+  );
+  const hasAutoFixes = validation.autoFixEvidence && validation.autoFixEvidence.totalCount > 0;
+  const hasLearnings = input.externalData?.userLearningProfile && (
+    (input.externalData.userLearningProfile.correctionCount ?? 0) > 0 ||
+    (input.externalData.userLearningProfile.avoidPatterns?.length ?? 0) > 0
+  );
+
+  // Return null if no evidence to show
+  if (!hasKnowledge && !hasAutoFixes && !hasLearnings) {
+    return null;
+  }
+
+  return {
+    knowledgeUsed: {
+      avoidWordsMatched: [],
+      preferredWordsUsed: [],
+      autoFixRulesCount: retrieval.evidenceMetadata?.autoFixRulesCount ?? 0,
+      source: retrieval.evidenceMetadata?.source ?? 'code_defaults',
+    },
+    learningsApplied: {
+      correctionsCount: input.externalData?.userLearningProfile?.correctionCount ?? 0,
+      avoidPatterns: input.externalData?.userLearningProfile?.avoidPatterns ?? [],
+      stylePreferences: input.externalData?.userLearningProfile?.traitPreferences ?? [],
+    },
+    autoFixes: validation.autoFixEvidence ?? {
+      applied: [],
+      totalCount: 0,
+    },
+  };
 }
 
 export { AbortError };

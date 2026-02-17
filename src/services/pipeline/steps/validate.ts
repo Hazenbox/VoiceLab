@@ -86,6 +86,8 @@ export async function validate(
 
   // 5. Auto-fix
   let autoFixPreview = null;
+  let autoFixEvidence: { applied: Array<{ from: string; to: string }>; totalCount: number } | undefined;
+  
   if (trustScore && trustScore.autoFixableCount > 0) {
     const fixResult = await tryAutoFix(processedContent, trustScore, input, validationResult);
     if (fixResult) {
@@ -95,6 +97,15 @@ export async function validate(
       if (validationSummary) {
         validationSummary.autoFixesApplied = fixResult.preview.appliedFixes.length;
       }
+      
+      // Build evidence for transparency panel
+      autoFixEvidence = {
+        applied: fixResult.preview.appliedFixes.map(fix => ({
+          from: fix.original,
+          to: fix.replacement,
+        })),
+        totalCount: fixResult.preview.appliedFixes.length,
+      };
     }
   }
 
@@ -107,6 +118,7 @@ export async function validate(
     trustScore,
     autoFixPreview,
     validationSummary,
+    autoFixEvidence,
   };
 }
 
