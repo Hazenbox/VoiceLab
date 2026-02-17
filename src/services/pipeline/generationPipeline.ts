@@ -28,6 +28,12 @@ import { finalize } from './steps/finalize';
 
 const MAX_RETRIES = 1;
 
+/**
+ * KB-compliant fallback response when LLM fails entirely.
+ * Uses Jio's voice (warm, helpful, transparent) per KB constitution.
+ */
+const LLM_FAILURE_FALLBACK = "I'm having a bit of trouble right now, but I'm here for you. Could you try again in a moment? If this keeps happening, our team is always available to help at jio.com/support.";
+
 export async function run(input: PipelineInput): Promise<PipelineResult> {
   const timer = createPipelineTimer();
   const startedAt = Date.now();
@@ -129,7 +135,7 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     const metadata = buildMetadata(input, timer.stop(), startedAt, 'error', 0);
     const result: PipelineResult = {
       success: false,
-      output: '',
+      output: LLM_FAILURE_FALLBACK,
       pipelinePath: 'content_generation',
       validation: null,
       trustScore: null,
