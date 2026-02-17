@@ -617,7 +617,7 @@ export const ChatPanel = memo(function ChatPanel({
     const hasAutoFixPreview = message.autoFixPreview && message.autoFixPreview.appliedFixes.length > 0;
     
     // Use auto-fixed content if available, otherwise use regular content
-    const displayContent = hasAutoFixPreview && message.autoFixPreview 
+    const assistantContent = hasAutoFixPreview && message.autoFixPreview 
       ? message.autoFixPreview.fixedContent 
       : message.content;
     
@@ -638,7 +638,7 @@ export const ChatPanel = memo(function ChatPanel({
           }}
         >
           <MessageContent 
-            content={displayContent} 
+            content={assistantContent} 
             role="assistant" 
             highlightedText={isHighlighted ? highlightedText ?? undefined : undefined}
           />
@@ -659,7 +659,7 @@ export const ChatPanel = memo(function ChatPanel({
             {onLike && onDislike && onTryAgain && (
               <AssistantMessageActions
                 messageId={message.id}
-                content={displayContent}
+                content={assistantContent}
                 onLike={onLike}
                 onDislike={onDislike}
                 onTryAgain={onTryAgain}
