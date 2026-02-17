@@ -36,7 +36,8 @@ import {
 
 // Brand guardrails are now in shared config to avoid cross-service coupling
 // (trust/ was importing from prompt/, breaking unidirectional flow)
-export { BRAND_GUARDRAILS } from '../../config/brandGuardrails';
+import { BRAND_GUARDRAILS } from '../../config/brandGuardrails';
+export { BRAND_GUARDRAILS };
 
 /**
  * Jio's 5 Signature Phrases (From Training 1.pdf lines 1310-1326)
