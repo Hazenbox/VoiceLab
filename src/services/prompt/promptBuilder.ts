@@ -419,53 +419,77 @@ ${isMarketing ? `1. **Subject Line**: Compelling, benefit-focused (40-60 charact
 // =============================================================================
 
 /**
- * Build a static high-priority section with the most critical avoid words
- * and preferred vocabulary. This is always included regardless of RAG results.
+ * Ecosystem-to-vocabulary priority mapping.
+ * Each ecosystem emphasises different vocabulary categories.
  */
-function buildStaticVocabularySection(): string {
-  // Critical word replacements (always include these)
+const ECOSYSTEM_VOCAB_FOCUS: Record<string, string[]> = {
+  jio_telecom:    ['Care & Connection', 'Clarity & Safety'],
+  jio_fiber:      ['Action & Progress', 'Clarity & Safety'],
+  jio_cinema:     ['Care & Connection', 'Community First'],
+  jio_saavn:      ['Care & Connection', 'Community First'],
+  jio_mart:       ['Action & Progress', 'Clarity & Safety'],
+  jio_financial:  ['Clarity & Safety', 'Action & Progress'],
+  jio_health:     ['Care & Connection', 'Clarity & Safety'],
+  jio_cloud:      ['Clarity & Safety', 'Action & Progress'],
+  jio_business:   ['Action & Progress', 'Clarity & Safety'],
+  jio_things:     ['Action & Progress', 'Clarity & Safety'],
+};
+
+/**
+ * Build a selective vocabulary section based on ecosystem + channel.
+ * Only injects the most relevant word categories + always includes
+ * the top-10 critical replacements and spelling/format rules.
+ */
+function buildStaticVocabularySection(ecosystem?: string, channel?: string): string {
+  // Always include top-10 critical replacements (tiny token cost)
   const criticalReplacements = [
-    ...Object.entries(SIMPLE_ALTERNATIVES).slice(0, 25),
-    ...Object.entries(GENDER_NEUTRAL_ALTERNATIVES).slice(0, 15),
+    ...Object.entries(SIMPLE_ALTERNATIVES).slice(0, 10),
+    ...Object.entries(GENDER_NEUTRAL_ALTERNATIVES).slice(0, 5),
   ];
 
-  // Grouped preferred vocabulary
-  const preferredByCategory = {
-    'Care & Connection': CARE_CONNECTION_WORDS.slice(0, 15),
-    'Action & Progress': ACTION_PROGRESS_WORDS.slice(0, 15),
-    'Clarity & Safety': CLARITY_SAFETY_WORDS.slice(0, 15),
-    'Community First': COMMUNITY_FIRST_WORDS.slice(0, 10),
+  // Select vocabulary categories based on ecosystem
+  const focusCategories = ECOSYSTEM_VOCAB_FOCUS[ecosystem || ''] || ['Care & Connection', 'Clarity & Safety'];
+
+  const allCategories: Record<string, readonly string[]> = {
+    'Care & Connection': CARE_CONNECTION_WORDS,
+    'Action & Progress': ACTION_PROGRESS_WORDS,
+    'Clarity & Safety': CLARITY_SAFETY_WORDS,
+    'Community First': COMMUNITY_FIRST_WORDS,
   };
 
-  return `## MANDATORY: Word Avoidance & Replacement Rules
+  // Include only the 2 focus categories (10 words each) instead of all 4 (15 each)
+  const preferredByCategory: Record<string, readonly string[]> = {};
+  for (const cat of focusCategories) {
+    if (allCategories[cat]) {
+      preferredByCategory[cat] = allCategories[cat].slice(0, 10);
+    }
+  }
 
-**YOU MUST FOLLOW THESE RULES DURING CONTENT GENERATION.**
+  // For support channels, add extra empathy words
+  const supportChannels = ['customer_care_chat', 'whatsapp_support', 'chatbot_faq'];
+  if (channel && supportChannels.includes(channel) && !focusCategories.includes('Care & Connection')) {
+    preferredByCategory['Care & Connection'] = CARE_CONNECTION_WORDS.slice(0, 8);
+  }
 
-### Words to NEVER Use (Use the Alternative Instead)
+  return `## vocabulary rules
 
-${criticalReplacements.map(([avoid, use]) => `- "${avoid}" → use "${use}"`).join('\n')}
+### words to avoid (use the alternative)
 
-### Preferred Vocabulary by Context
+${criticalReplacements.map(([avoid, use]) => `- "${avoid}" -> "${use}"`).join('\n')}
 
-**Use these words to create warm, human, Jio-aligned content:**
+### preferred vocabulary for this context
 
 ${Object.entries(preferredByCategory).map(([category, words]) => 
   `**${category}**: ${words.join(', ')}`
-).join('\n\n')}
+).join('\n')}
 
-### Spelling Rules (British English)
+### spelling and format
 
-- Use "-ise" not "-ize" (organise, recognise, optimise)
-- Use "-our" not "-or" (colour, favour, honour)
-- Use "-re" not "-er" (centre, theatre, metre)
-- Use "₹" not "Rs." or "INR" for currency
-
-### Format Rules
-
-- Use Indian number format: 1,00,000 (not 100,000)
-- Use 12-hour time: 3:30 PM (not 15:30)
-- No Oxford comma: "speed, value and reliability"
-- Use sentence case: "Get started today" (not "Get Started Today")
+- British English: -ise (not -ize), -our (not -or), -re (not -er)
+- Currency: ₹ (not Rs. or INR). Example: ₹399
+- Numbers: Indian format 1,00,000 (not 100,000)
+- Time: 12-hour 3:30 PM (not 15:30)
+- No Oxford comma. Sentence case only.
 
 `;
 }
@@ -530,8 +554,8 @@ export function buildSystemPrompt(
   const timingGuidance = getTimingGuidance(context.timing);
   const productContext = buildProductContextPrompt(context);
   
-  // Static vocabulary section (always included - high priority)
-  const staticVocabularySection = buildStaticVocabularySection();
+  // Selective vocabulary section (ecosystem + channel filtered)
+  const staticVocabularySection = buildStaticVocabularySection(context.ecosystem, context.channel);
   
   // Persona section (Phase 1) -- only if a persona role is set
   const personaSection = context.persona
