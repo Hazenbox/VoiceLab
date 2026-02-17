@@ -127,7 +127,7 @@ export const NAVARASA = {
     englishName: 'calm/neutral',
     signals: ['routine interaction', 'neutral tone', 'matter-of-fact'],
     responseBehavior: 'inform clearly, guide gently',
-    allowedTargets: ['shanta', 'veera'],
+    allowedTargets: ['shanta', 'vira'],
     forbiddenToneShifts: ['sudden urgency', 'celebratory exaggeration'],
   },
   hasya: {
@@ -135,15 +135,15 @@ export const NAVARASA = {
     englishName: 'joy/playfulness',
     signals: ['excitement', 'humor', 'lighthearted tone'],
     responseBehavior: 'celebrate lightly, reinforce success',
-    allowedTargets: ['hasya', 'veera'],
+    allowedTargets: ['hasya', 'vira'],
     forbiddenToneShifts: ['over-promotional excitement'],
   },
-  veera: {
-    name: 'veera',
+  vira: {
+    name: 'vira',
     englishName: 'confidence/ambition',
     signals: ['achievement', 'determination', 'goal-oriented'],
     responseBehavior: 'encourage action, enable progress',
-    allowedTargets: ['veera', 'shanta'],
+    allowedTargets: ['vira', 'shanta'],
     forbiddenToneShifts: ['over-caution', 'discouragement'],
   },
   karuna: {
@@ -151,7 +151,7 @@ export const NAVARASA = {
     englishName: 'sadness/compassion',
     signals: ['disappointment', 'fatigue', 'grief', 'distress'],
     responseBehavior: 'reassure, simplify steps, reduce effort',
-    allowedTargets: ['shanta', 'veera'],
+    allowedTargets: ['shanta', 'vira'],
     forbiddenToneShifts: ['humor', 'urgency pressure'],
   },
   raudra: {
@@ -183,7 +183,7 @@ export const NAVARASA = {
     englishName: 'curiosity/wonder',
     signals: ['exploration', 'discovery interest', 'questions'],
     responseBehavior: 'educate, explore possibilities',
-    allowedTargets: ['adbhuta', 'veera'],
+    allowedTargets: ['adbhuta', 'vira'],
     forbiddenToneShifts: ['overly technical overload'],
   },
   shringara: {

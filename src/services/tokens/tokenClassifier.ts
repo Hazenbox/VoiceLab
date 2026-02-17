@@ -82,7 +82,7 @@ export type UserProfile = 'new_user' | 'regular' | 'premium' | 'enterprise' | 's
 export type Language = 'en' | 'hi' | 'mr' | 'ta' | 'te' | 'bn' | 'gu' | 'kn' | 'ml' | 'pa' | 'or' | 'as' | 'hinglish' | 'other';
 export type Script = 'latin' | 'devanagari' | 'tamil' | 'telugu' | 'bengali' | 'gujarati' | 'kannada' | 'malayalam' | 'gurmukhi' | 'odia' | 'assamese' | 'mixed';
 export type LanguageMixLevel = 'pure' | 'light_mix' | 'heavy_mix' | 'code_switch';
-export type LiteracyLevel = 'basic' | 'intermediate' | 'advanced' | 'expert';
+export type LiteracyLevel = 'low' | 'moderate' | 'high';
 export type PersonaType = 'helper' | 'advisor' | 'guide' | 'companion' | 'expert';
 export type ToneGuardrail = 'none' | 'cautious' | 'strict' | 'compliance';
 export type ContextType = 'transactional' | 'informational' | 'support' | 'conversational' | 'emergency';
@@ -227,7 +227,7 @@ const EMOTION_PATTERNS: Record<NavarasaEmotion, { keywords: string[]; patterns: 
     keywords: ['haha', 'lol', 'great', 'awesome', 'excited', 'happy', 'wonderful'],
     patterns: [/ha(ha)+/, /lol/, /yay/],
   },
-  veera: {
+  vira: {
     keywords: ['let\'s do', 'ready', 'go ahead', 'definitely', 'absolutely'],
     patterns: [/let('?s| us) (do|go)/, /i('?m| am) ready/],
   },
@@ -380,11 +380,11 @@ function estimateLiteracy(text: string): LiteracyLevel {
   const sentenceCount = text.split(/[.!?]+/).filter(Boolean).length;
   const avgSentenceLength = words.length / Math.max(1, sentenceCount);
   
-  // Simple heuristic based on complexity
-  if (avgWordLength > 6 && avgSentenceLength > 15) return 'advanced';
-  if (avgWordLength > 5 || avgSentenceLength > 10) return 'intermediate';
-  if (words.length < 5) return 'basic';
-  return 'intermediate';
+  // KB values: low, moderate, high
+  if (avgWordLength > 6 && avgSentenceLength > 15) return 'high';
+  if (avgWordLength > 5 || avgSentenceLength > 10) return 'moderate';
+  if (words.length < 5) return 'low';
+  return 'moderate';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

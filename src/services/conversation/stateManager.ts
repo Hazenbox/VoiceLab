@@ -121,7 +121,7 @@ const STATE_SUGGESTIONS: Record<ConversationState, Partial<StateSuggestions>> = 
     patternBlocks: ['inform', 'guide', 'reassure'],
     warmthLevel: 3,
     detailLevel: 2,
-    targetEmotion: 'veera',
+    targetEmotion: 'vira',
     actions: ['provide_solution', 'explain_steps', 'confirm_action'],
     openingPhrases: [
       'Here\'s what I found...',
@@ -252,8 +252,8 @@ function adjustForEmotion(
       adjusted.targetEmotion = 'hasya';
       break;
 
-    case 'veera': // Confidence/ambition
-      adjusted.targetEmotion = 'veera';
+    case 'vira': // Confidence/ambition
+      adjusted.targetEmotion = 'vira';
       adjusted.detailLevel = 2; // Standard detail
       break;
 

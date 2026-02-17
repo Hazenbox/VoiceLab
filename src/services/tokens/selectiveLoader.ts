@@ -121,7 +121,7 @@ function selectVoiceTraits(
   }
   
   // Based on literacy
-  if (classification.literacy === 'basic') {
+  if (classification.literacy === 'low') {
     contextTraits.push('simple', 'grounded');
   }
   
