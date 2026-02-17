@@ -411,9 +411,6 @@ const HighlightSpan: React.FC<{ text: string; isLight: boolean }> = ({ text, isL
   <span 
     style={{
       backgroundColor: isLight ? HIGHLIGHT_COLORS.light.background : HIGHLIGHT_COLORS.dark.background,
-      color: isLight ? HIGHLIGHT_COLORS.light.text : HIGHLIGHT_COLORS.dark.text,
-      padding: '1px 4px',
-      borderRadius: '2px',
       transition: 'background-color 300ms ease-out',
     }}
   >
