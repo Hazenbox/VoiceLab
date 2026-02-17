@@ -10,13 +10,30 @@
  * NOTE: Uses isomorphic env helpers to work in both browser and server contexts.
  */
 
-import { getEnv, isServer } from './env';
+import { getEnv, isServer, isProduction } from './env';
+
+/**
+ * Safety-critical flags that CANNOT be disabled in production.
+ * Even if env vars say false, these stay true in prod.
+ */
+const PRODUCTION_LOCKED_FLAGS = new Set([
+  'SAFETY_GATE',
+  'EMERGENCY_RESPONSES',
+  'CONSTITUTIONAL_WRAPPER',
+  'VALIDATION_AGENTS',
+]);
 
 /**
  * Get a feature flag from environment (isomorphic).
  * Handles VITE_ prefix automatically.
+ * Production lockout: safety-critical flags are forced ON in production.
  */
 function getFlag(key: string, defaultEnabled: boolean = true): boolean {
+  // Production lockout: safety flags cannot be disabled in production
+  if (isProduction() && PRODUCTION_LOCKED_FLAGS.has(key)) {
+    return true;
+  }
+
   // Use getEnv which handles VITE_ prefix and server/client differences
   const value = getEnv(`ENABLE_${key}`, defaultEnabled ? 'true' : 'false');
   if (defaultEnabled) {
@@ -134,7 +151,7 @@ export const featureFlags = {
   /**
    * Enable safety gate pre-generation check
    * Checks user input for safety concerns before LLM generation
-   * Default: true (safety first)
+   * Default: true -- PRODUCTION LOCKED: cannot be disabled in production
    */
   get safetyGate(): boolean {
     return getFlag('SAFETY_GATE', true);
@@ -143,7 +160,7 @@ export const featureFlags = {
   /**
    * Enable constitutional wrapper for generation
    * Applies token classification, directive loading, state management
-   * Default: true
+   * Default: true -- PRODUCTION LOCKED: cannot be disabled in production
    */
   get constitutionalWrapper(): boolean {
     return getFlag('CONSTITUTIONAL_WRAPPER', true);
@@ -152,7 +169,7 @@ export const featureFlags = {
   /**
    * Enable post-generation validation agents
    * Runs voice traits, emotion, pattern block, and self-check validations
-   * Default: true
+   * Default: true -- PRODUCTION LOCKED: cannot be disabled in production
    */
   get validationAgents(): boolean {
     return getFlag('VALIDATION_AGENTS', true);
@@ -259,7 +276,7 @@ export const featureFlags = {
   /**
    * Enable emergency response templates
    * Uses pre-defined responses for critical safety situations
-   * Default: true (NEVER disable in production)
+   * Default: true -- PRODUCTION LOCKED: cannot be disabled in production
    */
   get emergencyResponses(): boolean {
     return getFlag('EMERGENCY_RESPONSES', true);
