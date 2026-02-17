@@ -178,9 +178,11 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
 
       try {
         // ── Build pipeline input ──────────────────────────────────────
+        // Use centralized constant for history limit
+        const { MAX_CONVERSATION_HISTORY } = await import('../constants');
         const conversationHistory = chatMessages
           .filter(m => m.type === 'text')
-          .slice(-20)
+          .slice(-MAX_CONVERSATION_HISTORY)
           .map(m => ({ role: m.role, content: m.content }));
 
         const pipelineFlags: PipelineFeatureFlags = {

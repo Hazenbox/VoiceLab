@@ -7,7 +7,7 @@ import type {
 } from '../types';
 import type { Voice } from '../../../types';
 import { VoiceGender } from '../../../types';
-import { ALIBABA_VOICES, getAlibabaVoiceByGender, RESPONSE_LENGTH_WORDS } from '../../../constants';
+import { ALIBABA_VOICES, getAlibabaVoiceByGender, RESPONSE_LENGTH_WORDS, MAX_VOICE_CONVERSATION_HISTORY } from '../../../constants';
 import { getAlibabaConfig, isAlibabaConfigured, getProxyConfig } from '../../../config/providers';
 import { QwenASRClient } from './qwenASR';
 import { createTTSProvider } from '../index';
@@ -206,7 +206,7 @@ export class AlibabaConversationProvider implements ConversationProvider {
 
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...this.conversationHistory.slice(-10), // Keep last 10 messages for context
+      ...this.conversationHistory.slice(-MAX_VOICE_CONVERSATION_HISTORY), // Keep messages for context
     ];
 
     // Use proxy for LLM API call to avoid CORS

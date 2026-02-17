@@ -62,6 +62,34 @@ const EXPLICIT_CONTENT_PATTERNS = [
   /\bgenerate\s+(?:a\s+)?(?:jio|brand)\b/i,
 ];
 
+/**
+ * Negative patterns: coding/programming requests that look like content generation
+ * but should be treated as general_chat. These take precedence over content detection.
+ * 
+ * Examples:
+ * - "Create a script to parse JSON" → general_chat (not content_generation)
+ * - "Build an ad blocker" → general_chat (coding request, not advertising)
+ * - "Write a function for sorting" → general_chat (code request)
+ */
+const CODING_NEGATIVE_PATTERNS = [
+  // Programming language mentions
+  /\b(javascript|typescript|python|java|c\+\+|ruby|php|go|rust|swift|kotlin|scala)\b/i,
+  // Code-related keywords after content verbs
+  /\b(create|write|build|make|generate)\s+(?:a\s+)?(?:function|class|method|api|endpoint|script|program|code|module|component|hook|util|helper|service|algorithm)\b/i,
+  // Technical terms that indicate coding
+  /\b(parse|compile|debug|refactor|optimize|implement|deploy|test|unittest|integration)\b/i,
+  // Data structure mentions
+  /\b(array|object|string|integer|boolean|json|xml|csv|database|sql|query|schema)\b/i,
+  // Framework/library mentions
+  /\b(react|vue|angular|express|django|flask|spring|laravel|rails|nextjs|nodejs)\b/i,
+  // Common coding request patterns
+  /\bcode\s+(?:for|to|that)\b/i,
+  /\bscript\s+(?:for|to|that)\b/i,
+  /\bfunction\s+(?:for|to|that)\b/i,
+  // "ad blocker" type patterns (where "ad" is not advertising)
+  /\b(?:ad|advertisement)\s*blocker\b/i,
+];
+
 // =============================================================================
 // JIO INQUIRY PATTERNS
 // =============================================================================
@@ -146,12 +174,26 @@ export function classifyIntent(
 }
 
 /**
+ * Check if message contains coding/programming indicators
+ * that should prevent content_generation classification
+ */
+function isCodingRequest(message: string): boolean {
+  return CODING_NEGATIVE_PATTERNS.some(pattern => pattern.test(message));
+}
+
+/**
  * Detect content generation intent and extract channel/ecosystem
  */
 function detectContentGeneration(
   message: string,
   options: ClassifyIntentOptions,
 ): IntentClassification | null {
+  // First, check for coding patterns - these take precedence
+  // "Create a script to parse JSON" should NOT be content_generation
+  if (isCodingRequest(message)) {
+    return null; // Let it fall through to general_chat
+  }
+
   const signals: string[] = [];
   let confidence: IntentConfidence = 'low';
 

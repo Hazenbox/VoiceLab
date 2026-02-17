@@ -1,6 +1,32 @@
 import type { ConversationConfig, Voice, VoiceGender, DocSection, ResponseLength, Pace, Vibe } from './types';
 import { VoiceGender as VG } from './types';
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONVERSATION HISTORY LIMITS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Maximum number of conversation messages to include in LLM context.
+ * Used across pipeline, hooks, and conversation providers for consistency.
+ */
+export const MAX_CONVERSATION_HISTORY = 20;
+
+/**
+ * Maximum messages for constitutional AI context (subset of full history).
+ * Smaller limit for focused validation and state management.
+ */
+export const MAX_CONSTITUTIONAL_HISTORY = 10;
+
+/**
+ * Maximum messages for voice conversation providers.
+ * Kept smaller due to speech-to-text latency considerations.
+ */
+export const MAX_VOICE_CONVERSATION_HISTORY = 10;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEFAULT CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════════
+
 // Default configuration
 export const DEFAULT_CONFIG: ConversationConfig = {
   persona: {

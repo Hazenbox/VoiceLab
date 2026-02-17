@@ -12,6 +12,7 @@
 import { buildPrompt } from '../../prompt';
 import { buildGenerationContext } from '../../context';
 import { buildConversationalPrompt, buildJioInquiryPrompt } from '../../prompt/basePersona';
+import { MAX_CONSTITUTIONAL_HISTORY } from '../../../constants';
 import {
   prepareConstitutionalContext,
   type ConstitutionalContext,
@@ -92,7 +93,7 @@ export function assemble(
         channel: effectiveChannel,
         userProfile: input.userProfile?.role as 'new_user' | 'regular' | 'premium' | 'enterprise' | 'senior' | 'youth' | 'unknown' | undefined,
         conversationHistory: (input.conversationHistory || [])
-          .slice(-10)
+          .slice(-MAX_CONSTITUTIONAL_HISTORY)
           .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
         directiveOverrides: (input.externalData?.directiveOverrides || []).map(o => ({
           directiveType: o.directiveType,

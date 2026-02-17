@@ -119,7 +119,19 @@ const SENSITIVE_PATTERNS: Record<SensitiveDataType, {
     pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z]+\b/g,
     confidence: 0.80,
     validator: (match) => {
-      const knownUPIs = ['paytm', 'ybl', 'ibl', 'upi', 'okaxis', 'okhdfcbank', 'okicici', 'oksbi', 'axl', 'yesbank'];
+      // Comprehensive list of Indian UPI providers
+      const knownUPIs = [
+        // Major banks
+        'paytm', 'ybl', 'ibl', 'upi', 'okaxis', 'okhdfcbank', 'okicici', 'oksbi', 'axl', 'yesbank',
+        // Payment apps
+        'apl', 'gpay', 'phonepe', 'freecharge', 'mobikwik', 'amazonpay',
+        // Telecom/Jio
+        'jio', 'airtel', 'vi',
+        // Other banks
+        'kotak', 'pnb', 'boi', 'bob', 'canara', 'union', 'indian', 'federal', 'rbl', 'indus',
+        // Neo banks
+        'jupiter', 'fi', 'niyo', 'slice',
+      ];
       const domain = match.split('@')[1]?.toLowerCase();
       return knownUPIs.some(upi => domain?.includes(upi));
     },
@@ -144,6 +156,23 @@ const SENSITIVE_PATTERNS: Record<SensitiveDataType, {
   date_of_birth: {
     pattern: /\b(?:dob|date of birth|born|birthday)[\s:]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/gi,
     confidence: 0.85,
+  },
+  ifsc_code: {
+    // Indian Financial System Code: 4 letters (bank) + 0 + 6 alphanumeric (branch)
+    // Examples: HDFC0001234, SBIN0012345, ICIC0006789
+    pattern: /\b[A-Z]{4}0[A-Z0-9]{6}\b/g,
+    confidence: 0.90,
+    validator: (match) => {
+      // Known bank codes (first 4 letters)
+      const knownBanks = [
+        'HDFC', 'ICIC', 'SBIN', 'UTIB', 'KKBK', 'PUNB', 'BARB', 'CNRB', 'UBIN', 'IOBA',
+        'BKID', 'CBIN', 'CORP', 'IDIB', 'MAHB', 'ORBC', 'PSIB', 'SYNB', 'VIJB', 'ALLA',
+        'ANDB', 'UCBA', 'FDRL', 'KARB', 'SIBL', 'YESB', 'RATN', 'INDB', 'CITI', 'HSBC',
+        'SCBL', 'DBSS', 'AXIS', 'AIRP', 'PAYT', 'IPPB', 'PYTM', 'JAKA', 'SVCB', 'TMBL',
+      ];
+      const bankCode = match.substring(0, 4).toUpperCase();
+      return knownBanks.includes(bankCode);
+    },
   },
 };
 

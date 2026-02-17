@@ -174,7 +174,7 @@ export interface ServerPipelineResult {
   metadata: ServerPipelineMetadata;
 
   /** Classified intent */
-  intent: string | null;
+  intent: 'content_generation' | 'general_chat' | 'jio_inquiry' | null;
 
   /** Error if pipeline failed */
   error?: string;

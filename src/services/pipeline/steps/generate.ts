@@ -3,6 +3,10 @@
  *
  * Calls the LLM orchestrator with retry and fallback support.
  * Supports both streaming and non-streaming modes.
+ * 
+ * Error handling:
+ * - Stream callbacks are protected with try-catch to prevent mid-stream failures
+ * - conversationHistory is safely handled if undefined
  */
 
 import { getOrchestratorInstance } from '../../llm/orchestrator';
@@ -17,9 +21,12 @@ export async function generate(
   const orchestrator = getOrchestratorInstance();
   const createProvider = input.createLLMProvider || defaultCreateLLMProvider;
 
+  // Safely handle undefined conversationHistory
+  const conversationHistory = input.conversationHistory || [];
+
   const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
     { role: 'system', content: systemPrompt },
-    ...input.conversationHistory.map(m => ({
+    ...conversationHistory.map(m => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,
     })),
@@ -45,7 +52,12 @@ export async function generate(
         createProvider,
         (chunk: string) => {
           accumulatedText += chunk;
-          input.callbacks!.onStreamChunk!(accumulatedText);
+          // Protect stream callback from throwing and breaking the stream
+          try {
+            input.callbacks!.onStreamChunk!(accumulatedText);
+          } catch (callbackError) {
+            console.warn('[Pipeline:Generate] Stream callback error (ignored):', callbackError);
+          }
         },
       );
 

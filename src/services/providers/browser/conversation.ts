@@ -13,7 +13,7 @@ import type {
 } from '../types';
 import type { Voice } from '../../../types';
 import { VoiceGender } from '../../../types';
-import { ELEVENLABS_VOICES, getElevenLabsVoiceByGender, RESPONSE_LENGTH_WORDS } from '../../../constants';
+import { ELEVENLABS_VOICES, getElevenLabsVoiceByGender, RESPONSE_LENGTH_WORDS, MAX_VOICE_CONVERSATION_HISTORY } from '../../../constants';
 import { WebSpeechASRClient, isWebSpeechSupported } from './webSpeechASR';
 import { createTTSProvider } from '../index';
 import { createLLMProvider, getDefaultLLMProviderType } from '../llm';
@@ -277,7 +277,7 @@ export class BrowserConversationProvider implements ConversationProvider {
 
     const messages = [
       { role: 'system' as const, content: systemPrompt },
-      ...this.conversationHistory.slice(-10), // Keep last 10 messages for context
+      ...this.conversationHistory.slice(-MAX_VOICE_CONVERSATION_HISTORY), // Keep messages for context
     ];
 
     try {
