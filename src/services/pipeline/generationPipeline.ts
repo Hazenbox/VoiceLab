@@ -78,11 +78,15 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     //    general_chat uses the same pipeline but does NOT trigger retry on failure
     let validation = await validate(input, generated.content, assembled);
 
-    // 7. Regeneration (max 1 retry, only for non-general-chat content)
+    // 7. Smart retry with failure feedback (max 1 retry, non-general-chat only)
     if (!isGeneralChat && !validation.passed && retryCount < MAX_RETRIES) {
       retryCount++;
-      console.log(`[Pipeline] Validation failed (score below threshold), retrying (${retryCount}/${MAX_RETRIES})`);
-      generated = await generate(input, assembled.systemPrompt, classification);
+      const retryFeedback = buildRetryFeedback(validation);
+      const retryPrompt = retryFeedback
+        ? `${assembled.systemPrompt}\n\n---\n\n${retryFeedback}`
+        : assembled.systemPrompt;
+      console.log(`[Pipeline] Validation failed, retrying with feedback (${retryCount}/${MAX_RETRIES})`);
+      generated = await generate(input, retryPrompt, classification);
       validation = await validate(input, generated.content, assembled);
     }
 
@@ -143,6 +147,36 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     logPipelineRun(input, result);
     return result;
   }
+}
+
+/**
+ * Build a short feedback section for retry (max 3 bullets, ~100 tokens).
+ * Tells the LLM what went wrong so it can self-correct.
+ */
+function buildRetryFeedback(validation: ValidateResult): string | null {
+  if (!validation.validation) return null;
+
+  const issues: string[] = [];
+
+  // Extract top violations (max 3, most severe first)
+  const allViolations = (validation.validation.agentResults || [])
+    .flatMap((r: { violations: Array<{ severity: string; rule?: string; text?: string }> }) => r.violations)
+    .filter((v: { severity: string }) => v.severity === 'error' || v.severity === 'critical')
+    .slice(0, 3);
+
+  for (const v of allViolations) {
+    const text = (v as { rule?: string; text?: string }).rule || (v as { text?: string }).text || 'compliance issue';
+    issues.push(`- ${text}`);
+  }
+
+  // Check if trust score was low
+  if (validation.trustScore && validation.trustScore.overall < 70) {
+    issues.push(`- overall quality score was ${validation.trustScore.overall}/100`);
+  }
+
+  if (issues.length === 0) return null;
+
+  return `## previous attempt feedback\nyour previous response had these issues. fix them this time:\n${issues.slice(0, 3).join('\n')}`;
 }
 
 function buildMetadata(
