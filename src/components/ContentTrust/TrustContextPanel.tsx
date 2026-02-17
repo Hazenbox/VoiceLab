@@ -470,7 +470,7 @@ const EvidenceSection: React.FC<{ evidence: GenerationEvidence }> = ({ evidence 
       title: 'Auto-fixes applied',
       items: [
         { label: 'replacements', value: evidence.autoFixes.totalCount },
-        ...evidence.autoFixes.applied.slice(0, 2).map(fix => ({
+        ...evidence.autoFixes.applied.map(fix => ({
           label: `"${fix.from}"`,
           value: `→ "${fix.to}"`,
         })),
