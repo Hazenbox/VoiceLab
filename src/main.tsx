@@ -71,20 +71,21 @@ const convex = new ConvexReactClient(convexUrl);
  * a real mutation function from the Convex client.
  * Must be rendered inside a ConvexProvider.
  */
+// Typed wrapper for ConvexReactClient's internal dynamic mutation method.
+// ConvexReactClient doesn't expose a public string-based mutation API,
+// so we cast once here to a narrow interface instead of scattering `any`.
+const convexDynamic = convex as unknown as {
+  mutation(name: string, args: Record<string, unknown>): Promise<unknown>;
+};
+
 function ConvexSyncBridge({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Helper to inject mutation function into sync service
     const injectMutationFn = (): boolean => {
       const syncService = getSyncService();
       if (syncService) {
-        // Inject a real mutation function using the Convex client
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        syncService.setMutationFn(async (name: string, args: Record<string, any>) => {
-          // Convex client.mutation expects an api reference, but we use string names.
-          // The ConvexReactClient exposes .mutation() for dynamic function references.
-          // Use the generic mutation method with the function path string.
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return await (convex as any).mutation(name as any, args);
+        syncService.setMutationFn(async (name, args) => {
+          return await convexDynamic.mutation(name, args);
         });
         console.log('[ConvexSyncBridge] Mutation function injected successfully');
         return true;

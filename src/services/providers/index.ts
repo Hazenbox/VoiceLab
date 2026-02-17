@@ -1,4 +1,4 @@
-import type { TTSProvider, ConversationProvider, ProviderType, TTSConfig } from './types';
+import type { TTSProvider, ConversationProvider, ProviderType, VoiceConfig } from './types';
 import { createCosyVoiceTTSProvider, createAlibabaConversationProvider } from './alibaba';
 import { createGeminiTTSProvider, createGeminiLiveProvider } from './gemini';
 import { createElevenLabsTTSProvider } from './elevenlabs';
@@ -74,9 +74,19 @@ export function createTTSProviderWithFallback(
     return entry.provider;
   };
   
+  // Resolve the primary provider for delegate methods
+  const getPrimary = (): TTSProvider => {
+    const p = getProvider(primary);
+    if (!p) throw new Error(`Primary TTS provider ${primary} unavailable`);
+    return p;
+  };
+
   // Return a wrapper that implements TTSProvider interface with fallback
   return {
-    synthesize: async (text: string, config: TTSConfig): Promise<AudioBuffer> => {
+    name: `fallback-${primary}`,
+    displayName: `${primary} (with fallback)`,
+
+    synthesize: async (text: string, config: VoiceConfig, signal?: AbortSignal): Promise<AudioBuffer> => {
       // Build list of providers to try (skip recently failed ones initially)
       const providersToTry = [primary, ...fallbackChain].filter(p => !failedProviders.has(p));
       
@@ -95,7 +105,7 @@ export function createTTSProviderWithFallback(
         
         try {
           console.log(`[TTSFallback] Trying ${providerType}...`);
-          const result = await provider.synthesize(text, config);
+          const result = await provider.synthesize(text, config, signal);
           
           // Success - clear any previous failures for this provider
           failedProviders.delete(providerType);
@@ -123,11 +133,17 @@ export function createTTSProviderWithFallback(
       // All providers failed
       throw lastError || new Error('All TTS providers failed');
     },
-    
-    // Health check uses primary provider
-    healthCheck: async (): Promise<boolean> => {
-      const provider = getProvider(primary);
-      return provider?.healthCheck?.() ?? Promise.resolve(true);
+
+    getSupportedVoices: () => getPrimary().getSupportedVoices(),
+    getDefaultVoice: (gender: 'male' | 'female') => getPrimary().getDefaultVoice(gender),
+    isReady: () => {
+      try { return getPrimary().isReady(); } catch { return false; }
+    },
+    disconnect: () => {
+      // Disconnect all initialized providers
+      for (const entry of providers) {
+        try { entry.provider?.disconnect(); } catch { /* ignore */ }
+      }
     },
   };
 }
