@@ -42,6 +42,38 @@ export function getEnabledAgents(agentIds: ValidationAgentId[]): ValidationAgent
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// AGENT CATEGORIES (Semantic Grouping)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export {
+  INCLUSIVITY_AGENTS,
+  INCLUSIVITY_AGENT_IDS,
+  getInclusivityAgents,
+  INCLUSIVITY_CATEGORY_WEIGHT,
+} from './categories/inclusivityAgents';
+
+export {
+  COMPLIANCE_AGENTS,
+  COMPLIANCE_AGENT_IDS,
+  getComplianceAgents,
+  COMPLIANCE_CATEGORY_WEIGHT,
+} from './categories/complianceAgents';
+
+export {
+  BRAND_AGENTS,
+  BRAND_AGENT_IDS,
+  getBrandAgents,
+  BRAND_CATEGORY_WEIGHT,
+} from './categories/brandAgents';
+
+export {
+  CONTENT_AGENTS,
+  CONTENT_AGENT_IDS,
+  getContentAgents,
+  CONTENT_CATEGORY_WEIGHT,
+} from './categories/contentAgents';
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // AGENT EXPORTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
