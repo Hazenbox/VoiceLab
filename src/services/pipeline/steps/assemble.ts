@@ -49,6 +49,11 @@ import {
   detectBlockingInfo,
   formatBlockingInfoForPrompt,
 } from '../../conversation/blockingInfoDetector';
+import {
+  selectFewShot,
+  formatFewShotForPrompt,
+  type TrainingExample,
+} from '../../fewshot/fewShotSelector';
 import type { PipelineInput, ClassifyResult, AssembleResult } from '../types';
 import type { RetrievedKnowledge, CorrectionEntry } from '../../knowledge';
 
@@ -303,25 +308,40 @@ export function assemble(
     } catch { /* ignore */ }
   }
 
-  // Training examples (priority 1 -- shed first)
+  // Few-shot example (priority 1 -- shed first)
+  // Only for complaint/multi-step/escalation intents with similarity >= 0.7
+  // NOT injected for SMS, push, or short-response channels
   if (input.featureFlags.learning && input.externalData?.trainingExamples?.length) {
-    const examplesSection = [
-      '# high-quality examples',
-      'use these verified examples as a reference for style and format:',
-      '',
-      ...input.externalData.trainingExamples.map((ex, i) => {
-        const lines = [
-          `## example ${i + 1}`,
-          `input: "${ex.inputContext}"`,
-          `output: "${ex.outputContent}"`,
-        ];
-        if (ex.ecosystem) lines.push(`ecosystem: ${ex.ecosystem}`);
-        if (ex.channel) lines.push(`channel: ${ex.channel}`);
-        return lines.join('\n');
-      }),
-    ].join('\n\n');
+    try {
+      const examples: TrainingExample[] = input.externalData.trainingExamples.map(ex => ({
+        inputContext: ex.inputContext,
+        outputContent: ex.outputContent,
+        tags: ex.tags || [],
+        ecosystem: ex.ecosystem,
+        channel: ex.channel,
+      }));
 
-    optionalSections.push({ key: 'training_examples', content: examplesSection, sheddable: true, priority: 1 });
+      const detectedEmotion = constitutionalContext?.tokens?.userEmotion;
+      const fewShotResult = selectFewShot(
+        input.message,
+        classification.intent,
+        effectiveChannel,
+        examples,
+        detectedEmotion,
+      );
+
+      if (fewShotResult.shouldInject) {
+        const fewShotBlock = formatFewShotForPrompt(fewShotResult);
+        if (fewShotBlock) {
+          optionalSections.push({ key: 'few_shot', content: fewShotBlock, sheddable: true, priority: 1 });
+          console.log(`[Pipeline:Assemble] Few-shot injected (score: ${fewShotResult.similarity.toFixed(2)})`);
+        }
+      } else {
+        console.log(`[Pipeline:Assemble] Few-shot skipped: ${fewShotResult.reason}`);
+      }
+    } catch (fewShotError) {
+      console.warn('[Pipeline:Assemble] Few-shot selection failed:', fewShotError);
+    }
   }
 
   // Apply token budget -- shed lowest-priority sections first if over cap
