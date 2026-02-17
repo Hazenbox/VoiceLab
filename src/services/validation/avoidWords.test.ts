@@ -109,9 +109,9 @@ describe('AGENT_WEIGHTS', () => {
     expect(AGENT_WEIGHTS.avoid_words).toBeGreaterThan(0);
   });
 
-  it('should have 9 agents total', () => {
+  it('should have 12 agents total', () => {
     const agentCount = Object.keys(AGENT_WEIGHTS).length;
-    expect(agentCount).toBe(9);
+    expect(agentCount).toBe(12);
   });
 });
 
