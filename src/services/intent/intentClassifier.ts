@@ -79,7 +79,8 @@ const CODING_NEGATIVE_PATTERNS = [
   // Code-related keywords after content verbs
   /\b(create|write|build|make|generate)\s+(?:a\s+)?(?:function|class|method|api|endpoint|script|program|code|module|component|hook|util|helper|service|algorithm)\b/i,
   // Technical terms that indicate coding
-  /\b(parse|compile|debug|refactor|optimize|implement|deploy|test|unittest|integration)\b/i,
+  // Note: "optimize" and "test" removed as they're common in business/marketing content
+  /\b(parse|compile|debug|refactor|implement|deploy|unittest|integration)\b/i,
   // Data structure mentions
   /\b(array|object|string|integer|boolean|json|xml|csv|database|sql|query|schema)\b/i,
   // Framework/library mentions
