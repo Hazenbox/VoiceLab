@@ -1,4 +1,5 @@
 import type { ProviderType } from '../services/providers/types';
+import { isProduction as envIsProduction, getEnv as envGetEnv } from '../services/env';
 
 /**
  * Provider-specific configuration
@@ -155,11 +156,13 @@ export function getAlibabaConfig(): AlibabaConfig {
 
 /**
  * Check if running in production (Vercel) environment
+ * 
+ * @deprecated Use `isProduction` from '../services/env' instead.
+ * This wrapper exists for backward compatibility.
  */
 export function isProduction(): boolean {
-  if (typeof window === 'undefined') return false;
-  const hostname = window.location.hostname;
-  return hostname !== 'localhost' && hostname !== '127.0.0.1';
+  // Use the unified env module that works on both client and server
+  return envIsProduction();
 }
 
 /**
