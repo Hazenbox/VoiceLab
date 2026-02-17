@@ -15,7 +15,7 @@
 import type { GenerationContext, ContentChannelType } from '../../types';
 import { getEcosystem, getChannel } from '../guidelines';
 import { getToneInstructions, getToneAdjustments } from '../guidelines/userProfile';
-import { getEmotionInstructions, getEmotion } from '../guidelines/navarasa';
+import { getEmotionInstructions, getEmotion, analyzeEmotion } from '../guidelines/navarasa';
 import { getTimingGuidance } from '../context/timingEngine';
 import { getTriggerEventGuidance } from '../context/contextEngine';
 import { buildPersonaPromptSection, type PersonaRole } from '../persona';
@@ -540,17 +540,24 @@ No specific Jio product was detected in the query. Generate content based on the
 export function buildSystemPrompt(
   context: GenerationContext,
   knowledge?: RetrievedKnowledge,
+  userMessage?: string,
 ): string {
   const ecosystem = getEcosystem(context.ecosystem);
   const channel = getChannel(context.channel);
   const emotion = getEmotion(context.emotion);
+  
+  // Analyze emotion intensity from user message for emotion-first logic
+  const emotionAnalysis = userMessage ? analyzeEmotion(userMessage, context.emotion) : null;
   
   // Get all component prompts
   const guardrails = getGuardrailsPrompt();
   const channelFormatting = getChannelFormattingPrompt(context.channel);
   const toneAdjustments = getToneAdjustments(context.userProfile);
   const toneInstructions = getToneInstructions(toneAdjustments);
-  const emotionInstructions = getEmotionInstructions(context.emotion);
+  const emotionInstructions = getEmotionInstructions(context.emotion, {
+    intensity: emotionAnalysis?.intensity,
+    confidence: emotionAnalysis ? 0.7 : undefined,
+  });
   const timingGuidance = getTimingGuidance(context.timing);
   const productContext = buildProductContextPrompt(context);
   
@@ -674,7 +681,7 @@ export function buildPrompt(
   context: GenerationContext;
 } {
   return {
-    system: buildSystemPrompt(context, options?.knowledge),
+    system: buildSystemPrompt(context, options?.knowledge, userRequest),
     user: buildUserPrompt(userRequest, options),
     context,
   };

@@ -266,10 +266,12 @@ export function getEmotion(id: NavarasaType): NavarasaEmotion {
 /**
  * Get prompt instructions for an emotion
  */
-export function getEmotionInstructions(id: NavarasaType): string {
+export function getEmotionInstructions(id: NavarasaType, options?: { intensity?: number; confidence?: number }): string {
   const emotion = getEmotion(id);
+  const intensity = options?.intensity ?? 5;
+  const confidence = options?.confidence ?? 0.5;
   
-  return `
+  let instructions = `
 DETECTED EMOTION: ${emotion.name} (${emotion.sanskrit})
 Signal: ${emotion.description}
 Strategy: ${emotion.toneStrategy}
@@ -282,6 +284,20 @@ ${emotion.dontList.map(item => `- ${item}`).join('\n')}
 
 MESSAGE PATTERN: ${emotion.messagePattern}
 `.trim();
+
+  // Emotion-first rule: for negative rasas at intensity >= 4 with reasonable confidence,
+  // inject a mandatory empathy-first directive that takes priority over everything else.
+  if (isNegativeEmotion(id) && intensity >= 4 && confidence > 0.6) {
+    const emotionFirstBlock = `
+CRITICAL -- EMOTION-FIRST RULE ACTIVE
+The user is experiencing strong ${emotion.name.toLowerCase()}. Before ANY solution, action, or information:
+1. Acknowledge their feeling in one natural sentence (e.g. "I can see this is frustrating" or "I understand this is worrying").
+2. Only then proceed with help.
+Do NOT skip the acknowledgment. Do NOT jump to a solution first.`;
+    instructions = emotionFirstBlock + '\n\n' + instructions;
+  }
+
+  return instructions;
 }
 
 /**
