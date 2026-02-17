@@ -273,6 +273,21 @@ export const featureFlags = {
     return env !== 'false';
   },
 
+  // ── Server-Side Pipeline Flags ──────────────────────────────────────────
+
+  /**
+   * Run the generation pipeline server-side via /api/generate.
+   * When enabled, the pipeline executes on Vercel serverless instead of client.
+   * Default: false (client-side pipeline)
+   * Set VITE_SERVER_SIDE_PIPELINE=true to enable
+   * 
+   * Phase 6: Gradual rollout capability for server-side migration
+   */
+  get serverSidePipeline(): boolean {
+    const env = import.meta.env.VITE_SERVER_SIDE_PIPELINE;
+    return env === 'true';
+  },
+
   // ── Debug & Development Flags ──────────────────────────────────────────
 
   /**

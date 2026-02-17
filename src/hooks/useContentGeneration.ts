@@ -21,8 +21,11 @@ import type {
 } from '../types';
 import { createTextMessage } from '../types';
 import { run as pipelineRun } from '../services/pipeline';
-import type { PipelineInput, PipelineFeatureFlags, PipelineExternalData } from '../services/pipeline';
+import type { PipelineInput, PipelineFeatureFlags, PipelineExternalData, PipelineResult } from '../services/pipeline';
 import { createLLMProvider } from '../services/providers/llm';
+// Server-side pipeline API client
+import { generateViaAPI, convertToServerInput } from '../services/api';
+import type { ServerPipelineResult } from '../services/pipeline/shared/types';
 // Reliability
 import {
   generateIdempotencyKey,
@@ -237,7 +240,51 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
         };
 
         // ── Run the pipeline ──────────────────────────────────────────
-        const result = await pipelineRun(pipelineInput);
+        // Phase 6: Support server-side pipeline via feature flag
+        let result: PipelineResult;
+        
+        if (featureFlags.serverSidePipeline) {
+          // Server-side: Call /api/generate endpoint
+          const serverInput = convertToServerInput({
+            message,
+            ecosystem,
+            contentChannel,
+            trustSettings,
+            temperature,
+            maxTokens,
+            stream: streamResponse,
+            llmProvider: selectedLLMProvider,
+            userProfile: userProfile ? {
+              role: userProfile.role,
+              name: userProfile.name,
+              userId: userProfile.userId,
+              deviceId: getDeviceId(),
+            } : undefined,
+            conversationHistory,
+            featureFlags: pipelineFlags,
+          });
+          
+          const serverResult = await generateViaAPI(
+            serverInput,
+            {
+              onChunk: (text: string) => setStreamingAIResponse(text),
+              onValidation: (v) => {
+                logger.debug('[Pipeline] Server validation:', v);
+              },
+            },
+            {
+              signal: getChatAbortSignal(),
+              stream: streamResponse,
+            }
+          );
+          
+          // Convert ServerPipelineResult to PipelineResult
+          result = convertServerResultToPipelineResult(serverResult);
+          
+        } else {
+          // Client-side: Run pipeline locally (existing behavior)
+          result = await pipelineRun(pipelineInput);
+        }
 
         // ── Handle safety blocks (early return paths) ─────────────────
         if (result.pipelinePath === 'emergency_response' || result.pipelinePath === 'safety_blocked') {
@@ -400,4 +447,37 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
   }, [resetChatAbort, addMessage, replaceMessage, chatMessages, getChatAbortSignal, activeProject?.defaultUserProfile, userProfile, tryAutoRenameProject, setStreamingAIResponse, convexKnowledge, convexCorrections, convexTrainingExamples, convexDirectiveOverrides, convexTokenEnforcementRules, convexUserLearningProfile, runSemanticSearch]);
 
   return { sendMessage };
+}
+
+// ── Helper: Convert Server Result to Pipeline Result ───────────────────────
+
+/**
+ * Convert ServerPipelineResult to PipelineResult for backward compatibility.
+ * This allows the rest of the hook to work unchanged with server-side pipeline.
+ */
+function convertServerResultToPipelineResult(serverResult: ServerPipelineResult): PipelineResult {
+  return {
+    success: serverResult.success,
+    output: serverResult.output,
+    pipelinePath: serverResult.pipelinePath,
+    validation: serverResult.validation,
+    trustScore: serverResult.trustScore,
+    evidence: serverResult.evidence,
+    autoFixPreview: serverResult.autoFixPreview,
+    validationSummary: serverResult.validationSummary,
+    retryCount: serverResult.retryCount,
+    metadata: {
+      model: serverResult.metadata.model,
+      latencyMs: serverResult.metadata.latencyMs,
+      retrievalCount: serverResult.metadata.retrievalCount,
+      tokensUsed: serverResult.metadata.tokensUsed,
+      effectiveEcosystem: serverResult.metadata.effectiveEcosystem,
+      effectiveChannel: serverResult.metadata.effectiveChannel,
+      startedAt: serverResult.metadata.startedAt,
+      completedAt: serverResult.metadata.completedAt,
+    },
+    safetyResult: null, // Server doesn't expose full safety result
+    intent: serverResult.intent,
+    error: serverResult.error,
+  };
 }
