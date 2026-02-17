@@ -3,21 +3,50 @@ import type {
   EcosystemType,
   ContentChannelType,
   TrustSettings,
-  AppState,
 } from '../types';
-import { AppState as AppStateEnum } from '../types';
 import type { LLMProviderType } from '../services/providers/llm';
 import { getDefaultLLMProviderType } from '../services/providers/llm';
 import type { TTSProviderType } from '../components';
 import type { MidTermMemory } from '../services/memory';
-import { DEFAULT_TRUST_SETTINGS } from '../types';
+import {
+  storageProjectDefaults,
+  storageTrustSettings,
+} from '../services/trustStorage';
 
 /**
- * Conversation Store -- generation config, provider selection, voice state, memory.
+ * Conversation Store -- generation config, provider selection, memory.
  * No UI concerns (modals, panels, editing).
+ * Voice state is owned by useVoiceConversation hook, NOT this store.
+ *
+ * localStorage keys (aligned with App.tsx):
+ *   ecosystem/channel -> voicelab_project_defaults (JSON with .ecosystem, .channel)
+ *   trustSettings     -> voicelab_trust_settings   (JSON)
+ *   midTermMemory     -> jio_voice_midterm_memory  (JSON)
  *
  * Split rule: if this store exceeds 10 state fields or 10 actions, split it.
  */
+
+// One-time migration: delete stale keys from an older store format
+const STALE_KEYS = [
+  'tone-studio-ecosystem',
+  'tone-studio-channel',
+  'tone-studio-trust-settings',
+  'tone-studio-mid-term-memory',
+] as const;
+
+function cleanupStaleKeys() {
+  try {
+    for (const key of STALE_KEYS) {
+      localStorage.removeItem(key);
+    }
+  } catch { /* noop in private browsing */ }
+}
+
+// Run once at module load
+cleanupStaleKeys();
+
+// localStorage key for mid-term memory (matches App.tsx)
+const MID_TERM_MEMORY_KEY = 'jio_voice_midterm_memory';
 
 interface ConversationState {
   // content trust config
@@ -36,12 +65,6 @@ interface ConversationState {
   selectedTTSProvider: TTSProviderType;
   selectedTalkLLMProvider: LLMProviderType;
 
-  // voice state
-  voiceSupported: boolean | null;
-  appState: AppState;
-  transcript: string;
-  streamingAIResponse: string;
-
   // memory
   midTermMemory: MidTermMemory | null;
 }
@@ -57,39 +80,14 @@ interface ConversationActions {
   setSelectedLLMProvider: (provider: LLMProviderType) => void;
   setSelectedTTSProvider: (provider: TTSProviderType) => void;
   setSelectedTalkLLMProvider: (provider: LLMProviderType) => void;
-  setVoiceSupported: (supported: boolean | null) => void;
-  setAppState: (state: AppState) => void;
-  setTranscript: (transcript: string) => void;
-  setStreamingAIResponse: (response: string) => void;
   setMidTermMemory: (memory: MidTermMemory | null) => void;
 }
 
 export const useConversationStore = create<ConversationState & ConversationActions>()((set) => ({
-  // initial state
-  ecosystem: (() => {
-    try {
-      const stored = localStorage.getItem('tone-studio-ecosystem');
-      return (stored as EcosystemType) || 'connectivity';
-    } catch {
-      return 'connectivity' as EcosystemType;
-    }
-  })(),
-  contentChannel: (() => {
-    try {
-      const stored = localStorage.getItem('tone-studio-channel');
-      return (stored as ContentChannelType) || 'push_notification';
-    } catch {
-      return 'push_notification' as ContentChannelType;
-    }
-  })(),
-  trustSettings: (() => {
-    try {
-      const stored = localStorage.getItem('tone-studio-trust-settings');
-      return stored ? JSON.parse(stored) : DEFAULT_TRUST_SETTINGS;
-    } catch {
-      return DEFAULT_TRUST_SETTINGS;
-    }
-  })(),
+  // initial state -- read from the SAME keys App.tsx uses
+  ecosystem: storageProjectDefaults.get().ecosystem,
+  contentChannel: storageProjectDefaults.get().channel,
+  trustSettings: storageTrustSettings.get(),
   temperature: 0.7,
   maxTokens: 2000,
   streamResponse: true,
@@ -97,30 +95,32 @@ export const useConversationStore = create<ConversationState & ConversationActio
   selectedLLMProvider: getDefaultLLMProviderType(),
   selectedTTSProvider: 'dashscope' as TTSProviderType,
   selectedTalkLLMProvider: 'qwen-text' as LLMProviderType,
-  voiceSupported: null,
-  appState: AppStateEnum.IDLE,
-  transcript: '',
-  streamingAIResponse: '',
   midTermMemory: (() => {
     try {
-      const stored = localStorage.getItem('tone-studio-mid-term-memory');
+      const stored = localStorage.getItem(MID_TERM_MEMORY_KEY);
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
     }
   })(),
 
-  // actions
+  // actions -- persist to the SAME keys App.tsx uses
   setEcosystem: (ecosystem) => {
-    try { localStorage.setItem('tone-studio-ecosystem', ecosystem); } catch { /* noop */ }
+    try {
+      const current = storageProjectDefaults.get();
+      storageProjectDefaults.save({ ...current, ecosystem });
+    } catch { /* noop */ }
     set({ ecosystem });
   },
   setContentChannel: (channel) => {
-    try { localStorage.setItem('tone-studio-channel', channel); } catch { /* noop */ }
+    try {
+      const current = storageProjectDefaults.get();
+      storageProjectDefaults.save({ ...current, channel });
+    } catch { /* noop */ }
     set({ contentChannel: channel });
   },
   setTrustSettings: (settings) => {
-    try { localStorage.setItem('tone-studio-trust-settings', JSON.stringify(settings)); } catch { /* noop */ }
+    try { storageTrustSettings.save(settings); } catch { /* noop */ }
     set({ trustSettings: settings });
   },
   setTemperature: (temperature) => set({ temperature }),
@@ -130,16 +130,12 @@ export const useConversationStore = create<ConversationState & ConversationActio
   setSelectedLLMProvider: (provider) => set({ selectedLLMProvider: provider }),
   setSelectedTTSProvider: (provider) => set({ selectedTTSProvider: provider }),
   setSelectedTalkLLMProvider: (provider) => set({ selectedTalkLLMProvider: provider }),
-  setVoiceSupported: (supported) => set({ voiceSupported: supported }),
-  setAppState: (state) => set({ appState: state }),
-  setTranscript: (transcript) => set({ transcript }),
-  setStreamingAIResponse: (response) => set({ streamingAIResponse: response }),
   setMidTermMemory: (memory) => {
     try {
       if (memory) {
-        localStorage.setItem('tone-studio-mid-term-memory', JSON.stringify(memory));
+        localStorage.setItem(MID_TERM_MEMORY_KEY, JSON.stringify(memory));
       } else {
-        localStorage.removeItem('tone-studio-mid-term-memory');
+        localStorage.removeItem(MID_TERM_MEMORY_KEY);
       }
     } catch { /* noop */ }
     set({ midTermMemory: memory });

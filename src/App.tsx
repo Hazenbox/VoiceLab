@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useShallow } from 'zustand/shallow';
 import type { 
   ActiveView, 
   ColorMode,
@@ -11,7 +12,6 @@ import type {
 import { 
   AppState,
 } from './types';
-import { AUDIO_CONFIG } from './constants';
 import { 
   DocumentationPanel,
   ProjectSidebar,
@@ -26,16 +26,16 @@ import {
   TrustContextPanel,
   AdvancedSettingsPanel,
 } from './components';
-import type { TTSProviderType } from './components';
 import { setDynamicAvoidWords } from './services/validation';
 import { setDynamicAutoFixRules } from './services/trust';
-import { storageTrustSettings, storageProjectDefaults, DEFAULT_PROJECT_DEFAULTS } from './services/trustStorage';
 import { useChatPersistence, useVoiceConversation, useMessageInteractions, useTrustPanel, useContentGeneration } from './hooks';
-import { getDefaultLLMProviderType, type LLMProviderType } from './services/providers/llm';
 import { useThemeColors } from './theme';
 // Design system context removed - locked to Jio only
 import { useProject } from './context/ProjectContext';
 import { useAbortController } from './hooks';
+// Zustand stores
+import { useConversationStore } from './stores/conversationStore';
+import { useUIStore } from './stores/uiStore';
 // Onboarding & Sync
 import OnboardingModal, { loadUserProfile, getDeviceId, type UserProfile } from './components/OnboardingModal';
 import { getSyncService } from './services/sync/convexSync';
@@ -75,9 +75,6 @@ import { generateProjectNameFromExchange } from './services/projectNaming';
 import type { 
   FeedbackPayload, 
 } from './types';
-
-// Storage key for chat mode persistence
-const CHAT_MODE_STORAGE_KEY = 'voiceDesigner_chatMode';
 
 interface AppProps {
   colorMode: ColorMode;
@@ -120,7 +117,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   
   // ── Onboarding State ──────────────────────────────────────────
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
-  const [showOnboarding, setShowOnboarding] = useState(() => !getDeviceId());
   
   // Sync user profile to Convex when profile changes (always enabled)
   // NOTE: Sync service is initialized at module level in main.tsx
@@ -182,7 +178,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     setUserProfile(profile);
     setShowOnboarding(false);
 
-    // NOTE: Profile sync to Convex is handled by the useEffect below
+    // NOTE: Profile sync to Convex is handled by the useEffect above
     // (triggers on userProfile?.deviceId change), avoiding a race condition
     // where initSyncService() would destroy an in-flight sync call.
 
@@ -192,106 +188,61 @@ function App({ colorMode, onColorModeChange }: AppProps) {
       setEcosystem(autoConfig.ecosystem);
       setContentChannel(autoConfig.channel);
     }
-  }, []);
+  }, [setShowOnboarding, setEcosystem, setContentChannel]);
 
-  // UI State - chatMode persisted to localStorage
-  const [chatMode, setChatMode] = useState<ChatMode>(() => {
-    try {
-      const stored = localStorage.getItem(CHAT_MODE_STORAGE_KEY);
-      return (stored === 'voice' || stored === 'copy') ? stored : 'copy';
-    } catch {
-      return 'copy';
-    }
-  });
-  const [activeView, setActiveView] = useState<ActiveView>('main');
-  const [error, setError] = useState<AppError | null>(null);
-  const [isConfigPanelCollapsed, setIsConfigPanelCollapsed] = useState(true);
-  
   // ==========================================================================
-  // Content Trust System State
+  // Zustand Store Selectors (replaces 15+ useState + persistence useEffects)
   // ==========================================================================
-  
-  // Ecosystem and Channel - with migration from old project fields
-  const [ecosystem, setEcosystem] = useState<EcosystemType>(() => {
-    // Priority: project.defaultEcosystem > storage > default
-    if (activeProject?.defaultEcosystem) return activeProject.defaultEcosystem;
-    return storageProjectDefaults.get()?.ecosystem || 'connectivity';
-  });
-  
-  const [contentChannel, setContentChannel] = useState<ContentChannelType>(() => {
-    // Priority: project.defaultChannel > storage > default
-    if (activeProject?.defaultChannel) return activeProject.defaultChannel;
-    return storageProjectDefaults.get()?.channel || 'push_notification';
-  });
-  
-  // Trust settings
-  const [trustSettings, setTrustSettings] = useState<TrustSettings>(() => 
-    storageTrustSettings.get()
-  );
-  
-  // Trust panel state
-  // showTrustPanel, selectedMessageForTrust, isAutoFixing moved to useTrustPanel hook
-  
-  // Mid-term memory state (Phase F)
-  const [midTermMemory, setMidTermMemory] = useState<MidTermMemory | null>(() => {
-    // Load mid-term memory from localStorage on mount
-    try {
-      const stored = localStorage.getItem('jio_voice_midterm_memory');
-      if (stored) {
-        return JSON.parse(stored) as MidTermMemory;
-      }
-    } catch {
-      // Ignore localStorage errors
-    }
-    return null;
-  });
-  
-  // Persist mid-term memory to localStorage
-  useEffect(() => {
-    if (midTermMemory) {
-      try {
-        localStorage.setItem('jio_voice_midterm_memory', JSON.stringify(midTermMemory));
-      } catch {
-        // Ignore localStorage errors
-      }
-    }
-  }, [midTermMemory]);
-  
+
+  // Conversation store -- generation config, providers, memory
+  const {
+    ecosystem, setEcosystem,
+    contentChannel, setContentChannel,
+    trustSettings, setTrustSettings,
+    temperature, setTemperature,
+    maxTokens, setMaxTokens,
+    streamResponse, setStreamResponse,
+    isChatLoading, setIsChatLoading,
+    selectedLLMProvider, setSelectedLLMProvider,
+    selectedTTSProvider, setSelectedTTSProvider,
+    selectedTalkLLMProvider, setSelectedTalkLLMProvider,
+    midTermMemory, setMidTermMemory,
+  } = useConversationStore(useShallow((s) => ({
+    ecosystem: s.ecosystem, setEcosystem: s.setEcosystem,
+    contentChannel: s.contentChannel, setContentChannel: s.setContentChannel,
+    trustSettings: s.trustSettings, setTrustSettings: s.setTrustSettings,
+    temperature: s.temperature, setTemperature: s.setTemperature,
+    maxTokens: s.maxTokens, setMaxTokens: s.setMaxTokens,
+    streamResponse: s.streamResponse, setStreamResponse: s.setStreamResponse,
+    isChatLoading: s.isChatLoading, setIsChatLoading: s.setIsChatLoading,
+    selectedLLMProvider: s.selectedLLMProvider, setSelectedLLMProvider: s.setSelectedLLMProvider,
+    selectedTTSProvider: s.selectedTTSProvider, setSelectedTTSProvider: s.setSelectedTTSProvider,
+    selectedTalkLLMProvider: s.selectedTalkLLMProvider, setSelectedTalkLLMProvider: s.setSelectedTalkLLMProvider,
+    midTermMemory: s.midTermMemory, setMidTermMemory: s.setMidTermMemory,
+  })));
+
+  // UI store -- navigation, modals, error
+  const {
+    chatMode, setChatMode,
+    activeView, setActiveView,
+    error, setError, clearError,
+    isConfigPanelCollapsed, setConfigPanelCollapsed,
+    showOnboarding, setShowOnboarding,
+  } = useUIStore(useShallow((s) => ({
+    chatMode: s.chatMode, setChatMode: s.setChatMode,
+    activeView: s.activeView, setActiveView: s.setActiveView,
+    error: s.error, setError: s.setError, clearError: s.clearError,
+    isConfigPanelCollapsed: s.isConfigPanelCollapsed, setConfigPanelCollapsed: s.setConfigPanelCollapsed,
+    showOnboarding: s.showOnboarding, setShowOnboarding: s.setShowOnboarding,
+  })));
+
   // Initialize session memory on mount
   useEffect(() => {
     if (!hasActiveSession()) {
       initSessionMemory();
     }
   }, []);
-  
-  // Chat generation settings
-  const [temperature, setTemperature] = useState(0.7);
-  const [maxTokens, setMaxTokens] = useState(2000);
-  const [streamResponse, setStreamResponse] = useState(true);
-  
-  // Sync ecosystem/channel changes to storage
-  useEffect(() => {
-    try {
-      const currentDefaults = storageProjectDefaults.get() || DEFAULT_PROJECT_DEFAULTS;
-      storageProjectDefaults.save({ 
-        ...currentDefaults, 
-        ecosystem, 
-        channel: contentChannel,
-      });
-    } catch (e) {
-      console.warn('[App] Failed to save project defaults to storage:', e);
-    }
-  }, [ecosystem, contentChannel]);
-  
-  // Sync trust settings to storage
-  useEffect(() => {
-    try {
-      storageTrustSettings.save(trustSettings);
-    } catch (e) {
-      console.warn('[App] Failed to save trust settings to storage:', e);
-    }
-  }, [trustSettings]);
-  
+
   // Sync ecosystem/channel with active project changes
   useEffect(() => {
     if (activeProject?.defaultEcosystem) {
@@ -300,7 +251,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     if (activeProject?.defaultChannel) {
       setContentChannel(activeProject.defaultChannel);
     }
-  }, [activeProject?.id, activeProject?.defaultEcosystem, activeProject?.defaultChannel]);
+  }, [activeProject?.id, activeProject?.defaultEcosystem, activeProject?.defaultChannel, setEcosystem, setContentChannel]);
   
   // ==========================================================================
   
@@ -328,12 +279,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     channel: contentChannel,
   });
 
-  // Chat/Generation State
-  const [isChatLoading, setIsChatLoading] = useState(false);
-  const [selectedLLMProvider, setSelectedLLMProvider] = useState<LLMProviderType>(getDefaultLLMProviderType());
-  const [selectedTTSProvider, setSelectedTTSProvider] = useState<TTSProviderType>('dashscope');
-  const [selectedTalkLLMProvider, setSelectedTalkLLMProvider] = useState<LLMProviderType>('qwen-text');
-  
   // Filter messages by current mode
   const filteredMessages = useMemo(() => {
     return chatMessages.filter(m => m.sourceMode === chatMode || !m.sourceMode);
@@ -420,15 +365,6 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   }, [theme.local.white]);
 
   // Voice support detection moved to useVoiceConversation hook
-
-  // Persist chatMode to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(CHAT_MODE_STORAGE_KEY, chatMode);
-    } catch {
-      // Ignore storage errors (e.g., private browsing)
-    }
-  }, [chatMode]);
 
   // Inject Convex avoid words into validation agent
   // This enables admin-added avoid words to be used during validation
@@ -591,13 +527,13 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   
   // Like/Dislike/TryAgain handlers extracted to useMessageInteractions hook
 
-  // Auto-dismiss error
+  // Auto-dismiss error (uses store clearError)
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
+      const timer = setTimeout(clearError, 5000);
       return () => clearTimeout(timer);
     }
-  }, [error]);
+  }, [error, clearError]);
 
   // Get TTS provider
   // const getTTSProvider = useCallback((): TTSProvider => {
@@ -746,7 +682,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
           onStreamResponseChange={setStreamResponse}
           disabled={appState !== AppState.IDLE}
           isCollapsed={isConfigPanelCollapsed}
-          onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
+          onToggleCollapse={() => setConfigPanelCollapsed(!isConfigPanelCollapsed)}
         />
       </div>
     );
@@ -903,7 +839,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
                   // Settings trigger
                   settingsTrigger={
                     <button
-                      onClick={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
+                      onClick={() => setConfigPanelCollapsed(!isConfigPanelCollapsed)}
                       className="w-[28px] h-[28px] rounded-full flex items-center justify-center transition-colors hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
                       style={{
                         backgroundColor: 'transparent',
@@ -983,7 +919,7 @@ function App({ colorMode, onColorModeChange }: AppProps) {
         onStreamResponseChange={setStreamResponse}
         disabled={appState !== AppState.IDLE && chatMode === 'voice'}
         isCollapsed={isConfigPanelCollapsed}
-        onToggleCollapse={() => setIsConfigPanelCollapsed(!isConfigPanelCollapsed)}
+        onToggleCollapse={() => setConfigPanelCollapsed(!isConfigPanelCollapsed)}
       />
 
       {/* Trust Context Panel - Slide-out */}

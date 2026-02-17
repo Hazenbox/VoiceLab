@@ -1,12 +1,22 @@
 import { create } from 'zustand';
 import type { ActiveView, ChatMode, AppError } from '../types';
+import { getDeviceId } from '../components/OnboardingModal';
 
 /**
  * UI Store -- purely visual/interaction state.
  * No business logic, no service imports.
  *
+ * localStorage keys (aligned with App.tsx):
+ *   chatMode -> voiceDesigner_chatMode (string)
+ *
  * Split rule: if this store exceeds 10 state fields or 10 actions, split it.
  */
+
+// One-time migration: delete stale key from older store format
+try { localStorage.removeItem('tone-studio-chat-mode'); } catch { /* noop */ }
+
+// Matches the key App.tsx has always used
+const CHAT_MODE_STORAGE_KEY = 'voiceDesigner_chatMode';
 
 interface UIState {
   // navigation
@@ -44,8 +54,6 @@ interface UIActions {
   clearError: () => void;
 }
 
-const CHAT_MODE_STORAGE_KEY = 'tone-studio-chat-mode';
-
 export const useUIStore = create<UIState & UIActions>()((set) => ({
   // initial state
   activeView: 'main',
@@ -58,7 +66,7 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
     }
   })() as ChatMode,
   isConfigPanelCollapsed: true,
-  showOnboarding: false,
+  showOnboarding: !getDeviceId(),
   showTrustPanel: false,
   selectedMessageForTrust: null,
   dislikeModalMessageId: null,
