@@ -73,14 +73,19 @@ export async function validate(
       autoFixesApplied: 0,
     };
   } catch (error) {
-    console.warn('[Pipeline:Validate] Validation failed:', error);
+    console.error('[Pipeline:Validate] Validation pipeline threw -- marking output as UNVALIDATED:', error);
     return {
-      passed: true,
+      passed: false,
       content: processedContent,
       validation: null,
       trustScore: null,
       autoFixPreview: null,
-      validationSummary: null,
+      validationSummary: {
+        passedCount: 0,
+        warningCount: 0,
+        errorCount: 1,
+        autoFixesApplied: 0,
+      },
     };
   }
 

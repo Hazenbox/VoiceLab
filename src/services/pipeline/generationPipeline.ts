@@ -73,28 +73,16 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     // 5. Generate content (supports streaming via callbacks)
     let generated = await generate(input, assembled.systemPrompt, classification);
 
-    // 6. Validate (skip for general_chat - LLM already uses Jio tone via BASE_PERSONA)
-    let validation;
-    if (isGeneralChat) {
-      // Skip validation for general conversation
-      validation = {
-        content: generated.content,
-        passed: true,
-        validation: null,
-        trustScore: null,
-        autoFixPreview: null,
-        validationSummary: null,
-      };
-    } else {
-      validation = await validate(input, generated.content, assembled);
+    // 6. Validate -- ALL intents go through validation (forbidden phrases, PII, auto-fix)
+    //    general_chat uses the same pipeline but does NOT trigger retry on failure
+    let validation = await validate(input, generated.content, assembled);
 
-      // 7. Regeneration (max 1 retry, only for content generation)
-      if (!validation.passed && retryCount < MAX_RETRIES) {
-        retryCount++;
-        console.log(`[Pipeline] Validation failed (score below threshold), retrying (${retryCount}/${MAX_RETRIES})`);
-        generated = await generate(input, assembled.systemPrompt, classification);
-        validation = await validate(input, generated.content, assembled);
-      }
+    // 7. Regeneration (max 1 retry, only for non-general-chat content)
+    if (!isGeneralChat && !validation.passed && retryCount < MAX_RETRIES) {
+      retryCount++;
+      console.log(`[Pipeline] Validation failed (score below threshold), retrying (${retryCount}/${MAX_RETRIES})`);
+      generated = await generate(input, assembled.systemPrompt, classification);
+      validation = await validate(input, generated.content, assembled);
     }
 
     // 8. Finalize (finishing layer + privacy masking)
