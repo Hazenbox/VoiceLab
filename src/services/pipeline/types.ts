@@ -11,11 +11,13 @@ import type {
   TrustSettings,
   TrustScore,
   GenerationEvidence,
+  AutoFixPreview,
 } from '../../types';
-import type { LLMProviderType } from '../providers/llm';
+import type { LLMProviderType, LLMProvider } from '../providers/llm';
 import type { SafetyGateResult } from '../safety';
 import type { RetrievedKnowledge } from '../knowledge';
 import type { PipelineValidationResult } from '../validation/types';
+import type { ConstitutionalContext, GenerationRequest } from '../generation/constitutionalWrapper';
 
 // ── Pipeline Input ──────────────────────────────────────────────────────
 
@@ -38,37 +40,91 @@ export interface PipelineInput {
   userProfile?: {
     role?: string;
     name?: string;
+    userId?: string;
     deviceId?: string;
   };
 
-  /** Conversation context */
+  /** Conversation context (text messages only, last N) */
   conversationHistory: Array<{ role: string; content: string }>;
 
   /** Feature flags snapshot (immutable for the run) */
-  featureFlags: {
-    conversationalMode: boolean;
-    safetyGate: boolean;
-    constitutionalWrapper: boolean;
-    knowledgeBase: boolean;
-    learning: boolean;
-    persona: boolean;
-    ragQueryExpansion: boolean;
-    ragResultRanking: boolean;
-    conversationState: boolean;
-    validateConversational: boolean;
-  };
+  featureFlags: PipelineFeatureFlags;
 
   /** External data (from Convex queries, resolved before pipeline runs) */
-  externalData?: {
-    knowledgeItems?: unknown[];
-    corrections?: unknown[];
-    trainingExamples?: unknown[];
-    directiveOverrides?: unknown[];
-    tokenEnforcementRules?: unknown[];
-  };
+  externalData?: PipelineExternalData;
 
   /** Abort signal for cancellation */
   abortSignal?: AbortSignal;
+
+  /** Streaming callbacks (React state updates) */
+  callbacks?: PipelineCallbacks;
+
+  /** LLM provider factory (passed from React layer) */
+  createLLMProvider?: (type: LLMProviderType) => LLMProvider;
+}
+
+export interface PipelineFeatureFlags {
+  conversationalMode: boolean;
+  safetyGate: boolean;
+  constitutionalWrapper: boolean;
+  knowledgeBase: boolean;
+  learning: boolean;
+  persona: boolean;
+  ragQueryExpansion: boolean;
+  ragResultRanking: boolean;
+  conversationState: boolean;
+  validateConversational: boolean;
+  sessionAnalytics: boolean;
+  responseTimeTracking: boolean;
+}
+
+export interface PipelineExternalData {
+  knowledge?: {
+    avoidWords?: string[];
+    preferredWords?: string[];
+    autoFixRules?: Array<{ content: string; metadata?: { suggestion?: string } }>;
+    approvedExamples?: unknown[];
+  };
+  corrections?: unknown[];
+  trainingExamples?: Array<{
+    inputContext: string;
+    outputContent: string;
+    ecosystem?: string;
+    channel?: string;
+  }>;
+  directiveOverrides?: Array<{
+    directiveType: string;
+    directiveKey: string;
+    ecosystem?: string;
+    channel?: string;
+    overrideAction: string;
+    overrideValue?: string;
+    priority: number;
+    reason?: string;
+    isActive: boolean;
+  }>;
+  tokenEnforcementRules?: unknown[];
+  userLearningProfile?: {
+    userId: string;
+    deviceId: string;
+    avoidPatterns?: string[];
+    preferredWarmth?: string;
+    preferredDetail?: string;
+    preferredLanguage?: string;
+    traitPreferences?: string[];
+    correctionCount?: number;
+    lastCorrectionAt?: number;
+  };
+  /** Semantic search function (injected from Convex) */
+  runSemanticSearch?: (...args: unknown[]) => Promise<unknown>;
+}
+
+/** Callbacks for pipeline → React communication */
+export interface PipelineCallbacks {
+  /** Called with accumulated text during streaming */
+  onStreamChunk?: (accumulatedText: string) => void;
+  /** Called when streaming finishes (to clear streaming state) */
+  onStreamEnd?: () => void;
 }
 
 // ── Pipeline Result ─────────────────────────────────────────────────────
@@ -77,7 +133,7 @@ export interface PipelineResult {
   /** Whether the pipeline succeeded */
   success: boolean;
 
-  /** The generated content */
+  /** The generated content (post-finishing, post-privacy-masking) */
   output: string;
 
   /** Which pipeline path was taken */
@@ -91,6 +147,17 @@ export interface PipelineResult {
 
   /** Generation evidence for transparency */
   evidence: GenerationEvidence | null;
+
+  /** Auto-fix preview (if fixes were applied) */
+  autoFixPreview: AutoFixPreview | null;
+
+  /** Validation summary */
+  validationSummary: {
+    passedCount: number;
+    warningCount: number;
+    errorCount: number;
+    autoFixesApplied: number;
+  } | null;
 
   /** How many times the pipeline retried generation */
   retryCount: number;
@@ -147,13 +214,18 @@ export interface ClassifyResult {
 
 export interface RetrieveResult {
   knowledge: RetrievedKnowledge | null;
-  semanticResults?: unknown[];
   retrievalCount: number;
 }
 
 export interface AssembleResult {
+  /** Final enhanced system prompt with all injections */
   systemPrompt: string;
+  /** The generation context object for validation */
+  generationContext: unknown;
+  /** Token snapshot for observability */
   tokenSnapshot: Record<string, unknown>;
+  /** Constitutional context (if enabled) */
+  constitutionalContext: ConstitutionalContext | null;
 }
 
 export interface GenerateResult {
@@ -168,6 +240,19 @@ export interface GenerateResult {
 
 export interface ValidateResult {
   passed: boolean;
+  content: string;
   validation: PipelineValidationResult | null;
   trustScore: TrustScore | null;
+  autoFixPreview: AutoFixPreview | null;
+  validationSummary: {
+    passedCount: number;
+    warningCount: number;
+    errorCount: number;
+    autoFixesApplied: number;
+  } | null;
+}
+
+export interface FinalizeResult {
+  content: string;
+  wasPrivacyMasked: boolean;
 }

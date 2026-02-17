@@ -2,7 +2,7 @@
  * Pipeline Step: Safety Check (hard stop)
  *
  * Pre-generation safety gate. If safety fails, pipeline stops -- no regeneration.
- * Calls: safety/ module only
+ * Pure function -- no side effects.
  */
 
 import { checkSafetyGate, type SafetyGateResult } from '../../safety';
@@ -11,8 +11,10 @@ import type { PipelineInput } from '../types';
 export interface SafetyCheckResult {
   passed: boolean;
   result: SafetyGateResult | null;
+  routing?: string;
   emergencyResponse?: string;
   blockedReason?: string;
+  modifications?: string[];
 }
 
 export function safetyCheck(input: PipelineInput): SafetyCheckResult {
@@ -29,6 +31,7 @@ export function safetyCheck(input: PipelineInput): SafetyCheckResult {
     return {
       passed: false,
       result,
+      routing: result.routing,
       emergencyResponse: result.emergencyResponse.message,
     };
   }
@@ -37,9 +40,16 @@ export function safetyCheck(input: PipelineInput): SafetyCheckResult {
     return {
       passed: false,
       result,
+      routing: result.routing,
       blockedReason: result.classification.domain,
     };
   }
 
-  return { passed: true, result };
+  // proceed or proceed_modified
+  return {
+    passed: true,
+    result,
+    routing: result.routing,
+    modifications: result.routing === 'proceed_modified' ? result.modifications : undefined,
+  };
 }

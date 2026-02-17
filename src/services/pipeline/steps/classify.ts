@@ -2,7 +2,7 @@
  * Pipeline Step: Classify
  *
  * Classifies user intent into content_generation, general_chat, or jio_inquiry.
- * Calls: nothing external (uses intent service)
+ * Pure function -- no side effects.
  */
 
 import { classifyIntent } from '../../intent';

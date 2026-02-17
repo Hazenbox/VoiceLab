@@ -15,7 +15,7 @@
  * - Validation fail = soft stop (one retry allowed)
  */
 
-import type { PipelineInput, PipelineResult, PipelineMetadata } from './types';
+import type { PipelineInput, PipelineResult, PipelineMetadata, ClassifyResult } from './types';
 import { createPipelineTimer, logPipelineRun } from './observability';
 import { classify } from './steps/classify';
 import { safetyCheck } from './steps/safetyCheck';
@@ -47,6 +47,8 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
         validation: null,
         trustScore: null,
         evidence: null,
+        autoFixPreview: null,
+        validationSummary: null,
         retryCount: 0,
         metadata,
         safetyResult: safety.result,
@@ -56,28 +58,28 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       return result;
     }
 
-    // 3. Retrieve knowledge context
-    const retrieval = retrieve(input);
+    // 3. Retrieve knowledge context (async: includes RAG semantic search)
+    const retrieval = await retrieve(input);
 
     // 4. Assemble prompt (tokens resolved here, immutable after this point)
     const assembled = assemble(input, classification, retrieval.knowledge);
 
-    // 5. Generate content
-    let generated = await generate(input, assembled.systemPrompt);
+    // 5. Generate content (supports streaming via callbacks)
+    let generated = await generate(input, assembled.systemPrompt, classification);
 
-    // 6. Validate
-    let validation = validate(input, generated.content, assembled.systemPrompt);
+    // 6. Validate (token enforcement + validation + trust + auto-fix)
+    let validation = await validate(input, generated.content, assembled);
 
     // 7. Regeneration (max 1 retry, enforced here -- pipeline orchestrator controls retry)
     if (!validation.passed && retryCount < MAX_RETRIES) {
       retryCount++;
-      console.log(`[Pipeline] Validation failed, retrying (${retryCount}/${MAX_RETRIES})`);
-      generated = await generate(input, assembled.systemPrompt);
-      validation = validate(input, generated.content, assembled.systemPrompt);
+      console.log(`[Pipeline] Validation failed (score below threshold), retrying (${retryCount}/${MAX_RETRIES})`);
+      generated = await generate(input, assembled.systemPrompt, classification);
+      validation = await validate(input, generated.content, assembled);
     }
 
-    // 8. Finalize (privacy masking)
-    const finalized = finalize(generated.content);
+    // 8. Finalize (finishing layer + privacy masking)
+    const finalized = finalize(validation.content, input, classification, assembled);
 
     const metadata = buildMetadata(
       input,
@@ -96,6 +98,8 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       validation: validation.validation,
       trustScore: validation.trustScore,
       evidence: null,
+      autoFixPreview: validation.autoFixPreview,
+      validationSummary: validation.validationSummary,
       retryCount,
       metadata,
       safetyResult: safety.result,
@@ -114,6 +118,8 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       validation: null,
       trustScore: null,
       evidence: null,
+      autoFixPreview: null,
+      validationSummary: null,
       retryCount,
       metadata,
       safetyResult: null,
@@ -132,7 +138,7 @@ function buildMetadata(
   startedAt: number,
   model: string,
   retrievalCount: number,
-  classification?: { detectedEcosystem?: string; detectedChannel?: string },
+  classification?: ClassifyResult,
   usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number },
 ): PipelineMetadata {
   return {

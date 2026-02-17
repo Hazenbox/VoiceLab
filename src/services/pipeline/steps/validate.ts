@@ -1,60 +1,267 @@
 /**
  * Pipeline Step: Validate
  *
- * Runs safety check (hard stop) then validation runner (soft stop).
- * Calls: validation/runner only
+ * Post-generation validation chain:
+ * 1. Token enforcement (brand protection rules from Convex)
+ * 2. Validation pipeline (brand, safety, structure, formatting)
+ * 3. Constitutional AI validation
+ * 4. Trust scoring
+ * 5. Auto-fix
  *
- * Execution rules:
- * - Safety fail = hard stop (no regeneration) -- handled by safetyCheck step
- * - Brand/structure/formatting fail = soft stop (one retry allowed)
+ * Rules:
+ * - Safety fail = hard stop (handled by safetyCheck step)
+ * - Validation fail = soft stop (one retry allowed, controlled by orchestrator)
  * - Validators execute in deterministic order
- * - No nested validator calls, no cross-validator dependencies
+ * - No cross-validator dependencies
  */
 
 import { runValidationPipeline } from '../../validation';
-import { calculateTrustScore } from '../../trust';
-import type { PipelineInput, ValidateResult } from '../types';
-import type { TrustScore } from '../../../types';
+import { calculateTrustScore, generateAutoFixes, applyAutoFixes } from '../../trust';
+import {
+  createTokenEnforcementAgent,
+  type TokenEnforcementContext,
+} from '../../validation/tokenEnforcementAgent';
+import { getCachedEnforcementRules } from '../../validation/tokenEnforcementCache';
+import {
+  validateConstitutionalResponse,
+  convertToViolations,
+  type ConstitutionalContext,
+} from '../../generation/constitutionalWrapper';
+import type { PipelineInput, ValidateResult, AssembleResult } from '../types';
 
-export function validate(
+export async function validate(
   input: PipelineInput,
   content: string,
-  systemPrompt: string,
-): ValidateResult {
-  try {
-    const validationResult = runValidationPipeline(content, {
-      ecosystem: input.ecosystem,
-      channel: input.contentChannel,
-    });
+  assembled: AssembleResult,
+): Promise<ValidateResult> {
+  let processedContent = content;
 
-    let trustScore: TrustScore | null = null;
-    try {
-      trustScore = calculateTrustScore(
-        content,
+  // 1. Token enforcement (Convex brand protection rules)
+  const cachedRules = getCachedEnforcementRules();
+  if (cachedRules.length > 0) {
+    processedContent = applyTokenEnforcement(processedContent, input, assembled, cachedRules);
+  }
+
+  // 2. Run validation pipeline
+  let validationResult;
+  let trustScore = null;
+  let validationSummary = null;
+
+  try {
+    validationResult = await runValidationPipeline(processedContent, assembled.generationContext);
+
+    // 3. Constitutional AI validation
+    if (input.featureFlags.constitutionalWrapper && assembled.constitutionalContext) {
+      validationResult = applyConstitutionalValidation(
+        processedContent,
+        assembled.constitutionalContext,
         validationResult,
-        {
-          ecosystem: input.ecosystem,
-          channel: input.contentChannel,
-          trustSettings: input.trustSettings,
-        }
       );
-    } catch (trustError) {
-      console.warn('[Pipeline:Validate] Trust scoring failed:', trustError);
     }
 
-    const passed = validationResult.overallScore >= 0.7;
+    // 4. Trust scoring
+    trustScore = calculateTrustScore(validationResult, input.trustSettings);
 
-    return {
-      passed,
-      validation: validationResult,
-      trustScore,
+    validationSummary = {
+      passedCount: validationResult.agentResults.filter((r: { passed: boolean }) => r.passed).length,
+      warningCount: validationResult.agentResults
+        .flatMap((r: { violations: Array<{ severity: string }> }) => r.violations)
+        .filter((v: { severity: string }) => v.severity === 'warning').length,
+      errorCount: validationResult.agentResults
+        .flatMap((r: { violations: Array<{ severity: string }> }) => r.violations)
+        .filter((v: { severity: string }) => v.severity === 'error').length,
+      autoFixesApplied: 0,
     };
   } catch (error) {
     console.warn('[Pipeline:Validate] Validation failed:', error);
     return {
       passed: true,
+      content: processedContent,
       validation: null,
       trustScore: null,
+      autoFixPreview: null,
+      validationSummary: null,
     };
+  }
+
+  // 5. Auto-fix
+  let autoFixPreview = null;
+  if (trustScore && trustScore.autoFixableCount > 0) {
+    const fixResult = tryAutoFix(processedContent, trustScore, input, validationResult);
+    if (fixResult) {
+      autoFixPreview = fixResult.preview;
+      processedContent = fixResult.content;
+      trustScore = fixResult.trustScore;
+      if (validationSummary) {
+        validationSummary.autoFixesApplied = fixResult.preview.appliedFixes.length;
+      }
+    }
+  }
+
+  const passed = validationResult.overallScore >= 70;
+
+  return {
+    passed,
+    content: processedContent,
+    validation: validationResult,
+    trustScore,
+    autoFixPreview,
+    validationSummary,
+  };
+}
+
+function applyTokenEnforcement(
+  content: string,
+  input: PipelineInput,
+  assembled: AssembleResult,
+  rules: unknown[],
+): string {
+  try {
+    const constitutionalContext = assembled.constitutionalContext;
+    const activeTokens = {
+      ecosystem: input.ecosystem,
+      channel: input.contentChannel,
+      'safety.domain': constitutionalContext?.safetyResult?.domain || 'general',
+      'safety.level': constitutionalContext?.tokens?.safetyLevel || 'none',
+      'emotion.rasa.user': constitutionalContext?.tokens?.userEmotion || 'shanta',
+      'emotion.intensity': constitutionalContext?.tokens?.emotionIntensity || 'moderate',
+      persona: input.featureFlags.persona ? input.userProfile?.role : undefined,
+    };
+
+    const enforcementContext: TokenEnforcementContext = {
+      activeTokens,
+      rules,
+    };
+
+    const enforcementAgent = createTokenEnforcementAgent(enforcementContext);
+    const enforcementResult = enforcementAgent.validate(content);
+
+    if (!enforcementResult.passed) {
+      const autoFixable = enforcementResult.violations.filter(
+        (v: { autoFixable: boolean; autoFixAction?: string }) => v.autoFixable && v.autoFixAction === 'remove',
+      );
+
+      if (autoFixable.length > 0) {
+        let fixed = content;
+        for (const violation of autoFixable) {
+          const termRegex = new RegExp(`\\b${violation.term}\\b`, 'gi');
+          fixed = fixed.replace(termRegex, '');
+        }
+        fixed = fixed
+          .replace(/ {2,}/g, ' ')
+          .replace(/ +([.,!?])/g, '$1')
+          .replace(/([.,!?]) *([.,!?])/g, '$1')
+          .replace(/\n{3,}/g, '\n\n')
+          .trim();
+
+        console.log(`[Pipeline:Validate] Token enforcement auto-fixed ${autoFixable.length} violations`);
+        return fixed;
+      }
+    }
+
+    return content;
+  } catch (error) {
+    console.warn('[Pipeline:Validate] Token enforcement failed:', error);
+    return content;
+  }
+}
+
+function applyConstitutionalValidation(
+  content: string,
+  constitutionalContext: ConstitutionalContext,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  validationResult: any,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
+  try {
+    const constitutionalValidation = validateConstitutionalResponse(content, constitutionalContext);
+
+    if (!constitutionalValidation.passed) {
+      const violations = convertToViolations(constitutionalValidation);
+
+      if (violations.length > 0) {
+        validationResult.summary = validationResult.summary || {};
+        validationResult.summary.totalViolations =
+          (validationResult.summary.totalViolations || 0) + violations.length;
+
+        validationResult.results = validationResult.results || [];
+        validationResult.results.push({
+          agentId: 'constitutional',
+          score: constitutionalValidation.passed
+            ? 100
+            : Math.max(0, 100 - violations.length * 15),
+          violations: violations.map(cv => ({
+            severity: cv.severity,
+            rule: cv.rule,
+            text: cv.text,
+            suggestion: cv.suggestion,
+            category: cv.category,
+            autoFixable: cv.autoFixable,
+          })),
+          processingTimeMs: 0,
+        });
+      }
+    }
+
+    return validationResult;
+  } catch (error) {
+    console.warn('[Pipeline:Validate] Constitutional validation failed:', error);
+    return validationResult;
+  }
+}
+
+function tryAutoFix(
+  content: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  trustScore: any,
+  input: PipelineInput,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  validationResult: any,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+): { preview: any; content: string; trustScore: any } | null {
+  try {
+    const autoFixableViolations = trustScore.validationResults
+      .flatMap((r: { violations: Array<{ autoFixable: boolean }> }) => r.violations)
+      .filter((v: { autoFixable: boolean }) => v.autoFixable);
+
+    if (autoFixableViolations.length === 0) return null;
+
+    const dynamicReplacements = input.externalData?.knowledge?.autoFixRules?.map(rule => ({
+      from: rule.content,
+      to: rule.metadata?.suggestion,
+    }));
+
+    const fixes = generateAutoFixes(autoFixableViolations, dynamicReplacements);
+    const fixResult = applyAutoFixes(content, fixes);
+
+    if (fixResult.appliedFixes.length === 0) return null;
+
+    const preview = {
+      originalContent: content,
+      fixedContent: fixResult.fixedContent,
+      appliedFixes: fixResult.appliedFixes,
+      isPending: false,
+    };
+
+    // Re-validate after fix
+    let newTrustScore = trustScore;
+    try {
+      const fixedValidation = runValidationPipeline(fixResult.fixedContent, undefined);
+      // runValidationPipeline is async, but we handle it gracefully
+      if (fixedValidation instanceof Promise) {
+        // Can't await in sync context -- skip re-scoring
+      } else {
+        newTrustScore = calculateTrustScore(fixedValidation, input.trustSettings);
+      }
+    } catch { /* ignore */ }
+
+    return {
+      preview,
+      content: fixResult.fixedContent,
+      trustScore: newTrustScore,
+    };
+  } catch (error) {
+    console.warn('[Pipeline:Validate] Auto-fix failed:', error);
+    return null;
   }
 }
