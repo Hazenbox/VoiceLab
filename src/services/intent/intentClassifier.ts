@@ -45,10 +45,12 @@ const CONTENT_VERBS = /\b(generate|write|create|draft|compose|design|prepare|mak
 const CONTENT_TYPES = /\b(sms|email|push\s*notification|notification|banner|ad\s*copy|ad|flyer|whatsapp|social\s*media|social\s*post|post|copy|content|script|announcement|campaign|message|text\s+for|headline|tagline|subject\s*line|newsletter|memo|training|onboarding|faq|chatbot|ivr|voice\s*menu|voice\s*prompt)\b/i;
 
 /**
- * Combined pattern: verb + optional filler + content type
+ * Combined pattern: verb + optional filler + optional adjectives + content type
+ * The (?:\w+\s+)*? allows adjectives like "error", "friendly", "promotional" between filler and content type
+ * Examples: "Write an error message", "Create a friendly notification", "Draft a short SMS"
  */
 const CONTENT_GENERATION_PATTERN = new RegExp(
-  `${CONTENT_VERBS.source}\\s+(?:a\\s+|an\\s+|the\\s+|some\\s+|me\\s+(?:a\\s+|an\\s+)?)?${CONTENT_TYPES.source}`,
+  `${CONTENT_VERBS.source}\\s+(?:a\\s+|an\\s+|the\\s+|some\\s+|me\\s+(?:a\\s+|an\\s+)?)?(?:\\w+\\s+)*?${CONTENT_TYPES.source}`,
   'i'
 );
 
