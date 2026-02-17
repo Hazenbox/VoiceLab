@@ -635,10 +635,13 @@ export class ConvexSyncService {
       return;
     }
 
+    // Remove sessionId if null/undefined - Convex expects either valid ID or omission
+    const { sessionId, ...restParams } = params;
     const result = await this.safeMutation('interactions:log', {
       userId: this.convexUserId,
       deviceId: this.deviceId,
-      ...params,
+      ...restParams,
+      ...(sessionId ? { sessionId } : {}),
     });
 
     if (!result.ok) {
@@ -665,12 +668,17 @@ export class ConvexSyncService {
       return;
     }
 
-    const formattedEvents = events.map(e => ({
-      userId: this.convexUserId!,
-      deviceId: this.deviceId!,
-      ...e,
-      timestamp: Date.now(),
-    }));
+    const formattedEvents = events.map(e => {
+      // Remove sessionId if null/undefined - Convex expects either valid ID or omission
+      const { sessionId, ...rest } = e;
+      return {
+        userId: this.convexUserId!,
+        deviceId: this.deviceId!,
+        ...rest,
+        ...(sessionId ? { sessionId } : {}),
+        timestamp: Date.now(),
+      };
+    });
 
     const result = await this.safeMutation('interactions:batchLog', {
       events: formattedEvents,
@@ -863,12 +871,17 @@ export class ConvexSyncService {
       // v2: Batch interaction events
       if (interactionEvents.length > 0) {
         const result = await this.safeMutation('interactions:batchLog', {
-          events: interactionEvents.map((e) => ({
-            userId: this.convexUserId,
-            deviceId: this.deviceId!,
-            ...e.data,
-            timestamp: e.data.timestamp || e.timestamp,
-          })),
+          events: interactionEvents.map((e) => {
+            // Remove sessionId if null/undefined - Convex expects either valid ID or omission
+            const { sessionId, ...restData } = e.data as { sessionId?: string | null; [key: string]: unknown };
+            return {
+              userId: this.convexUserId,
+              deviceId: this.deviceId!,
+              ...restData,
+              ...(sessionId ? { sessionId } : {}),
+              timestamp: e.data.timestamp || e.timestamp,
+            };
+          }),
         });
 
         if (result.ok) {
