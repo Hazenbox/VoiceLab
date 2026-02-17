@@ -17,6 +17,9 @@ import {
   appendSignature,
   type SignatureContext,
 } from '../../finishing/signatureSelector';
+import { normalizeEntities } from '../../postprocess/entityNormalizer';
+import { trimResponse } from '../../postprocess/responseTrimmer';
+import { conditionalPromoStrip } from '../../postprocess/promoStripper';
 import type { FinalizeResult, ClassifyResult, AssembleResult } from '../types';
 import type { PipelineInput } from '../types';
 
@@ -51,7 +54,41 @@ export function finalize(
     }
   }
 
-  // 2. Privacy masking
+  // 2. Entity normalization (deterministic brand name fixes)
+  try {
+    const entityResult = normalizeEntities(finalContent);
+    if (entityResult.replacementCount > 0) {
+      finalContent = entityResult.content;
+      console.log(`[Pipeline:Finalize] Normalized ${entityResult.replacementCount} entity names`);
+    }
+  } catch (error) {
+    console.warn('[Pipeline:Finalize] Entity normalization failed:', error);
+  }
+
+  // 3. Response length enforcement (channel-appropriate trimming)
+  try {
+    const trimResult = trimResponse(finalContent, input.contentChannel);
+    if (trimResult.wasTrimmed) {
+      finalContent = trimResult.content;
+      console.log(`[Pipeline:Finalize] Trimmed response from ${trimResult.originalLength} to ${trimResult.trimmedLength} chars`);
+    }
+  } catch (error) {
+    console.warn('[Pipeline:Finalize] Response trimming failed:', error);
+  }
+
+  // 4. Night-time promotional stripping
+  try {
+    const timing = assembled.constitutionalContext?.tokens?.timing;
+    const promoResult = conditionalPromoStrip(finalContent, timing);
+    if (promoResult.strippedCount > 0) {
+      finalContent = promoResult.content;
+      console.log(`[Pipeline:Finalize] Stripped ${promoResult.strippedCount} promotional sentences (late night)`);
+    }
+  } catch (error) {
+    console.warn('[Pipeline:Finalize] Promo stripping failed:', error);
+  }
+
+  // 5. Privacy masking
   let wasPrivacyMasked = false;
   try {
     if (containsSensitiveData(finalContent)) {
