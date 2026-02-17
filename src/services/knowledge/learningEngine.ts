@@ -15,6 +15,7 @@
 
 import type { RetrievedKnowledge } from './knowledgeRetriever';
 import { createLogger } from '../../utils/logger';
+import { safeStorage } from '../safeStorage';
 
 const log = createLogger('LearningEngine');
 
@@ -206,7 +207,7 @@ export interface RejectedCorrectionInfo {
  */
 export function storeRejectedCorrections(rejectedInfos: RejectedCorrectionInfo[]): void {
   try {
-    const stored = localStorage.getItem(LOCAL_REJECTED_IDS_KEY);
+    const stored = safeStorage.getItem(LOCAL_REJECTED_IDS_KEY);
     const existing: RejectedCorrectionInfo[] = stored ? JSON.parse(stored) : [];
     
     // Merge new rejections (deduplicate by id)
@@ -214,10 +215,10 @@ export function storeRejectedCorrections(rejectedInfos: RejectedCorrectionInfo[]
     const newRejections = rejectedInfos.filter(r => !existingIds.has(r.id));
     
     const merged = [...existing, ...newRejections].slice(-500); // Keep last 500
-    localStorage.setItem(LOCAL_REJECTED_IDS_KEY, JSON.stringify(merged));
+    safeStorage.setItem(LOCAL_REJECTED_IDS_KEY, JSON.stringify(merged));
     
     // Update sync timestamp
-    localStorage.setItem(LOCAL_REJECTION_SYNC_KEY, String(Date.now()));
+    safeStorage.setItem(LOCAL_REJECTION_SYNC_KEY, String(Date.now()));
     
     log.debug(`Stored ${newRejections.length} new rejections`, { total: merged.length });
   } catch (e) {
@@ -231,7 +232,7 @@ export function storeRejectedCorrections(rejectedInfos: RejectedCorrectionInfo[]
  */
 export function getRejectedFingerprints(ecosystem?: string, channel?: string): Set<string> {
   try {
-    const stored = localStorage.getItem(LOCAL_REJECTED_IDS_KEY);
+    const stored = safeStorage.getItem(LOCAL_REJECTED_IDS_KEY);
     if (!stored) return new Set();
     
     const rejections: RejectedCorrectionInfo[] = JSON.parse(stored);
@@ -255,7 +256,7 @@ export function getRejectedFingerprints(ecosystem?: string, channel?: string): S
  */
 export function getLastRejectionSyncTimestamp(): number {
   try {
-    const ts = localStorage.getItem(LOCAL_REJECTION_SYNC_KEY);
+    const ts = safeStorage.getItem(LOCAL_REJECTION_SYNC_KEY);
     return ts ? parseInt(ts, 10) : 0;
   } catch {
     return 0;
@@ -267,8 +268,8 @@ export function getLastRejectionSyncTimestamp(): number {
  */
 export function clearRejectedCorrections(): void {
   try {
-    localStorage.removeItem(LOCAL_REJECTED_IDS_KEY);
-    localStorage.removeItem(LOCAL_REJECTION_SYNC_KEY);
+    safeStorage.removeItem(LOCAL_REJECTED_IDS_KEY);
+    safeStorage.removeItem(LOCAL_REJECTION_SYNC_KEY);
   } catch { /* ignore */ }
 }
 
@@ -317,7 +318,7 @@ export function isDuplicateCorrection(
  */
 export function storeLocalCorrection(correction: CorrectionEntry): void {
   try {
-    const stored = localStorage.getItem(LOCAL_CORRECTIONS_KEY);
+    const stored = safeStorage.getItem(LOCAL_CORRECTIONS_KEY);
     const corrections: CorrectionEntry[] = stored ? JSON.parse(stored) : [];
     
     // P1: Check for duplicates before adding
@@ -328,7 +329,7 @@ export function storeLocalCorrection(correction: CorrectionEntry): void {
     
     corrections.unshift(correction);
     const trimmed = corrections.slice(0, MAX_LOCAL_CORRECTIONS);
-    localStorage.setItem(LOCAL_CORRECTIONS_KEY, JSON.stringify(trimmed));
+    safeStorage.setItem(LOCAL_CORRECTIONS_KEY, JSON.stringify(trimmed));
   } catch (e) {
     log.warn('Failed to store correction (quota?)', { error: String(e) });
   }
@@ -343,7 +344,7 @@ export function getLocalCorrections(
   channel?: string,
 ): CorrectionEntry[] {
   try {
-    const stored = localStorage.getItem(LOCAL_CORRECTIONS_KEY);
+    const stored = safeStorage.getItem(LOCAL_CORRECTIONS_KEY);
     if (!stored) return [];
     const corrections: CorrectionEntry[] = JSON.parse(stored);
     
@@ -376,7 +377,7 @@ export function getLocalCorrections(
  */
 export function clearLocalCorrections(): void {
   try {
-    localStorage.removeItem(LOCAL_CORRECTIONS_KEY);
+    safeStorage.removeItem(LOCAL_CORRECTIONS_KEY);
   } catch { /* ignore */ }
 }
 

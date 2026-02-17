@@ -3,6 +3,8 @@
  * Manages prompt versioning, A/B testing, and change tracking
  */
 
+import { safeStorage } from '../safeStorage';
+
 export interface PromptVersion {
   id: string;
   name: string;
@@ -174,22 +176,28 @@ export class PromptRegistry {
 
   private loadFromStorage(): void {
     try {
-      const data = localStorage.getItem(this.STORAGE_KEY);
+      const data = safeStorage.getItem(this.STORAGE_KEY);
       if (data) {
         const parsed = JSON.parse(data);
         this.prompts = new Map(Object.entries(parsed));
       }
     } catch (error) {
-      console.error('[PromptRegistry] Failed to load from storage:', error);
+      // Silently fail on server or if storage is unavailable
+      if (safeStorage.isAvailable()) {
+        console.error('[PromptRegistry] Failed to load from storage:', error);
+      }
     }
   }
 
   private saveToStorage(): void {
     try {
       const obj = Object.fromEntries(this.prompts);
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(obj));
+      safeStorage.setItem(this.STORAGE_KEY, JSON.stringify(obj));
     } catch (error) {
-      console.error('[PromptRegistry] Failed to save to storage:', error);
+      // Silently fail on server or if storage is unavailable
+      if (safeStorage.isAvailable()) {
+        console.error('[PromptRegistry] Failed to save to storage:', error);
+      }
     }
   }
 

@@ -282,9 +282,11 @@ function toInternalInput(
     temperature: serverInput.temperature,
     maxTokens: serverInput.maxTokens,
     stream: serverInput.stream,
-    llmProvider: serverInput.llmProvider,
+    // Default to qwen-text if no provider specified
+    llmProvider: serverInput.llmProvider || 'qwen-text',
     userProfile: serverInput.userProfile,
-    conversationHistory: serverInput.conversationHistory,
+    // Ensure conversationHistory is always an array
+    conversationHistory: serverInput.conversationHistory || [],
     // Apply default feature flags, allowing overrides from client
     featureFlags: {
       ...DEFAULT_FEATURE_FLAGS,

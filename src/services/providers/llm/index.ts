@@ -10,6 +10,7 @@ import { createGeminiTextProvider } from './gemini';
 import { createQwenTextProvider } from './qwen';
 import { createInworldLLMProvider } from './inworldLLM';
 import { createHuggingFaceProvider } from './huggingface';
+import { getEnv, isServer, isProduction as checkIsProduction } from '../../env';
 
 // Re-export types and utilities
 export * from './types';
@@ -49,12 +50,11 @@ export function createLLMProvider(type: LLMProviderType): LLMProvider {
 }
 
 /**
- * Check if running in production
+ * Check if running in production (isomorphic)
  */
-function isProduction(): boolean {
-  if (typeof window === 'undefined') return false;
-  const hostname = window.location.hostname;
-  return hostname !== 'localhost' && hostname !== '127.0.0.1';
+function isProductionEnv(): boolean {
+  // Use isomorphic check from env.ts
+  return checkIsProduction();
 }
 
 /**
@@ -113,9 +113,10 @@ export function getAvailableLLMProviders(): Array<{
     },
   ];
 
-  // In production, server-side keys are configured via Vercel env vars
-  // In development, assume configured if proxy port is set
-  const isConfigured = isProduction() || Boolean(import.meta.env.VITE_WS_PROXY_PORT);
+  // On server, always consider configured (server has API keys)
+  // In production client, server-side keys are configured via Vercel env vars
+  // In development client, assume configured if proxy port is set
+  const isConfigured = isServer || isProductionEnv() || Boolean(getEnv('WS_PROXY_PORT'));
 
   return providers.map(p => ({
     type: p.type,

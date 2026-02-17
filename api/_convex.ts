@@ -217,8 +217,10 @@ export async function fetchAllPipelineData(
  */
 export function createSemanticSearchFunction(): (...args: unknown[]) => Promise<unknown> {
   return async (query: unknown, limit?: unknown) => {
-    if (typeof query !== 'string') {
-      throw new Error('Semantic search query must be a string');
+    // Defensive: return empty if query is invalid
+    if (typeof query !== 'string' || !query.trim()) {
+      console.warn('[Convex] Semantic search called with invalid query:', query);
+      return [];
     }
     const limitNum = typeof limit === 'number' ? limit : 10;
     return runSemanticSearch(query, limitNum);

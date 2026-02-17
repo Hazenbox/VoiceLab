@@ -16,6 +16,7 @@ import {
   createLLMError,
 } from './types';
 import { getApiBaseUrl, getInternalApiKey, isProduction } from '../../../config/providers';
+import { getEnv } from '../../env';
 
 // Available HuggingFace models configuration
 export const HF_MODELS = {
@@ -445,7 +446,7 @@ export class HuggingFaceProvider implements LLMProvider {
  * Create a HuggingFace provider instance
  */
 export function createHuggingFaceProvider(config?: Partial<HuggingFaceConfig>): HuggingFaceProvider {
-  const modelKey = (config?.model || import.meta.env.VITE_HUGGINGFACE_MODEL || 'qwen25-7b') as HFModelKey;
+  const modelKey = (config?.model || getEnv('HUGGINGFACE_MODEL', 'qwen25-7b')) as HFModelKey;
   
   // Validate model key
   const validModel = modelKey in HF_MODELS ? modelKey : 'qwen25-7b';
@@ -460,7 +461,7 @@ export function createHuggingFaceProvider(config?: Partial<HuggingFaceConfig>): 
     // API key is server-side only - passed to serverless function via process.env
     apiKey: config?.apiKey || '',
     model: validModel,
-    baseUrl: config?.baseUrl || import.meta.env.VITE_HUGGINGFACE_BASE_URL || 'https://router.huggingface.co',
+    baseUrl: config?.baseUrl || getEnv('HUGGINGFACE_BASE_URL', 'https://router.huggingface.co'),
     proxyUrl,
   });
 }

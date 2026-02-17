@@ -1,5 +1,5 @@
 import type { ProviderType } from '../services/providers/types';
-import { isProduction as envIsProduction, getEnv as envGetEnv } from '../services/env';
+import { isProduction as envIsProduction, getEnv } from '../services/env';
 
 /**
  * Provider-specific configuration
@@ -53,14 +53,7 @@ export interface ProviderConfig {
   };
 }
 
-/**
- * Get environment variable with fallback
- */
-function getEnv(key: string, fallback: string = ''): string {
-  // Access from Vite's import.meta.env
-  const value = import.meta.env[key];
-  return value !== undefined ? String(value) : fallback;
-}
+// getEnv is now imported from '../services/env' for isomorphic env access
 
 /**
  * Get the configured TTS provider type

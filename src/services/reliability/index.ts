@@ -8,6 +8,8 @@
  * - Cross-tab message deduplication
  */
 
+import { safeStorage } from '../safeStorage';
+
 // =============================================================================
 // Idempotency Key Generation
 // =============================================================================
@@ -40,7 +42,7 @@ interface IdempotencyEntry {
  */
 export function isIdempotencyKeyProcessed(key: string): boolean {
   try {
-    const stored = localStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+    const stored = safeStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
     if (!stored) return false;
     
     const entries: IdempotencyEntry[] = JSON.parse(stored);
@@ -59,7 +61,7 @@ export function isIdempotencyKeyProcessed(key: string): boolean {
  */
 export function markIdempotencyKeyProcessed(key: string, result?: unknown): void {
   try {
-    const stored = localStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+    const stored = safeStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
     const entries: IdempotencyEntry[] = stored ? JSON.parse(stored) : [];
     const now = Date.now();
     
@@ -71,7 +73,7 @@ export function markIdempotencyKeyProcessed(key: string, result?: unknown): void
     
     // Keep max 100 entries
     const trimmed = validEntries.slice(-100);
-    localStorage.setItem(IDEMPOTENCY_STORAGE_KEY, JSON.stringify(trimmed));
+    safeStorage.setItem(IDEMPOTENCY_STORAGE_KEY, JSON.stringify(trimmed));
   } catch (error) {
     console.warn('[Idempotency] Failed to mark key as processed:', error);
   }
@@ -82,7 +84,7 @@ export function markIdempotencyKeyProcessed(key: string, result?: unknown): void
  */
 export function getIdempotencyResult(key: string): unknown | undefined {
   try {
-    const stored = localStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+    const stored = safeStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
     if (!stored) return undefined;
     
     const entries: IdempotencyEntry[] = JSON.parse(stored);

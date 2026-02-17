@@ -91,7 +91,7 @@ export function assemble(
         ecosystem: effectiveEcosystem,
         channel: effectiveChannel,
         userProfile: input.userProfile?.role as 'new_user' | 'regular' | 'premium' | 'enterprise' | 'senior' | 'youth' | 'unknown' | undefined,
-        conversationHistory: input.conversationHistory
+        conversationHistory: (input.conversationHistory || [])
           .slice(-10)
           .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
         directiveOverrides: (input.externalData?.directiveOverrides || []).map(o => ({
@@ -184,7 +184,7 @@ export function assemble(
       emotion: constitutionalContext?.tokens?.userEmotion || 'shanta',
       intent: classification.intent || 'general',
       resolutionStatus: constitutionalContext?.stateContext?.resolutionStatus || 'in_progress',
-      turnNumber: input.conversationHistory.filter(m => m.role === 'user').length + 1,
+      turnNumber: (input.conversationHistory || []).filter(m => m.role === 'user').length + 1,
       ecosystem: effectiveEcosystem,
       userSegment: input.userProfile?.role,
     };

@@ -4,6 +4,7 @@
  */
 
 import type { LLMUsageMetrics } from '../providers/llm/types';
+import { safeStorage } from '../safeStorage';
 
 export interface UsageRecord {
   id: string;
@@ -250,20 +251,26 @@ export class CostTracker {
 
   private loadFromStorage(): void {
     try {
-      const data = localStorage.getItem(this.STORAGE_KEY);
+      const data = safeStorage.getItem(this.STORAGE_KEY);
       if (data) {
         this.records = JSON.parse(data);
       }
     } catch (error) {
-      console.error('[CostTracker] Failed to load usage records:', error);
+      // Silently fail on server or if storage is unavailable
+      if (safeStorage.isAvailable()) {
+        console.error('[CostTracker] Failed to load usage records:', error);
+      }
     }
   }
 
   private saveToStorage(): void {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.records));
+      safeStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.records));
     } catch (error) {
-      console.error('[CostTracker] Failed to save usage records:', error);
+      // Silently fail on server or if storage is unavailable
+      if (safeStorage.isAvailable()) {
+        console.error('[CostTracker] Failed to save usage records:', error);
+      }
     }
   }
 
