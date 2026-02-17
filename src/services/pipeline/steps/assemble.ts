@@ -43,6 +43,55 @@ import {
 import type { PipelineInput, ClassifyResult, AssembleResult } from '../types';
 import type { RetrievedKnowledge, CorrectionEntry } from '../../knowledge';
 
+// ── Token Budget ──────────────────────────────────────────────────────────
+// Rough estimate: 1 token ~= 4 characters. Cap system prompt at ~2500 tokens.
+const SYSTEM_PROMPT_TOKEN_BUDGET = 2500;
+const CHARS_PER_TOKEN = 4;
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / CHARS_PER_TOKEN);
+}
+
+/**
+ * Shedding priority (lowest priority shed first):
+ * 1. training examples
+ * 2. nudge
+ * 3. playbook
+ * 4. profile learning
+ * 5. session memory
+ * Constitutional + base prompt + knowledge are never shed.
+ */
+interface PromptSection {
+  key: string;
+  content: string;
+  sheddable: boolean;
+  priority: number; // higher = shed first
+}
+
+function applyTokenBudget(
+  basePrompt: string,
+  sections: PromptSection[],
+): string {
+  const baseTokens = estimateTokens(basePrompt);
+  let remaining = SYSTEM_PROMPT_TOKEN_BUDGET - baseTokens;
+
+  // Sort by priority: lower number = keep longer (shed higher numbers first)
+  const sorted = [...sections].sort((a, b) => a.priority - b.priority);
+  const included: string[] = [];
+
+  for (const section of sorted) {
+    const sectionTokens = estimateTokens(section.content);
+    if (!section.sheddable || sectionTokens <= remaining) {
+      included.push(section.content);
+      remaining -= sectionTokens;
+    } else {
+      console.log(`[Pipeline:Assemble] Token budget: shedding "${section.key}" (${sectionTokens} tokens over budget)`);
+    }
+  }
+
+  return [basePrompt, ...included].join('\n\n---\n\n');
+}
+
 export function assemble(
   input: PipelineInput,
   classification: ClassifyResult,
@@ -81,10 +130,11 @@ export function assemble(
     knowledge ? { knowledge } : {},
   );
 
-  let enhancedSystemPrompt = systemPrompt;
+  // Build base prompt (constitutional + core prompt -- never shed)
+  let basePrompt = systemPrompt;
   let constitutionalContext: ConstitutionalContext | null = null;
 
-  // Constitutional AI context
+  // Constitutional AI context (never shed)
   if (input.featureFlags.constitutionalWrapper) {
     try {
       const constitutionalRequest: GenerationRequest = {
@@ -111,16 +161,16 @@ export function assemble(
       constitutionalContext = prepareConstitutionalContext(constitutionalRequest);
 
       if (constitutionalContext.systemPromptInjection) {
-        enhancedSystemPrompt = `${constitutionalContext.systemPromptInjection}\n\n---\n\n${enhancedSystemPrompt}`;
+        basePrompt = `${constitutionalContext.systemPromptInjection}\n\n---\n\n${basePrompt}`;
       }
 
-      // Token Gate
+      // Token Gate (never shed)
       if (constitutionalContext.tokens) {
         const gateDecision = checkTokenGate(constitutionalContext.tokens);
         console.log(`[Pipeline:Assemble] TokenGate: ${formatGateDecision(gateDecision)}`);
 
         if (gateDecision.promptInjection) {
-          enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${gateDecision.promptInjection}`;
+          basePrompt = `${basePrompt}\n\n---\n\n${gateDecision.promptInjection}`;
         }
       }
     } catch (constitutionalError) {
@@ -128,7 +178,11 @@ export function assemble(
     }
   }
 
-  // Profile Learning
+  // Collect optional sections with shedding priorities
+  // Lower priority number = keep longer. Higher = shed first.
+  const optionalSections: PromptSection[] = [];
+
+  // Profile Learning (priority 4 -- shed fourth)
   if (input.featureFlags.learning && input.externalData?.userLearningProfile) {
     try {
       const learningProfile: UserLearningProfile = {
@@ -161,24 +215,24 @@ export function assemble(
 
       const section = buildProfileLearningSection(learningProfile, correctionEntries);
       if (section) {
-        enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${section}`;
+        optionalSections.push({ key: 'profile_learning', content: section, sheddable: true, priority: 4 });
       }
     } catch (learningError) {
       console.warn('[Pipeline:Assemble] Profile learning failed:', learningError);
     }
   }
 
-  // Session memory
+  // Session memory (priority 5 -- shed fifth)
   if (input.featureFlags.learning) {
     try {
       const sessionMemoryBlock = formatSessionMemoryForPrompt();
       if (sessionMemoryBlock) {
-        enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${sessionMemoryBlock}`;
+        optionalSections.push({ key: 'session_memory', content: sessionMemoryBlock, sheddable: true, priority: 5 });
       }
     } catch { /* ignore */ }
   }
 
-  // Nudge controller
+  // Nudge controller (priority 2 -- shed second)
   try {
     const nudgeContext: NudgeContext = {
       permission: 'allowed',
@@ -193,23 +247,23 @@ export function assemble(
     const nudgeDecision = decideNudge(nudgeContext);
     if (nudgeDecision.shouldNudge && nudgeDecision.nudge) {
       const nudgeBlock = formatNudgeForPrompt(nudgeDecision);
-      enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${nudgeBlock}`;
+      optionalSections.push({ key: 'nudge', content: nudgeBlock, sheddable: true, priority: 2 });
     }
   } catch (nudgeError) {
     console.warn('[Pipeline:Assemble] Nudge failed:', nudgeError);
   }
 
-  // Domain playbooks
+  // Domain playbooks (priority 3 -- shed third)
   try {
     const detectedDomain = detectDomain(input.message, effectiveEcosystem);
     const domainPlaybook = getPlaybook(detectedDomain);
     if (domainPlaybook) {
       const playbookGuidance = formatPlaybookForPrompt(domainPlaybook, input.message);
-      enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${playbookGuidance}`;
+      optionalSections.push({ key: 'playbook', content: playbookGuidance, sheddable: true, priority: 3 });
     }
   } catch { /* ignore */ }
 
-  // Training examples
+  // Training examples (priority 1 -- shed first)
   if (input.featureFlags.learning && input.externalData?.trainingExamples?.length) {
     const examplesSection = [
       '# high-quality examples',
@@ -227,8 +281,11 @@ export function assemble(
       }),
     ].join('\n\n');
 
-    enhancedSystemPrompt = `${enhancedSystemPrompt}\n\n---\n\n${examplesSection}`;
+    optionalSections.push({ key: 'training_examples', content: examplesSection, sheddable: true, priority: 1 });
   }
+
+  // Apply token budget -- shed lowest-priority sections first if over cap
+  const enhancedSystemPrompt = applyTokenBudget(basePrompt, optionalSections);
 
   return {
     systemPrompt: enhancedSystemPrompt,
