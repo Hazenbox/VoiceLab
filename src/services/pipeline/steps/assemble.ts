@@ -40,6 +40,15 @@ import {
   getPlaybook,
   formatPlaybookForPrompt,
 } from '../../playbooks/domainPlaybooks';
+import {
+  findMatchingTemplate,
+  generateMicroPlan,
+  formatPlanForPrompt,
+} from '../../conversation/microPlanGenerator';
+import {
+  detectBlockingInfo,
+  formatBlockingInfoForPrompt,
+} from '../../conversation/blockingInfoDetector';
 import type { PipelineInput, ClassifyResult, AssembleResult } from '../types';
 import type { RetrievedKnowledge, CorrectionEntry } from '../../knowledge';
 
@@ -262,6 +271,37 @@ export function assemble(
       optionalSections.push({ key: 'playbook', content: playbookGuidance, sheddable: true, priority: 3 });
     }
   } catch { /* ignore */ }
+
+  // Micro-plan for multi-step intents (priority 3 -- tied with playbook, shed third)
+  if (classification.intent === 'content_generation') {
+    try {
+      const topic = constitutionalContext?.tokens?.safetyResult?.domain || 'general';
+      const intent = constitutionalContext?.tokens?.intent || classification.intent;
+      const template = findMatchingTemplate(intent, topic);
+      if (template) {
+        const plan = generateMicroPlan(template);
+        const planBlock = formatPlanForPrompt(plan);
+        optionalSections.push({ key: 'micro_plan', content: planBlock, sheddable: true, priority: 3 });
+      }
+    } catch { /* ignore */ }
+  }
+
+  // Blocking info detection (priority 2 -- shed second, alongside nudge)
+  if (input.featureFlags.conversationState) {
+    try {
+      const turnNumber = (input.conversationHistory || []).filter(m => m.role === 'user').length + 1;
+      const blockingResult = detectBlockingInfo({
+        intent: classification.intent,
+        topic: constitutionalContext?.tokens?.safetyResult?.domain || 'general',
+        knownInfo: {},
+        turnNumber,
+      });
+      if (blockingResult.hasBlockingNeeds) {
+        const blockingBlock = formatBlockingInfoForPrompt(blockingResult);
+        optionalSections.push({ key: 'blocking_info', content: blockingBlock, sheddable: true, priority: 2 });
+      }
+    } catch { /* ignore */ }
+  }
 
   // Training examples (priority 1 -- shed first)
   if (input.featureFlags.learning && input.externalData?.trainingExamples?.length) {
