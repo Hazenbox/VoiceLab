@@ -45,32 +45,12 @@ export function getEnabledAgents(agentIds: ValidationAgentId[]): ValidationAgent
 // AGENT EXPORTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Voice Traits Agent
+// Forbidden Phrase Checker (used by constitutionalWrapper)
 export {
-  validateVoiceTraits,
-  hasTraitViolations,
-  getTraitSuggestions,
-  type VoiceTraitValidation,
-  type VoiceTraitsResult,
-} from './voiceTraitsAgent';
-
-// Emotion Response Agent
-export {
-  validateEmotionResponse,
-  respectsEmotionalContext,
-  getEmotionSuggestions,
-  type EmotionValidation,
-} from './emotionResponseAgent';
-
-// Pattern Block Agent
-export {
-  validatePatternBlocks,
-  hasBasicStructure,
-  getPatternTemplate,
-  suggestBlocks,
-  type PatternBlockValidation,
-  type PatternValidationResult,
-} from './patternBlockAgent';
+  checkForbiddenPhrases,
+  hasCriticalIssues,
+  getViolationsByCategory,
+} from './forbiddenPhraseChecker';
 
 
 // All Agents (individual exports)
