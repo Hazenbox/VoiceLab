@@ -64,6 +64,27 @@ export function finalize(
   };
 }
 
+/**
+ * Pattern to detect if user message indicates a complaint or escalation request.
+ * This is used to suppress joy/signatures which would feel inappropriate.
+ */
+const COMPLAINT_PATTERN = /\b(complaint|complain|unhappy|frustrated|angry|upset|disappointed|terrible|worst|awful|horrible|unacceptable|escalate|supervisor|manager|speak to someone)\b/i;
+
+/**
+ * Derive complaint status from the user's message or context.
+ * We can't rely on intent type since 'complaint' isn't a pipeline intent.
+ */
+function isUserComplaint(input: PipelineInput, constitutionalContext: unknown): boolean {
+  // Check if escalation was requested/offered (from constitutional context)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ctx = constitutionalContext as any;
+  if (ctx?.stateContext?.wasEscalated) return true;
+  if (ctx?.stateContext?.requestsEscalation) return true;
+  
+  // Check user message for complaint patterns
+  return COMPLAINT_PATTERN.test(input.message);
+}
+
 function applyFinishingLayer(
   content: string,
   classification: ClassifyResult,
@@ -75,6 +96,9 @@ function applyFinishingLayer(
   const userTurnCount = input.conversationHistory.filter(m => m.role === 'user').length + 1;
   const resolutionStatus = constitutionalContext?.stateContext?.resolutionStatus || 'in_progress';
   const hasSolution = /(?:step\s*\d|follow these|here's how|to fix this|you can|try this)/i.test(finished);
+  
+  // Derive complaint status from message content and context (not intent type)
+  const isComplaint = isUserComplaint(input, constitutionalContext);
 
   // Joy injection
   const joyContext: JoyContext = {
@@ -88,7 +112,7 @@ function applyFinishingLayer(
     isMilestone: false,
     safetyDomain: constitutionalContext?.safetyResult?.domain,
     riskLevel: constitutionalContext?.tokens?.risk,
-    isComplaint: classification.intent === 'complaint',
+    isComplaint,
     isEscalated: constitutionalContext?.stateContext?.wasEscalated || false,
     hasSolutionContext: hasSolution,
   };
@@ -111,7 +135,7 @@ function applyFinishingLayer(
     channel: input.contentChannel,
     safetyDomain: constitutionalContext?.safetyResult?.domain,
     riskLevel: constitutionalContext?.tokens?.risk,
-    isComplaint: classification.intent === 'complaint',
+    isComplaint,
     isHealthContext: constitutionalContext?.safetyResult?.domain?.includes('health'),
   };
 

@@ -173,6 +173,13 @@ export class AlibabaConversationProvider implements ConversationProvider {
 
       // Add assistant response to history
       this.conversationHistory.push({ role: 'assistant', content: response });
+      
+      // Truncate history to prevent unbounded memory growth
+      // Keep 2x the used context to have some buffer
+      const maxHistorySize = MAX_VOICE_CONVERSATION_HISTORY * 2;
+      if (this.conversationHistory.length > maxHistorySize) {
+        this.conversationHistory = this.conversationHistory.slice(-maxHistorySize);
+      }
 
       // Notify callback
       this.callbacks.onResponse?.(response);

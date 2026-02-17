@@ -9,7 +9,7 @@
 import { memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import { CodeBlock, InlineCode } from './CodeBlock';
 import { useThemeColors, chatTypography } from '../theme';
 import { Divider } from '@marcelinodzn/ds-react';
@@ -27,9 +27,32 @@ interface MessageContentProps {
   role: 'user' | 'assistant';
 }
 
+/**
+ * Custom sanitization schema that extends defaults with safe attributes.
+ * SECURITY: This prevents XSS from LLM-generated content while allowing
+ * necessary markdown formatting. No script tags, no event handlers.
+ */
+const sanitizeSchema = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    // Allow class names for code highlighting
+    code: [...(defaultSchema.attributes?.code || []), 'className'],
+    // Allow safe link attributes
+    a: ['href', 'title', 'target', 'rel'],
+    // Allow checkbox attributes for task lists
+    input: ['type', 'checked', 'disabled'],
+  },
+  // Only allow safe protocols for links
+  protocols: {
+    href: ['http', 'https', 'mailto'],
+  },
+};
+
 // Memoized remark/rehype plugins (stable references)
 const remarkPlugins = [remarkGfm];
-const rehypePlugins = [rehypeRaw];
+// SECURITY: Use rehype-sanitize instead of rehype-raw to prevent XSS
+const rehypePlugins = [[rehypeSanitize, sanitizeSchema]] as const;
 
 /**
  * Factory function to create markdown components with theme styling.
@@ -379,7 +402,8 @@ export const MessageContent = memo(function MessageContent({ content }: MessageC
     <div className="markdown-content">
       <ReactMarkdown
         remarkPlugins={remarkPlugins}
-        rehypePlugins={rehypePlugins}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        rehypePlugins={rehypePlugins as any}
         components={components}
       >
         {normalizedContent}

@@ -87,7 +87,7 @@ export async function validate(
   // 5. Auto-fix
   let autoFixPreview = null;
   if (trustScore && trustScore.autoFixableCount > 0) {
-    const fixResult = tryAutoFix(processedContent, trustScore, input, validationResult);
+    const fixResult = await tryAutoFix(processedContent, trustScore, input, validationResult);
     if (fixResult) {
       autoFixPreview = fixResult.preview;
       processedContent = fixResult.content;
@@ -210,7 +210,7 @@ function applyConstitutionalValidation(
   }
 }
 
-function tryAutoFix(
+async function tryAutoFix(
   content: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   trustScore: any,
@@ -218,7 +218,7 @@ function tryAutoFix(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   validationResult: any,
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): { preview: any; content: string; trustScore: any } | null {
+): Promise<{ preview: any; content: string; trustScore: any } | null> {
   try {
     const autoFixableViolations = trustScore.validationResults
       .flatMap((r: { violations: Array<{ autoFixable: boolean }> }) => r.violations)
@@ -243,17 +243,14 @@ function tryAutoFix(
       isPending: false,
     };
 
-    // Re-validate after fix
+    // Re-validate after fix to get accurate trust score
     let newTrustScore = trustScore;
     try {
-      const fixedValidation = runValidationPipeline(fixResult.fixedContent, undefined);
-      // runValidationPipeline is async, but we handle it gracefully
-      if (fixedValidation instanceof Promise) {
-        // Can't await in sync context -- skip re-scoring
-      } else {
-        newTrustScore = calculateTrustScore(fixedValidation, input.trustSettings);
-      }
-    } catch { /* ignore */ }
+      const fixedValidation = await runValidationPipeline(fixResult.fixedContent, undefined);
+      newTrustScore = calculateTrustScore(fixedValidation, input.trustSettings);
+    } catch (revalidateError) {
+      console.warn('[Pipeline:Validate] Re-validation after auto-fix failed, using original score:', revalidateError);
+    }
 
     return {
       preview,

@@ -26,7 +26,8 @@ export type SensitiveDataType =
   | 'password'
   | 'address'
   | 'name'
-  | 'date_of_birth';
+  | 'date_of_birth'
+  | 'ifsc_code';
 
 /**
  * Masking result

@@ -59,6 +59,9 @@ export function createTTSProviderWithFallback(
   const failedProviders = new Set<ProviderType>();
   const failureResetTimeout = 60000; // 1 minute cooldown
   
+  // Track cooldown timers to clean them up on disconnect (prevent memory leaks)
+  const cooldownTimers = new Map<ProviderType, ReturnType<typeof setTimeout>>();
+  
   const getProvider = (type: ProviderType): TTSProvider | null => {
     const entry = providers.find(p => p.type === type);
     if (!entry) return null;
@@ -122,11 +125,19 @@ export function createTTSProviderWithFallback(
           // Mark as failed (will be retried after cooldown)
           failedProviders.add(providerType);
           
+          // Clear any existing timer for this provider
+          const existingTimer = cooldownTimers.get(providerType);
+          if (existingTimer) {
+            clearTimeout(existingTimer);
+          }
+          
           // Schedule removal from failed set after cooldown
-          setTimeout(() => {
+          const timerId = setTimeout(() => {
             failedProviders.delete(providerType);
+            cooldownTimers.delete(providerType);
             console.log(`[TTSFallback] ${providerType} cooldown expired, eligible for retry`);
           }, failureResetTimeout);
+          cooldownTimers.set(providerType, timerId);
         }
       }
       
@@ -140,6 +151,13 @@ export function createTTSProviderWithFallback(
       try { return getPrimary().isReady(); } catch { return false; }
     },
     disconnect: () => {
+      // Clear all cooldown timers to prevent memory leaks
+      for (const timerId of cooldownTimers.values()) {
+        clearTimeout(timerId);
+      }
+      cooldownTimers.clear();
+      failedProviders.clear();
+      
       // Disconnect all initialized providers
       for (const entry of providers) {
         try { entry.provider?.disconnect(); } catch { /* ignore */ }

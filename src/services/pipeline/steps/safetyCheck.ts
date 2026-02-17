@@ -4,10 +4,10 @@
  * Pre-generation safety gate. If safety fails, pipeline stops -- no regeneration.
  * Pure function -- no side effects.
  * 
- * Error handling: Falls back to passed=true on safety check failure to avoid
- * blocking the entire pipeline due to a bug in safety classification.
- * This is a fail-open approach - safety issues in classification shouldn't
- * prevent users from getting responses. The LLM's built-in safety still applies.
+ * Error handling: FAIL-CLOSED approach. If safety classification throws an error,
+ * we block the request rather than allowing potentially unsafe content through.
+ * This is the security-first approach - a bug in safety classification should NOT
+ * result in bypassing safety entirely.
  */
 
 import { checkSafetyGate, type SafetyGateResult } from '../../safety';
@@ -59,13 +59,14 @@ export function safetyCheck(input: PipelineInput): SafetyCheckResult {
       modifications: result.routing === 'proceed_modified' ? result.modifications : undefined,
     };
   } catch (error) {
-    // Fail-open: allow pipeline to continue if safety check itself fails
-    // The LLM provider's built-in safety measures still apply
-    console.error('[Pipeline:SafetyCheck] Safety check failed, allowing pipeline to continue:', error);
+    // FAIL-CLOSED: Block the request if safety check fails
+    // A bug in safety classification should NOT bypass safety entirely
+    console.error('[Pipeline:SafetyCheck] Safety check failed, BLOCKING request for safety:', error);
     return {
-      passed: true,
+      passed: false,
       result: null,
-      routing: 'proceed_normal',
+      routing: 'block_and_log',
+      blockedReason: 'safety_check_error',
     };
   }
 }
