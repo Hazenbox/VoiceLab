@@ -41,13 +41,14 @@ const CONTENT_VERBS = /\b(generate|write|create|draft|compose|design|prepare|mak
 
 /**
  * Content type keywords that, combined with verbs, indicate content generation.
+ * Includes both channel formats (sms, email) and content functions (error, alert).
  */
-const CONTENT_TYPES = /\b(sms|email|push\s*notification|notification|banner|ad\s*copy|ad|flyer|whatsapp|social\s*media|social\s*post|post|copy|content|script|announcement|campaign|message|text\s+for|headline|tagline|subject\s*line|newsletter|memo|training|onboarding|faq|chatbot|ivr|voice\s*menu|voice\s*prompt|article|blog\s*post|blog|guide|documentation|whitepaper|report)\b/i;
+const CONTENT_TYPES = /\b(sms|email|push\s*notification|notification|banner|ad\s*copy|ad|flyer|whatsapp|social\s*media|social\s*post|post|copy|content|script|announcement|campaign|message|text\s+for|headline|tagline|subject\s*line|newsletter|memo|training|onboarding|faq|chatbot|ivr|voice\s*menu|voice\s*prompt|article|blog\s*post|blog|guide|documentation|whitepaper|report|error|response|alert|warning|confirmation|greeting|welcome|reminder|notice|disclaimer|template|dialog|tooltip|placeholder|label|description|summary|instruction|flow)\b/i;
 
 /**
  * Combined pattern: verb + optional filler + optional adjectives + content type
- * The (?:\w+\s+)*? allows adjectives like "error", "friendly", "promotional" between filler and content type
- * Examples: "Write an error message", "Create a friendly notification", "Draft a short SMS"
+ * The (?:\w+\s+)*? allows adjectives like "friendly", "promotional", "short" between filler and content type
+ * Examples: "Write an error", "Write error for failed otp", "Create a friendly notification", "Draft a short SMS"
  */
 const CONTENT_GENERATION_PATTERN = new RegExp(
   `${CONTENT_VERBS.source}\\s+(?:a\\s+|an\\s+|the\\s+|some\\s+|me\\s+(?:a\\s+|an\\s+)?)?(?:\\w+\\s+)*?${CONTENT_TYPES.source}`,
@@ -62,6 +63,8 @@ const EXPLICIT_CONTENT_PATTERNS = [
   /\bcontent\s+for\s+(jio|our|the)\b/i,
   /\b(brand|branded)\s+(content|copy|message)\b/i,
   /\bgenerate\s+(?:a\s+)?(?:jio|brand)\b/i,
+  // "write/create [word] for [context]" -- common shorthand for content generation
+  /\b(write|create|draft|generate)\s+(?:a\s+|an\s+)?\w+\s+for\s+(?:a\s+|an\s+|the\s+)?(?:failed|new|existing|pending|expired|successful|invalid|missing|incorrect|delayed|blocked|rejected|cancelled|overdue|upcoming)\b/i,
 ];
 
 /**
