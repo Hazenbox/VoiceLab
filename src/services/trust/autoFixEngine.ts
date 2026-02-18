@@ -555,21 +555,31 @@ function escapeRegex(str: string): string {
 function cleanOrphanedPunctuation(text: string): string {
   let cleaned = text
     // Remove leading punctuation at start of text and capitalize next letter
-    .replace(/^[,;:]\s*([a-z])/g, (_, letter) => letter.toUpperCase())
-    // Remove leading punctuation after newlines (including blank lines) and capitalize
-    .replace(/(\n+)[,;:]\s*([a-z])/g, (_, newlines, letter) => newlines + letter.toUpperCase())
+    .replace(/^[,;:]\s*([a-z])/gi, (_, letter) => letter.toUpperCase())
+    // Remove leading punctuation after newlines (including blank lines with optional spaces)
+    // This handles: \n, you -> \nYou and \n\n, you -> \n\nYou
+    .replace(/(\n+)\s*[,;:]\s*([a-z])/gi, (_, newlines, letter) => newlines + letter.toUpperCase())
     // Remove leading punctuation after sentence endings
     .replace(/([.!?])\s*[,;:]\s*/g, '$1 ')
     // Clean up multiple spaces (but preserve newlines)
     .replace(/[ \t]{2,}/g, ' ')
     // Clean up double punctuation like ", ," or ". ,"
     .replace(/[,;:]\s*[,;:]/g, ',')
+    // Handle standalone comma/semicolon/colon at start of any line (multiline mode)
+    // This catches orphaned punctuation that wasn't captured above
+    .replace(/^[,;:]\s*/gm, '')
     .trim();
   
-  // Ensure first character is capitalized
+  // Ensure first character is capitalized after all cleanup
   if (cleaned.length > 0 && /[a-z]/.test(cleaned[0])) {
     cleaned = cleaned[0].toUpperCase() + cleaned.slice(1);
   }
+  
+  // Also capitalize first letter of each paragraph (after blank lines)
+  cleaned = cleaned.replace(/(\n\n+)([a-z])/g, (_, newlines, letter) => newlines + letter.toUpperCase());
+  
+  // Capitalize first letter after single newlines too (for consistent line starts)
+  cleaned = cleaned.replace(/(\n)([a-z])/g, (_, newline, letter) => newline + letter.toUpperCase());
   
   return cleaned;
 }
