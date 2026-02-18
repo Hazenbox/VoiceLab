@@ -34,9 +34,11 @@ export {
   getChannelGroups,
   getChannelOptions,
   getChannelDefaults,
+  getChannelConfig,
   detectChannel,
   type ContentChannel,
   type ChannelGroup,
+  type ChannelGroupDefaults,
 } from './channels';
 
 // User Profile Engine

@@ -2,12 +2,14 @@
  * Response Length Enforcer
  *
  * Trims responses to channel-appropriate lengths at sentence boundaries.
+ * Uses getChannelConfig() (AD-3 inheritance) for limits.
  * Deterministic, safe, no semantic changes.
  *
  * @module services/postprocess/responseTrimmer
  */
 
 import type { ContentChannelType } from '../../types';
+import { getChannelConfig } from '../guidelines/channels';
 
 interface ChannelLimits {
   maxChars?: number;
@@ -15,22 +17,17 @@ interface ChannelLimits {
   maxSteps?: number;
 }
 
-const CHANNEL_LIMITS: Partial<Record<ContentChannelType, ChannelLimits>> = {
-  sms: { maxChars: 160 },
-  push_notification: { maxChars: 100 },
-  whatsapp_alert: { maxChars: 256 },
-  customer_care_chat: { maxWords: 180 },
-  whatsapp_support: { maxWords: 180 },
-  chatbot_faq: { maxWords: 180 },
-  ivr_voice_menu: { maxChars: 200 },
-  voice_assistant: { maxWords: 100 },
-  voice_prompts: { maxChars: 100 },
-  marketing_email: { maxWords: 400 },
-  transactional_email: { maxWords: 300 },
-  social_media_post: { maxChars: 280 },
-  digital_ads: { maxChars: 150 },
-  app_notification: { maxChars: 150 },
-};
+/**
+ * Resolve channel limits from the inheritance model.
+ * Character limits come from the channel's maxLength; word limits from group defaults.
+ */
+function resolveChannelLimits(channel: ContentChannelType): ChannelLimits {
+  const config = getChannelConfig(channel);
+  return {
+    maxChars: config.maxLength,
+    maxWords: config.maxWords,
+  };
+}
 
 export interface TrimResult {
   content: string;
@@ -43,10 +40,7 @@ export interface TrimResult {
  * Trim response to channel limits at sentence boundaries.
  */
 export function trimResponse(content: string, channel: ContentChannelType): TrimResult {
-  const limits = CHANNEL_LIMITS[channel];
-  if (!limits) {
-    return { content, wasTrimmed: false, originalLength: content.length, trimmedLength: content.length };
-  }
+  const limits = resolveChannelLimits(channel);
 
   let trimmed = content;
   let wasTrimmed = false;

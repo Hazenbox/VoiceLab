@@ -1,8 +1,11 @@
 /**
- * Channel Registry
+ * Channel Registry with Group Inheritance (AD-3)
  * 
- * 18 Channels representing different output formats for content.
- * Each channel has preset warmth, detail, and goal parameters.
+ * 9 channel groups with default properties. Individual channels inherit
+ * from their group and only override what's different. This makes adding
+ * new channels trivial: just specify the group and any overrides.
+ * 
+ * Use getChannelConfig() at runtime to get merged properties.
  * 
  * @module services/guidelines/channels
  */
@@ -36,6 +39,52 @@ export interface ContentChannel {
   description: string;
   guidelines: string;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHANNEL GROUP DEFAULTS (AD-3 Inheritance Model)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Group-level defaults. Channels inherit these unless overridden.
+ * New channels only need to specify group + any property they override.
+ */
+export interface ChannelGroupDefaults {
+  warmth: number;
+  detail: number;
+  maxWords: number;
+  structure: string;
+}
+
+export const CHANNEL_GROUP_DEFAULTS: Record<ChannelGroup, ChannelGroupDefaults> = {
+  'Quick Messages': { warmth: 5, detail: 2, maxWords: 30, structure: 'single line or 2-line alert' },
+  'Support & Chat': { warmth: 7, detail: 7, maxWords: 180, structure: 'greeting + solution + next step' },
+  'Voice': { warmth: 6, detail: 5, maxWords: 100, structure: 'spoken instructions, natural cadence' },
+  'Email': { warmth: 6, detail: 6, maxWords: 400, structure: 'subject + body + CTA + sign-off' },
+  'Marketing': { warmth: 6, detail: 4, maxWords: 100, structure: 'hook + message + CTA' },
+  'In-App': { warmth: 6, detail: 5, maxWords: 50, structure: 'contextual micro-copy' },
+  'Internal': { warmth: 6, detail: 7, maxWords: 300, structure: 'headline + body + action items' },
+};
+
+/**
+ * Get the resolved config for a channel by merging group defaults with channel overrides.
+ * This is the canonical way to get channel properties at runtime.
+ */
+export function getChannelConfig(id: ContentChannelType): ContentChannel & ChannelGroupDefaults {
+  const channel = getChannel(id);
+  const groupDefaults = CHANNEL_GROUP_DEFAULTS[channel.group];
+
+  return {
+    ...channel,
+    warmth: channel.warmth ?? groupDefaults.warmth,
+    detail: channel.detail ?? groupDefaults.detail,
+    maxWords: groupDefaults.maxWords,
+    structure: groupDefaults.structure,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CHANNEL REGISTRY
+// ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * 18 Channels - Complete registry with auto-set parameters
