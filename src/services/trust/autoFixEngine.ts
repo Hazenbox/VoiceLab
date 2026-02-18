@@ -359,7 +359,7 @@ const REPLACEMENTS: Record<string, ReplacementValue> = {
   // ── ANTI-PATTERN FIXES (ap-*) ──
   'unfortunately': { replacement: '', confidence: 0.90 },
   'regrettably': { replacement: '', confidence: 0.90 },
-  'as an AI': { replacement: '', confidence: 0.85 },
+  // NOTE: "as an AI" is ALLOWED per KB for transparent AI self-identification. Do not auto-fix.
   'as a language model': { replacement: '', confidence: 0.85 },
   "here's what you need to do": { replacement: ["here's how we can sort this out", "let's work through this together"], confidence: 0.85 },
   'you need to follow these steps': { replacement: ["here's how we can fix this", "let me walk you through this"], confidence: 0.85 },
@@ -373,6 +373,14 @@ const REPLACEMENTS: Record<string, ReplacementValue> = {
   'i hope that helps': { replacement: ["i'm here if you need anything else", "let me know if you need more help"], confidence: 0.85 },
   'please note that': { replacement: '', confidence: 0.90 },
   'kindly note that': { replacement: '', confidence: 0.90 },
+
+  // ── SUPERLATIVES / SCARCITY / FINANCIAL (validation agents) ──
+  'fastest': { replacement: ['one of the fastest', 'a very fast'], confidence: 0.85 },
+  'cheapest': { replacement: ['one of the most affordable', 'a very affordable'], confidence: 0.85 },
+  'only 5 left': { replacement: 'available for a limited time', confidence: 0.90 },
+  'only 3 left': { replacement: 'available for a limited time', confidence: 0.90 },
+  'only 2 left': { replacement: 'available for a limited time', confidence: 0.90 },
+  'only 1 left': { replacement: 'available for a limited time', confidence: 0.90 },
 
   // ── TIER B: Semantic replacements (max 25, context-guarded) ──
   // AD-4: 2-3 alternatives per replacement for variety
@@ -538,9 +546,10 @@ export function generateAutoFixes(
       } else if (violation.suggestion.length < 100) {
         // Check if suggestion is instructional (not a literal replacement)
         // These are guidance for humans, not actual replacement values
-        const isInstructional = /^(Add|Use|Consider|Avoid|Remove|Describe|Rephrase|Break|Simplify|Put|State|Lowercase|Substantiate|Here's)/i.test(violation.suggestion);
+        const isInstructional = /^(Add|Use|Consider|Avoid|Remove|Describe|Rephrase|Break|Simplify|Put|State|Lowercase|Uppercase|Capitalize|Substantiate|Rewrite|Check|Ensure|Fix|Convert|Replace|Here's)/i.test(violation.suggestion);
+        const isTooLong = violation.suggestion.split(/\s+/).length > (violation.text.split(/\s+/).length * 3);
         
-        if (!isInstructional) {
+        if (!isInstructional && !isTooLong) {
           // Fallback to raw suggestion - only use short, non-instructional suggestions
           fixes.push({
             original: violation.text,
@@ -731,6 +740,68 @@ export function previewAutoFixes(
 }
 
 /**
+ * Acronyms that should preserve uppercase in sentence-case conversion
+ */
+const ACRONYMS = new Set([
+  'SMS', 'OTP', 'SIM', 'UPI', 'EMI', 'GST', 'BAL', 'PIN', 'ID', 'PAN',
+  'KYC', 'PDF', 'URL', 'FAQ', 'IVR', 'USSD', 'QR', 'HD', 'AI', 'TV',
+  'GB', 'MB', 'KB', 'TB', 'LTE', 'WiFi', 'Wi-Fi', 'IMEI', 'IFSC', 'ATM',
+]);
+
+/**
+ * Direct content scanning against ALL REPLACEMENTS keys.
+ * Bypasses validation agents entirely -- if a phrase is in REPLACEMENTS,
+ * it gets replaced regardless of whether any agent flagged it.
+ * Keys are processed longest-first to avoid partial matches.
+ */
+export function applyDirectReplacements(content: string): string {
+  let result = content;
+  const sorted = Object.entries(REPLACEMENTS)
+    .sort((a, b) => b[0].length - a[0].length);
+
+  for (const [phrase, value] of sorted) {
+    if (phrase.length < 2) continue;
+    if (value.replacement === '' && value.confidence < 0.85) continue;
+    const escaped = escapeRegex(phrase);
+    const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+    if (regex.test(result)) {
+      const rep = randomPick(value.replacement);
+      result = result.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (m) => matchCase(m, rep));
+    }
+  }
+  return cleanOrphanedPunctuation(result);
+}
+
+/**
+ * Convert Title Case text to sentence case while preserving brand names and acronyms.
+ * Targets bold headings, numbered list headings, and standalone title-cased lines.
+ */
+function toSentenceCase(text: string): string {
+  return text.split('\n').map(line => {
+    const trimmed = line.trim();
+    if (!trimmed) return line;
+
+    const isTitleCased = (s: string) => {
+      const words = s.replace(/[*#\d.:\-]+/g, ' ').trim().split(/\s+/).filter(w => w.length > 2);
+      if (words.length < 2) return false;
+      const capCount = words.filter(w => /^[A-Z][a-z]/.test(w)).length;
+      return capCount / words.length >= 0.6;
+    };
+
+    if (!isTitleCased(trimmed)) return line;
+
+    return line.replace(/\b([A-Z][a-z]+)\b/g, (word, _w, offset) => {
+      if (BRAND_NAMES.has(word)) return word;
+      if (ACRONYMS.has(word.toUpperCase())) return word;
+      const beforeWord = line.substring(0, offset);
+      const isFirstMeaningfulWord = /^[\s*#\d.\-:]*$/.test(beforeWord);
+      if (isFirstMeaningfulWord) return word;
+      return word.toLowerCase();
+    });
+  }).join('\n');
+}
+
+/**
  * Deterministic format fixes per KB/09 wording standards.
  * Applied after word replacements for consistent formatting.
  */
@@ -754,13 +825,45 @@ export function applyFormatFixes(content: string): string {
   // Oxford comma removal: "a, b, and c" -> "a, b and c" (Indian English)
   fixed = fixed.replace(/,\s+and\s+/gi, ' and ');
 
+  // 24hr time -> 12hr time: "14:00 hrs" -> "2:00 pm"
+  fixed = fixed.replace(/\b([01]?\d|2[0-3]):([0-5]\d)\s*hrs?\b/gi, (_m, h, min) => {
+    const hour = parseInt(h, 10);
+    const suffix = hour >= 12 ? 'pm' : 'am';
+    const h12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${h12}:${min} ${suffix}`;
+  });
+
+  // Western number format -> Indian: "1,000,000" -> "10,00,000"
+  fixed = fixed.replace(/\b(\d{1,3})(,\d{3}){2,}\b/g, (match) => {
+    const num = parseInt(match.replace(/,/g, ''), 10);
+    if (isNaN(num)) return match;
+    return num.toLocaleString('en-IN');
+  });
+
+  // All-caps text (>2 words) -> sentence case (preserving acronyms)
+  fixed = fixed.replace(/\b([A-Z]{2,}\s+){2,}[A-Z]{2,}\b/g, (match) => {
+    const words = match.split(/\s+/);
+    return words.map((w, i) => {
+      if (ACRONYMS.has(w)) return w;
+      if (BRAND_NAMES.has(w)) return w;
+      if (i === 0) return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      return w.toLowerCase();
+    }).join(' ');
+  });
+
+  // Title Case -> sentence case (headings, bold labels, numbered items)
+  fixed = toSentenceCase(fixed);
+
   return fixed;
 }
+
+export { cleanOrphanedPunctuation };
 
 export default {
   generateAutoFixes,
   applyAutoFixes,
   applyFormatFixes,
+  applyDirectReplacements,
   previewAutoFixes,
   setDynamicAutoFixRules,
   clearDynamicAutoFixRules,

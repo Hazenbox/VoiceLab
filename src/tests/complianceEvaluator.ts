@@ -14,7 +14,7 @@ import { normalizeEntities } from '../services/postprocess/entityNormalizer';
 import { detectAndMaskPII } from '../services/postprocess/piiDetector';
 import { checkForbiddenPhrases } from '../services/validation/agents/forbiddenPhraseChecker';
 import { runComplianceVerifier } from '../services/postprocess/complianceVerifier';
-import { generateAutoFixes, applyAutoFixes, applyFormatFixes } from '../services/trust/autoFixEngine';
+import { generateAutoFixes, applyAutoFixes, applyFormatFixes, applyDirectReplacements } from '../services/trust/autoFixEngine';
 import { runQuickValidation } from '../services/validation/validationPipeline';
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -130,8 +130,11 @@ function runCheckerMode(test: ComplianceTestCase): string {
   const piiResult = detectAndMaskPII(content);
   content = piiResult.content;
 
-  // 3. Format fixes (Indian number format, AM/PM lowercase, Oxford comma)
+  // 3. Format fixes (Indian number format, AM/PM lowercase, Oxford comma, title case, 24hr time)
   content = applyFormatFixes(content);
+
+  // 3.5. Direct replacement scan (bypasses validation agents, catches all REPLACEMENTS keys)
+  content = applyDirectReplacements(content);
 
   // 4. Auto-fix engine (vocabulary replacements: jargon, gender, accessibility, tone)
   const validation = runQuickValidation(content);
@@ -146,7 +149,7 @@ function runCheckerMode(test: ComplianceTestCase): string {
 
   // 5. Forbidden phrase checker (clean forbidden phrases via replacement)
   const fpResult = checkForbiddenPhrases(content);
-  if (fpResult.cleanedResponse) {
+  if (fpResult.cleanedResponse !== undefined) {
     content = fpResult.cleanedResponse;
   }
 
