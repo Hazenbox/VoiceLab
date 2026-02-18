@@ -35,6 +35,7 @@ import {
 } from './services/knowledge';
 // Project auto-naming (ChatGPT-style)
 import { generateProjectNameFromExchange } from './services/projectNaming';
+import { ComplianceTestRunner } from './components/ComplianceTestRunner';
 import type { 
   FeedbackPayload, 
 } from './types';
@@ -386,6 +387,10 @@ function App({ colorMode, onColorModeChange }: AppProps) {
 
   if (activeView === 'how-it-works') {
     return <HowItWorksLayout {...sidebarProps} />;
+  }
+
+  if (activeView === 'compliance-tests') {
+    return <ComplianceTestRunner />;
   }
 
   return (

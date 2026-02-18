@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
 import { useProject } from '../context/ProjectContext';
 import { useThemeColors } from '../theme';
+import { useUIStore } from '../stores/uiStore';
 import type { ColorMode } from '../types';
 import { Button, Avatar, Text, Label, Divider, Input, Icon } from '@marcelinodzn/ds-react';
 import { LazyIcon } from '@marcelinodzn/ds-react/icons';
@@ -258,6 +259,11 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       icon: <DSIcon name="IcLightbulb" size="S" attention="high" appearance="neutral" />,
     }] : []),
     {
+      value: 'compliance-tests',
+      label: 'Compliance Tests',
+      icon: <DSIcon name="IcSettings" size="S" attention="high" appearance="neutral" />,
+    },
+    {
       value: 'admin-panel',
       label: 'Admin Panel',
       icon: <DSIcon name="IcSettings" size="S" attention="high" appearance="neutral" />,
@@ -279,6 +285,9 @@ export const ProjectSidebar = memo(function ProjectSidebar({
         break;
       case 'how-it-works':
         onNavigateToHowItWorks?.();
+        break;
+      case 'compliance-tests':
+        useUIStore.getState().setActiveView('compliance-tests');
         break;
       case 'admin-panel':
         window.location.href = '/admin';

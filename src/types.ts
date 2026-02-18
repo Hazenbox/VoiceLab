@@ -563,7 +563,7 @@ export interface AppError {
 }
 
 // Active view type
-export type ActiveView = 'main' | 'docs' | 'how-it-works';
+export type ActiveView = 'main' | 'docs' | 'how-it-works' | 'compliance-tests';
 
 // Active tab type
 export type ActiveTab = 'tts' | 'talk' | 'copy';
