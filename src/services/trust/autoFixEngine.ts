@@ -2,6 +2,7 @@
  * Auto-Fix Engine
  * 
  * Automatically suggests and applies fixes for content violations.
+ * Supports replacement variety (AD-4 anti-blandness) via randomPick.
  * 
  * UNIFIED SOURCE: Imports vocabulary alternatives from vocabulary.ts
  * to ensure all terms work with the auto-fix preview feature.
@@ -10,6 +11,19 @@
 import type { AutoFix, Violation } from '../../types';
 import { runQuickValidation } from '../validation/validationPipeline';
 import { SIMPLE_ALTERNATIVES, GENDER_NEUTRAL_ALTERNATIVES } from '../guidelines/vocabulary';
+
+/**
+ * Pick a random element from an array, or return the string directly.
+ * Used for replacement variety (AD-4) to prevent monotone outputs.
+ */
+function randomPick(value: string | string[]): string {
+  if (Array.isArray(value)) {
+    return value[Math.floor(Math.random() * value.length)];
+  }
+  return value;
+}
+
+type ReplacementValue = { replacement: string | string[]; confidence: number };
 
 /**
  * Auto-fix result
@@ -30,7 +44,7 @@ export interface AutoFixResult {
  * from vocabulary.ts to ensure the auto-fix engine can generate fixes for all
  * vocabulary terms, enabling the side-by-side preview.
  */
-const VOCABULARY_REPLACEMENTS: Record<string, { replacement: string; confidence: number }> = {};
+const VOCABULARY_REPLACEMENTS: Record<string, ReplacementValue> = {};
 
 // Add SIMPLE_ALTERNATIVES with 0.90 confidence (e.g., utilize -> use)
 for (const [from, to] of Object.entries(SIMPLE_ALTERNATIVES)) {
@@ -54,7 +68,7 @@ for (const [from, to] of Object.entries(GENDER_NEUTRAL_ALTERNATIVES)) {
  * - Confidence reflects how safe it is to auto-apply without human review
  * - All keys should be lowercase (matching is case-insensitive)
  */
-const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> = {
+const REPLACEMENTS: Record<string, ReplacementValue> = {
   // === Import all vocabulary alternatives (SINGLE SOURCE OF TRUTH) ===
   ...VOCABULARY_REPLACEMENTS,
   
@@ -76,24 +90,24 @@ const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> 
   
   // Jargon variants
   'utilise': { replacement: 'use', confidence: 0.95 },
-  'avail': { replacement: 'get', confidence: 0.90 },
-  'availing': { replacement: 'getting', confidence: 0.90 },
-  'availed': { replacement: 'got', confidence: 0.90 },
+  'avail': { replacement: ['get', 'use', 'access'], confidence: 0.90 },
+  'availing': { replacement: ['getting', 'using', 'accessing'], confidence: 0.90 },
+  'availed': { replacement: ['got', 'used', 'accessed'], confidence: 0.90 },
   
-  // Wordy phrases - Complex Words category
+  // Wordy phrases - Complex Words category (AD-4: variety alternatives)
   'in order to': { replacement: 'to', confidence: 0.98 },
   'at this point in time': { replacement: 'now', confidence: 0.98 },
-  'due to the fact that': { replacement: 'because', confidence: 0.98 },
+  'due to the fact that': { replacement: ['because', 'since'], confidence: 0.98 },
   'for the purpose of': { replacement: 'to', confidence: 0.95 },
   'in the event that': { replacement: 'if', confidence: 0.95 },
-  'with regard to': { replacement: 'about', confidence: 0.90 },
-  'pursuant to': { replacement: 'following', confidence: 0.90 },
-  'in accordance with': { replacement: 'following', confidence: 0.90 },
-  'as a matter of fact': { replacement: 'actually', confidence: 0.95 },
-  'it should be noted that': { replacement: 'note that', confidence: 0.95 },
+  'with regard to': { replacement: ['about', 'regarding'], confidence: 0.90 },
+  'pursuant to': { replacement: ['following', 'based on'], confidence: 0.90 },
+  'in accordance with': { replacement: ['following', 'based on', 'per'], confidence: 0.90 },
+  'as a matter of fact': { replacement: ['actually', 'in fact'], confidence: 0.95 },
+  'it should be noted that': { replacement: ['note that', 'keep in mind'], confidence: 0.95 },
   'in lieu of': { replacement: 'instead of', confidence: 0.95 },
-  'with respect to': { replacement: 'about', confidence: 0.90 },
-  'pertaining to': { replacement: 'about', confidence: 0.90 },
+  'with respect to': { replacement: ['about', 'regarding'], confidence: 0.90 },
+  'pertaining to': { replacement: ['about', 'related to'], confidence: 0.90 },
   'notwithstanding': { replacement: 'despite', confidence: 0.90 },
   
   // Marketing jargon - Simplification category
@@ -306,9 +320,9 @@ const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> 
   'make an attempt': { replacement: 'try', confidence: 0.98 },
   'give consideration to': { replacement: 'consider', confidence: 0.98 },
 
-  // Tone softeners (KB: never blame, never dismiss)
-  'you need to': { replacement: 'you can', confidence: 0.85 },
-  'you must': { replacement: 'please', confidence: 0.80 },
+  // Tone softeners (KB: never blame, never dismiss) -- AD-4 variety
+  'you need to': { replacement: ['you can', 'you might want to', "here's how you can"], confidence: 0.85 },
+  'you must': { replacement: ['please', 'you can'], confidence: 0.80 },
   'trust me': { replacement: '', confidence: 0.90 },
   'obviously': { replacement: '', confidence: 0.90 },
   'basically': { replacement: '', confidence: 0.85 },
@@ -316,21 +330,20 @@ const REPLACEMENTS: Record<string, { replacement: string; confidence: number }> 
   'honestly': { replacement: '', confidence: 0.85 },
 
   // ── TIER B: Semantic replacements (max 25, context-guarded) ──
-  // These replacements change meaning slightly. Use with caution.
-  // Only applied when confidence check passes.
-  'guarantee': { replacement: 'aim to help', confidence: 0.75 },
-  'guaranteed': { replacement: 'expected', confidence: 0.75 },
-  'never fails': { replacement: 'designed to be reliable', confidence: 0.75 },
-  'always works': { replacement: 'designed to work reliably', confidence: 0.75 },
-  'impossible': { replacement: 'unlikely', confidence: 0.70 },
-  'definitely': { replacement: 'likely', confidence: 0.70 },
-  'absolutely': { replacement: 'yes', confidence: 0.70 },
-  'the best': { replacement: 'a great option', confidence: 0.70 },
-  'the only': { replacement: 'one of the', confidence: 0.70 },
+  // AD-4: 2-3 alternatives per replacement for variety
+  'guarantee': { replacement: ['aim to help', 'do our best to'], confidence: 0.75 },
+  'guaranteed': { replacement: ['expected', 'designed to'], confidence: 0.75 },
+  'never fails': { replacement: ['designed to be reliable', 'built to be dependable'], confidence: 0.75 },
+  'always works': { replacement: ['designed to work reliably', 'built to be dependable'], confidence: 0.75 },
+  'impossible': { replacement: ['unlikely', 'not expected'], confidence: 0.70 },
+  'definitely': { replacement: ['likely', 'very likely'], confidence: 0.70 },
+  'absolutely': { replacement: ['yes', 'certainly'], confidence: 0.70 },
+  'the best': { replacement: ['a great option', 'a strong choice', 'a solid option'], confidence: 0.70 },
+  'the only': { replacement: ['one of the', 'a key'], confidence: 0.70 },
   'without a doubt': { replacement: '', confidence: 0.70 },
   'rest assured': { replacement: '', confidence: 0.75 },
-  'no worries': { replacement: "I'm here to help", confidence: 0.75 },
-  'don\'t worry': { replacement: "I'm here to help", confidence: 0.75 },
+  'no worries': { replacement: ["i'm here to help", "let me help with that", "i've got you"], confidence: 0.75 },
+  'don\'t worry': { replacement: ["i'm here to help", "let me help with that", "i've got you"], confidence: 0.75 },
 };
 
 /**
@@ -376,8 +389,8 @@ export function clearDynamicAutoFixRules(): void {
  */
 function getMergedReplacements(
   dynamicReplacements?: DynamicReplacement[]
-): Record<string, { replacement: string; confidence: number }> {
-  const mergedReplacements: Record<string, { replacement: string; confidence: number }> = { ...REPLACEMENTS };
+): Record<string, ReplacementValue> {
+  const mergedReplacements: Record<string, ReplacementValue> = { ...REPLACEMENTS };
   
   // Use provided dynamic replacements, or fall back to cached ones
   const dynamicToUse = dynamicReplacements ?? cachedDynamicReplacements;
@@ -456,10 +469,10 @@ export function generateAutoFixes(
     const directFix = mergedReplacements[text];
     
     if (directFix) {
-      // Direct replacement from dictionary - highest confidence
+      const picked = randomPick(directFix.replacement);
       fixes.push({
         original: violation.text,
-        replacement: matchCase(violation.text, directFix.replacement),
+        replacement: matchCase(violation.text, picked),
         confidence: directFix.confidence,
         rule: violation.rule,
         violation,
@@ -672,9 +685,37 @@ export function previewAutoFixes(
   };
 }
 
+/**
+ * Deterministic format fixes per KB/09 wording standards.
+ * Applied after word replacements for consistent formatting.
+ */
+export function applyFormatFixes(content: string): string {
+  let fixed = content;
+
+  // Indian number format: 100000 -> 1,00,000 (lakhs/crores)
+  fixed = fixed.replace(/\b(\d{1,2})((\d{2})+)(\d{3})\b/g, (_match, head, _mid, _g3, tail) => {
+    const middle = _mid as string;
+    const parts = middle.match(/.{2}/g) || [];
+    return head + ',' + parts.join(',') + ',' + tail;
+  });
+
+  // Percent: "50 %" or "50 percent" -> "50%"
+  fixed = fixed.replace(/(\d)\s+%/g, '$1%');
+  fixed = fixed.replace(/(\d)\s+percent\b/gi, '$1%');
+
+  // Time format: "10:00 AM" -> "10:00 am" (lowercase am/pm per KB)
+  fixed = fixed.replace(/(\d{1,2}:\d{2})\s*(AM|PM)/g, (_m, time, ampm) => `${time} ${(ampm as string).toLowerCase()}`);
+
+  // Oxford comma removal: "a, b, and c" -> "a, b and c" (Indian English)
+  fixed = fixed.replace(/,\s+and\s+/gi, ' and ');
+
+  return fixed;
+}
+
 export default {
   generateAutoFixes,
   applyAutoFixes,
+  applyFormatFixes,
   previewAutoFixes,
   setDynamicAutoFixRules,
   clearDynamicAutoFixRules,

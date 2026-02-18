@@ -21,7 +21,9 @@ export type ViolationCategory =
   | 'blame'             // Blaming user or others
   | 'dismissive'        // Dismissing user concerns
   | 'corporate_speak'   // Inappropriate corporate language
-  | 'sensitivity';      // Insensitive language
+  | 'sensitivity'       // Insensitive language
+  | 'false_empathy'     // Empty empathy without follow-through (KB/13)
+  | 'passive_institutional'; // Passive/institutional phrasing (KB/11)
 
 /**
  * Forbidden phrase match
@@ -252,6 +254,50 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
       description: 'dismissing complaints',
     },
   ],
+
+  // KB/13: False empathy - empty sympathy without action
+  false_empathy: [
+    {
+      pattern: /\bi (completely |totally |fully )?understand your (frustration|concern|issue|problem)\.\s*$/gim,
+      severity: 'warning',
+      replacement: '',
+      description: 'empathy statement without follow-through action',
+    },
+    {
+      pattern: /\bi('m| am) sorry (to hear|for the|about).*?\.\s*(?!(let me|here|i'll|we can|to help))/gi,
+      severity: 'warning',
+      replacement: '',
+      description: 'apology without immediate next step',
+    },
+    {
+      pattern: /\b(we value your|your .+ is important to us|thank you for your patience)\b/gi,
+      severity: 'warning',
+      replacement: '',
+      description: 'corporate filler empathy',
+    },
+  ],
+
+  // KB/11: Passive/institutional phrasing
+  passive_institutional: [
+    {
+      pattern: /\b(the request has been|your request has been|the issue has been) (logged|noted|recorded|registered)\b/gi,
+      severity: 'warning',
+      replacement: '',
+      description: 'passive institutional language',
+    },
+    {
+      pattern: /\b(please be (informed|advised|noted) that)\b/gi,
+      severity: 'warning',
+      replacement: '',
+      description: 'institutional advisory tone',
+    },
+    {
+      pattern: /\b(as per (our |the )?(policy|guidelines|terms|regulations))\b/gi,
+      severity: 'warning',
+      replacement: '',
+      description: 'hiding behind policy',
+    },
+  ],
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -362,6 +408,8 @@ export function getViolationsByCategory(
     dismissive: [],
     corporate_speak: [],
     sensitivity: [],
+    false_empathy: [],
+    passive_institutional: [],
   };
   
   for (const violation of result.violations) {

@@ -85,5 +85,5 @@ export {
 } from './forbiddenPhraseChecker';
 
 
-// All Agents (individual exports)
-export { ALL_AGENTS } from './allAgents';
+// All Agents (individual exports + execution order)
+export { ALL_AGENTS, AGENT_EXECUTION_ORDER } from './allAgents';

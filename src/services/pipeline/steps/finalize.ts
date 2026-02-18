@@ -19,6 +19,9 @@ import {
 } from '../../finishing/signatureSelector';
 import { normalizeEntities } from '../../postprocess/entityNormalizer';
 import { conditionalPromoStrip } from '../../postprocess/promoStripper';
+import { detectAndMaskPII } from '../../postprocess/piiDetector';
+import { checkAntiPatterns } from '../../postprocess/antiPatternChecker';
+import { applyFormatFixes } from '../../trust/autoFixEngine';
 import type { FinalizeResult, ClassifyResult, AssembleResult } from '../types';
 import type { PipelineInput } from '../types';
 
@@ -76,7 +79,37 @@ export function finalize(
     console.warn('[Pipeline:Finalize] Promo stripping failed:', error);
   }
 
-  // 4. Privacy masking
+  // 4. Format fixes (Indian number format, time format, Oxford comma)
+  try {
+    finalContent = applyFormatFixes(finalContent);
+  } catch (error) {
+    console.warn('[Pipeline:Finalize] Format fixes failed:', error);
+  }
+
+  // 5. PII detection & masking
+  let piiCount = 0;
+  try {
+    const piiResult = detectAndMaskPII(finalContent);
+    if (piiResult.detectedCount > 0) {
+      finalContent = piiResult.content;
+      piiCount = piiResult.detectedCount;
+      console.log(`[Pipeline:Finalize] Masked ${piiCount} PII instances`);
+    }
+  } catch (error) {
+    console.warn('[Pipeline:Finalize] PII detection failed:', error);
+  }
+
+  // 6. Anti-pattern check (log warnings, don't block)
+  try {
+    const apResult = checkAntiPatterns(finalContent);
+    if (apResult.violations.length > 0) {
+      console.log(`[Pipeline:Finalize] Anti-pattern violations: ${apResult.violations.map(v => v.id).join(', ')}`);
+    }
+  } catch (error) {
+    console.warn('[Pipeline:Finalize] Anti-pattern check failed:', error);
+  }
+
+  // 7. Legacy privacy masking (fallback)
   let wasPrivacyMasked = false;
   try {
     if (containsSensitiveData(finalContent)) {
