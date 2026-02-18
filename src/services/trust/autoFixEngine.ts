@@ -548,6 +548,33 @@ function escapeRegex(str: string): string {
 }
 
 /**
+ * Clean up orphaned punctuation after word replacements.
+ * When words like "obviously" are removed, they can leave behind orphaned
+ * punctuation like ", you can..." which should become "You can..."
+ */
+function cleanOrphanedPunctuation(text: string): string {
+  let cleaned = text
+    // Remove leading punctuation at start of text and capitalize next letter
+    .replace(/^[,;:]\s*([a-z])/g, (_, letter) => letter.toUpperCase())
+    // Remove leading punctuation after newlines and capitalize
+    .replace(/\n[,;:]\s*([a-z])/g, (_, letter) => '\n' + letter.toUpperCase())
+    // Remove leading punctuation after sentence endings
+    .replace(/([.!?])\s*[,;:]\s*/g, '$1 ')
+    // Clean up multiple spaces
+    .replace(/\s{2,}/g, ' ')
+    // Clean up double punctuation like ", ," or ". ,"
+    .replace(/[,;:]\s*[,;:]/g, ',')
+    .trim();
+  
+  // Ensure first character is capitalized
+  if (cleaned.length > 0 && /[a-z]/.test(cleaned[0])) {
+    cleaned = cleaned[0].toUpperCase() + cleaned.slice(1);
+  }
+  
+  return cleaned;
+}
+
+/**
  * Apply auto-fixes to content
  * 
  * IMPORTANT: Uses global regex replacement to fix ALL occurrences of a word,
@@ -584,6 +611,10 @@ export function applyAutoFixes(
       appliedFixes.push(fix);
     }
   }
+  
+  // Clean up orphaned punctuation after replacements
+  // e.g., "Obviously, you can..." → ", you can..." → "You can..."
+  fixedContent = cleanOrphanedPunctuation(fixedContent);
   
   const skipped = fixes.filter(f => f.confidence < minConfidence);
   skippedFixes.push(...skipped);
