@@ -644,8 +644,9 @@ export const ChatPanel = memo(function ChatPanel({
           />
           
           {/* Actions row: Trust Badge + Message Actions + Auto-fixed badge */}
+          {/* Trust badge and auto-fixed label only shown for branded content, not general chat */}
           <div className="flex items-center gap-0 mt-1.5 -ml-2">
-            {message.trustScore && (
+            {message.trustScore && message.messageIntent !== 'general_chat' && (
               <TrustBadge
                 trustScore={message.trustScore}
                 onClick={() => onTrustBadgeClick?.(message.id)}
@@ -664,7 +665,7 @@ export const ChatPanel = memo(function ChatPanel({
                 feedbackGiven={message.userFeedback}
               />
             )}
-            {hasAutoFixPreview && (
+            {hasAutoFixPreview && message.messageIntent !== 'general_chat' && (
               <Badge variant="positive">auto-fixed</Badge>
             )}
           </div>

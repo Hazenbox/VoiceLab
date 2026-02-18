@@ -81,12 +81,45 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     // 5. Generate content (supports streaming via callbacks)
     let generated = await generate(input, assembled.systemPrompt, classification);
 
-    // 6. Validate -- ALL intents go through validation (forbidden phrases, PII, auto-fix)
-    //    general_chat uses the same pipeline but does NOT trigger retry on failure
+    // 6-10: For general_chat, skip validation/trust/auto-fix/compliance.
+    //        These are content-trust features for branded content only.
+    if (isGeneralChat) {
+      const finalized = finalize(generated.content, input, classification, assembled);
+      const metadata = buildMetadata(
+        input,
+        timer.stop(),
+        startedAt,
+        generated.model,
+        retrieval.retrievalCount,
+        classification,
+        generated.usage,
+      );
+
+      const result: PipelineResult = {
+        success: true,
+        output: finalized.content,
+        pipelinePath: 'general_chat',
+        validation: null,
+        trustScore: null,
+        evidence: null,
+        autoFixPreview: null,
+        validationSummary: null,
+        generationContext: null,
+        retryCount: 0,
+        metadata,
+        safetyResult: safety.result,
+        intent: 'general_chat',
+      };
+
+      logPipelineRun(input, result);
+      return result;
+    }
+
+    // 6. Validate (content_generation and jio_inquiry only)
     let validation = await validate(input, generated.content, assembled);
 
-    // 7. Smart retry with failure feedback (max 1 retry, non-general-chat only)
-    if (!isGeneralChat && !validation.passed && retryCount < MAX_RETRIES) {
+    // 7. Smart retry with failure feedback (max 1 retry)
+    if (!validation.passed && retryCount < MAX_RETRIES) {
       retryCount++;
       const retryFeedback = buildRetryFeedback(validation);
       const retryPrompt = retryFeedback
@@ -98,8 +131,6 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     }
 
     // 8. LLM-as-judge compliance check (only for content_generation intent)
-    //    Catches subjective rules: empathy, turn discipline, structure, warmth, responsibility
-    //    If judge fails, silently passes through original content
     let judgedContent = validation.content;
     if (classification.intent === 'content_generation' && validation.passed) {
       try {
