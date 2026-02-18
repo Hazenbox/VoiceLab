@@ -329,6 +329,51 @@ const REPLACEMENTS: Record<string, ReplacementValue> = {
   'actually': { replacement: '', confidence: 0.80 },
   'honestly': { replacement: '', confidence: 0.85 },
 
+  // ── CULTURAL SENSITIVITY (validation agent cs-*) ──
+  'madrasi': { replacement: ['users in the region', 'users in that area'], confidence: 0.95 },
+  'castes': { replacement: 'communities', confidence: 0.95 },
+  'fair-skinned': { replacement: 'light display', confidence: 0.90 },
+  'non-veg': { replacement: 'certain dietary', confidence: 0.85 },
+  'illiterate': { replacement: ['users who need guidance', 'users new to digital services'], confidence: 0.95 },
+
+  // ── ACCESSIBILITY (validation agent ac-*) ──
+  'red button': { replacement: ['the button marked "continue"', 'the continue button'], confidence: 0.85 },
+  'simply': { replacement: '', confidence: 0.85 },
+
+  // ── GENDER NEUTRALITY (validation agent gn-*) ──
+  'housewives': { replacement: 'homemakers', confidence: 0.95 },
+  'housewife': { replacement: 'homemaker', confidence: 0.95 },
+  'he can now enjoy': { replacement: 'they can now enjoy', confidence: 0.90 },
+
+  // ── INCLUSIVITY (validation agent in-*) ──
+  'ping us': { replacement: ['reach out to us', 'get in touch with us'], confidence: 0.90 },
+  'invite-only': { replacement: ['early access', 'limited access'], confidence: 0.85 },
+
+  // ── GLOSSARY (validation agent gl-*) ──
+  'data pack': { replacement: 'data plan', confidence: 0.90 },
+  'data packs': { replacement: 'data plans', confidence: 0.90 },
+
+  // ── COMMERCIAL SENSITIVITY (validation agent cm-*) ──
+  'grab this deal': { replacement: ['explore this option', 'check this out'], confidence: 0.90 },
+
+  // ── ANTI-PATTERN FIXES (ap-*) ──
+  'unfortunately': { replacement: '', confidence: 0.90 },
+  'regrettably': { replacement: '', confidence: 0.90 },
+  'as an AI': { replacement: '', confidence: 0.85 },
+  'as a language model': { replacement: '', confidence: 0.85 },
+  "here's what you need to do": { replacement: ["here's how we can sort this out", "let's work through this together"], confidence: 0.85 },
+  'you need to follow these steps': { replacement: ["here's how we can fix this", "let me walk you through this"], confidence: 0.85 },
+  'for further assistance, please contact': { replacement: ["i'm here if you need anything else", "let me know if there's anything else"], confidence: 0.85 },
+  'for more assistance, please contact': { replacement: ["i'm here if you need anything else", "let me know if there's anything else"], confidence: 0.85 },
+  'for further information, please contact': { replacement: ["i'm here if you need anything else", "let me know if there's anything else"], confidence: 0.85 },
+  'we apologize for the inconvenience': { replacement: ["sorry about that", "sorry for the trouble"], confidence: 0.90 },
+  'we regret to inform': { replacement: '', confidence: 0.90 },
+  'we are sorry to': { replacement: 'sorry to', confidence: 0.85 },
+  'i hope this helps': { replacement: ["i'm here if you need anything else", "let me know if you need more help"], confidence: 0.85 },
+  'i hope that helps': { replacement: ["i'm here if you need anything else", "let me know if you need more help"], confidence: 0.85 },
+  'please note that': { replacement: '', confidence: 0.90 },
+  'kindly note that': { replacement: '', confidence: 0.90 },
+
   // ── TIER B: Semantic replacements (max 25, context-guarded) ──
   // AD-4: 2-3 alternatives per replacement for variety
   'guarantee': { replacement: ['aim to help', 'do our best to'], confidence: 0.75 },
