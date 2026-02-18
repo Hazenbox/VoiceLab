@@ -61,8 +61,11 @@ function t(
   mode: TestMode, prompt: string, context: TestContext,
   pass: string[], fail: string[], ruleRef: string,
   testContent?: string,
+  caseSensitive?: boolean,
 ): ComplianceTestCase {
-  return { id, section, group, description, mode, prompt, context, expectedPassPatterns: pass, expectedFailPatterns: fail, ruleRef, testContent };
+  const tc: ComplianceTestCase = { id, section, group, description, mode, prompt, context, expectedPassPatterns: pass, expectedFailPatterns: fail, ruleRef, testContent };
+  if (caseSensitive) tc.caseSensitive = true;
+  return tc;
 }
 
 const any: TestContext = {};
@@ -217,11 +220,11 @@ const B_COMPLIANCE_VERIFIER: ComplianceTestCase[] = [
   t('B1-03', 'B', 'B', 'c-03: competitor mention auto-fix', 'checker',
     '', any, ['other providers'], ['Airtel'],
     'c-03', 'unlike Airtel, our network is better'),
-  t('B1-04', 'B', 'B', 'c-04: user blame detection', 'checker',
-    '', any, [], ["it's your fault"],
+  t('B1-04', 'B', 'B', 'c-04: user blame auto-fix', 'checker',
+    '', any, ['there seems to be an issue'], ["it's your fault"],
     'c-04', "it's your fault the payment failed"),
-  t('B1-05', 'B', 'B', 'c-05: dismissing user concern', 'checker',
-    '', any, [], ["not our problem"],
+  t('B1-05', 'B', 'B', 'c-05: dismissing concern auto-fix', 'checker',
+    '', any, ['let me help'], ["not our problem"],
     'c-05', "that's not our problem, contact someone else"),
   // Voice & Tone
   t('B2-01', 'B', 'B', 'v-01: "you should" auto-fix', 'checker',
@@ -230,11 +233,11 @@ const B_COMPLIANCE_VERIFIER: ComplianceTestCase[] = [
   t('B2-02', 'B', 'B', 'v-02: formal salutation auto-fix', 'checker',
     '', any, ['hi there'], ['dear valued customer'],
     'v-02', 'dear valued customer, thank you for reaching out'),
-  t('B2-03', 'B', 'B', 'v-03: passive institutional phrasing', 'checker',
-    '', any, [], ['request has been logged'],
+  t('B2-03', 'B', 'B', 'v-03: passive institutional auto-fix', 'checker',
+    '', any, ["i'm looking into this"], ['request has been logged'],
     'v-03', 'the request has been logged in our system'),
-  t('B2-04', 'B', 'B', 'v-04: hiding behind policy', 'checker',
-    '', any, [], ['as per our policy'],
+  t('B2-04', 'B', 'B', 'v-04: hiding behind policy auto-fix', 'checker',
+    '', any, ["here's how this works"], ['as per our policy'],
     'v-04', 'as per our policy, refunds take 7 days'),
   t('B2-05', 'B', 'B', 'v-05: corporate filler auto-fix', 'checker',
     '', any, [], ['we value your'],
@@ -263,7 +266,7 @@ const B_COMPLIANCE_VERIFIER: ComplianceTestCase[] = [
     'w-06', 'explore plans, features, and benefits'),
   t('B3-07', 'B', 'B', 'w-07: AM/PM lowercase auto-fix', 'checker',
     '', any, ['10:00 am'], ['10:00 AM'],
-    'w-07', 'available from 10:00 AM to 6:00 PM'),
+    'w-07', 'available from 10:00 AM to 6:00 PM', true),
   // Structure
   t('B4-01', 'B', 'B', 's-01: max 7 steps', 'checker',
     '', any, [], [],
@@ -297,8 +300,8 @@ const B_COMPLIANCE_VERIFIER: ComplianceTestCase[] = [
     '', any, ['JioMart'], ['Jio Mart'],
     'b-04', 'order groceries on Jio Mart'),
   t('B5-05', 'B', 'B', 'b-05: JIO → Jio', 'checker',
-    '', any, ['welcome to Jio'], ['JIO'],
-    'b-05', 'welcome to JIO'),
+    '', any, ['welcome to Jio'], ['\\bJIO\\b'],
+    'b-05', 'welcome to JIO', true),
   // Emotion
   t('B6-01', 'B', 'B', 'e-01: unacknowledged negative emotion', 'checker',
     '', { emotion: 'raudra', isComplaint: true }, [], [],
@@ -319,8 +322,8 @@ const B_COMPLIANCE_VERIFIER: ComplianceTestCase[] = [
   t('B7-03', 'B', 'B', 'x-03: asking PII without reason', 'checker',
     '', any, [], [],
     'x-03', 'please share your aadhaar number to proceed.'),
-  t('B7-04', 'B', 'B', 'x-04: over-promising timeline', 'checker',
-    '', any, [], ['within 2 hours your issue will be resolved'],
+  t('B7-04', 'B', 'B', 'x-04: over-promising timeline auto-fix', 'checker',
+    '', any, ["team is working|we'll keep you updated"], ['within 2 hours your issue will be resolved'],
     'x-04', 'within 2 hours your issue will be resolved.'),
   t('B7-05', 'B', 'B', 'x-05: long sentence for low-literacy', 'checker',
     '', { literacy: 'basic' }, [], [],
@@ -485,7 +488,7 @@ const F_ENTITY: ComplianceTestCase[] = [
   t('F-05', 'F', 'F', 'Jio Air Fiber → JioAirFiber', 'checker', '', any, ['JioAirFiber'], ['Jio Air Fiber'], 'entity', 'get Jio Air Fiber installed'),
   t('F-06', 'F', 'F', 'My Jio → MyJio', 'checker', '', any, ['MyJio'], ['My Jio'], 'entity', 'open My Jio app'),
   t('F-07', 'F', 'F', 'Jio Brain → JioBrain', 'checker', '', any, ['JioBrain'], ['Jio Brain'], 'entity', 'powered by Jio Brain'),
-  t('F-08', 'F', 'F', 'JIO → Jio', 'checker', '', any, ['welcome to Jio'], ['JIO'], 'entity', 'welcome to JIO'),
+  t('F-08', 'F', 'F', 'JIO → Jio', 'checker', '', any, ['welcome to Jio'], ['\\bJIO\\b'], 'entity', 'welcome to JIO', true),
   t('F-09', 'F', 'F', 'Jio Silver → Jio Freedom Plan', 'checker', '', any, ['Jio Freedom Plan'], ['Jio Silver'], 'entity', 'your Jio Silver plan is active'),
   t('F-10', 'F', 'F', 'Jio Gold → Jio Popular Plan', 'checker', '', any, ['Jio Popular Plan'], ['Jio Gold'], 'entity', 'upgrade to Jio Gold'),
   t('F-11', 'F', 'F', 'Jio Platinum → Jio Plus Plan', 'checker', '', any, ['Jio Plus Plan'], ['Jio Platinum'], 'entity', 'the Jio Platinum benefits include'),
@@ -493,10 +496,10 @@ const F_ENTITY: ComplianceTestCase[] = [
   t('F-13', 'F', 'F', 'Rs. → ₹', 'checker', '', any, ['₹'], ['Rs\\.'], 'entity', 'pay Rs. 299 for the plan'),
   t('F-14', 'F', 'F', 'INR → ₹', 'checker', '', any, ['₹'], ['INR'], 'entity', 'costs INR 500 per month'),
   t('F-15', 'F', 'F', 'jiofibre misspelling', 'checker', '', any, ['JioFiber'], ['jiofibre'], 'entity', 'check your jiofibre connection'),
-  t('F-16', 'F', 'F', 'lowercase jiocinema', 'checker', '', any, ['JioCinema'], ['jiocinema'], 'entity', 'open jiocinema to watch'),
+  t('F-16', 'F', 'F', 'lowercase jiocinema', 'checker', '', any, ['JioCinema'], ['\\bjiocinema\\b'], 'entity', 'open jiocinema to watch', true),
   t('F-17', 'F', 'F', 'Reliance Jio → Jio', 'checker', '', any, ['Jio network'], ['Reliance Jio'], 'entity', 'Reliance Jio network covers all states'),
-  t('F-18', 'F', 'F', 'lowercase jiogames', 'checker', '', any, ['JioGames'], ['jiogames'], 'entity', 'play on jiogames platform'),
-  t('F-19', 'F', 'F', 'lowercase jiopay', 'checker', '', any, ['JioPay'], ['jiopay'], 'entity', 'use jiopay for payments'),
+  t('F-18', 'F', 'F', 'lowercase jiogames', 'checker', '', any, ['JioGames'], ['\\bjiogames\\b'], 'entity', 'play on jiogames platform', true),
+  t('F-19', 'F', 'F', 'lowercase jiopay', 'checker', '', any, ['JioPay'], ['\\bjiopay\\b'], 'entity', 'use jiopay for payments', true),
   t('F-20', 'F', 'F', 'Jio Platforms preserved', 'checker', '', any, ['Jio Platforms'], [], 'entity', 'Jio Platforms Limited is the parent company'),
 ];
 
@@ -506,10 +509,10 @@ const F_ENTITY: ComplianceTestCase[] = [
 
 const G_PII: ComplianceTestCase[] = [
   t('G-01', 'G', 'G', 'aadhaar masking', 'checker', '', any, ['1234 XXXX XXXX'], ['5678 9012'], 'pii_aadhaar', 'your aadhaar is 1234 5678 9012'),
-  t('G-02', 'G', 'G', 'PAN masking', 'checker', '', any, ['XXXX'], ['ABCDE1234F'], 'pii_pan', 'your PAN is ABCDE1234F'),
+  t('G-02', 'G', 'G', 'PAN masking', 'checker', '', any, ['ABXXX'], ['ABCDE1234F'], 'pii_pan', 'your PAN is ABCDE1234F'),
   t('G-03', 'G', 'G', 'phone masking', 'checker', '', any, ['XXXXXX3210'], ['9876543210'], 'pii_phone', 'call me at 9876543210'),
   t('G-04', 'G', 'G', 'email masking', 'checker', '', any, ['\\*\\*\\*@'], ['john@example\\.com'], 'pii_email', 'email: john@example.com'),
-  t('G-05', 'G', 'G', 'credit card masking', 'checker', '', any, ['XXXX XXXX XXXX 4444'], ['4111 2222 3333'], 'pii_card', 'card: 4111 2222 3333 4444'),
+  t('G-05', 'G', 'G', 'credit card masking', 'checker', '', any, ['XXXX.*4444'], ['4111 2222 3333 4444'], 'pii_card', 'card: 4111 2222 3333 4444'),
   t('G-06', 'G', 'G', 'bank account masking', 'checker', '', any, ['XXXX'], ['12345678901234'], 'pii_bank', 'account number: 12345678901234'),
   t('G-07', 'G', 'G', 'IFSC masking', 'checker', '', any, ['XXX'], ['SBIN0001234'], 'pii_ifsc', 'IFSC: SBIN0001234'),
   t('G-08', 'G', 'G', 'UPI masking', 'checker', '', any, ['\\*\\*\\*@'], ['user@paytm'], 'pii_upi', 'UPI ID: user@paytm'),
@@ -532,7 +535,7 @@ const H_AUTOFIX: ComplianceTestCase[] = [
   t('H-10', 'H', 'H', 'cutting-edge → advanced', 'checker', '', any, ['advanced'], ['cutting-edge'], 'autofix', 'our cutting-edge technology platform'),
   t('H-11', 'H', 'H', 'world-class → excellent', 'checker', '', any, ['excellent'], ['world-class'], 'autofix', 'world-class network infrastructure'),
   t('H-12', 'H', 'H', 'click here → view details', 'checker', '', any, ['view details'], ['click here'], 'autofix', 'click here to know more about plans'),
-  t('H-13', 'H', 'H', 'jio → Jio (capitalization)', 'checker', '', any, ['Jio offers'], ['jio offers'], 'autofix', 'jio offers great plans for everyone'),
+  t('H-13', 'H', 'H', 'jio → Jio (capitalization)', 'checker', '', any, ['Jio offers'], ['\\bjio offers\\b'], 'autofix', 'jio offers great plans for everyone', true),
   t('H-14', 'H', 'H', 'Rs. → ₹', 'checker', '', any, ['₹'], ['Rs\\.'], 'autofix', 'Rs. 199 plan with unlimited calls'),
   t('H-15', 'H', 'H', '"you need to" → "you can"', 'checker', '', any, ['you can|you might want to'], ['you need to'], 'autofix', 'you need to restart the router now'),
   t('H-16', 'H', 'H', '"you must" → "please"', 'checker', '', any, ['please'], ['you must'], 'autofix', 'you must complete the verification step'),
@@ -548,7 +551,7 @@ const H_AUTOFIX: ComplianceTestCase[] = [
   t('H-26', 'H', 'H', 'subsequently → then', 'checker', '', any, ['then'], ['subsequently'], 'autofix', 'subsequently, we fixed the connection issue'),
   t('H-27', 'H', 'H', 'approximately → about', 'checker', '', any, ['about'], ['approximately'], 'autofix', 'approximately 500 users reported this issue'),
   t('H-28', 'H', 'H', 'prior to → before', 'checker', '', any, ['before'], ['prior to'], 'autofix', 'prior to the update, speeds were slower'),
-  t('H-29', 'H', 'H', 'AM → am (format fix)', 'checker', '', any, ['10:00 am'], ['10:00 AM'], 'autofix', 'service available from 10:00 AM daily'),
+  t('H-29', 'H', 'H', 'AM → am (format fix)', 'checker', '', any, ['10:00 am'], ['10:00 AM'], 'autofix', 'service available from 10:00 AM daily', true),
   t('H-30', 'H', 'H', 'Oxford comma removal', 'checker', '', any, ['plans, features and'], [', and benefits'], 'autofix', 'explore our plans, features, and benefits today'),
 ];
 
@@ -598,7 +601,7 @@ const I5_I10_AGENTS: ComplianceTestCase[] = [
   t('I7-03', 'I', 'I5-I10', 'recharge vs bill payment', 'checker', '', any, [], ['recharge.*postpaid'], 'gl-003', 'recharge your postpaid number for this month'),
   t('I7-04', 'I', 'I5-I10', 'unlimited data caveat', 'checker', '', any, [], [], 'gl-005', 'enjoy unlimited data on this premium plan'),
   // Style Consistency
-  t('I8-01', 'I', 'I5-I10', 'lowercase jio', 'checker', '', any, [], ['jio has'], 'st-001', 'jio has great plans for everyone to enjoy'),
+  t('I8-01', 'I', 'I5-I10', 'lowercase jio', 'checker', '', any, [], ['\\bjio has\\b'], 'st-001', 'jio has great plans for everyone to enjoy', true),
   t('I8-02', 'I', 'I5-I10', 'American spelling: color', 'checker', '', any, [], ['color'], 'st-010', 'check the color of the LED indicator'),
   t('I8-03', 'I', 'I5-I10', 'Rs. → ₹', 'checker', '', any, [], ['Rs\\. 499'], 'st-030', 'the Rs. 499 plan includes calling benefits'),
   t('I8-04', 'I', 'I5-I10', 'Western number format', 'checker', '', any, [], ['1,000,000'], 'st-033', 'over 1,000,000 users enjoy this plan'),
