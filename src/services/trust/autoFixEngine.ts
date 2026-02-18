@@ -556,12 +556,12 @@ function cleanOrphanedPunctuation(text: string): string {
   let cleaned = text
     // Remove leading punctuation at start of text and capitalize next letter
     .replace(/^[,;:]\s*([a-z])/g, (_, letter) => letter.toUpperCase())
-    // Remove leading punctuation after newlines and capitalize
-    .replace(/\n[,;:]\s*([a-z])/g, (_, letter) => '\n' + letter.toUpperCase())
+    // Remove leading punctuation after newlines (including blank lines) and capitalize
+    .replace(/(\n+)[,;:]\s*([a-z])/g, (_, newlines, letter) => newlines + letter.toUpperCase())
     // Remove leading punctuation after sentence endings
     .replace(/([.!?])\s*[,;:]\s*/g, '$1 ')
-    // Clean up multiple spaces
-    .replace(/\s{2,}/g, ' ')
+    // Clean up multiple spaces (but preserve newlines)
+    .replace(/[ \t]{2,}/g, ' ')
     // Clean up double punctuation like ", ," or ". ,"
     .replace(/[,;:]\s*[,;:]/g, ',')
     .trim();
