@@ -804,6 +804,51 @@ function toSentenceCase(text: string): string {
 }
 
 /**
+ * Capitalise the first letter of sentence/list item starts.
+ * Fixes cases where LLM generates all-lowercase text.
+ *
+ * Targets:
+ * - Bullet points: "- check the app" -> "- Check the app"
+ * - Numbered lists: "1. open settings" -> "1. Open settings"
+ * - Bold labels: "**check status:**" -> "**Check status:**"
+ * - Paragraph starts after blank lines
+ */
+function capitaliseSentenceStarts(text: string): string {
+  return text.split('\n').map((line, idx, arr) => {
+    const trimmed = line.trim();
+    if (!trimmed) return line;
+
+    // Detect if this is a new paragraph (previous line was blank or this is first line)
+    const isNewParagraph = idx === 0 || arr[idx - 1].trim() === '';
+
+    // Pattern: optional leading whitespace + optional markdown prefix + first letter
+    // Markdown prefixes: "- ", "* ", "1. ", "## ", "**"
+    const match = line.match(/^(\s*)([-*]\s+|\d+\.\s+|#{1,6}\s+|\*\*)?([a-z])/);
+
+    if (match) {
+      const [, leadingSpace, prefix, firstLetter] = match;
+      const prefixPart = prefix || '';
+
+      // Only capitalise if:
+      // 1. It's a list item (has prefix like "- " or "1. ")
+      // 2. It's a heading (has prefix like "## ")
+      // 3. It's a new paragraph start (previous line blank)
+      // 4. It's bold text start (**)
+      const shouldCapitalise =
+        prefixPart.length > 0 || // has markdown prefix
+        isNewParagraph;          // new paragraph
+
+      if (shouldCapitalise) {
+        const startIdx = (leadingSpace?.length || 0) + prefixPart.length;
+        return line.slice(0, startIdx) + firstLetter.toUpperCase() + line.slice(startIdx + 1);
+      }
+    }
+
+    return line;
+  }).join('\n');
+}
+
+/**
  * Deterministic format fixes per KB/09 wording standards.
  * Applied after word replacements for consistent formatting.
  */
@@ -855,6 +900,9 @@ export function applyFormatFixes(content: string): string {
 
   // Title Case -> sentence case (headings, bold labels, numbered items)
   fixed = toSentenceCase(fixed);
+
+  // Capitalise first letter of sentences/bullets that start lowercase
+  fixed = capitaliseSentenceStarts(fixed);
 
   return fixed;
 }

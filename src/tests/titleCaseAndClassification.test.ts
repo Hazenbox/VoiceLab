@@ -224,3 +224,53 @@ describe('Fix 4b: v-06 compliance verifier detection', () => {
     expect(report.fixedContent).toContain('Check your transaction status');
   });
 });
+
+// =============================================================================
+// Fix 5: capitaliseSentenceStarts() capitalises lowercase sentence/bullet starts
+// =============================================================================
+describe('Fix 5: capitaliseSentenceStarts via applyFormatFixes', () => {
+  it('capitalises bullet point starting with lowercase', () => {
+    const input = '- check your balance\n- open the app';
+    const result = applyFormatFixes(input);
+    expect(result).toContain('- Check your balance');
+    expect(result).toContain('- Open the app');
+  });
+
+  it('capitalises numbered list items', () => {
+    const input = '1. go to settings\n2. tap on recharge';
+    const result = applyFormatFixes(input);
+    expect(result).toContain('1. Go to settings');
+    expect(result).toContain('2. Tap on recharge');
+  });
+
+  it('capitalises markdown headings', () => {
+    const input = '## check your transaction status';
+    const result = applyFormatFixes(input);
+    expect(result).toBe('## Check your transaction status');
+  });
+
+  it('capitalises bold label starts', () => {
+    const input = '**open settings:** tap the gear icon.';
+    const result = applyFormatFixes(input);
+    expect(result).toContain('**Open settings:**');
+  });
+
+  it('capitalises new paragraph after blank line', () => {
+    const input = 'First paragraph.\n\nsecond paragraph here.';
+    const result = applyFormatFixes(input);
+    expect(result).toContain('Second paragraph here.');
+  });
+
+  it('does not touch mid-sentence lowercase words', () => {
+    const input = 'This is a normal sentence with lowercase words.';
+    const result = applyFormatFixes(input);
+    expect(result).toBe('This is a normal sentence with lowercase words.');
+  });
+
+  it('preserves already capitalised content', () => {
+    const input = '- Check your balance\n1. Open the app';
+    const result = applyFormatFixes(input);
+    expect(result).toContain('- Check your balance');
+    expect(result).toContain('1. Open the app');
+  });
+});
