@@ -102,7 +102,8 @@ const CHECKS: Check[] = [
     severity: 'error',
     description: 'blaming the user',
     test: (c) => match(c, /\b(it's your fault|you (did|made) (it )?wrong|your mistake|you failed to)\b/i),
-    autoFixable: false,
+    autoFixable: true,
+    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), 'there seems to be an issue with'),
   },
   {
     id: 'c-05',
@@ -110,7 +111,8 @@ const CHECKS: Check[] = [
     severity: 'error',
     description: 'dismissing user concern',
     test: (c) => match(c, /\b(that's not (my|our) (problem|issue|concern))\b/i),
-    autoFixable: false,
+    autoFixable: true,
+    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), 'let me help with this'),
   },
 
   // ── VOICE & TONE (KB/02) ──────────────────────────────────────────────
@@ -138,7 +140,8 @@ const CHECKS: Check[] = [
     severity: 'warning',
     description: 'passive institutional phrasing',
     test: (c) => match(c, /\b(the request has been (logged|noted|recorded|registered))\b/i),
-    autoFixable: false,
+    autoFixable: true,
+    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), "i'm looking into this now"),
   },
   {
     id: 'v-04',
@@ -146,7 +149,8 @@ const CHECKS: Check[] = [
     severity: 'warning',
     description: 'hiding behind policy',
     test: (c) => match(c, /\b(as per (our |the )?(policy|guidelines|terms|regulations))\b/i),
-    autoFixable: false,
+    autoFixable: true,
+    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), "here's how this works"),
   },
   {
     id: 'v-05',
@@ -436,7 +440,8 @@ const CHECKS: Check[] = [
     severity: 'error',
     description: 'over-promising resolution timeline (gap #16)',
     test: (c) => match(c, /\b(within\s+\d+\s+(minutes?|hours?)\s+(your|the)\s+\w+\s+(will be|should be)\s+(resolved|fixed))\b/i),
-    autoFixable: false,
+    autoFixable: true,
+    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), "our team is working on this and we'll keep you updated"),
   },
   {
     id: 'x-05',
@@ -460,7 +465,8 @@ const CHECKS: Check[] = [
       if (ctx.timing !== 'late_night') return null;
       return match(c, /\b(upgrade|offer|deal|discount|special|limited time|exclusive)\b/i);
     },
-    autoFixable: false,
+    autoFixable: true,
+    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), ''),
   },
   {
     id: 'x-07',
