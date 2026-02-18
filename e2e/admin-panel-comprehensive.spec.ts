@@ -5,45 +5,17 @@ import { test, expect, Page } from '@playwright/test';
  * With proper wait conditions and robust selectors
  */
 
-async function authenticateAdmin(page: Page): Promise<boolean> {
-  // Wait for page to fully load
+async function navigateToAdmin(page: Page): Promise<boolean> {
+  // Navigate to admin panel
   await page.goto('/admin');
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(2000);
   
-  // Check if already authenticated (sidebar visible)
-  const sidebar = await page.locator('aside').first();
-  if (await sidebar.isVisible()) {
-    const navButton = await page.locator('nav button').first();
-    if (await navButton.isVisible()) {
-      console.log('Already authenticated');
-      return true;
-    }
-  }
-  
-  // Look for password input (login page)
-  const passphraseInput = page.locator('input[type="password"]').first();
-  const inputVisible = await passphraseInput.isVisible({ timeout: 5000 }).catch(() => false);
-  
-  if (inputVisible) {
-    console.log('On login page, entering passphrase...');
-    await passphraseInput.fill('voicelab-admin');
-    
-    // Find and click submit button
-    const submitButton = page.locator('button[type="submit"]').first();
-    await submitButton.click();
-    
-    // Wait for navigation/dashboard to appear
-    await page.waitForTimeout(3000);
-    
-    // Check if we made it past login
-    const dashboardText = await page.locator('text=dashboard').first();
-    const authenticated = await dashboardText.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log('Authentication result:', authenticated);
-    return authenticated;
-  }
-  
-  return false;
+  // Check if admin panel loaded (sidebar visible)
+  const dashboardText = await page.locator('text=dashboard').first();
+  const loaded = await dashboardText.isVisible({ timeout: 5000 }).catch(() => false);
+  console.log('Admin panel loaded:', loaded);
+  return loaded;
 }
 
 test.describe('Admin Panel - Comprehensive Tests', () => {
@@ -56,12 +28,12 @@ test.describe('Admin Panel - Comprehensive Tests', () => {
     console.log('VOICE LAB ADMIN PANEL COMPREHENSIVE TEST');
     console.log('========================================\n');
     
-    // Authenticate
-    const authenticated = await authenticateAdmin(page);
+    // Navigate to admin panel
+    const loaded = await navigateToAdmin(page);
     
-    if (!authenticated) {
-      console.log('ERROR: Could not authenticate');
-      await page.screenshot({ path: 'test-results/screenshots/error-auth-failed.png', fullPage: true });
+    if (!loaded) {
+      console.log('ERROR: Admin panel did not load');
+      await page.screenshot({ path: 'test-results/screenshots/error-load-failed.png', fullPage: true });
       return;
     }
     
@@ -243,49 +215,9 @@ test.describe('Admin Panel - Comprehensive Tests', () => {
     console.log('  - Logo (Jio Voice Lab):', sidebarContent.includes('Jio Voice Lab') || sidebarContent.includes('voice-lab') ? 'FOUND' : 'NOT FOUND');
     console.log('  - admin panel label:', sidebarContent.includes('admin panel') ? 'FOUND' : 'NOT FOUND');
     console.log('  - back to app:', sidebarContent.includes('back to app') ? 'FOUND' : 'NOT FOUND');
-    console.log('  - sign out:', sidebarContent.includes('sign out') ? 'FOUND' : 'NOT FOUND');
-    
-    // ===== 7. LOGOUT TEST =====
-    console.log('\n=== 7. LOGOUT TEST ===\n');
-    
-    const signOutBtn = page.locator('button', { hasText: 'sign out' }).first();
-    if (await signOutBtn.isVisible()) {
-      await page.screenshot({ path: 'test-results/screenshots/06a-before-logout.png', fullPage: true });
-      await signOutBtn.click();
-      await page.waitForTimeout(2000);
-      await page.screenshot({ path: 'test-results/screenshots/06b-after-logout.png', fullPage: true });
-      
-      const logoutContent = await page.content();
-      console.log('After logout:');
-      console.log('  - Login page shown:', logoutContent.includes('passphrase') || logoutContent.includes('password') ? 'YES' : 'NO');
-    }
     
     console.log('\n========================================');
     console.log('TEST COMPLETE');
     console.log('========================================\n');
-  });
-  
-  test('Authentication Error Test', async ({ page }) => {
-    await page.setViewportSize({ width: 1400, height: 900 });
-    await page.goto('/admin');
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
-    
-    const passphraseInput = page.locator('input[type="password"]').first();
-    
-    if (await passphraseInput.isVisible()) {
-      // Test wrong passphrase
-      await passphraseInput.fill('wrong-password-123');
-      await page.locator('button[type="submit"]').first().click();
-      await page.waitForTimeout(1000);
-      
-      await page.screenshot({ path: 'test-results/screenshots/auth-error.png', fullPage: true });
-      
-      const content = await page.content();
-      const hasError = content.toLowerCase().includes('invalid') || 
-                       content.toLowerCase().includes('error') ||
-                       content.toLowerCase().includes('failed');
-      console.log('Error message shown for wrong password:', hasError ? 'YES' : 'NO');
-    }
   });
 });

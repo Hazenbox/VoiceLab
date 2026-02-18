@@ -12,19 +12,11 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('Admin Panel - Full Coverage Tests', () => {
-  // Authenticate before each test
+  // Navigate to admin panel before each test
   test.beforeEach(async ({ page }) => {
     await page.goto('/admin');
     await page.waitForLoadState('networkidle');
-    
-    // Authenticate with the correct passphrase
-    const passphraseInput = page.locator('input[type="password"]').first();
-    if (await passphraseInput.isVisible()) {
-      const passphrase = 'voicelab-admin'; // Default dev passphrase
-      await passphraseInput.fill(passphrase);
-      await page.locator('button[type="submit"]').first().click();
-      await page.waitForTimeout(2000);
-    }
+    await page.waitForTimeout(1000);
   });
 
   test('1. Dashboard Section - Complete Test', async ({ page }) => {
@@ -443,53 +435,7 @@ test.describe('Admin Panel - Full Coverage Tests', () => {
     const hasBackToApp = await backToApp.isVisible().catch(() => false);
     console.log('Back to app button visible:', hasBackToApp);
     
-    const signOut = page.locator('button:has-text("sign out")').first();
-    const hasSignOut = await signOut.isVisible().catch(() => false);
-    console.log('Sign out button visible:', hasSignOut);
-    
     console.log('\n--- Sidebar Summary ---');
     console.log('All primary nav items present: YES');
-  });
-
-  test('8. Authentication Flow Test', async ({ page }) => {
-    // Logout first
-    const signOut = page.locator('button:has-text("sign out")').first();
-    if (await signOut.isVisible()) {
-      await signOut.click();
-      await page.waitForTimeout(1000);
-    }
-    
-    console.log('\n=== AUTHENTICATION FLOW TEST ===');
-    
-    // Should be on login page
-    await page.screenshot({ path: 'test-results/screenshots/08a-login-page.png', fullPage: true });
-    
-    const passphraseInput = page.locator('input[type="password"]').first();
-    const hasLogin = await passphraseInput.isVisible().catch(() => false);
-    console.log('Login page displayed after logout:', hasLogin);
-    
-    if (hasLogin) {
-      // Test wrong passphrase
-      await passphraseInput.fill('wrong-password');
-      await page.locator('button[type="submit"]').first().click();
-      await page.waitForTimeout(1000);
-      
-      // Should show error
-      await page.screenshot({ path: 'test-results/screenshots/08b-login-error.png', fullPage: true });
-      const stillOnLogin = await passphraseInput.isVisible().catch(() => false);
-      console.log('Wrong password keeps user on login:', stillOnLogin);
-      
-      // Test correct passphrase
-      await passphraseInput.fill('voicelab-admin');
-      await page.locator('button[type="submit"]').first().click();
-      await page.waitForTimeout(2000);
-      
-      await page.screenshot({ path: 'test-results/screenshots/08c-login-success.png', fullPage: true });
-      const dashboardVisible = await page.locator('text=dashboard').first().isVisible().catch(() => false);
-      console.log('Correct password grants access:', dashboardVisible);
-    }
-    
-    console.log('\n--- Authentication Summary ---');
-    console.log('Login flow working correctly');
   });
 });

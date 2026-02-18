@@ -28,47 +28,8 @@ test.describe('Admin Panel Visual Tests', () => {
     await page.screenshot({ path: 'test-results/screenshots/visual-01-initial.png', fullPage: true });
     
     // Check what we see
-    const content = await page.content();
-    console.log('Page content length:', content.length);
-    
-    // Check for login page elements
-    const hasPasswordInput = content.includes('password') || content.includes('passphrase');
-    const hasSubmitBtn = content.includes('submit') || content.includes('Enter Admin');
-    const hasLogo = content.includes('Voice Lab') || content.includes('voice-lab');
-    
-    console.log('Login page indicators:');
-    console.log('  - Password/passphrase field:', hasPasswordInput ? 'YES' : 'NO');
-    console.log('  - Submit button:', hasSubmitBtn ? 'YES' : 'NO');
-    console.log('  - Logo:', hasLogo ? 'YES' : 'NO');
-    
-    // Try to find and fill password input
-    const passwordInput = page.locator('input[type="password"]');
-    const inputCount = await passwordInput.count();
-    console.log('\nPassword input count:', inputCount);
-    
-    if (inputCount > 0) {
-      console.log('\n=== AUTHENTICATING ===');
-      
-      // Fill the passphrase
-      await passwordInput.first().fill('voicelab-admin');
-      await page.screenshot({ path: 'test-results/screenshots/visual-02-password-filled.png', fullPage: true });
-      
-      // Find and click submit button
-      const submitBtn = page.locator('button[type="submit"]');
-      if (await submitBtn.count() > 0) {
-        await submitBtn.first().click();
-        console.log('Clicked submit button');
-        
-        // Wait for navigation
-        await page.waitForTimeout(4000);
-        await page.waitForLoadState('networkidle');
-        
-        await page.screenshot({ path: 'test-results/screenshots/visual-03-after-login.png', fullPage: true });
-      }
-    }
-    
-    // Now check what we see after potential login
     const afterContent = await page.content();
+    console.log('Page content length:', afterContent.length);
     
     console.log('\n=== CHECKING ADMIN CONTENT ===\n');
     
@@ -212,16 +173,6 @@ test.describe('Admin Panel Visual Tests', () => {
           console.log('     - Feature Flags:', configContent.includes('Feature Flags') ? 'FOUND' : 'NOT FOUND');
           console.log('     - Environment:', configContent.includes('Environment') ? 'FOUND' : 'NOT FOUND');
         }
-      }
-      
-      // Test Sign Out
-      console.log('\n6. Testing Sign Out...');
-      const signOutBtn = page.locator('button').filter({ hasText: /sign out/i }).first();
-      if (await signOutBtn.isVisible()) {
-        await signOutBtn.click();
-        await page.waitForTimeout(2000);
-        await page.screenshot({ path: 'test-results/screenshots/visual-10-logout.png', fullPage: true });
-        console.log('   Signed out successfully');
       }
     } else {
       console.log('\nWARNING: Not in admin panel - may still be on login page');

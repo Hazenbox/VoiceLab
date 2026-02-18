@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Admin Panel Full Test', () => {
-  const PASSPHRASE = 'voicelab-admin';
-  
   test('Full admin panel test', async ({ page }) => {
     const results: Record<string, { status: string; details: string }> = {};
     
@@ -17,71 +15,27 @@ test.describe('Admin Panel Full Test', () => {
       errors.push(`Page error: ${error.message}`);
     });
 
-    // 1. Navigate and authenticate
+    // 1. Navigate to admin panel
     console.log('\n=== STEP 1: Navigate to /admin ===');
     await page.goto('/admin');
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
     
-    // Check for password input
-    const passwordInput = page.locator('input[type="password"]');
-    if (await passwordInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-      console.log('Password input found, entering passphrase...');
-      await passwordInput.fill(PASSPHRASE);
-      
-      // Click the submit button
-      const submitBtn = page.locator('button:has-text("Enter Admin Panel")');
-      await submitBtn.click();
-      
-      // Wait for dashboard to load
-      await page.waitForTimeout(2000);
-      
-      // Check for specific error message from auth gate
-      const errorMsg = page.locator('span:has-text("Invalid passphrase"), span:has-text("Authentication failed"), span:has-text("Network error")');
-      if (await errorMsg.isVisible({ timeout: 1000 }).catch(() => false)) {
-        const errorText = await errorMsg.textContent();
-        results['authentication'] = { status: 'FAILED', details: `Error: ${errorText}` };
-        console.log('Authentication FAILED:', errorText);
-        return;
-      }
-    }
-    
-    // Verify dashboard loaded - with longer timeout and better debugging
+    // Verify dashboard loaded
     const dashboardHeader = page.locator('h2:has-text("dashboard")');
-    
-    // Wait a bit longer for dashboard to load
-    await page.waitForTimeout(3000);
     
     // Check page state
     const pageText = await page.locator('body').textContent();
     console.log('Page content (first 200 chars):', pageText?.slice(0, 200));
     
     if (await dashboardHeader.isVisible({ timeout: 5000 }).catch(() => false)) {
-      results['authentication'] = { status: 'PASSED', details: 'Successfully authenticated' };
-      console.log('✅ Authentication: PASSED');
+      results['page_load'] = { status: 'PASSED', details: 'Admin panel loaded successfully' };
+      console.log('✅ Page Load: PASSED');
     } else {
-      // Check if there's still a password input (auth might have failed)
-      const stillHasPasswordInput = await page.locator('input[type="password"]').isVisible().catch(() => false);
-      const verifyingSession = await page.locator('text=Verifying session').isVisible().catch(() => false);
-      
-      console.log('Still has password input:', stillHasPasswordInput);
-      console.log('Verifying session visible:', verifyingSession);
-      
-      // If verifying session is shown, wait more
-      if (verifyingSession) {
-        console.log('Waiting for session verification...');
-        await page.waitForTimeout(5000);
-      }
-      
-      // Try again
-      if (await dashboardHeader.isVisible({ timeout: 3000 }).catch(() => false)) {
-        results['authentication'] = { status: 'PASSED', details: 'Successfully authenticated (after retry)' };
-        console.log('✅ Authentication: PASSED (after retry)');
-      } else {
-        results['authentication'] = { status: 'FAILED', details: 'Dashboard did not load' };
-        console.log('❌ Authentication: FAILED - Dashboard did not load');
-        await page.screenshot({ path: 'admin-auth-failed.png', fullPage: true });
-        return;
-      }
+      results['page_load'] = { status: 'FAILED', details: 'Dashboard did not load' };
+      console.log('❌ Page Load: FAILED - Dashboard did not load');
+      await page.screenshot({ path: 'admin-load-failed.png', fullPage: true });
+      return;
     }
 
     // 2. Test Dashboard

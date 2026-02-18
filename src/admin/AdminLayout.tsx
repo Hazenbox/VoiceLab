@@ -19,197 +19,11 @@ import { ChartContainer, HorizontalBarChart, VerticalBars, StatBreakdown, Sentim
 import { DataCard, VerticalBarChart } from '@jio/datavis-components';
 import { KPI_DESCRIPTIONS } from './constants/kpiDescriptions';
 import { formatDuration, formatRelativeTime } from './utils/formatters';
-import { getApiBaseUrl } from '../config/providers';
 import { KnowledgeItemEditor, DeleteConfirmModal } from './components/KnowledgeCRUD';
 import { CorrectionApprovalList } from './components/CorrectionApproval';
 import { CategorySection, SearchFilterBar, type KnowledgeItem } from './components/CategorySection';
 import { TokensDisplay } from './components/TokensDisplay';
 import type { Id } from '../../convex/_generated/dataModel';
-
-// ── Admin Auth Gate ──────────────────────────────────────────────
-const SESSION_TOKEN_KEY = 'voicelab_admin_token';
-
-/**
- * Server-side admin authentication with dev mode fallback
- */
-async function authenticateAdmin(passphrase: string): Promise<{ success: boolean; token?: string; error?: string }> {
-  try {
-    const apiBase = getApiBaseUrl();
-    console.log('[Admin Auth] Attempting login to:', `${apiBase}/api/admin/auth`);
-    
-    const response = await fetch(`${apiBase}/api/admin/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'login', passphrase }),
-    });
-    
-    console.log('[Admin Auth] Response status:', response.status);
-    const data = await response.json();
-    console.log('[Admin Auth] Response data:', { success: data.success, hasToken: !!data.token, error: data.error });
-    
-    if (!response.ok) {
-      return { success: false, error: data.error || 'Authentication failed' };
-    }
-    
-    return { success: true, token: data.token };
-  } catch (error) {
-    console.error('[Admin Auth] Server auth failed:', error);
-    
-    // Dev mode fallback: if API is unreachable and we're in dev mode, use client-side check
-    if (import.meta.env.DEV) {
-      const devPassphrase = import.meta.env.VITE_ADMIN_PASSPHRASE || 'voicelab-admin';
-      if (passphrase === devPassphrase) {
-        console.warn('[Admin Auth] Using dev mode fallback (client-side auth)');
-        // Generate a pseudo-token for dev mode
-        const devToken = `dev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        return { success: true, token: devToken };
-      }
-      return { success: false, error: 'Invalid passphrase (dev mode)' };
-    }
-    
-    return { success: false, error: 'Network error. Please try again.' };
-  }
-}
-
-async function verifyAdminToken(token: string): Promise<boolean> {
-  // Dev mode tokens are always valid (they start with 'dev_')
-  if (import.meta.env.DEV && token.startsWith('dev_')) {
-    return true;
-  }
-  
-  try {
-    const apiBase = getApiBaseUrl();
-    const response = await fetch(`${apiBase}/api/admin/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'verify', token }),
-    });
-    
-    const data = await response.json();
-    return data.valid === true;
-  } catch (error) {
-    console.warn('[AdminAuth] Token verification failed:', error);
-    return false;
-  }
-}
-
-async function logoutAdmin(token: string): Promise<void> {
-  try {
-    const apiBase = getApiBaseUrl();
-    await fetch(`${apiBase}/api/admin/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'logout', token }),
-    });
-  } catch (error) {
-    // Log but don't block logout
-    console.warn('[AdminAuth] Logout request failed:', error);
-  }
-}
-
-function AdminAuthGate({ onAuthenticated }: { onAuthenticated: () => void }) {
-  const theme = useThemeColors();
-  const [passphrase, setPassphrase] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-    
-    const result = await authenticateAdmin(passphrase);
-    
-    if (result.success && result.token) {
-      sessionStorage.setItem(SESSION_TOKEN_KEY, result.token);
-      onAuthenticated();
-    } else {
-      setError(result.error || 'Authentication failed');
-      setPassphrase('');
-    }
-    
-    setIsLoading(false);
-  }, [passphrase, onAuthenticated]);
-
-  return (
-    <div
-      className="flex items-center justify-center min-h-screen"
-      style={{ backgroundColor: theme.background.ghost }}
-    >
-      <div
-        className="w-full max-w-sm rounded-xl px-6 py-8"
-        style={{
-          backgroundColor: theme.background.subtle,
-          border: `1px solid ${theme.stroke.low}`,
-        }}
-      >
-        <div className="mb-1">
-          <img
-            src={theme.isLight ? '/jio-voice-lab-light.svg?v=3' : '/jio-voice-lab-dark.svg?v=3'}
-            alt="Jio Voice Lab"
-            className="h-7"
-          />
-        </div>
-        <span
-          className="block mb-6"
-          style={{ color: theme.text.low, fontSize: '13px' }}
-        >
-          Enter the admin passphrase to continue.
-        </span>
-
-        <form onSubmit={handleSubmit}>
-          {/* Hidden username field for accessibility (password managers expect this) */}
-          <input
-            type="text"
-            name="username"
-            autoComplete="username"
-            defaultValue="admin"
-            aria-hidden="true"
-            style={{ display: 'none' }}
-          />
-          <input
-            id="admin-passphrase"
-            name="passphrase"
-            type="password"
-            value={passphrase}
-            onChange={(e) => { setPassphrase(e.target.value); setError(''); }}
-            placeholder="Passphrase"
-            autoFocus
-            autoComplete="current-password"
-            aria-label="Admin passphrase"
-            className="w-full rounded-lg px-3 outline-none"
-            style={{
-              height: '36px',
-              fontSize: '13px',
-              backgroundColor: theme.background.ghost,
-              color: theme.text.high,
-              border: `1px solid ${error ? SEMANTIC_COLORS.negative : theme.stroke.medium}`,
-            }}
-          />
-          {error && (
-            <span className="block mt-1" style={{ color: SEMANTIC_COLORS.negative, fontSize: '12px' }}>
-              {error}
-            </span>
-          )}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full rounded-lg mt-4 font-medium cursor-pointer transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              height: '36px',
-              fontSize: '13px',
-              backgroundColor: theme.accent,
-              color: '#fff',
-              border: 'none',
-            }}
-          >
-            {isLoading ? 'Authenticating...' : 'Enter Admin Panel'}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
 
 // ── Utility: Feedback badge ──────────────────────────────────────
 function FeedbackBadge({ type }: { type: string }) {
@@ -1886,8 +1700,6 @@ interface AdminLayoutProps {
 }
 
 export default function AdminLayout({ colorMode, onColorModeChange }: AdminLayoutProps) {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(true);
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const theme = useThemeColors();
   
@@ -1895,42 +1707,11 @@ export default function AdminLayout({ colorMode, onColorModeChange }: AdminLayou
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
   const [showEditProfile, setShowEditProfile] = useState(false);
 
-  // Verify existing token on mount
-  useEffect(() => {
-    const verifyToken = async () => {
-      const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
-      if (token) {
-        const isValid = await verifyAdminToken(token);
-        if (isValid) {
-          setAuthenticated(true);
-        } else {
-          // Clear invalid token
-          sessionStorage.removeItem(SESSION_TOKEN_KEY);
-        }
-      }
-      setIsVerifying(false);
-    };
-    verifyToken();
-  }, []);
-
   // Handle profile save from OnboardingModal
   const handleProfileSave = useCallback((profile: UserProfile) => {
     setUserProfile(profile);
     setShowEditProfile(false);
   }, []);
-
-  // Show loading while verifying token
-  if (isVerifying) {
-    return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: theme.background.ghost }}>
-        <span style={{ color: theme.text.low }}>Verifying session...</span>
-      </div>
-    );
-  }
-
-  if (!authenticated) {
-    return <AdminAuthGate onAuthenticated={() => setAuthenticated(true)} />;
-  }
 
   const renderContent = () => {
     switch (activeSection) {
