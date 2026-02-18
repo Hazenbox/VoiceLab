@@ -421,9 +421,15 @@ export function getContextSummary(context: GenerationContext): {
     warmth: `${context.warmth}/10 - ${context.warmth >= 7 ? 'Warm' : context.warmth <= 3 ? 'Formal' : 'Balanced'}`,
     detail: `${context.detail}/10 - ${context.detail >= 7 ? 'Comprehensive' : context.detail <= 3 ? 'Brief' : 'Moderate'}`,
     goal: context.goal,
-    profile: `${context.userProfile.language}, ${context.userProfile.region}`,
-    emotion: `${context.emotion.charAt(0).toUpperCase() + context.emotion.slice(1)}`,
-    timing: `${context.timing.timeOfDay}${context.timing.festival ? ` (${context.timing.festival})` : ''}, ${context.timing.dayOfWeek}`,
+    profile: context.userProfile 
+      ? `${context.userProfile.language}, ${context.userProfile.region}` 
+      : 'Default profile',
+    emotion: context.emotion 
+      ? `${context.emotion.charAt(0).toUpperCase() + context.emotion.slice(1)}` 
+      : 'Neutral',
+    timing: context.timing 
+      ? `${context.timing.timeOfDay}${context.timing.festival ? ` (${context.timing.festival})` : ''}, ${context.timing.dayOfWeek}` 
+      : 'Current time',
     overrides: overridesList,
     detectedProduct: detectedProductSummary,
   };

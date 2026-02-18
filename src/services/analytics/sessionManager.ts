@@ -242,7 +242,7 @@ export class SessionManager {
     await this.flushPendingEvents();
     
     // Final sync to Convex
-    if (this.session.sessionId && this.syncCallback) {
+    if (this.session.sessionId && typeof this.syncCallback === 'function') {
       try {
         await this.syncCallback('sessions:end', {
           sessionId: this.session.sessionId,
@@ -424,7 +424,7 @@ export class SessionManager {
    * Flush pending interaction events to Convex
    */
   private async flushPendingEvents(): Promise<void> {
-    if (this.pendingEvents.length === 0 || !this.syncCallback) {
+    if (this.pendingEvents.length === 0 || typeof this.syncCallback !== 'function') {
       return;
     }
     

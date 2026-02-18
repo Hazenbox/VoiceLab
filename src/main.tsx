@@ -166,7 +166,14 @@ function Root() {
   );
 }
 
-createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root')!;
+
+// Reuse existing React root on HMR to avoid "createRoot on already-rooted container" warning
+const existingRoot = (rootElement as any).__reactRoot;
+const root = existingRoot ?? createRoot(rootElement);
+(rootElement as any).__reactRoot = root;
+
+root.render(
   <StrictMode>
     <Root />
   </StrictMode>,

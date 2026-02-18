@@ -114,7 +114,8 @@ export { SEGMENT_PERMISSIONS } from '../../config/nudges';
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // Nudge library moved to config/nudges.ts -- edit content there
-export { NUDGE_LIBRARY } from '../../config/nudges';
+import { NUDGE_LIBRARY } from '../../config/nudges';
+export { NUDGE_LIBRARY };
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CORE FUNCTIONS
