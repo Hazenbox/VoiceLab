@@ -136,11 +136,12 @@ function shouldIncludeJoy(context: JoyContext): boolean {
     return false;
   }
   
-  // BLOCK: Safety-sensitive domains
+  // BLOCK: Safety-sensitive domains (gap #12: no joy in safety/fraud/medical)
   const safetySensitiveDomains = [
     'health_general', 'health_emergency', 'mental_health',
     'self_harm', 'suicide_risk', 'violence',
-    'fraud_scam', 'cybersecurity', 'legal_sensitive'
+    'fraud_scam', 'fraud', 'cybersecurity', 'legal_sensitive',
+    'safety', 'medical', 'financial_dispute',
   ];
   if (context.safetyDomain && safetySensitiveDomains.includes(context.safetyDomain)) {
     return false;
@@ -165,7 +166,7 @@ function shouldIncludeJoy(context: JoyContext): boolean {
   }
   
   // BLOCK: Angry/frustrated emotions
-  const noJoyEmotions = ['raudra', 'bhayanak', 'bibhatsa'];
+  const noJoyEmotions = ['raudra', 'bhayanaka', 'bibhatsa'];
   if (noJoyEmotions.includes(context.emotion)) {
     return false;
   }
@@ -196,7 +197,7 @@ function shouldIncludeJoy(context: JoyContext): boolean {
   
   // Early turns - maybe empathetic joy only
   if (context.turnNumber <= 1) {
-    return context.emotion === 'karuna' || context.emotion === 'karun';
+    return context.emotion === 'karuna';
   }
   
   // Random chance for other cases (30%)
@@ -222,7 +223,7 @@ function selectJoyType(context: JoyContext): JoyType {
   }
   
   // Sad/worried emotions
-  if (context.emotion === 'karun' || context.emotion === 'bhayanak') {
+  if (context.emotion === 'karuna' || context.emotion === 'bhayanaka') {
     return 'empathetic';
   }
   

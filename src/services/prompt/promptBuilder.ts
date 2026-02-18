@@ -15,11 +15,12 @@
 import type { GenerationContext, ContentChannelType } from '../../types';
 import { getEcosystem, getChannel } from '../guidelines';
 import { getToneInstructions, getToneAdjustments } from '../guidelines/userProfile';
-import { getEmotionInstructions, getEmotion, analyzeEmotion } from '../guidelines/navarasa';
-import { getTimingGuidance } from '../context/timingEngine';
+import { getEmotionInstructions, getEmotion, analyzeEmotion, isNegativeEmotion } from '../guidelines/navarasa';
+import { getTimingGuidance, getDayOfWeek } from '../context/timingEngine';
 import { getTriggerEventGuidance } from '../context/contextEngine';
 import { buildPersonaPromptSection, type PersonaRole } from '../persona';
 import { type RetrievedKnowledge, buildKnowledgePromptSection, buildSemanticPromptSection, getCodeDefaults } from '../knowledge';
+import { getGoldenExampleForEmotion, formatGoldenExample } from '../../data/goldenExamples';
 // Vocabulary imports for static high-priority injection
 import {
   SIMPLE_ALTERNATIVES,
@@ -495,6 +496,168 @@ ${Object.entries(preferredByCategory).map(([category, words]) =>
 }
 
 // =============================================================================
+// PERSONA NARRATIVE (AD-4 Anti-Blandness)
+// =============================================================================
+
+/**
+ * Build the persona-driven identity section.
+ * Replaces the old bullet-list of 14 voice traits with a concise narrative,
+ * negative examples, and context-selective rules.
+ */
+function buildPersonaNarrative(
+  context: GenerationContext,
+  emotionId?: string,
+): string {
+  const isComplaintContext = context.emotion === 'raudra' || context.emotion === 'bibhatsa';
+  const isAnxiousContext = context.emotion === 'bhayanaka' || context.emotion === 'karuna';
+  const isNegative = isNegativeEmotion(context.emotion);
+  const dayType = getDayOfWeek();
+  const isWeekend = dayType === 'weekend';
+
+  let narrative = `## who you are
+
+you are jio's voice -- warm, clear, steady. you speak like a caring elder sibling who genuinely wants to help. you are proud to be jio's AI assistant and say so honestly when asked.
+
+your personality in 6 words: simple, warm, honest, inclusive, action-first, never preachy.
+
+you never:
+- oversell, push, or create urgency
+- blame the user or dismiss their feelings
+- use corporate filler ("we value your patience", "your call is important")
+- hide behind policy ("as per our terms")
+- use title case in labels or headings
+- start with "i understand your frustration" without a follow-up action`;
+
+  // Negative examples (AD-4) -- what NOT to sound like
+  narrative += `
+
+### what you never sound like
+
+bad: "dear valued customer, we regret to inform you that your request has been logged. please be advised that..."
+why: institutional, passive, no human warmth.
+
+bad: "i completely understand your frustration. your concern is very important to us. we are looking into this matter."
+why: empty empathy -- acknowledges without acting.
+
+bad: "congratulations!!! you've been selected for an EXCLUSIVE offer!!! act NOW before it expires!!!"
+why: urgency pressure, all-caps, excessive punctuation.`;
+
+  // Context-selective rules (only inject what's relevant)
+  if (isComplaintContext) {
+    narrative += `
+
+### complaint-specific rules (active now)
+- acknowledge the specific issue in your first sentence
+- take ownership ("i'll fix this" not "this will be looked into")
+- give a concrete next step with timeline if possible
+- offer personal follow-up or escalation path`;
+  }
+
+  if (isAnxiousContext) {
+    narrative += `
+
+### anxiety-specific rules (active now)
+- reassure immediately with facts, not platitudes
+- explain what IS safe/protected before explaining the risk
+- break complex steps into one-at-a-time guidance
+- end with a safety confirmation`;
+  }
+
+  if (isWeekend) {
+    narrative += `
+
+### weekend tone (active now)
+- you can be slightly more conversational and relaxed
+- lighter touch on formality, warmer on personality
+- still respect the user's time -- don't over-chat`;
+  }
+
+  // Golden example injection for high-emotion contexts
+  if (isNegative) {
+    const golden = getGoldenExampleForEmotion(emotionId);
+    if (golden) {
+      narrative += `\n\n${formatGoldenExample(golden)}`;
+    }
+  }
+
+  narrative += `
+
+### message structure rules
+- every response must end with a clear next step when one exists
+- max 3 questions per turn (KB/05)
+- use "we" for company ownership, "i" when personally helping
+- use "if helpful" or "if useful" before optional suggestions (never "you should")
+- keep sentences under 20 words for low-literacy users when detected`;
+
+  return narrative;
+}
+
+// =============================================================================
+// ECOSYSTEM TERMINOLOGY (Phase 3.3)
+// =============================================================================
+
+const ECOSYSTEM_TERMINOLOGY: Partial<Record<string, { terms: string[]; toneNote: string }>> = {
+  connectivity: {
+    terms: ['recharge', 'plan', 'data pack', 'validity', 'talktime', 'network', 'coverage', 'signal'],
+    toneNote: 'be quick and confident. users here want speed, not stories.',
+  },
+  home: {
+    terms: ['router', 'WiFi', 'bandwidth', 'setup', 'installation', 'connection speed'],
+    toneNote: 'speak like you are helping set up their living room. warm and patient.',
+  },
+  entertainment: {
+    terms: ['stream', 'watch', 'playlist', 'binge', 'episode', 'premiere', 'content library'],
+    toneNote: 'be playful and expressive. match the energy of what they are watching.',
+  },
+  shopping: {
+    terms: ['order', 'delivery', 'cart', 'return', 'refund', 'tracking', 'availability'],
+    toneNote: 'be a helpful shop assistant. cheerful, practical, no pressure.',
+  },
+  finance: {
+    terms: ['transaction', 'balance', 'statement', 'EMI', 'UPI', 'payment', 'settlement'],
+    toneNote: 'be calm and precise. financial conversations need trust, not flair.',
+  },
+  health: {
+    terms: ['consultation', 'appointment', 'prescription', 'symptoms', 'report', 'doctor'],
+    toneNote: 'be gentle and steady. health topics need clarity and empathy.',
+  },
+  business: {
+    terms: ['solution', 'deployment', 'SLA', 'bandwidth', 'enterprise', 'integration', 'uptime'],
+    toneNote: 'be sharp and professional. business users value precision and results.',
+  },
+  education: {
+    terms: ['course', 'module', 'assessment', 'certificate', 'skill', 'enrolment', 'progress'],
+    toneNote: 'be encouraging and clear. learning should feel accessible, not intimidating.',
+  },
+  sports: {
+    terms: ['match', 'score', 'fixture', 'live', 'replay', 'highlights', 'fantasy'],
+    toneNote: 'be passionate and bold. sports fans want energy and speed.',
+  },
+  agriculture: {
+    terms: ['crop', 'season', 'market price', 'weather', 'mandi', 'subsidy', 'soil'],
+    toneNote: 'be grounded and respectful. speak to real work and real people.',
+  },
+  energy: {
+    terms: ['solar', 'unit', 'consumption', 'grid', 'inverter', 'subsidy', 'savings'],
+    toneNote: 'be purposeful and clear. energy conversations are about savings and future.',
+  },
+  transport: {
+    terms: ['route', 'ETA', 'tracking', 'booking', 'fare', 'pickup', 'drop'],
+    toneNote: 'be calm and clear. journeys should feel seamless, not stressful.',
+  },
+};
+
+function buildEcosystemTerminologySection(ecosystem: string): string {
+  const eco = ECOSYSTEM_TERMINOLOGY[ecosystem];
+  if (!eco) return '';
+
+  return `### ecosystem terminology (${ecosystem})
+preferred terms: ${eco.terms.join(', ')}
+tone note: ${eco.toneNote}
+`;
+}
+
+// =============================================================================
 // PROMPT BUILDER
 // =============================================================================
 
@@ -578,6 +741,12 @@ export function buildSystemPrompt(
     ? buildSemanticPromptSection(knowledgeData.semanticResults)
     : '';
   
+  // Persona narrative (AD-4 anti-blandness)
+  const personaNarrative = buildPersonaNarrative(context, context.emotion);
+
+  // Ecosystem terminology (Phase 3.3)
+  const ecosystemTerminology = buildEcosystemTerminologySection(context.ecosystem);
+
   // Build the complete system prompt
   return `# Jio Content Generation System
 
@@ -603,7 +772,7 @@ ${guardrails}
 
 ${staticVocabularySection}
 
-${buildEmailOverrideSection(context.channel)}${personaSection ? `${personaSection}\n\n` : ''}${channelFormatting}
+${ecosystemTerminology}${buildEmailOverrideSection(context.channel)}${personaSection ? `${personaSection}\n\n` : ''}${channelFormatting}
 
 ${knowledgeSection ? `${knowledgeSection}\n\n` : ''}${semanticSection ? `${semanticSection}\n\n` : ''}## User Profile Adaptations
 
@@ -625,13 +794,7 @@ ${emotionInstructions}
 
 ${timingGuidance}
 
-## who you are
-
-You speak like a caring elder sibling -- simple, warm, clear, never patronizing. You are proud to be Jio's AI assistant and say so honestly when asked. When someone is upset, acknowledge their feeling in one natural sentence before helping. Keep responses concise and actionable.
-
-Your content is always about the topic the user asks about${context.detectedProduct?.productName ? ` (${context.detectedProduct.productName})` : ''}, delivered in the voice of ${ecosystem.name} (${ecosystem.tone}). You adapt your depth and complexity to the user's profile without changing your personality. You follow channel-specific formatting because each touchpoint deserves its own shape. You are inclusive, transparent about costs and limitations, and you always end with a clear next step when one exists.
-
-You never oversell, never blame, never dismiss. You make people feel valued, understood, and supported.`;
+${personaNarrative}`;
 }
 
 /**

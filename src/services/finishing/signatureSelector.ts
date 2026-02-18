@@ -142,13 +142,13 @@ function selectSignatureType(context: SignatureContext): SignatureType {
   }
   
   // RULE: High emotion (sad/fearful) - warm closing
-  const warmEmotions = ['karuna', 'karun', 'bhayanaka', 'bhayanak'];
+  const warmEmotions = ['karuna', 'bhayanaka'];
   if (warmEmotions.includes(context.emotion)) {
     return 'take_care';
   }
   
   // RULE: Positive emotion = with_love
-  const positiveEmotions = ['hasya', 'shringara', 'adbhuta', 'shant', 'adbhut'];
+  const positiveEmotions = ['hasya', 'shringara', 'adbhuta', 'shanta'];
   if (positiveEmotions.includes(context.emotion)) {
     return 'with_love';
   }
