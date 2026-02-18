@@ -58,8 +58,8 @@ const STYLE_PATTERNS: PatternRule[] = [
   { id: 'st-034', pattern: /"([^"]*)"/g, severity: 'info', rule: 'Use curved quotes for better typography', suggestion: 'Use curved quotes', category: 'punctuation' },
   { id: 'st-035', pattern: /'([^']*?)'/g, severity: 'info', rule: 'Use curved apostrophes for better typography', suggestion: 'Use curved apostrophes', category: 'punctuation' },
   
-  // En-dash for ranges
-  { id: 'st-036', pattern: /(\d+)-(\d+)/g, severity: 'info', rule: 'Use en-dash for number ranges', suggestion: '$1–$2', category: 'punctuation' },
+  // En-dash for ranges (exclude phone numbers: negative lookbehind/lookahead for adjacent digit-hyphen patterns)
+  { id: 'st-036', pattern: /(?<!\d[-–])(\d+)-(\d+)(?![-–]\d)/g, severity: 'info', rule: 'Use en-dash for number ranges', suggestion: '$1–$2', category: 'punctuation' },
   
   // Oxford comma
   { id: 'st-037', pattern: /,\s+and\s+/gi, severity: 'info', rule: 'No Oxford comma in Jio style', suggestion: 'Consider: "A, B and C" format', category: 'punctuation' },

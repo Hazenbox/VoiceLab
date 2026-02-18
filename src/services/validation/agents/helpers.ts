@@ -16,11 +16,14 @@ export function createViolation(
 ): ValidationViolation | null {
   if (match.index === undefined) return null;
   
+  // Resolve regex backreferences ($1, $2, etc.) in suggestion with actual captured groups
+  const resolvedSuggestion = rule.suggestion?.replace(/\$(\d+)/g, (_, idx) => match[Number(idx)] ?? '');
+  
   return {
     severity: rule.severity,
     rule: rule.rule,
     text: match[0],
-    suggestion: rule.suggestion,
+    suggestion: resolvedSuggestion,
     category: rule.category,
     position: {
       start: match.index,
