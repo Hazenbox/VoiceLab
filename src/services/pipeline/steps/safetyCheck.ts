@@ -48,6 +48,7 @@ export function safetyCheck(input: PipelineInput): SafetyCheckResult {
         result,
         routing: result.routing,
         blockedReason: result.classification.domain,
+        emergencyResponse: result.emergencyResponse?.message,
       };
     }
 

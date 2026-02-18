@@ -112,10 +112,11 @@ const EXTENDED_PATTERNS: Record<SafetyDomain, {
   self_harm: {
     // Note: "cutting" alone removed - too many false positives with "cutting-edge"
     // Instead, we rely on more specific phrases like "cut myself"
-    keywords: ['cut myself', 'hurt myself', 'self harm', 'self-harm'],
-    phrases: ['want to hurt', 'harm myself', 'punish myself', 'pain myself'],
+    // "my self" (two words) variants added to catch common typos/spacing
+    keywords: ['cut myself', 'hurt myself', 'self harm', 'self-harm', 'cut my self', 'hurt my self', 'harm my self'],
+    phrases: ['want to hurt', 'harm myself', 'punish myself', 'pain myself', 'harm my self', 'punish my self'],
     regexPatterns: [
-      /\b(i|im|i'm)\s+(want|going|trying)\s+to\s+(hurt|harm|cut)\s+(myself|me)\b/i,
+      /\b(i|im|i'm)\s+(want|going|trying)\s+to\s+(hurt|harm|cut)\s+(myself|my\s+self|me)\b/i,
       /\bself[\s-]?(harm|injury|mutilation)\b/i,
     ],
   },
@@ -147,7 +148,7 @@ const EXTENDED_PATTERNS: Record<SafetyDomain, {
     keywords: ['kill', 'murder', 'attack', 'bomb', 'hurt someone', 'shoot', 'stab'],
     phrases: ['want to kill', 'going to attack', 'make a bomb', 'hurt them', 'beat someone'],
     regexPatterns: [
-      /\b(i|im|i'm)\s+(want|going|planning)\s+to\s+(kill|murder|attack|hurt)\b/i,
+      /\b(i|im|i'm)\s+(want|going|planning)\s+to\s+(kill|murder|attack|hurt)(?!\s+(myself|my\s*self|me)\b)/i,
       /\bhow\s+to\s+(make|build)\s+(a\s+)?(bomb|explosive|weapon)\b/i,
       /\b(threaten|threatening)\s+(to\s+)?(kill|harm|hurt)\b/i,
     ],
