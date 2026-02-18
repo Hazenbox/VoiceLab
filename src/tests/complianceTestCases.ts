@@ -41,6 +41,8 @@ export interface ComplianceTestCase {
   expectedFailPatterns: string[];
   /** KB/rule reference */
   ruleRef: string;
+  /** If true, pattern matching uses exact case (no /i flag). For case-correction tests. */
+  caseSensitive?: boolean;
 }
 
 export interface TestGroup {

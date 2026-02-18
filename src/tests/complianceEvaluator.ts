@@ -12,9 +12,10 @@ import type { EcosystemType, ContentChannelType } from '../types';
 import { run as runPipeline } from '../services/pipeline/generationPipeline';
 import { normalizeEntities } from '../services/postprocess/entityNormalizer';
 import { detectAndMaskPII } from '../services/postprocess/piiDetector';
-import { checkAntiPatterns } from '../services/postprocess/antiPatternChecker';
 import { checkForbiddenPhrases } from '../services/validation/agents/forbiddenPhraseChecker';
 import { runComplianceVerifier } from '../services/postprocess/complianceVerifier';
+import { generateAutoFixes, applyAutoFixes, applyFormatFixes } from '../services/trust/autoFixEngine';
+import { runQuickValidation } from '../services/validation/validationPipeline';
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -121,15 +122,35 @@ function runCheckerMode(test: ComplianceTestCase): string {
 
   let content = raw;
 
-  // Entity normalizer
+  // 1. Entity normalizer (brand names, deprecated plans, currency symbols)
   const entityResult = normalizeEntities(content);
   content = entityResult.content;
 
-  // PII detector
+  // 2. PII detector (mask Aadhaar, PAN, phone, email, etc.)
   const piiResult = detectAndMaskPII(content);
   content = piiResult.content;
 
-  // Compliance verifier (includes its own auto-fixes + format fixes)
+  // 3. Format fixes (Indian number format, AM/PM lowercase, Oxford comma)
+  content = applyFormatFixes(content);
+
+  // 4. Auto-fix engine (vocabulary replacements: jargon, gender, accessibility, tone)
+  const validation = runQuickValidation(content);
+  const allViolations = validation.agentResults.flatMap(r => r.violations);
+  if (allViolations.length > 0) {
+    const fixes = generateAutoFixes(allViolations);
+    if (fixes.length > 0) {
+      const fixResult = applyAutoFixes(content, fixes);
+      content = fixResult.fixedContent;
+    }
+  }
+
+  // 5. Forbidden phrase checker (clean forbidden phrases via replacement)
+  const fpResult = checkForbiddenPhrases(content);
+  if (fpResult.cleanedResponse) {
+    content = fpResult.cleanedResponse;
+  }
+
+  // 6. Compliance verifier (final deterministic checks with progressive auto-fixes)
   const cvResult = runComplianceVerifier(content, {
     emotion: test.context.emotion,
     isComplaint: test.context.isComplaint,
@@ -146,18 +167,23 @@ function runCheckerMode(test: ComplianceTestCase): string {
 // PATTERN MATCHING
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function matchesAny(output: string, patterns: string[]): { matched: string[]; unmatched: string[] } {
-  const lower = output.toLowerCase();
+function matchesAny(output: string, patterns: string[], caseSensitive = false): { matched: string[]; unmatched: string[] } {
   const matched: string[] = [];
   const unmatched: string[] = [];
   for (const p of patterns) {
     try {
-      const re = new RegExp(p, 'i');
-      if (re.test(lower)) matched.push(p);
+      const re = caseSensitive ? new RegExp(p) : new RegExp(p, 'i');
+      const target = caseSensitive ? output : output.toLowerCase();
+      if (re.test(target)) matched.push(p);
       else unmatched.push(p);
     } catch {
-      if (lower.includes(p.toLowerCase())) matched.push(p);
-      else unmatched.push(p);
+      if (caseSensitive) {
+        if (output.includes(p)) matched.push(p);
+        else unmatched.push(p);
+      } else {
+        if (output.toLowerCase().includes(p.toLowerCase())) matched.push(p);
+        else unmatched.push(p);
+      }
     }
   }
   return { matched, unmatched };
@@ -174,8 +200,9 @@ function scoreTest(output: string, test: ComplianceTestCase): { status: TestStat
     return { status: 'fail', score: 0, passedPatterns: [], failedPatterns: test.expectedPassPatterns, failPatternMatches: [], notes: ['empty output'] };
   }
 
-  const passCheck = matchesAny(output, test.expectedPassPatterns);
-  const failCheck = matchesAny(output, test.expectedFailPatterns);
+  const cs = !!(test as any).caseSensitive;
+  const passCheck = matchesAny(output, test.expectedPassPatterns, cs);
+  const failCheck = matchesAny(output, test.expectedFailPatterns, cs);
 
   const passScore = test.expectedPassPatterns.length > 0
     ? passCheck.matched.length / test.expectedPassPatterns.length
