@@ -27,6 +27,9 @@ import { validate } from './steps/validate';
 import { finalize } from './steps/finalize';
 import { runComplianceJudge } from '../postprocess/complianceJudge';
 import { runComplianceVerifier, type ComplianceReport } from '../postprocess/complianceVerifier';
+import { normalizeEntities } from '../postprocess/entityNormalizer';
+import { checkForbiddenPhrases } from '../validation/agents/forbiddenPhraseChecker';
+import { applyDirectReplacements, applyFormatFixes } from '../trust/autoFixEngine';
 
 const MAX_RETRIES = 1;
 
@@ -202,8 +205,23 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       console.warn('[Pipeline] Compliance verifier failed, using judged content:', verifierError);
     }
 
+    // 9b. Post-process: entity normalizer + forbidden phrases + direct replacements + format fixes
+    let postProcessed = verifiedContent;
+    try {
+      const entityResult = normalizeEntities(postProcessed);
+      postProcessed = entityResult.content;
+      postProcessed = applyDirectReplacements(postProcessed);
+      const fpResult = checkForbiddenPhrases(postProcessed);
+      if (fpResult.cleanedResponse !== undefined) {
+        postProcessed = fpResult.cleanedResponse;
+      }
+      postProcessed = applyFormatFixes(postProcessed);
+    } catch (ppErr) {
+      console.warn('[Pipeline] Post-process step failed, using verifier output:', ppErr);
+    }
+
     // 10. Finalize (finishing layer + privacy masking)
-    const finalized = finalize(verifiedContent, input, classification, assembled);
+    const finalized = finalize(postProcessed, input, classification, assembled);
 
     // 11. Build evidence for transparency panel
     const evidence = buildEvidence(retrieval, validation, input);
