@@ -7,6 +7,8 @@
  * @module services/validation/agents/forbiddenPhraseChecker
  */
 
+import { cleanOrphanedPunctuation } from '../../trust/autoFixEngine';
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -160,7 +162,7 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
     {
       pattern: /\b(it's your fault|you (did|made) (it|this) wrong|your mistake)\b/gi,
       severity: 'critical',
-      replacement: '',
+      replacement: 'there seems to be an issue with',
       description: 'blaming user',
     },
     {
@@ -180,7 +182,7 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
     {
       pattern: /\b(that's not (my|our) (problem|issue|concern))\b/gi,
       severity: 'critical',
-      replacement: "let me see how I can help",
+      replacement: "let me help with this",
       description: 'dismissing responsibility',
     },
     {
@@ -260,13 +262,13 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
     {
       pattern: /\bi (completely |totally |fully )?understand your (frustration|concern|issue|problem)\.\s*$/gim,
       severity: 'warning',
-      replacement: '',
+      replacement: "let me look into this and help you.",
       description: 'empathy statement without follow-through action',
     },
     {
       pattern: /\bi('m| am) sorry (to hear|for the|about).*?\.\s*(?!(let me|here|i'll|we can|to help))/gi,
       severity: 'warning',
-      replacement: '',
+      replacement: "let me check on this right away.",
       description: 'apology without immediate next step',
     },
     {
@@ -282,7 +284,7 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
     {
       pattern: /\b(the request has been|your request has been|the issue has been) (logged|noted|recorded|registered)\b/gi,
       severity: 'warning',
-      replacement: '',
+      replacement: "i'm looking into this now",
       description: 'passive institutional language',
     },
     {
@@ -294,7 +296,7 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
     {
       pattern: /\b(as per (our |the )?(policy|guidelines|terms|regulations))\b/gi,
       severity: 'warning',
-      replacement: '',
+      replacement: "here's how this works",
       description: 'hiding behind policy',
     },
   ],
@@ -376,8 +378,9 @@ function cleanResponse(response: string, violations: PhraseMatch[]): string {
               cleaned.slice(violation.position + violation.phrase.length);
   }
   
-  // Clean up any double spaces
+  // Clean up double spaces and orphaned punctuation
   cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
+  cleaned = cleanOrphanedPunctuation(cleaned);
   
   return cleaned;
 }
