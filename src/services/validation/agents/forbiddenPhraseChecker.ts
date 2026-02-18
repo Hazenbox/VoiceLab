@@ -122,7 +122,7 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
     {
       pattern: /\b(Airtel|Vodafone|Vi|Idea|BSNL|MTNL|ACT Fibernet|Hathway|Tata Sky)\b/gi,
       severity: 'error',
-      replacement: 'other providers',
+      replacement: 'another provider',
       description: 'mentioning competitor brand',
     },
     {
@@ -160,19 +160,19 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
   ],
   blame: [
     {
-      pattern: /\b(it's your fault|you (did|made) (it|this) wrong|your mistake)\b/gi,
+      pattern: /[^.!?\n]*\b(it's your fault|you (did|made) (it|this) wrong|your mistake)\b[^.!?\n]*[.!?]?/gi,
       severity: 'critical',
-      replacement: 'there seems to be an issue with',
+      replacement: 'let me look into this.',
       description: 'blaming user',
     },
     {
-      pattern: /\b(you should have|why didn't you|you failed to)\b/gi,
+      pattern: /[^.!?\n]*\b(you should have|why didn't you|you failed to)\b[^.!?\n]*[.!?]?/gi,
       severity: 'error',
       replacement: '',
       description: 'criticizing user',
     },
     {
-      pattern: /\b(because of (your|the user's) (error|mistake|failure))\b/gi,
+      pattern: /[^.!?\n]*\b(because of (your|the user's) (error|mistake|failure))\b[^.!?\n]*[.!?]?/gi,
       severity: 'error',
       replacement: '',
       description: 'attributing blame',
@@ -264,6 +264,12 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
       severity: 'warning',
       replacement: "let me look into this and help you.",
       description: 'empathy statement without follow-through action',
+    },
+    {
+      pattern: /\bi (completely |totally |fully )?understand how (frustrating|difficult|hard|annoying) (this|it|that) (must|can) be( for you)?\b/gi,
+      severity: 'warning',
+      replacement: "let me help you with this",
+      description: 'generic empathy without action',
     },
     {
       pattern: /\bi('m| am) sorry (to hear|for the|about).*?\.\s*(?!(let me|here|i'll|we can|to help))/gi,

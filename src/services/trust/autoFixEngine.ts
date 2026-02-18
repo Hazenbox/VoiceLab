@@ -377,8 +377,8 @@ const REPLACEMENTS: Record<string, ReplacementValue> = {
   // ── SUPERLATIVES / SCARCITY / FINANCIAL (validation agents) ──
   'invest in': { replacement: ['explore', 'check out'], confidence: 0.85 },
   'great returns': { replacement: 'great value', confidence: 0.85 },
-  'fastest': { replacement: ['a top-speed', 'a very quick'], confidence: 0.85 },
-  'cheapest': { replacement: ['a very affordable', 'a budget-friendly'], confidence: 0.85 },
+  'fastest': { replacement: ['top-speed', 'very quick'], confidence: 0.85 },
+  'cheapest': { replacement: ['very affordable', 'budget-friendly'], confidence: 0.85 },
   'only 5 left': { replacement: 'available for a limited time', confidence: 0.90 },
   'only 3 left': { replacement: 'available for a limited time', confidence: 0.90 },
   'only 2 left': { replacement: 'available for a limited time', confidence: 0.90 },

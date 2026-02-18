@@ -218,10 +218,10 @@ const B_COMPLIANCE_VERIFIER: ComplianceTestCase[] = [
     '', any, [], ['OpenAI', 'GPT', 'ChatGPT'],
     'c-02', "powered by OpenAI's latest model"),
   t('B1-03', 'B', 'B', 'c-03: competitor mention auto-fix', 'checker',
-    '', any, ['other providers'], ['Airtel'],
+    '', any, ['another provider'], ['Airtel'],
     'c-03', 'unlike Airtel, our network is better'),
   t('B1-04', 'B', 'B', 'c-04: user blame auto-fix', 'checker',
-    '', any, ['there seems to be an issue'], ["it's your fault"],
+    '', any, ['let me look into this'], ["it's your fault"],
     'c-04', "it's your fault the payment failed"),
   t('B1-05', 'B', 'B', 'c-05: dismissing concern auto-fix', 'checker',
     '', any, ['let me help'], ["not our problem"],
@@ -351,7 +351,7 @@ const C_FORBIDDEN: ComplianceTestCase[] = [
   t('C1-07', 'C', 'C', 'training data reference', 'checker', '', any, [], ['my training data'], 'ai_identity', 'my training data suggests this is the best approach'),
   t('C1-08', 'C', 'C', 'chatbot self-ref', 'checker', '', any, ["jio's AI assistant"], ['i am a chatbot'], 'ai_identity', 'i am a chatbot designed to help you'),
   // Competitor
-  t('C2-01', 'C', 'C', 'competitor brand', 'checker', '', any, ['other providers'], ['Airtel'], 'competitor', 'switch from Airtel to Jio for better speeds'),
+  t('C2-01', 'C', 'C', 'competitor brand', 'checker', '', any, ['another provider'], ['Airtel'], 'competitor', 'switch from Airtel to Jio for better speeds'),
   t('C2-02', 'C', 'C', 'competitive comparison', 'checker', '', any, [], ['better than.*competitor'], 'competitor', 'we are better than competitor networks in every way'),
   // Overpromise
   t('C3-01', 'C', 'C', 'absolute guarantee', 'checker', '', any, [], ['guarantee.*definitely'], 'overpromise', 'i guarantee that it will definitely work after this fix'),
@@ -360,8 +360,8 @@ const C_FORBIDDEN: ComplianceTestCase[] = [
   t('C3-04', 'C', 'C', 'unrealistic timing', 'checker', '', any, [], ['immediate.*refund'], 'overpromise', 'immediate refund will be processed to your account'),
   // Blame
   t('C4-01', 'C', 'C', 'blaming user', 'checker', '', any, [], ["it's your fault"], 'blame', "it's your fault the SIM isn't working properly"),
-  t('C4-02', 'C', 'C', 'criticizing user', 'checker', '', any, [], ['you should have'], 'blame', 'you should have recharged your plan earlier'),
-  t('C4-03', 'C', 'C', 'attributing blame', 'checker', '', any, [], ['because of your error'], 'blame', 'because of your error, the payment failed to process'),
+  t('C4-02', 'C', 'C', 'criticizing user', 'checker', '', any, ['let me help'], ['you should have'], 'blame', 'you should have recharged your plan earlier. let me help you fix this now.'),
+  t('C4-03', 'C', 'C', 'attributing blame', 'checker', '', any, ['let me check'], ['because of your error'], 'blame', 'because of your error, the payment failed to process. let me check your account.'),
   // Dismissive
   t('C5-01', 'C', 'C', 'dismissing responsibility', 'checker', '', any, ['let me help'], ["not our problem"], 'dismissive', "that's not our problem, you need to contact someone else"),
   t('C5-02', 'C', 'C', 'refusing help', 'checker', '', any, ['find someone who can help'], ["can't help you"], 'dismissive', "i can't help you with that particular issue"),
@@ -763,6 +763,13 @@ const QRS_EDGE: ComplianceTestCase[] = [
   t('S-01', 'S', 'Q-S', 'variety: "due to the fact that"', 'checker', '', any, ['because|since'], ['due to the fact that'], 'variety', 'due to the fact that your plan expired, you lost access.'),
   t('S-02', 'S', 'Q-S', 'variety: "you need to"', 'checker', '', any, ['you can|you might want|here\'s how'], ['you need to'], 'variety', 'you need to restart your router to fix the issue.'),
   t('S-03', 'S', 'Q-S', 'variety: "no worries"', 'checker', '', any, ["i'm here to help|let me help|i've got you"], ['no worries'], 'variety', 'no worries about the error, we can fix it quickly.'),
+  // S-04 to S-09: Bug fix verification tests (spot-check edge cases from pipeline verification)
+  t('S-04', 'S', 'Q-S', 'blame fix: grammar preserved', 'checker', '', any, ['let me look into this'], ["it's your fault|there seems to be an issue with that"], 'bugfix:blame', "It's your fault that the payment failed."),
+  t('S-05', 'S', 'Q-S', 'competitor fix: verb agreement', 'checker', '', any, ['another provider offers'], ['other providers offers|Airtel'], 'bugfix:competitor', 'Airtel offers better 5G coverage than us.'),
+  t('S-06', 'S', 'Q-S', 'superlative fix: no double article', 'checker', '', any, ['the top-speed|the very quick'], ['the a top-speed|the a very quick'], 'bugfix:superlative', 'Jio has the fastest network available.'),
+  t('S-07', 'S', 'Q-S', 'timeline fix: full sentence replaced', 'checker', '', any, ["we're working on this"], ['be working perfectly fine'], 'bugfix:timeline', 'By tomorrow everything should be working perfectly fine.'),
+  t('S-08', 'S', 'Q-S', 'promo-during-support fix: upgrade stripped', 'checker', '', any, ['sorry for the issue'], ['upgrade|premium plan|50%'], 'bugfix:promo', 'Sorry for the issue with your network. Also, upgrade to our premium plan at 50% off!'),
+  t('S-09', 'S', 'Q-S', 'false empathy fix: generic phrase caught', 'checker', '', any, ['let me help you with this'], ['completely understand how frustrating'], 'bugfix:empathy', 'I completely understand how frustrating this must be for you.'),
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════

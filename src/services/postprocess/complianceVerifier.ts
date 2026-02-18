@@ -422,10 +422,10 @@ const CHECKS: Check[] = [
     category: 'emotion',
     severity: 'warning',
     description: 'promo mixed with support/apology',
-    test: (c) => match(c, /\b(sorry|apologies|issue|problem).*\b(also[, ]+(check|try)|you might like|our new plan|upgrade)\b/i),
+    test: (c) => match(c, /\b(sorry|apologies|issue|problem).*\b(also[, ]+(check|try)|you might like|our new plan|upgrade|deal|discount|offer)\b/i),
     autoFixable: true,
     fix: (c) => {
-      return c.replace(/[^.!?\n]*\b(also[, ]+(check|try)|you might like|our new plan)\b[^.!?\n]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim();
+      return c.replace(/[^.!?\n]*\b(also[, ]+(check|try)|you might like|our new plan|upgrade|deal|discount|offer)[^.!?\n]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim();
     },
   },
   {
@@ -435,7 +435,9 @@ const CHECKS: Check[] = [
     description: 'speculative timeline commitment',
     test: (c) => match(c, /\b(by (tomorrow|tonight|end of day|next week)\s+(it|this|everything)\s+(will|should))\b/i),
     autoFixable: true,
-    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), "we're working on this and will keep you updated"),
+    fix: (c) => {
+      return c.replace(/[^.!?\n]*\bby (tomorrow|tonight|end of day|next week)\s+(it|this|everything)\s+(will|should)[^.!?\n]*[.!?]?/gi, "we're working on this and will keep you updated.").replace(/\s{2,}/g, ' ').trim();
+    },
   },
 
   // ── CONTEXT-AWARE (Gaps #13, #15, #17) ────────────────────────────────
