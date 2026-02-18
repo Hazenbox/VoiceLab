@@ -7,8 +7,8 @@ import { runPatterns, calculateScore } from './helpers';
 
 const CULTURAL_PATTERNS: PatternRule[] = [
   { id: 'cs-001', pattern: /\b(madrasi|bhaiya|chinki|mallu)\b/gi, severity: 'error', rule: 'Avoid regional slurs', suggestion: 'Use proper regional terms', category: 'slurs' },
-  { id: 'cs-002', pattern: /\b(caste|untouchable|dalit|brahmin|kshatriya)\b/gi, severity: 'error', rule: 'Avoid caste references', suggestion: 'Remove term', category: 'caste' },
-  { id: 'cs-003', pattern: /\b(fair\s+skin|dark\s+skin|gora|kaala|wheatish)\b/gi, severity: 'error', rule: 'Avoid colorism', suggestion: 'Remove skin color reference', category: 'colorism' },
+  { id: 'cs-002', pattern: /\b(castes?|untouchable|dalit|brahmin|kshatriya)\b/gi, severity: 'error', rule: 'Avoid caste references', suggestion: 'Remove term', category: 'caste' },
+  { id: 'cs-003', pattern: /\b(fair[\s-]skinned?|fair\s+skin|dark[\s-]skinned?|dark\s+skin|gora|kaala|wheatish)\b/gi, severity: 'error', rule: 'Avoid colorism', suggestion: 'Remove skin color reference', category: 'colorism' },
   { id: 'cs-004', pattern: /\b(beef|pork|halal|haram|non-?veg)\b/gi, severity: 'warning', rule: 'Avoid food sensitivity references', suggestion: 'Use neutral food terms', category: 'food' },
   { id: 'cs-005', pattern: /\b(hindu|muslim|christian|sikh|jain|buddhist)\b/gi, severity: 'warning', rule: 'Avoid religious references', suggestion: 'Remove religious reference', category: 'religion' },
   { id: 'cs-006', pattern: /\b(backward|primitive|third[\s-]?world|uncivilized)\b/gi, severity: 'error', rule: 'Avoid derogatory cultural terms', suggestion: 'Use respectful language', category: 'derogatory' },

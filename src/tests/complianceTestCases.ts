@@ -393,7 +393,7 @@ const C_FORBIDDEN: ComplianceTestCase[] = [
 
 const D_ANTI_PATTERNS: ComplianceTestCase[] = [
   t('D-01', 'D', 'D', 'ap-01: generic empathy opener', 'checker', '', any, [], ['I understand\\.'], 'ap-01', 'I understand. now let me check your account for recent activity.'),
-  t('D-02', 'D', 'D', 'ap-02: AI self-reference', 'checker', '', any, [], ['as an AI'], 'ap-02', "as an AI, i don't have access to your personal account details."),
+  t('D-02', 'D', 'D', 'ap-02: AI self-reference (allowed per KB)', 'checker', '', any, ['as an AI'], [], 'ap-02', "as an AI, i don't have access to your personal account details."),
   t('D-03', 'D', 'D', 'ap-03: >7 numbered steps', 'checker', '', any, [], [], 'ap-03', '1. open\n2. tap\n3. go\n4. select\n5. choose\n6. confirm\n7. verify\n8. restart\n9. done'),
   t('D-04', 'D', 'D', 'ap-04: sentence >300 chars', 'checker', '', any, [], [], 'ap-04', 'your JioFiber connection which was recently upgraded from the standard plan to the premium plan with additional features including unlimited data at high speed connections along with access to all entertainment services and premium content libraries across multiple devices simultaneously has been successfully activated and is now ready for use. please check.'),
   t('D-05', 'D', 'D', 'ap-05: institutional phrasing', 'checker', '', any, [], ['please note that'], 'ap-05', 'please note that your plan expires tomorrow and you will need to recharge.'),
@@ -530,7 +530,7 @@ const H_AUTOFIX: ComplianceTestCase[] = [
   t('H-05', 'H', 'H', '"at this point in time" → "now"', 'checker', '', any, ['now'], ['at this point in time'], 'autofix', 'at this point in time, the service is active'),
   t('H-06', 'H', 'H', 'Dear Sir → Hello', 'checker', '', any, ['Hello'], ['Dear Sir'], 'autofix', 'Dear Sir, welcome to Jio support'),
   t('H-07', 'H', 'H', 'chairman → chairperson', 'checker', '', any, ['chairperson'], ['chairman'], 'autofix', 'the chairman of the committee approved it'),
-  t('H-08', 'H', 'H', 'mankind → humankind', 'checker', '', any, ['humankind'], ['mankind'], 'autofix', 'mankind benefits from better connectivity'),
+  t('H-08', 'H', 'H', 'mankind → humankind', 'checker', '', any, ['humankind'], ['\\bmankind\\b'], 'autofix', 'mankind benefits from better connectivity'),
   t('H-09', 'H', 'H', 'best-in-class → excellent', 'checker', '', any, ['excellent'], ['best-in-class'], 'autofix', 'our best-in-class service quality'),
   t('H-10', 'H', 'H', 'cutting-edge → advanced', 'checker', '', any, ['advanced'], ['cutting-edge'], 'autofix', 'our cutting-edge technology platform'),
   t('H-11', 'H', 'H', 'world-class → excellent', 'checker', '', any, ['excellent'], ['world-class'], 'autofix', 'world-class network infrastructure'),

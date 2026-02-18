@@ -466,7 +466,9 @@ const CHECKS: Check[] = [
       return match(c, /\b(upgrade|offer|deal|discount|special|limited time|exclusive)\b/i);
     },
     autoFixable: true,
-    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), ''),
+    fix: (c) => {
+      return c.replace(/[^.!?\n]*\b(upgrade|offer|deal|discount|special|limited time|exclusive)\b[^.!?\n]*[.!?]?/gi, '').replace(/\n{2,}/g, '\n').trim();
+    },
   },
   {
     id: 'x-07',
