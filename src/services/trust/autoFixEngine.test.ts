@@ -100,7 +100,7 @@ describe('AutoFixEngine', () => {
           severity: 'warning',
           category: 'other',
           text: 'unknown-word',
-          suggestion: 'fix it somehow',
+          suggestion: 'a better word',
           position: { start: 0, end: 12 },
           autoFixable: true,
         },
@@ -196,7 +196,7 @@ describe('AutoFixEngine', () => {
       const result = applyAutoFixes(content, fixes);
 
       // Should replace ALL occurrences
-      expect(result.fixedContent).toBe('chairperson and chairperson');
+      expect(result.fixedContent).toBe('Chairperson and chairperson');
       expect(result.appliedFixes).toHaveLength(1);
     });
 

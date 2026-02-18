@@ -130,13 +130,29 @@ function runCheckerMode(test: ComplianceTestCase): string {
   const piiResult = detectAndMaskPII(content);
   content = piiResult.content;
 
-  // 3. Format fixes (Indian number format, AM/PM lowercase, Oxford comma, title case, 24hr time)
-  content = applyFormatFixes(content);
-
-  // 3.5. Direct replacement scan (bypasses validation agents, catches all REPLACEMENTS keys)
+  // 3. Direct replacement scan FIRST (bypasses agents, catches all REPLACEMENTS keys)
   content = applyDirectReplacements(content);
 
-  // 4. Auto-fix engine (vocabulary replacements: jargon, gender, accessibility, tone)
+  // 4. Format fixes (Indian number format, AM/PM lowercase, Oxford comma, title case, 24hr time)
+  content = applyFormatFixes(content);
+
+  // 5. Forbidden phrase checker (high-priority constitutional fixes: blame, dismiss, identity)
+  const fpResult = checkForbiddenPhrases(content);
+  if (fpResult.cleanedResponse !== undefined) {
+    content = fpResult.cleanedResponse;
+  }
+
+  // 6. Compliance verifier (deterministic checks with progressive auto-fixes)
+  const cvResult = runComplianceVerifier(content, {
+    emotion: test.context.emotion,
+    isComplaint: test.context.isComplaint,
+    channel: test.context.channel as string | undefined,
+    literacy: test.context.literacy,
+    timing: test.context.timing,
+  });
+  content = cvResult.fixedContent;
+
+  // 7. Auto-fix engine (vocabulary replacements: jargon, gender, accessibility, tone)
   const validation = runQuickValidation(content);
   const allViolations = validation.agentResults.flatMap(r => r.violations);
   if (allViolations.length > 0) {
@@ -146,22 +162,6 @@ function runCheckerMode(test: ComplianceTestCase): string {
       content = fixResult.fixedContent;
     }
   }
-
-  // 5. Forbidden phrase checker (clean forbidden phrases via replacement)
-  const fpResult = checkForbiddenPhrases(content);
-  if (fpResult.cleanedResponse !== undefined) {
-    content = fpResult.cleanedResponse;
-  }
-
-  // 6. Compliance verifier (final deterministic checks with progressive auto-fixes)
-  const cvResult = runComplianceVerifier(content, {
-    emotion: test.context.emotion,
-    isComplaint: test.context.isComplaint,
-    channel: test.context.channel as string | undefined,
-    literacy: test.context.literacy,
-    timing: test.context.timing,
-  });
-  content = cvResult.fixedContent;
 
   return content;
 }

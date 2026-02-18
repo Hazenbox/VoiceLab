@@ -68,6 +68,7 @@ const ENTITY_MAP: Array<{ pattern: RegExp; replacement: string }> = [
   { pattern: /\bJio\s+Gold\b/gi, replacement: 'Jio Popular Plan' },
   { pattern: /\bJio\s+Platinum\b/gi, replacement: 'Jio Plus Plan' },
   { pattern: /\bJio\s+Diamond\b/gi, replacement: 'Jio Max Plan' },
+  { pattern: /\b(bronze|silver|gold|platinum|diamond)\s+(plan|package|tier|subscription)\b/gi, replacement: 'plan' },
 
   // Currency normalization
   { pattern: /\bRs\.?\s*/g, replacement: '₹' },

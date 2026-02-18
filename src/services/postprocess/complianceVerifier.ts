@@ -395,6 +395,48 @@ const CHECKS: Check[] = [
     autoFixable: true,
     fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), "i'm here if you need anything else"),
   },
+  {
+    id: 'e-04',
+    category: 'emotion',
+    severity: 'warning',
+    description: 'generic empathy opener without specifics',
+    test: (c) => {
+      const m = match(c, /^(I understand|I hear you|I get it)[.,!]\s+(?!(this|how|that|your))/im);
+      return m;
+    },
+    autoFixable: true,
+    fix: (c) => c.replace(/^(I understand|I hear you|I get it)[.,!]\s+(?!(this|how|that|your))/im, ''),
+  },
+
+  {
+    id: 'e-07',
+    category: 'emotion',
+    severity: 'warning',
+    description: 'raw error code exposed to user',
+    test: (c) => match(c, /\berror\s+(code|number)?\s*[:=]?\s*[A-Z0-9_-]{4,}/i),
+    autoFixable: true,
+    fix: (c) => c.replace(/\berror\s+(code|number)?\s*[:=]?\s*[A-Z0-9_-]{4,}/gi, 'an error'),
+  },
+  {
+    id: 'e-06',
+    category: 'emotion',
+    severity: 'warning',
+    description: 'promo mixed with support/apology',
+    test: (c) => match(c, /\b(sorry|apologies|issue|problem).*\b(also[, ]+(check|try)|you might like|our new plan|upgrade)\b/i),
+    autoFixable: true,
+    fix: (c) => {
+      return c.replace(/[^.!?\n]*\b(also[, ]+(check|try)|you might like|our new plan)\b[^.!?\n]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim();
+    },
+  },
+  {
+    id: 'e-05',
+    category: 'emotion',
+    severity: 'warning',
+    description: 'speculative timeline commitment',
+    test: (c) => match(c, /\b(by (tomorrow|tonight|end of day|next week)\s+(it|this|everything)\s+(will|should))\b/i),
+    autoFixable: true,
+    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), "we're working on this and will keep you updated"),
+  },
 
   // ── CONTEXT-AWARE (Gaps #13, #15, #17) ────────────────────────────────
   {
