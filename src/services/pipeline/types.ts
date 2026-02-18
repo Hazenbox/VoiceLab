@@ -175,6 +175,24 @@ export interface PipelineResult {
   /** Classified intent */
   intent: 'content_generation' | 'general_chat' | 'jio_inquiry' | null;
 
+  /** Post-generation compliance report */
+  complianceReport?: {
+    passed: boolean;
+    score: number;
+    totalChecks: number;
+    passedChecks: number;
+    violations: Array<{
+      id: string;
+      category: string;
+      severity: string;
+      description: string;
+      autoFixable: boolean;
+    }>;
+  } | null;
+
+  /** IDs of compliance fixes that were auto-applied */
+  complianceFixesApplied?: string[];
+
   /** Error if pipeline failed */
   error?: string;
 }

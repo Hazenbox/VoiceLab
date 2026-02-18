@@ -26,6 +26,7 @@ import { generate } from './steps/generate';
 import { validate } from './steps/validate';
 import { finalize } from './steps/finalize';
 import { runComplianceJudge } from '../postprocess/complianceJudge';
+import { runComplianceVerifier, type ComplianceReport } from '../postprocess/complianceVerifier';
 
 const MAX_RETRIES = 1;
 
@@ -150,10 +151,72 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       }
     }
 
-    // 9. Finalize (finishing layer + privacy masking)
-    const finalized = finalize(judgedContent, input, classification, assembled);
+    // 9. Post-generation compliance verifier (AD-2: user never sees errors)
+    let verifiedContent = judgedContent;
+    let complianceReport: ComplianceReport | null = null;
+    const complianceFixesApplied: string[] = [];
 
-    // 10. Build evidence for transparency panel
+    try {
+      complianceReport = runComplianceVerifier(judgedContent, {
+        emotion: assembled.constitutionalContext?.tokens?.userEmotion,
+        channel: input.contentChannel,
+        ecosystem: input.ecosystem,
+        literacy: assembled.constitutionalContext?.tokens?.literacy,
+        timing: assembled.constitutionalContext?.tokens?.timing?.period,
+        isComplaint: !!assembled.constitutionalContext?.stateContext?.requestsEscalation,
+      });
+
+      if (complianceReport.violations.length > 0) {
+        // Step 1: Apply all auto-fixable violations
+        for (const v of complianceReport.violations) {
+          if (v.autoFixable && v.fix) {
+            const before = verifiedContent;
+            verifiedContent = v.fix;
+            if (verifiedContent !== before) {
+              complianceFixesApplied.push(v.id);
+            }
+          }
+        }
+
+        // Step 2: If non-fixable errors remain and we haven't retried yet, retry
+        const nonFixableErrors = complianceReport.violations
+          .filter(v => !v.autoFixable && v.severity === 'error');
+        if (nonFixableErrors.length > 0 && retryCount < MAX_RETRIES) {
+          retryCount++;
+          const feedback = nonFixableErrors.slice(0, 3)
+            .map(v => `- ${v.description}`)
+            .join('\n');
+          const retryPrompt = `${assembled.systemPrompt}\n\n---\n\n## previous attempt feedback\nfix these issues:\n${feedback}`;
+          console.log(`[Pipeline] Compliance verifier triggered retry (${retryCount}/${MAX_RETRIES})`);
+          generated = await generate(input, retryPrompt, classification);
+          verifiedContent = generated.content;
+          // Re-run verifier on retried content
+          complianceReport = runComplianceVerifier(verifiedContent, {
+            emotion: assembled.constitutionalContext?.tokens?.userEmotion,
+            channel: input.contentChannel,
+            ecosystem: input.ecosystem,
+          });
+          // Apply auto-fixes on retried content too
+          for (const v of complianceReport.violations) {
+            if (v.autoFixable && v.fix) {
+              verifiedContent = v.fix;
+              complianceFixesApplied.push(v.id);
+            }
+          }
+        }
+
+        if (complianceFixesApplied.length > 0) {
+          console.log(`[Pipeline] Compliance verifier auto-fixed: ${complianceFixesApplied.join(', ')}`);
+        }
+      }
+    } catch (verifierError) {
+      console.warn('[Pipeline] Compliance verifier failed, using judged content:', verifierError);
+    }
+
+    // 10. Finalize (finishing layer + privacy masking)
+    const finalized = finalize(verifiedContent, input, classification, assembled);
+
+    // 11. Build evidence for transparency panel
     const evidence = buildEvidence(retrieval, validation, input);
 
     const metadata = buildMetadata(
@@ -180,6 +243,8 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       metadata,
       safetyResult: safety.result,
       intent: classification.intent,
+      complianceReport,
+      complianceFixesApplied,
     };
 
     logPipelineRun(input, result);
