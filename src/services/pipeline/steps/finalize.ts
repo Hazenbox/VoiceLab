@@ -47,7 +47,7 @@ function applySafetyPostProcess(content: string, userMessage: string): string {
   const humanImpersonation = /\bi\s+am\s+(a\s+)?(real\s+)?(?:human|person)\b/gi;
   result = result.replace(humanImpersonation, "i'm Jio's AI assistant");
 
-  return result.replace(/\s{2,}/g, ' ');
+  return result.replace(/ {2,}/g, ' ').replace(/\n{3,}/g, '\n\n');
 }
 
 export function finalize(

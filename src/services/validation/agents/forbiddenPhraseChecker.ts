@@ -385,7 +385,7 @@ function cleanResponse(response: string, violations: PhraseMatch[]): string {
   }
   
   // Clean up double spaces and orphaned punctuation
-  cleaned = cleaned.replace(/\s{2,}/g, ' ').trim();
+  cleaned = cleaned.replace(/ {2,}/g, ' ').trim();
   cleaned = cleanOrphanedPunctuation(cleaned);
   
   return cleaned;

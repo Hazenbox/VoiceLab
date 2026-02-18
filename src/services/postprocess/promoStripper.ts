@@ -69,7 +69,7 @@ export function stripPromoContent(content: string): StripResult {
   }
 
   return {
-    content: kept.join(' ').replace(/\s{2,}/g, ' ').trim(),
+    content: kept.join(' ').replace(/ {2,}/g, ' ').trim(),
     strippedCount: stripped.length,
     strippedSentences: stripped,
   };

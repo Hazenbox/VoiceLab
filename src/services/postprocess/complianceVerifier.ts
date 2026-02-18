@@ -425,7 +425,7 @@ const CHECKS: Check[] = [
     test: (c) => match(c, /\b(sorry|apologies|issue|problem).*\b(also[, ]+(check|try)|you might like|our new plan|upgrade|deal|discount|offer)\b/i),
     autoFixable: true,
     fix: (c) => {
-      return c.replace(/[^.!?\n]*\b(also[, ]+(check|try)|you might like|our new plan|upgrade|deal|discount|offer)[^.!?\n]*[.!?]?/gi, '').replace(/\s{2,}/g, ' ').trim();
+      return c.replace(/[^.!?\n]*\b(also[, ]+(check|try)|you might like|our new plan|upgrade|deal|discount|offer)[^.!?\n]*[.!?]?/gi, '').replace(/ {2,}/g, ' ').trim();
     },
   },
   {
@@ -436,7 +436,7 @@ const CHECKS: Check[] = [
     test: (c) => match(c, /\b(by (tomorrow|tonight|end of day|next week)\s+(it|this|everything)\s+(will|should))\b/i),
     autoFixable: true,
     fix: (c) => {
-      return c.replace(/[^.!?\n]*\bby (tomorrow|tonight|end of day|next week)\s+(it|this|everything)\s+(will|should)[^.!?\n]*[.!?]?/gi, "we're working on this and will keep you updated.").replace(/\s{2,}/g, ' ').trim();
+      return c.replace(/[^.!?\n]*\bby (tomorrow|tonight|end of day|next week)\s+(it|this|everything)\s+(will|should)[^.!?\n]*[.!?]?/gi, "we're working on this and will keep you updated.").replace(/ {2,}/g, ' ').trim();
     },
   },
 
