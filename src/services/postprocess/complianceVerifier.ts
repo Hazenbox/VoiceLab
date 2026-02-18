@@ -479,11 +479,12 @@ const CHECKS: Check[] = [
 
 /**
  * Run all compliance checks on content and return a structured report.
+ * Also applies all auto-fixable violations progressively and returns `fixedContent`.
  */
 export function runComplianceVerifier(
   content: string,
   context: VerifierContext = {},
-): ComplianceReport {
+): ComplianceReport & { fixedContent: string } {
   const violations: ComplianceViolation[] = [];
   const categories: Record<ViolationCategory, { passed: number; failed: number }> = {
     constitutional: { passed: 0, failed: 0 },
@@ -494,6 +495,9 @@ export function runComplianceVerifier(
     emotion: { passed: 0, failed: 0 },
     context_aware: { passed: 0, failed: 0 },
   };
+
+  // Collect violations and the check references for progressive fixing
+  const fixableChecks: Array<{ id: string; check: Check }> = [];
 
   for (const check of CHECKS) {
     const result = check.test(content, context);
@@ -506,10 +510,34 @@ export function runComplianceVerifier(
         description: check.description,
         match: result,
         autoFixable: check.autoFixable,
-        fix: check.autoFixable && check.fix ? check.fix(content, result) : undefined,
       });
+      if (check.autoFixable && check.fix) {
+        fixableChecks.push({ id: check.id, check });
+      }
     } else {
       categories[check.category].passed++;
+    }
+  }
+
+  // Apply auto-fixes PROGRESSIVELY (each fix runs on the result of the previous)
+  let fixedContent = content;
+  const appliedFixIds: string[] = [];
+  for (const { id, check } of fixableChecks) {
+    if (!check.fix) continue;
+    const testResult = check.test(fixedContent, context);
+    if (testResult !== null) {
+      const before = fixedContent;
+      fixedContent = check.fix(fixedContent, testResult);
+      if (fixedContent !== before) {
+        appliedFixIds.push(id);
+      }
+    }
+  }
+
+  // Update violation records with fix status
+  for (const v of violations) {
+    if (appliedFixIds.includes(v.id)) {
+      v.fix = 'applied';
     }
   }
 
@@ -524,31 +552,8 @@ export function runComplianceVerifier(
     passedChecks,
     violations,
     categories,
+    fixedContent,
   };
-}
-
-/**
- * Apply all auto-fixable violations to content.
- * Returns the fixed content and a list of applied fixes.
- */
-export function applyComplianceFixes(
-  content: string,
-  violations: ComplianceViolation[],
-): { content: string; applied: string[] } {
-  let fixed = content;
-  const applied: string[] = [];
-
-  for (const v of violations) {
-    if (v.autoFixable && v.fix) {
-      const before = fixed;
-      fixed = v.fix;
-      if (fixed !== before) {
-        applied.push(v.id);
-      }
-    }
-  }
-
-  return { content: fixed, applied };
 }
 
 /**

@@ -157,57 +157,46 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     const complianceFixesApplied: string[] = [];
 
     try {
-      complianceReport = runComplianceVerifier(judgedContent, {
+      const verifierCtx = {
         emotion: assembled.constitutionalContext?.tokens?.userEmotion,
         channel: input.contentChannel,
         ecosystem: input.ecosystem,
         literacy: assembled.constitutionalContext?.tokens?.literacy,
         timing: assembled.constitutionalContext?.tokens?.timing?.period,
         isComplaint: !!assembled.constitutionalContext?.stateContext?.requestsEscalation,
-      });
+      };
 
-      if (complianceReport.violations.length > 0) {
-        // Step 1: Apply all auto-fixable violations
-        for (const v of complianceReport.violations) {
-          if (v.autoFixable && v.fix) {
-            const before = verifiedContent;
-            verifiedContent = v.fix;
-            if (verifiedContent !== before) {
-              complianceFixesApplied.push(v.id);
-            }
-          }
-        }
+      const firstPass = runComplianceVerifier(judgedContent, verifierCtx);
+      complianceReport = firstPass;
+      verifiedContent = firstPass.fixedContent;
 
-        // Step 2: If non-fixable errors remain and we haven't retried yet, retry
-        const nonFixableErrors = complianceReport.violations
-          .filter(v => !v.autoFixable && v.severity === 'error');
-        if (nonFixableErrors.length > 0 && retryCount < MAX_RETRIES) {
-          retryCount++;
-          const feedback = nonFixableErrors.slice(0, 3)
-            .map(v => `- ${v.description}`)
-            .join('\n');
-          const retryPrompt = `${assembled.systemPrompt}\n\n---\n\n## previous attempt feedback\nfix these issues:\n${feedback}`;
-          console.log(`[Pipeline] Compliance verifier triggered retry (${retryCount}/${MAX_RETRIES})`);
-          generated = await generate(input, retryPrompt, classification);
-          verifiedContent = generated.content;
-          // Re-run verifier on retried content
-          complianceReport = runComplianceVerifier(verifiedContent, {
-            emotion: assembled.constitutionalContext?.tokens?.userEmotion,
-            channel: input.contentChannel,
-            ecosystem: input.ecosystem,
-          });
-          // Apply auto-fixes on retried content too
-          for (const v of complianceReport.violations) {
-            if (v.autoFixable && v.fix) {
-              verifiedContent = v.fix;
-              complianceFixesApplied.push(v.id);
-            }
-          }
-        }
+      // Track which fixes were applied
+      for (const v of firstPass.violations) {
+        if (v.fix === 'applied') complianceFixesApplied.push(v.id);
+      }
 
-        if (complianceFixesApplied.length > 0) {
-          console.log(`[Pipeline] Compliance verifier auto-fixed: ${complianceFixesApplied.join(', ')}`);
+      // If non-fixable errors remain and we haven't retried yet, retry
+      const nonFixableErrors = firstPass.violations
+        .filter(v => !v.autoFixable && v.severity === 'error');
+      if (nonFixableErrors.length > 0 && retryCount < MAX_RETRIES) {
+        retryCount++;
+        const feedback = nonFixableErrors.slice(0, 3)
+          .map(v => `- ${v.description}`)
+          .join('\n');
+        const retryPrompt = `${assembled.systemPrompt}\n\n---\n\n## previous attempt feedback\nfix these issues:\n${feedback}`;
+        console.log(`[Pipeline] Compliance verifier triggered retry (${retryCount}/${MAX_RETRIES})`);
+        generated = await generate(input, retryPrompt, classification);
+
+        const retryPass = runComplianceVerifier(generated.content, verifierCtx);
+        complianceReport = retryPass;
+        verifiedContent = retryPass.fixedContent;
+        for (const v of retryPass.violations) {
+          if (v.fix === 'applied') complianceFixesApplied.push(v.id);
         }
+      }
+
+      if (complianceFixesApplied.length > 0) {
+        console.log(`[Pipeline] Compliance verifier auto-fixed: ${complianceFixesApplied.join(', ')}`);
       }
     } catch (verifierError) {
       console.warn('[Pipeline] Compliance verifier failed, using judged content:', verifierError);

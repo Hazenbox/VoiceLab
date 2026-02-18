@@ -41,7 +41,7 @@ const ENTITY_MAP: Array<{ pattern: RegExp; replacement: string }> = [
   { pattern: /\bJio\s+Brain\b/gi, replacement: 'JioBrain' },
   { pattern: /\bJio\s+Platforms\b/gi, replacement: 'Jio Platforms' },
 
-  // Common misspellings
+  // Common misspellings (lowercase variants)
   { pattern: /\bjiofibre\b/gi, replacement: 'JioFiber' },
   { pattern: /\bjio\s*fi\b/gi, replacement: 'JioFiber' },
   { pattern: /\bjiocinema\b/g, replacement: 'JioCinema' },
@@ -52,6 +52,22 @@ const ENTITY_MAP: Array<{ pattern: RegExp; replacement: string }> = [
   { pattern: /\bjiogames\b/g, replacement: 'JioGames' },
   { pattern: /\bjionews\b/g, replacement: 'JioNews' },
   { pattern: /\bjiophone\b/g, replacement: 'JioPhone' },
+  { pattern: /\bjiomeet\b/g, replacement: 'JioMeet' },
+  { pattern: /\bjiopay\b/g, replacement: 'JioPay' },
+  { pattern: /\bjiohealth\b/g, replacement: 'JioHealth' },
+  { pattern: /\bjiosecurity\b/g, replacement: 'JioSecurity' },
+  { pattern: /\bjioairfiber\b/g, replacement: 'JioAirFiber' },
+  { pattern: /\bjiobusiness\b/g, replacement: 'JioBusiness' },
+  { pattern: /\bjioswitch\b/g, replacement: 'JioSwitch' },
+
+  // All-caps JIO → Jio (standalone, not part of compound like JioFiber)
+  { pattern: /\bJIO\b/g, replacement: 'Jio' },
+
+  // Deprecated / incorrect plan tier names → current names
+  { pattern: /\bJio\s+Silver\b/gi, replacement: 'Jio Freedom Plan' },
+  { pattern: /\bJio\s+Gold\b/gi, replacement: 'Jio Popular Plan' },
+  { pattern: /\bJio\s+Platinum\b/gi, replacement: 'Jio Plus Plan' },
+  { pattern: /\bJio\s+Diamond\b/gi, replacement: 'Jio Max Plan' },
 
   // Currency normalization
   { pattern: /\bRs\.?\s*/g, replacement: '₹' },
