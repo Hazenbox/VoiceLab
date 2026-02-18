@@ -41,6 +41,13 @@ interface JudgeCheckResult {
   structure: boolean;
   warmth: boolean;
   responsibility: boolean;
+  naturalness: boolean;
+  simplicity: boolean;
+  forwardMomentum: boolean;
+  brandAlignment: boolean;
+  emotionalCorrectness: boolean;
+  serviceFirst: boolean;
+  inclusivity: boolean;
 }
 
 // ── Judge Prompt ─────────────────────────────────────────────────────────
@@ -53,6 +60,13 @@ function buildJudgePrompt(content: string, userMessage: string): string {
 3. STRUCTURE: Does the response follow this order: acknowledge → empathize (if needed) → guide/explain → next step?
 4. WARMTH: Does the response sound like a caring elder sibling — warm but genuine, not robotic or overly formal?
 5. RESPONSIBILITY: When mentioning errors or issues, does the response use "we" language (taking responsibility) rather than blaming the user or "the system"?
+6. NATURALNESS: Does it read like a real person wrote it, not a template engine? No "dear valued customer", no "we regret to inform you", no corporate filler.
+7. SIMPLICITY: Is the language simple enough for a Grade 8 student? No jargon, no complex sentence structures, short sentences preferred.
+8. FORWARD MOMENTUM: Does the response move the conversation forward with a clear, actionable next step (not just information)?
+9. BRAND ALIGNMENT: Does it feel like Jio -- Indian, inclusive, warm, tech-forward -- not like a generic Western chatbot?
+10. EMOTIONAL CORRECTNESS: Is the emotional tone proportional to the user's state? (No excessive enthusiasm for complaints, no cold efficiency for anxious users)
+11. SERVICE FIRST: Is the response focused on helping the user, not selling or promoting? (Suggestions OK, but help comes first)
+12. INCLUSIVITY: Is the language gender-neutral, accessible, and free from assumptions about the user's background?
 
 Format your answer EXACTLY like this (no extra text):
 1. YES/NO
@@ -60,8 +74,15 @@ Format your answer EXACTLY like this (no extra text):
 3. YES/NO
 4. YES/NO
 5. YES/NO
+6. YES/NO
+7. YES/NO
+8. YES/NO
+9. YES/NO
+10. YES/NO
+11. YES/NO
+12. YES/NO
 
-If ANY answer is NO, add a section starting with "REWRITE:" and provide the corrected response fixing ONLY the failed checks. Keep everything else identical. If all YES, just output the 5 answers.
+If ANY answer is NO, add a section starting with "REWRITE:" and provide the corrected response fixing ONLY the failed checks. Keep everything else identical. If all YES, just output the 12 answers.
 
 User message: "${userMessage}"
 
@@ -79,10 +100,19 @@ function parseJudgeResponse(response: string): { checks: JudgeCheckResult; rewri
     structure: true,
     warmth: true,
     responsibility: true,
+    naturalness: true,
+    simplicity: true,
+    forwardMomentum: true,
+    brandAlignment: true,
+    emotionalCorrectness: true,
+    serviceFirst: true,
+    inclusivity: true,
   };
 
   const checkKeys: (keyof JudgeCheckResult)[] = [
     'empathy', 'turnDiscipline', 'structure', 'warmth', 'responsibility',
+    'naturalness', 'simplicity', 'forwardMomentum', 'brandAlignment',
+    'emotionalCorrectness', 'serviceFirst', 'inclusivity',
   ];
 
   let lineIdx = 0;
@@ -145,11 +175,25 @@ export async function runComplianceJudge(
     const parsed = parseJudgeResponse(result.content);
 
     const failedChecks: string[] = [];
-    if (!parsed.checks.empathy) failedChecks.push('empathy');
-    if (!parsed.checks.turnDiscipline) failedChecks.push('turn_discipline');
-    if (!parsed.checks.structure) failedChecks.push('structure');
-    if (!parsed.checks.warmth) failedChecks.push('warmth');
-    if (!parsed.checks.responsibility) failedChecks.push('responsibility');
+    const checkNameMap: Record<keyof JudgeCheckResult, string> = {
+      empathy: 'empathy',
+      turnDiscipline: 'turn_discipline',
+      structure: 'structure',
+      warmth: 'warmth',
+      responsibility: 'responsibility',
+      naturalness: 'naturalness',
+      simplicity: 'simplicity',
+      forwardMomentum: 'forward_momentum',
+      brandAlignment: 'brand_alignment',
+      emotionalCorrectness: 'emotional_correctness',
+      serviceFirst: 'service_first',
+      inclusivity: 'inclusivity',
+    };
+    for (const [key, label] of Object.entries(checkNameMap)) {
+      if (!parsed.checks[key as keyof JudgeCheckResult]) {
+        failedChecks.push(label);
+      }
+    }
 
     const allPassed = failedChecks.length === 0;
 
@@ -159,7 +203,7 @@ export async function runComplianceJudge(
     if (!allPassed) {
       console.log(`[ComplianceJudge] Failed checks: ${failedChecks.join(', ')}. ${parsed.rewrite ? 'Rewrite applied.' : 'No rewrite provided.'}`);
     } else {
-      console.log('[ComplianceJudge] All 5 checks passed.');
+      console.log('[ComplianceJudge] All 12 checks passed.');
     }
 
     return {
