@@ -177,7 +177,7 @@ export function getApiBaseUrl(): string {
  * This is bundled into the client - acceptable for internal tools only
  */
 export function getInternalApiKey(): string {
-  return getEnv('VITE_INTERNAL_API_KEY', '');
+  return getEnv('INTERNAL_API_KEY', '');
 }
 
 /**
