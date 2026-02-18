@@ -67,6 +67,13 @@ interface Check {
   fix?: (content: string, match: string) => string;
 }
 
+const BRAND_WORDS = new Set([
+  'Jio', 'JioCinema', 'JioMart', 'JioSaavn', 'JioFiber', 'JioAirFiber',
+  'JioTV', 'JioCloud', 'JioGames', 'JioMoney', 'JioNews', 'JioPhone',
+  'MyJio', 'JioPay', 'JioMeet', 'JioBrain', 'Reliance', 'India',
+  'PhonePe', 'Google', 'WiFi',
+]);
+
 const CHECKS: Check[] = [
   // ── CONSTITUTIONAL (KB/01) ────────────────────────────────────────────
   {
@@ -167,10 +174,36 @@ const CHECKS: Check[] = [
     severity: 'warning',
     description: 'title case in labels/headings (should be sentence case)',
     test: (c) => {
-      const titleCasePattern = /^[A-Z][a-z]+ [A-Z][a-z]+ [A-Z][a-z]+/m;
-      return titleCasePattern.test(c) ? c.match(titleCasePattern)?.[0] || null : null;
+      const lines = c.split('\n');
+      for (const line of lines) {
+        const stripped = line.replace(/^[\s*#\d.:\-]+/, '').trim();
+        if (!stripped) continue;
+        const words = stripped.split(/\s+/).filter(w => w.length > 2 && !/^[A-Z]{2,}$/.test(w));
+        if (words.length < 2) continue;
+        const capWords = words.filter(w => /^[A-Z][a-z]/.test(w));
+        if (capWords.length / words.length >= 0.6) return stripped;
+      }
+      return null;
     },
-    autoFixable: false,
+    autoFixable: true,
+    fix: (c) => {
+      return c.split('\n').map(line => {
+        const stripped = line.replace(/^[\s*#\d.:\-]+/, '').trim();
+        if (!stripped) return line;
+        const words = stripped.split(/\s+/).filter(w => w.length > 2 && !/^[A-Z]{2,}$/.test(w));
+        if (words.length < 2) return line;
+        const capWords = words.filter(w => /^[A-Z][a-z]/.test(w));
+        if (capWords.length / words.length < 0.6) return line;
+        let isFirst = true;
+        return line.replace(/\b([A-Z][a-z]+)\b/g, (word, _w, offset) => {
+          const before = line.substring(0, offset);
+          const isFirstWord = /^[\s*#\d.\-:]*$/.test(before);
+          if (isFirstWord && isFirst) { isFirst = false; return word; }
+          if (BRAND_WORDS.has(word)) return word;
+          return word.toLowerCase();
+        });
+      }).join('\n');
+    },
   },
 
   // ── WORDING (KB/09) ───────────────────────────────────────────────────
