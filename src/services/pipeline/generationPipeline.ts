@@ -205,20 +205,28 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       console.warn('[Pipeline] Compliance verifier failed, using judged content:', verifierError);
     }
 
-    // 9b. Post-process: entity normalizer + forbidden phrases + direct replacements + format fixes
+    // 9b. Post-process steps (individually protected so one failure doesn't skip the rest)
     let postProcessed = verifiedContent;
+
     try {
       const entityResult = normalizeEntities(postProcessed);
       postProcessed = entityResult.content;
+    } catch (e) { console.warn('[Pipeline] Entity normalization failed:', e); }
+
+    try {
       postProcessed = applyDirectReplacements(postProcessed);
+    } catch (e) { console.warn('[Pipeline] Direct replacements failed:', e); }
+
+    try {
       const fpResult = checkForbiddenPhrases(postProcessed);
       if (fpResult.cleanedResponse !== undefined) {
         postProcessed = fpResult.cleanedResponse;
       }
+    } catch (e) { console.warn('[Pipeline] Forbidden phrases check failed:', e); }
+
+    try {
       postProcessed = applyFormatFixes(postProcessed);
-    } catch (ppErr) {
-      console.warn('[Pipeline] Post-process step failed, using verifier output:', ppErr);
-    }
+    } catch (e) { console.warn('[Pipeline] Format fixes failed:', e); }
 
     // 10. Finalize (finishing layer + privacy masking)
     const finalized = finalize(postProcessed, input, classification, assembled);
