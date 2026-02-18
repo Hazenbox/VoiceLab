@@ -108,6 +108,23 @@ const JIO_PRODUCT_NAMES = /\b(jio|jiofiber|jio\s*fiber|jiocinema|jio\s*cinema|ji
 const QUESTION_PATTERNS = /\b(what|how|tell\s+me|explain|when|where|which|is|does|can|should|will|would|could|why|who)\b/i;
 
 /**
+ * Support-related keywords that imply Jio service issues.
+ * These keywords, when combined with issue indicators, should be classified as jio_inquiry
+ * since they likely relate to Jio services (JioFiber, Jio mobile, etc.)
+ */
+const SUPPORT_SERVICE_KEYWORDS = /\b(internet|wifi|wi-fi|broadband|fiber|fibre|connection|network|router|speed|data|signal|ott|streaming|tv|mobile|sim|phone)\b/i;
+
+/**
+ * Issue/complaint indicators that suggest a support request
+ */
+const ISSUE_INDICATORS = /\b(slow|not working|doesn'?t work|won'?t work|problem|issue|error|fail|down|disconnected|buffering|lag|dropping|unstable|poor|bad|trouble|help|fix|broken)\b/i;
+
+/**
+ * Billing/recharge keywords - also indicate Jio service inquiry
+ */
+const BILLING_KEYWORDS = /\b(recharge|bill|billing|payment|plan|balance|outage|expire|expiry|renew|subscription|pack|validity)\b/i;
+
+/**
  * Combined: question + Jio product mention
  */
 function isJioInquiry(text: string): { match: boolean; signals: string[] } {
@@ -122,6 +139,30 @@ function isJioInquiry(text: string): { match: boolean; signals: string[] } {
   const aboutJio = /\babout\s+(jio\w*)/i.exec(text);
   if (aboutJio) {
     return { match: true, signals: [`inquiry about ${aboutJio[1]}`] };
+  }
+  
+  // Support query detection: service keyword + issue indicator
+  // e.g., "My internet is slow", "WiFi not working", "connection problem"
+  const hasServiceKeyword = SUPPORT_SERVICE_KEYWORDS.test(text);
+  const hasIssueIndicator = ISSUE_INDICATORS.test(text);
+  
+  if (hasServiceKeyword && hasIssueIndicator) {
+    const serviceMatch = text.match(SUPPORT_SERVICE_KEYWORDS);
+    const issueMatch = text.match(ISSUE_INDICATORS);
+    return { 
+      match: true, 
+      signals: [`support request: ${serviceMatch?.[0]} ${issueMatch?.[0]}`] 
+    };
+  }
+  
+  // Billing/recharge queries are also Jio-related
+  const hasBillingKeyword = BILLING_KEYWORDS.test(text);
+  if (hasBillingKeyword) {
+    const billingMatch = text.match(BILLING_KEYWORDS);
+    return { 
+      match: true, 
+      signals: [`billing inquiry: ${billingMatch?.[0]}`] 
+    };
   }
   
   return { match: false, signals: [] };
