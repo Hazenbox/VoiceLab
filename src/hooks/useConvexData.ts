@@ -30,27 +30,27 @@ export function useConvexData(deviceId: string | undefined) {
   // ── Convex Queries ──────────────────────────────────────────────────
 
   const convexKnowledge = useQuery(
-    featureFlags.knowledgeBase ? api.knowledge.getKnowledgeForPrompt : undefined,
+    api.knowledge.getKnowledgeForPrompt,
     featureFlags.knowledgeBase ? { ecosystem, channel: contentChannel } : 'skip'
   );
 
   const convexCorrections = useQuery(
-    featureFlags.learning ? api.corrections.getLearningCorrections : undefined,
+    api.corrections.getLearningCorrections,
     featureFlags.learning ? { ecosystem, channel: contentChannel, limit: 20 } : 'skip'
   );
 
   const convexUserLearningProfile = useQuery(
-    featureFlags.learning && deviceId ? api.userProfiles.getProfileByDeviceId : undefined,
+    api.userProfiles.getProfileByDeviceId,
     featureFlags.learning && deviceId ? { deviceId } : 'skip'
   );
 
   const convexTrainingExamples = useQuery(
-    featureFlags.learning ? api.seedTrainingExamples.getHighQuality : undefined,
+    api.seedTrainingExamples.getHighQuality,
     featureFlags.learning ? { minScore: 4, limit: 5 } : 'skip'
   );
 
   const convexDirectiveOverrides = useQuery(
-    featureFlags.constitutionalWrapper ? api.seedDirectiveOverrides.getByContext : undefined,
+    api.seedDirectiveOverrides.getByContext,
     featureFlags.constitutionalWrapper ? { ecosystem, channel: contentChannel } : 'skip'
   );
 
