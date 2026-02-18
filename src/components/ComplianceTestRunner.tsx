@@ -301,7 +301,7 @@ export function ComplianceTestRunner() {
   // ─── RENDER ──────────────────────────────────────────────────────────
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto', fontFamily: 'system-ui, -apple-system, sans-serif', height: '100vh', overflowY: 'auto' }}>
       <button
         onClick={() => useUIStore.getState().setActiveView('main')}
         style={{
