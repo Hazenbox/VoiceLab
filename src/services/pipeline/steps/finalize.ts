@@ -25,6 +25,31 @@ import { applyFormatFixes } from '../../trust/autoFixEngine';
 import type { FinalizeResult, ClassifyResult, AssembleResult } from '../types';
 import type { PipelineInput } from '../types';
 
+/**
+ * Deterministic safety post-processor.
+ * Catches safety-critical content that the LLM might generate despite instructions.
+ * Runs BEFORE finishing layer so that joy/signatures are never added to safety responses.
+ */
+function applySafetyPostProcess(content: string, userMessage: string): string {
+  let result = content;
+
+  const selfHarmKeywords = /\b(suicide|kill\s+(myself|yourself)|end\s+(my|your)\s+life|self[- ]harm|want\s+to\s+die|hurt\s+myself)\b/i;
+  if (selfHarmKeywords.test(userMessage) && !/AASRA|iCall|9820466726|9152987821|helpline/i.test(result)) {
+    result += '\n\nif you or someone you know is in crisis, please reach out:\n- AASRA: 9820466726 (24/7)\n- iCall: 9152987821\n- emergency: 112';
+  }
+
+  const competitorBrands = /\b(Airtel|Vodafone|Vi|BSNL|MTNL|ACT\s+Fibernet|Hathway)\b/gi;
+  result = result.replace(competitorBrands, 'other providers');
+
+  const aiProviderLeak = /\b(OpenAI|GPT-?\d*|ChatGPT|Claude|Anthropic|Google\s+AI|Gemini|Llama|Mistral)\b/gi;
+  result = result.replace(aiProviderLeak, '');
+
+  const humanImpersonation = /\bi\s+am\s+(a\s+)?(real\s+)?(?:human|person)\b/gi;
+  result = result.replace(humanImpersonation, "i'm Jio's AI assistant");
+
+  return result.replace(/\s{2,}/g, ' ');
+}
+
 export function finalize(
   content: string,
   input: PipelineInput,
@@ -35,7 +60,14 @@ export function finalize(
   const constitutionalContext = assembled.constitutionalContext;
   const isGeneralChat = classification.intent === 'general_chat';
 
-  // 0. Normalize markdown tables (fix malformed LLM output)
+  // 0a. Safety post-process (deterministic catch-all for critical safety content)
+  try {
+    finalContent = applySafetyPostProcess(finalContent, input.message);
+  } catch (error) {
+    console.warn('[Pipeline:Finalize] Safety post-process failed:', error);
+  }
+
+  // 0b. Normalize markdown tables (fix malformed LLM output)
   try {
     finalContent = normalizeMarkdownTables(finalContent);
   } catch (error) {
