@@ -313,6 +313,35 @@ function createMarkdownComponents(theme: ThemeColors): Components {
 }
 
 /**
+ * Sanitize content to strip any leaked test/debug metadata
+ * Defense-in-depth: even if test data somehow leaks into production,
+ * this ensures users never see internal debugging output.
+ * 
+ * Patterns removed:
+ * - "notes: ..." (compliance test notes)
+ * - "missing expected patterns: ..." (compliance test failures)
+ * - "missing PASS patterns: ..." (compliance test failures)
+ * - "forbidden patterns found: ..." (compliance test violations)
+ * - "**[PASS/FAIL/WARN/ERROR] score: X%** | ..." (test result headers)
+ */
+function sanitizeTestMetadata(content: string): string {
+  return content
+    // Remove test result header lines (e.g., "**[PASS] score: 85%** | A1-04: ...")
+    .replace(/^\*\*\[(PASS|FAIL|WARN|ERROR)\]\s*score:\s*\d+%\*\*\s*\|\s*[A-Z0-9-]+:.*\n\n?/gm, '')
+    // Remove notes section (including any patterns after it)
+    .replace(/\n\nnotes:\s*[^\n]*(?:\n[^\n]*)*$/s, '')
+    // Remove missing PASS patterns (could appear standalone or after notes)
+    .replace(/\n*missing PASS patterns?:.*$/gim, '')
+    // Remove missing expected patterns
+    .replace(/\n*missing expected patterns?:.*$/gim, '')
+    // Remove forbidden patterns found
+    .replace(/\n*forbidden patterns? found:.*$/gim, '')
+    // Clean up any resulting multiple blank lines
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/**
  * Normalize markdown to fix common LLM output issues
  * - Fixes numbered lists broken by blank lines (including nested bullets)
  * - Handles: "1. Title\n - bullet\n\n2. Title" -> continuous list with nested bullets
@@ -457,10 +486,16 @@ export const MessageContent = memo(function MessageContent({
     [theme]
   );
 
-  // Normalize markdown to fix common LLM output issues (e.g., broken numbered lists)
-  const normalizedContent = useMemo(
-    () => normalizeMarkdown(content),
+  // First: sanitize any leaked test metadata (defense-in-depth)
+  const sanitizedContent = useMemo(
+    () => sanitizeTestMetadata(content),
     [content]
+  );
+  
+  // Then: normalize markdown to fix common LLM output issues (e.g., broken numbered lists)
+  const normalizedContent = useMemo(
+    () => normalizeMarkdown(sanitizedContent),
+    [sanitizedContent]
   );
   
   // Apply highlighting if text is specified

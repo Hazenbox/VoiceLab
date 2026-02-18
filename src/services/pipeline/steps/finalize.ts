@@ -111,6 +111,7 @@ export function finalize(
 
   // 7. Legacy privacy masking (fallback)
   let wasPrivacyMasked = false;
+  const contentBeforeMasking = finalContent;
   try {
     if (containsSensitiveData(finalContent)) {
       const maskResult = maskSensitiveData(finalContent);
@@ -123,10 +124,86 @@ export function finalize(
     console.warn('[Pipeline:Finalize] Privacy masking failed:', error);
   }
 
+  // 8. Masking integrity check - detect suspicious masking patterns
+  // If masking corrupted normal text, revert to pre-masking content
+  try {
+    const integrityResult = checkMaskingIntegrity(finalContent, contentBeforeMasking);
+    if (!integrityResult.passed) {
+      console.warn(`[Pipeline:Finalize] Masking integrity check failed: ${integrityResult.reason}. Reverting to pre-masking content.`);
+      finalContent = contentBeforeMasking;
+      wasPrivacyMasked = false;
+    }
+  } catch (error) {
+    console.warn('[Pipeline:Finalize] Masking integrity check failed:', error);
+  }
+
   return {
     content: finalContent,
     wasPrivacyMasked,
   };
+}
+
+/**
+ * Check if masking introduced suspicious patterns that indicate false positives.
+ * 
+ * Detects patterns like:
+ * - Words with asterisks in the middle (e.g., "in******************en")
+ * - Too many asterisks in a row (more than typical PII length)
+ * - Asterisks that don't look like proper PII masking formats
+ */
+function checkMaskingIntegrity(
+  maskedContent: string,
+  originalContent: string
+): { passed: boolean; reason?: string } {
+  // Pattern 1: Detect words with asterisks in the middle that don't look like PII
+  // Real PII masking produces patterns like: "****1234", "ab****cd", "XXXX XXXX 1234"
+  // False positive masking produces: "in******************en" (asterisks inside a word)
+  const suspiciousWordPattern = /\b[a-zA-Z]{1,3}\*{5,}[a-zA-Z]{1,3}\b/g;
+  const suspiciousMatches = maskedContent.match(suspiciousWordPattern);
+  
+  if (suspiciousMatches && suspiciousMatches.length > 0) {
+    return {
+      passed: false,
+      reason: `Detected ${suspiciousMatches.length} suspicious masking pattern(s): ${suspiciousMatches.slice(0, 3).join(', ')}`
+    };
+  }
+  
+  // Pattern 2: Detect very long asterisk sequences (>20) that aren't typical PII
+  // Typical PII: phone (10 digits), Aadhaar (12), PAN (10), credit card (16)
+  // Suspicious: 20+ consecutive asterisks often indicate false positives
+  const longAsteriskPattern = /\*{20,}/g;
+  const longMatches = maskedContent.match(longAsteriskPattern);
+  
+  if (longMatches && longMatches.length > 0) {
+    // Check if original content had actual long PII (unlikely in normal responses)
+    const originalHadLongPII = /\d{20,}/.test(originalContent);
+    if (!originalHadLongPII) {
+      return {
+        passed: false,
+        reason: `Detected ${longMatches.length} unusually long masking pattern(s)`
+      };
+    }
+  }
+  
+  // Pattern 3: Check if masking removed too much content
+  // If more than 20% of alphabetic content was replaced with asterisks, it's suspicious
+  const originalAlphaCount = (originalContent.match(/[a-zA-Z]/g) || []).length;
+  const maskedAlphaCount = (maskedContent.match(/[a-zA-Z]/g) || []).length;
+  const asteriskCount = (maskedContent.match(/\*/g) || []).length;
+  
+  if (originalAlphaCount > 50) { // Only check for substantial content
+    const alphaLossRatio = (originalAlphaCount - maskedAlphaCount) / originalAlphaCount;
+    const asteriskRatio = asteriskCount / originalContent.length;
+    
+    if (alphaLossRatio > 0.2 || asteriskRatio > 0.15) {
+      return {
+        passed: false,
+        reason: `Excessive masking detected: ${Math.round(alphaLossRatio * 100)}% alpha loss, ${Math.round(asteriskRatio * 100)}% asterisks`
+      };
+    }
+  }
+  
+  return { passed: true };
 }
 
 /**

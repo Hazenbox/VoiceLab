@@ -46,6 +46,71 @@ interface ProjectMapping {
 
 const TEST_PROJECT_PREFIX = '[test] ';
 
+// Separate storage key for compliance test results - completely isolated from production chatStorage
+const TEST_STORAGE_KEY = 'voicelab_compliance_test_results';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ISOLATED TEST STORAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface TestStorageEntry {
+  projectId: string;
+  messages: Array<{
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: number;
+    testMetadata?: {
+      testId: string;
+      status: string;
+      score: number;
+      notes: string[];
+      failedPatterns: string[];
+      failPatternMatches: string[];
+    };
+  }>;
+}
+
+const testStorage = {
+  load(projectId: string): TestStorageEntry['messages'] {
+    try {
+      const data = localStorage.getItem(TEST_STORAGE_KEY);
+      if (!data) return [];
+      const store: Record<string, TestStorageEntry['messages']> = JSON.parse(data);
+      return store[projectId] || [];
+    } catch {
+      return [];
+    }
+  },
+  
+  save(projectId: string, messages: TestStorageEntry['messages']): void {
+    try {
+      const data = localStorage.getItem(TEST_STORAGE_KEY);
+      const store: Record<string, TestStorageEntry['messages']> = data ? JSON.parse(data) : {};
+      store[projectId] = messages;
+      localStorage.setItem(TEST_STORAGE_KEY, JSON.stringify(store));
+    } catch (err) {
+      console.warn('[TestStorage] Failed to save:', err);
+    }
+  },
+  
+  clear(projectId: string): void {
+    try {
+      const data = localStorage.getItem(TEST_STORAGE_KEY);
+      if (!data) return;
+      const store: Record<string, TestStorageEntry['messages']> = JSON.parse(data);
+      delete store[projectId];
+      localStorage.setItem(TEST_STORAGE_KEY, JSON.stringify(store));
+    } catch (err) {
+      console.warn('[TestStorage] Failed to clear:', err);
+    }
+  },
+  
+  clearAll(): void {
+    localStorage.removeItem(TEST_STORAGE_KEY);
+  },
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -81,8 +146,12 @@ export function ComplianceTestRunner() {
     const testProjects = existingProjects.filter(p => p.name.startsWith(TEST_PROJECT_PREFIX));
     for (const p of testProjects) {
       deleteProject(p.id);
+      // Clear from both storages to ensure complete cleanup
       chatStorage.clear(p.id);
+      testStorage.clear(p.id);
     }
+    // Also clear all test storage to be safe
+    testStorage.clearAll();
     setCleanedUp(true);
   }, [deleteProject]);
 
@@ -100,48 +169,51 @@ export function ComplianceTestRunner() {
     return mappings;
   }, [createProject]);
 
-  // ─── SAVE TEST MESSAGE TO CHAT ───────────────────────────────────────
+  // ─── SAVE TEST MESSAGE TO ISOLATED TEST STORAGE ────────────────────────
+  // Important: Test results are stored in a SEPARATE storage from production chatStorage
+  // This prevents test metadata (notes:, missing expected:, etc.) from leaking to users
 
   const saveTestMessages = useCallback(async (
     projectId: string,
     test: ComplianceTestCase,
     result: TestResult,
   ) => {
-    const existing = chatStorage.load(projectId);
+    const existing = testStorage.load(projectId);
     const now = Date.now();
 
-    const userMsg: ChatMessage = {
+    const userMsg = {
       id: generateId(),
-      role: 'user',
+      role: 'user' as const,
       content: test.mode === 'checker'
         ? `[CHECKER] ${test.description}\n\ntest content:\n${test.testContent ?? ''}`
         : test.prompt,
       timestamp: now,
-      type: 'text',
-      sourceMode: 'copy',
     };
 
+    // Store clean content WITHOUT debug metadata embedded in the string
+    // Debug metadata is stored separately in testMetadata field
     const statusLabel = result.status.toUpperCase();
     const scoreStr = `${Math.round(result.score * 100)}%`;
-    const notes = result.notes.length > 0 ? `\n\nnotes: ${result.notes.join('; ')}` : '';
-    const patterns = result.failPatternMatches.length > 0
-      ? `\n\nforbidden patterns found: ${result.failPatternMatches.join(', ')}`
-      : '';
-    const missing = result.failedPatterns.length > 0
-      ? `\nmissing expected patterns: ${result.failedPatterns.join(', ')}`
-      : '';
 
-    const assistantMsg: ChatMessage = {
+    const assistantMsg = {
       id: generateId(),
-      role: 'assistant',
-      content: `**[${statusLabel}] score: ${scoreStr}** | ${test.id}: ${test.description}\n\n${result.actualOutput || '(empty output)'}${notes}${patterns}${missing}`,
+      role: 'assistant' as const,
+      // Clean content: only the actual output + status header (no debug notes/patterns)
+      content: `**[${statusLabel}] score: ${scoreStr}** | ${test.id}: ${test.description}\n\n${result.actualOutput || '(empty output)'}`,
       timestamp: now + 1,
-      type: 'text',
-      sourceMode: 'copy',
-      parentMessageId: userMsg.id,
+      // Test metadata stored separately - not embedded in content
+      testMetadata: {
+        testId: result.testId,
+        status: result.status,
+        score: result.score,
+        notes: result.notes,
+        failedPatterns: result.failedPatterns,
+        failPatternMatches: result.failPatternMatches,
+      },
     };
 
-    await chatStorage.save(projectId, [...existing, userMsg, assistantMsg]);
+    // Save to isolated test storage (NOT production chatStorage)
+    testStorage.save(projectId, [...existing, userMsg, assistantMsg]);
   }, []);
 
   // ─── RUN ALL TESTS ──────────────────────────────────────────────────

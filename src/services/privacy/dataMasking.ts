@@ -151,8 +151,57 @@ const SENSITIVE_PATTERNS: Record<SensitiveDataType, {
   },
   name: {
     // Names are tricky - only mask if preceded by name indicators
+    // Added validator to prevent masking common English words that might follow these triggers
     pattern: /\b(?:name|customer|user)[\s:]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})\b/gi,
     confidence: 0.60,
+    validator: (match) => {
+      // Common English words that should NOT be masked even if they follow "name:", "user:", "customer:"
+      // These often appear in LLM-generated content in contexts like "user interaction", "customer experience"
+      const commonEnglishWords = [
+        // Common nouns that could follow "user/customer"
+        'interaction', 'interactions', 'experience', 'experiences', 'engagement', 'engagements',
+        'satisfaction', 'service', 'services', 'support', 'feedback', 'journey', 'journeys',
+        'behavior', 'behaviour', 'preference', 'preferences', 'profile', 'profiles',
+        'account', 'accounts', 'session', 'sessions', 'request', 'requests', 'response', 'responses',
+        'action', 'actions', 'activity', 'activities', 'input', 'inputs', 'output', 'outputs',
+        'data', 'information', 'details', 'settings', 'options', 'choice', 'choices',
+        'interface', 'interfaces', 'portal', 'portals', 'dashboard', 'dashboards',
+        'guide', 'guides', 'manual', 'manuals', 'documentation', 'tutorial', 'tutorials',
+        'story', 'stories', 'case', 'cases', 'scenario', 'scenarios', 'example', 'examples',
+        'role', 'roles', 'type', 'types', 'level', 'levels', 'tier', 'tiers',
+        'base', 'group', 'groups', 'segment', 'segments', 'category', 'categories',
+        'flow', 'flows', 'path', 'paths', 'step', 'steps', 'process', 'processes',
+        'issue', 'issues', 'problem', 'problems', 'concern', 'concerns', 'query', 'queries',
+        'mention', 'mentioned', 'message', 'messages', 'conversation', 'conversations',
+        'initiated', 'completed', 'started', 'ended', 'successful', 'friendly', 'helpful',
+        // Words from the bug report
+        'mentioned', 'mentionable', 'experiencing', 'important', 'simple', 'straightforward',
+        // Common abstract nouns
+        'value', 'values', 'success', 'closure', 'conclusion', 'point', 'points', 'key', 'keys',
+      ];
+      
+      // Check each word in the match against the common words list
+      const words = match.toLowerCase().split(/\s+/);
+      const hasCommonWord = words.some(word => commonEnglishWords.includes(word));
+      
+      // If ANY word is a common English word, don't mask
+      if (hasCommonWord) {
+        return false;
+      }
+      
+      // Additional heuristic: Real names typically:
+      // - Have at least 2 characters per word
+      // - Don't have words longer than 15 characters (typical name max)
+      // - Don't contain common suffixes like -tion, -ment, -ing, -ness, -able, -ible
+      const suspiciousSuffixes = /(?:tion|ment|ing|ness|able|ible|ance|ence|ous|ive|ful|less|ship|hood)$/i;
+      const hasSuspiciousSuffix = words.some(word => suspiciousSuffixes.test(word));
+      
+      if (hasSuspiciousSuffix) {
+        return false;
+      }
+      
+      return true;
+    },
   },
   date_of_birth: {
     pattern: /\b(?:dob|date of birth|born|birthday)[\s:]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/gi,
