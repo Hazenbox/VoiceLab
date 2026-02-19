@@ -54,7 +54,7 @@ export const ActionButton = memo(function ActionButton({
         className={`rounded-full flex items-center justify-center
           hover:bg-black/5 dark:hover:bg-white/10 
           disabled:opacity-40 disabled:cursor-not-allowed
-          focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1
+          focus:outline-none
           ${className}`}
         style={{
           width: `${size}px`,
