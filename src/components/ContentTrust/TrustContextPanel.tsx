@@ -247,7 +247,7 @@ const GuardrailItem: React.FC<{ guardrail: GuardrailStatus }> = ({ guardrail }) 
   
   return (
     <div 
-      className="flex items-start gap-2 py-2 border-b last:border-b-0"
+      className="flex items-start gap-2 pt-0.5 pb-2 border-b last:border-b-0"
       style={{ borderColor: theme.stroke.low }}
     >
       <div className="flex-shrink-0 flex items-center pt-2.5" style={{ height: '15px' }}>
