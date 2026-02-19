@@ -145,8 +145,8 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
     }
   }, [messageId, onTryAgain]);
   
-  // Consistent icon color for all action buttons
-  const iconStyle = { color: theme.text.low };
+  // Consistent darker icon color for all action buttons
+  const iconStyle = { color: theme.text.medium };
   
   return (
     <div className="flex items-center gap-0">
@@ -206,8 +206,8 @@ export const UserMessageActions = memo(function UserMessageActions({
   const theme = useThemeColors();
   const { isCopied, copyToClipboard } = useCopyToClipboard(2000);
   
-  // Consistent icon color for all action buttons
-  const iconStyle = { color: theme.text.low };
+  // Consistent darker icon color for all action buttons
+  const iconStyle = { color: theme.text.medium };
   
   const handleCopy = useCallback(() => {
     copyToClipboard(content);

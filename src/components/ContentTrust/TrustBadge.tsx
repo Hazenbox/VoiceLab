@@ -73,14 +73,14 @@ export const TrustBadge = memo(function TrustBadge({
   // Determine button size based on size prop - match action buttons (32px for sm)
   const buttonSize = size === 'sm' ? '32px' : size === 'lg' ? '32px' : '28px';
   
-  // Shield icon with grey color to match other action icons
+  // Shield icon with darker grey color to match other action icons
   const ShieldIcon = () => {
     const iconName = certification === 'certified' ? 'IcProtection' : 'IcProtectionThreats';
     return (
       <DSIcon 
         name={iconName} 
         size={size === 'sm' ? 'S' : size === 'lg' ? 'M' : 'S'} 
-        style={{ color: theme.text.low }}
+        style={{ color: theme.text.medium }}
       />
     );
   };
@@ -93,11 +93,10 @@ export const TrustBadge = memo(function TrustBadge({
     >
       <button
         onClick={onClick}
-        className="rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
+        className="rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer focus:outline-none"
         style={{
           width: buttonSize,
           height: buttonSize,
-          color: theme.text.low,
         }}
         type="button"
         aria-label={`Trust badge: ${badge.label}`}
