@@ -767,8 +767,6 @@ const TOKEN_DOCUMENTATION: Record<string, {
 // Components
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const MAX_VISIBLE_CHIPS = 8;
-
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
@@ -783,8 +781,6 @@ const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardPro
   const theme = useThemeColors();
   const [isExpanded, setIsExpanded] = useState(false);
   const hasRules = rules && Object.keys(rules).length > 0;
-  const visibleChips = doc.values.slice(0, MAX_VISIBLE_CHIPS);
-  const hiddenCount = Math.max(0, doc.values.length - MAX_VISIBLE_CHIPS);
 
   return (
     <div
@@ -820,31 +816,6 @@ const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardPro
           size="S"
           attention="low"
         />
-      </div>
-
-      {/* Value chips — always visible */}
-      <div className="flex flex-wrap gap-1.5 mt-3">
-        {visibleChips.map((v) => (
-          <span
-            key={v.value}
-            className="px-2 py-0.5 rounded-md text-xs font-mono"
-            title={v.description}
-            style={{
-              backgroundColor: theme.background.bold,
-              color: theme.text.high,
-            }}
-          >
-            {v.value}
-          </span>
-        ))}
-        {hiddenCount > 0 && !isExpanded && (
-          <span
-            className="px-2 py-0.5 rounded-md text-xs"
-            style={{ color: theme.text.low }}
-          >
-            +{hiddenCount} more
-          </span>
-        )}
       </div>
 
       {/* Expanded: merged table of values + rules + example */}
@@ -1118,7 +1089,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
               <TabList>
                 {groupNames.map((name) => (
                   <Tab key={name} id={name}>
-                    {name.replace(/_/g, ' ').toLowerCase()}
+                    {capitalize(name.replace(/_/g, ' ').toLowerCase())}
                   </Tab>
                 ))}
               </TabList>
