@@ -262,27 +262,6 @@ const useStreamingText = (fullText: string, isStreaming: boolean) => {
 };
 
 // =============================================================================
-// Typing Cursor Component - Slim blinking cursor
-// =============================================================================
-
-/**
- * Slim typing cursor (1.5px width) that pulses at end of streaming text.
- */
-const TypingCursor = memo(function TypingCursor() {
-  const theme = useThemeColors();
-  return (
-    <span 
-      className="inline-block w-[1.5px] h-[1em] ml-0.5 animate-pulse"
-      style={{ 
-        backgroundColor: theme.accent,
-        verticalAlign: 'text-bottom',
-      }}
-      aria-hidden="true"
-    />
-  );
-});
-
-// =============================================================================
 // Types
 // =============================================================================
 
@@ -441,7 +420,7 @@ export const ChatPanel = memo(function ChatPanel({
   const highlightedMessageRef = useRef<HTMLDivElement>(null);
 
   // ChatGPT-like word-by-word streaming animation for AI responses
-  const { displayedText: streamingDisplayText, isComplete: streamingComplete } = useStreamingText(
+  const { displayedText: streamingDisplayText } = useStreamingText(
     streamingAIResponse || '',
     isLoading && !!streamingAIResponse
   );
@@ -962,8 +941,6 @@ export const ChatPanel = memo(function ChatPanel({
                     >
                       {/* Render markdown progressively as it streams */}
                       <MessageContent content={streamingDisplayText} role="assistant" />
-                      {/* Show slim cursor while streaming, hide when complete */}
-                      {!streamingComplete && streamingDisplayText && <TypingCursor />}
                     </div>
                   </div>
                 )}
