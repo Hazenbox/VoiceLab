@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAdmin, requireAuthenticated } from "./_auth";
+import { requireAdmin, requireAuthenticated, requireKnowledgeEditor } from "./_auth";
 
 // ── Create or update a user profile ──────────────────────────────
 // Called during onboarding (create) and on profile edits (update).
@@ -67,16 +67,15 @@ export const heartbeat = mutation({
   },
 });
 
-// ── List all users (admin only) ──────────────────────────────────
-// SECURITY: Requires admin authorization to prevent IDOR
+// ── List all users (knowledge editors) ───────────────────────────
+// SECURITY: Requires knowledge-editor role (leadership, product, ux_writer)
 export const listAll = query({
   args: {
     limit: v.optional(v.number()),
     deviceId: v.optional(v.string()), // For authorization
   },
   handler: async (ctx, args) => {
-    // Verify admin authorization
-    await requireAdmin(ctx, args.deviceId);
+    await requireKnowledgeEditor(ctx, args.deviceId);
     
     const limit = args.limit ?? 500; // Default limit for performance
     return await ctx.db

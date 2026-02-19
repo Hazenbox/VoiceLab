@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAuthenticated, requireAdmin } from "./_auth";
+import { requireAuthenticated, requireAdmin, requireKnowledgeEditor } from "./_auth";
 
 // ── Create a correction/feedback entry ───────────────────────────
 // PROTECTED: Requires authenticated user
@@ -117,8 +117,8 @@ export const getByUser = query({
   },
 });
 
-// ── List all corrections (admin only, paginated) ─────────────────
-// SECURITY: Requires admin authorization to prevent IDOR
+// ── List all corrections (knowledge editors, paginated) ──────────
+// SECURITY: Requires knowledge-editor role (leadership, product, ux_writer)
 export const listAll = query({
   args: {
     limit: v.optional(v.number()),
@@ -126,8 +126,7 @@ export const listAll = query({
     deviceId: v.optional(v.string()), // For authorization
   },
   handler: async (ctx, args) => {
-    // Verify admin authorization
-    await requireAdmin(ctx, args.deviceId);
+    await requireKnowledgeEditor(ctx, args.deviceId);
     
     const limit = args.limit ?? 100;
 
