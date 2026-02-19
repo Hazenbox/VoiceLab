@@ -274,3 +274,105 @@ describe('Fix 5: capitaliseSentenceStarts via applyFormatFixes', () => {
     expect(result).toContain('1. Open the app');
   });
 });
+
+// =============================================================================
+// Fix 6: Passive voice detection (principle-based)
+// =============================================================================
+describe('Fix 6: passive voice detection via complianceVerifier', () => {
+  // Common -ed endings
+  it('detects "has been resolved"', () => {
+    const content = 'Your issue has been resolved.';
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeDefined();
+    expect(v03?.description).toContain('passive voice');
+  });
+
+  it('detects "has been credited"', () => {
+    const content = 'The amount has been credited to your account.';
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeDefined();
+  });
+
+  it('detects "has been processed"', () => {
+    const content = 'Your request has been processed.';
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeDefined();
+  });
+
+  // With adverb
+  it('detects "has been successfully resolved"', () => {
+    const content = 'Your recharge issue has been successfully resolved.';
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeDefined();
+  });
+
+  // Irregular -en endings
+  it('detects "has been written"', () => {
+    const content = 'The report has been written.';
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeDefined();
+  });
+
+  it('detects "has been given"', () => {
+    const content = 'Access has been given.';
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeDefined();
+  });
+
+  // Irregular -wn endings
+  it('detects "has been shown"', () => {
+    const content = 'The error has been shown.';
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeDefined();
+  });
+
+  // Irregular -t endings
+  it('detects "has been sent"', () => {
+    const content = 'Your OTP has been sent.';
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeDefined();
+  });
+
+  it('detects "has been built"', () => {
+    const content = 'The feature has been built.';
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeDefined();
+  });
+
+  // Auto-fix converts to active voice
+  it('auto-fixes passive to active voice', () => {
+    const content = 'Your issue has been resolved.';
+    const report = runComplianceVerifier(content, {});
+    expect(report.fixedContent).toContain("we've resolved");
+  });
+
+  it('auto-fixes with adverb preserved', () => {
+    const content = 'The amount has been successfully credited.';
+    const report = runComplianceVerifier(content, {});
+    expect(report.fixedContent).toContain("we've credited");
+  });
+
+  // Does not flag active voice
+  it('does not flag active voice sentences', () => {
+    const content = "We've resolved your issue.";
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeUndefined();
+  });
+
+  it('does not flag sentences without passive pattern', () => {
+    const content = 'Check your balance in the app.';
+    const report = runComplianceVerifier(content, {});
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeUndefined();
+  });
+});
