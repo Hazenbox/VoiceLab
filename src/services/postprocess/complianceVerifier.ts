@@ -145,10 +145,21 @@ const CHECKS: Check[] = [
     id: 'v-03',
     category: 'voice_tone',
     severity: 'warning',
-    description: 'passive institutional phrasing',
-    test: (c) => match(c, /\b(the request has been (logged|noted|recorded|registered))\b/i),
+    description: 'passive voice (use active voice with we/you)',
+    // Grammatical passive: "has/have/had been [adverb?] [past participle]"
+    // Past participles typically end in -ed, -en, -t, -n, or irregular forms
+    test: (c) => match(c, /\b((?:has|have|had)\s+been\s+(?:\w+ly\s+)?(\w+(?:ed|en|wn|nt|t)\b))/i),
     autoFixable: true,
-    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), "i'm looking into this now"),
+    fix: (c, m) => {
+      // Extract the past participle from the match
+      const ppMatch = m.match(/been\s+(?:\w+ly\s+)?(\w+)$/i);
+      if (ppMatch) {
+        const pastParticiple = ppMatch[1].toLowerCase();
+        // Convert to active: "has been resolved" -> "we've resolved"
+        return c.replace(new RegExp(escapeRe(m), 'gi'), `we've ${pastParticiple}`);
+      }
+      return c;
+    },
   },
   {
     id: 'v-04',
