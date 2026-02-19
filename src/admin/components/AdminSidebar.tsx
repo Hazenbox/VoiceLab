@@ -24,6 +24,7 @@ interface AdminSidebarProps {
   colorMode: ColorMode;
   onColorModeChange: (mode: ColorMode) => void;
   onEditProfile?: () => void;
+  onSettingsOpen?: () => void;
   onNavigateToHowItWorks?: () => void;
 }
 
@@ -51,6 +52,7 @@ export const AdminSidebar = memo(function AdminSidebar({
   colorMode,
   onColorModeChange,
   onEditProfile,
+  onSettingsOpen,
   onNavigateToHowItWorks,
 }: AdminSidebarProps) {
   const theme = useThemeColors();
@@ -153,6 +155,7 @@ export const AdminSidebar = memo(function AdminSidebar({
             colorMode={colorMode}
             onColorModeChange={onColorModeChange}
             onEditProfile={onEditProfile}
+            onSettingsOpen={onSettingsOpen}
             additionalItems={adminMenuAdditionalItems}
             onAdditionalAction={handleAdditionalAction}
           />

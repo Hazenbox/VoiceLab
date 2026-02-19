@@ -1761,6 +1761,11 @@ export default function AdminLayout({ colorMode, onColorModeChange }: AdminLayou
     setUserProfile(profile);
     setShowEditProfile(false);
   }, []);
+  
+  // Handle settings open (navigate to System Config section)
+  const handleSettingsOpen = useCallback(() => {
+    setActiveSection('config');
+  }, []);
 
   const renderContent = () => {
     switch (activeSection) {
@@ -1789,6 +1794,7 @@ export default function AdminLayout({ colorMode, onColorModeChange }: AdminLayou
         colorMode={colorMode}
         onColorModeChange={onColorModeChange}
         onEditProfile={() => setShowEditProfile(true)}
+        onSettingsOpen={handleSettingsOpen}
         onNavigateToHowItWorks={() => { window.location.href = '/?view=how-it-works'; }}
       />
 
