@@ -295,14 +295,9 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
       pattern: /\b(?:has|have|had)\s+been\s+(?:\w+ly\s+)?(\w+(?:ed|en|wn|nt|t))\b/gi,
       severity: 'warning',
       replacement: '',  // fallback, not used when replaceFn exists
-      replaceFn: (match: string) => {
-        // Extract past participle from "has been [adverb?] [verb]"
-        const verbMatch = match.match(/been\s+(?:\w+ly\s+)?(\w+)$/i);
-        if (verbMatch) {
-          return `we've ${verbMatch[1].toLowerCase()}`;
-        }
-        return match; // keep original if extraction fails
-      },
+      // Keep original text - auto-fix creates broken grammar (e.g., "your issue we've resolved")
+      // Detection still works; LLM should generate active voice from prompt instructions
+      replaceFn: (match: string) => match,
       description: 'passive voice - use active voice with we/you as subject',
     },
     {
