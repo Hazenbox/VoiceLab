@@ -58,20 +58,36 @@ export const AdminSidebar = memo(function AdminSidebar({
   const theme = useThemeColors();
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Admin-specific additional menu items
-  const adminMenuAdditionalItems: MenuOption[] = onNavigateToHowItWorks ? [
-    {
+  // Admin menu additional items (matching main app for consistency)
+  const adminMenuAdditionalItems: MenuOption[] = [
+    ...(onNavigateToHowItWorks ? [{
       value: 'how-it-works',
       label: 'How it Works',
       icon: <DSIcon name="IcLightbulb" size="S" attention="high" appearance="neutral" />,
+    }] : []),
+    {
+      value: 'compliance-tests',
+      label: 'Compliance Tests',
+      icon: <DSIcon name="IcCode" size="S" attention="high" appearance="neutral" />,
     },
-  ] : [];
+    {
+      value: 'back-to-chat',
+      label: 'Back to Chat',
+      icon: <DSIcon name="IcChat" size="S" attention="high" appearance="neutral" />,
+    },
+  ];
 
   // Handle additional menu actions
   const handleAdditionalAction = useCallback((action: string) => {
     switch (action) {
       case 'how-it-works':
         onNavigateToHowItWorks?.();
+        break;
+      case 'compliance-tests':
+        window.location.href = '/?view=compliance-tests';
+        break;
+      case 'back-to-chat':
+        window.location.href = '/';
         break;
     }
   }, [onNavigateToHowItWorks]);
