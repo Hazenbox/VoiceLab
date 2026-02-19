@@ -913,6 +913,11 @@ export function applyFormatFixes(content: string): string {
   // Capitalise first letter of sentences/bullets that start lowercase
   fixed = capitaliseSentenceStarts(fixed);
 
+  // Ensure space after sentence-ending punctuation followed by uppercase letter
+  // Pattern: [lowercase letter][.!?][uppercase letter] -> add space before uppercase
+  // This avoids breaking URLs (jio.com), abbreviations (U.S.A), decimals (3.5x)
+  fixed = fixed.replace(/([a-z])([.!?])([A-Z])/g, '$1$2 $3');
+
   return fixed;
 }
 
