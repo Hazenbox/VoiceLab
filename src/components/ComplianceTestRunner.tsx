@@ -15,10 +15,12 @@ import { evaluateTest, type TestResult, type GroupResult, type FullReport } from
 import { generateMarkdownReport } from '../tests/generateComplianceReport';
 import { storageProjects, generateId } from '../services/storage';
 import { chatStorage } from '../services/chatStorage';
-import type { Project, ChatMessage } from '../types';
+import type { Project, ChatMessage, ChatMode } from '../types';
+import { generateMessageId } from '../types';
 import { useProject } from '../context/ProjectContext';
 import { useUIStore } from '../stores/uiStore';
 import { createLLMProvider as createLLMProviderFactory } from '../services/providers/llm';
+import { getSyncService } from '../services/sync/convexSync';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -169,9 +171,9 @@ export function ComplianceTestRunner() {
     return mappings;
   }, [createProject]);
 
-  // ─── SAVE TEST MESSAGE TO ISOLATED TEST STORAGE ────────────────────────
-  // Important: Test results are stored in a SEPARATE storage from production chatStorage
-  // This prevents test metadata (notes:, missing expected:, etc.) from leaking to users
+  // ─── SAVE TEST MESSAGES ────────────────────────────────────────────────
+  // Writes to BOTH isolated test storage (for runner metadata) AND production
+  // chatStorage (so messages are visible when clicking "open chat").
 
   const saveTestMessages = useCallback(async (
     projectId: string,
@@ -181,27 +183,26 @@ export function ComplianceTestRunner() {
     const existing = testStorage.load(projectId);
     const now = Date.now();
 
+    const userContent = test.mode === 'checker'
+      ? `[CHECKER] ${test.description}\n\ntest content:\n${test.testContent ?? ''}`
+      : test.prompt;
+
+    const statusLabel = result.status.toUpperCase();
+    const scoreStr = `${Math.round(result.score * 100)}%`;
+    const assistantContent = `**[${statusLabel}] score: ${scoreStr}** | ${test.id}: ${test.description}\n\n${result.actualOutput || '(empty output)'}`;
+
     const userMsg = {
       id: generateId(),
       role: 'user' as const,
-      content: test.mode === 'checker'
-        ? `[CHECKER] ${test.description}\n\ntest content:\n${test.testContent ?? ''}`
-        : test.prompt,
+      content: userContent,
       timestamp: now,
     };
-
-    // Store clean content WITHOUT debug metadata embedded in the string
-    // Debug metadata is stored separately in testMetadata field
-    const statusLabel = result.status.toUpperCase();
-    const scoreStr = `${Math.round(result.score * 100)}%`;
 
     const assistantMsg = {
       id: generateId(),
       role: 'assistant' as const,
-      // Clean content: only the actual output + status header (no debug notes/patterns)
-      content: `**[${statusLabel}] score: ${scoreStr}** | ${test.id}: ${test.description}\n\n${result.actualOutput || '(empty output)'}`,
+      content: assistantContent,
       timestamp: now + 1,
-      // Test metadata stored separately - not embedded in content
       testMetadata: {
         testId: result.testId,
         status: result.status,
@@ -212,8 +213,29 @@ export function ComplianceTestRunner() {
       },
     };
 
-    // Save to isolated test storage (NOT production chatStorage)
+    // 1. Isolated test storage (runner UI metadata)
     testStorage.save(projectId, [...existing, userMsg, assistantMsg]);
+
+    // 2. Production chatStorage so chats are visible in the main UI
+    const existingChat = chatStorage.load(projectId);
+    const chatUserMsg: ChatMessage = {
+      id: generateMessageId('user'),
+      role: 'user',
+      content: userContent,
+      timestamp: now,
+      type: 'text',
+      sourceMode: 'copy' as ChatMode,
+    };
+    const chatAssistantMsg: ChatMessage = {
+      id: generateMessageId('ai'),
+      role: 'assistant',
+      content: assistantContent,
+      timestamp: now + 1,
+      type: 'text',
+      sourceMode: 'copy' as ChatMode,
+      parentMessageId: chatUserMsg.id,
+    };
+    await chatStorage.save(projectId, [...existingChat, chatUserMsg, chatAssistantMsg]);
   }, []);
 
   // ─── RUN ALL TESTS ──────────────────────────────────────────────────
@@ -264,6 +286,22 @@ export function ComplianceTestRunner() {
           test,
           test.mode === 'generation' ? createLLMProvider : undefined,
         );
+
+        if (test.mode === 'generation' && result.status !== 'error') {
+          const syncService = getSyncService();
+          syncService?.logAnalyticsEvent({
+            eventType: 'generation',
+            ecosystem: (test.context.ecosystem ?? 'connectivity'),
+            channel: (test.context.channel ?? 'customer_care_chat') as string,
+            persona: 'compliance-test',
+            trustScore: result.score * 100,
+            violationCount: result.failPatternMatches.length,
+            llmProvider: 'openai',
+            timestamp: Date.now(),
+            responseTimeMs: result.durationMs,
+            wasRegeneration: false,
+          });
+        }
 
         testResults.push(result);
         allResults.set(result.testId, result);
