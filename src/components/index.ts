@@ -33,6 +33,7 @@ export type { AIOrbProps } from './AIOrb';
 export { DSIcon } from './DSIcon';
 export { UserMenu } from './UserMenu';
 export type { UserMenuProps } from './UserMenu';
+export { SettingsModal } from './SettingsModal';
 
 // UI Components
 export { Accordion } from './ui/Accordion';

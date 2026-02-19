@@ -235,8 +235,6 @@ interface ChatPanelProps {
   onVoiceClick?: () => void;
   /** Whether voice is supported in this browser */
   voiceSupported?: boolean;
-  /** Model selector component to render below input */
-  modelSelector?: React.ReactNode;
   /** @deprecated Use contextSelector instead */
   channelSelector?: React.ReactNode;
   /** @deprecated Use contextSelector instead */
@@ -247,10 +245,6 @@ interface ChatPanelProps {
   contextSelector?: React.ReactNode;
   /** Callback when user clicks trust badge to view details */
   onTrustBadgeClick?: (messageId: string) => void;
-  
-  // Settings trigger
-  /** Settings icon to render below input at the end of dropdowns */
-  settingsTrigger?: React.ReactNode;
   
   // Voice streaming props
   /** Streaming user transcript (while user is speaking) */
@@ -321,13 +315,11 @@ export const ChatPanel = memo(function ChatPanel({
   id,
   onVoiceClick,
   voiceSupported = true,
-  modelSelector,
   channelSelector,
   platformSelector,
   // Content Trust System props
   contextSelector,
   onTrustBadgeClick,
-  settingsTrigger,
   // Voice streaming props
   streamingUserTranscript,
   streamingAIResponse,
@@ -788,10 +780,9 @@ export const ChatPanel = memo(function ChatPanel({
         </div>
       </div>
 
-      {/* Model + Context selectors - below input, centered */}
-      {(modelSelector || contextSelector || channelSelector || platformSelector || settingsTrigger) && (
+      {/* Context selectors - below input, centered */}
+      {(contextSelector || channelSelector || platformSelector) && (
         <div className="flex items-center justify-center gap-0 mt-3">
-          {modelSelector}
           {/* Prefer new contextSelector, fallback to legacy channel + platform */}
           {contextSelector || (
             <>
@@ -799,11 +790,10 @@ export const ChatPanel = memo(function ChatPanel({
               {platformSelector}
             </>
           )}
-          {settingsTrigger}
         </div>
       )}
     </div>
-  ), [theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, inputDisabled, handleSubmit, isLoading, modelSelector, contextSelector, channelSelector, platformSelector, settingsTrigger]);
+  ), [theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, inputDisabled, handleSubmit, isLoading, contextSelector, channelSelector, platformSelector]);
 
   return (
     <div 

@@ -1,16 +1,17 @@
 /**
- * DocsLayout -- documentation view with sidebar, docs panel, and settings.
+ * DocsLayout -- documentation view with sidebar and docs panel.
  * Reads from conversationStore + uiStore + useProject directly to minimize props.
  */
 
+import { useState } from 'react';
 import type { ColorMode } from '../../types';
 import { AppState } from '../../types';
 import { useShallow } from 'zustand/shallow';
 import {
   DocumentationPanel,
   ProjectSidebar,
-  AdvancedSettingsPanel,
 } from '../../components';
+import { SettingsModal } from '../../components/SettingsModal';
 import { useThemeColors } from '../../theme';
 import { useProject } from '../../context/ProjectContext';
 import { useConversationStore } from '../../stores/conversationStore';
@@ -35,38 +36,25 @@ export function DocsLayout({
   voiceAppState,
 }: DocsLayoutProps) {
   const theme = useThemeColors();
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   const {
     activeProject,
     updateProjectVoiceGender,
     updateProjectConfig,
-    updateProjectDefaultEcosystem,
-    updateProjectDefaultChannel,
-    updateProjectDefaultLanguage,
-    updateProjectDefaultRegion,
   } = useProject();
 
   const {
-    ecosystem, setEcosystem,
-    contentChannel, setContentChannel,
     trustSettings, setTrustSettings,
-    temperature, setTemperature,
-    maxTokens, setMaxTokens,
-    streamResponse, setStreamResponse,
+    selectedLLMProvider, setSelectedLLMProvider,
+    selectedTTSProvider, setSelectedTTSProvider,
   } = useConversationStore(useShallow((s) => ({
-    ecosystem: s.ecosystem, setEcosystem: s.setEcosystem,
-    contentChannel: s.contentChannel, setContentChannel: s.setContentChannel,
     trustSettings: s.trustSettings, setTrustSettings: s.setTrustSettings,
-    temperature: s.temperature, setTemperature: s.setTemperature,
-    maxTokens: s.maxTokens, setMaxTokens: s.setMaxTokens,
-    streamResponse: s.streamResponse, setStreamResponse: s.setStreamResponse,
+    selectedLLMProvider: s.selectedLLMProvider, setSelectedLLMProvider: s.setSelectedLLMProvider,
+    selectedTTSProvider: s.selectedTTSProvider, setSelectedTTSProvider: s.setSelectedTTSProvider,
   })));
 
-  const {
-    isConfigPanelCollapsed, setConfigPanelCollapsed, setActiveView,
-  } = useUIStore(useShallow((s) => ({
-    isConfigPanelCollapsed: s.isConfigPanelCollapsed,
-    setConfigPanelCollapsed: s.setConfigPanelCollapsed,
+  const { setActiveView } = useUIStore(useShallow((s) => ({
     setActiveView: s.setActiveView,
   })));
 
@@ -86,11 +74,20 @@ export function DocsLayout({
         userName={userName}
         userRole={userRole}
         onEditProfile={onEditProfile}
+        onSettingsOpen={() => setIsSettingsModalOpen(true)}
       />
       <main className="flex-1 overflow-hidden">
         <DocumentationPanel onBack={() => setActiveView('main')} />
       </main>
-      <AdvancedSettingsPanel
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        selectedLLMProvider={selectedLLMProvider}
+        onLLMProviderChange={setSelectedLLMProvider}
+        selectedTTSProvider={selectedTTSProvider}
+        onTTSProviderChange={setSelectedTTSProvider}
         voiceGender={activeProject.voiceGender}
         onVoiceGenderChange={updateProjectVoiceGender}
         config={activeProject.config}
@@ -98,8 +95,6 @@ export function DocsLayout({
         trustSettings={trustSettings}
         onTrustSettingsChange={setTrustSettings}
         disabled={voiceAppState !== AppState.IDLE}
-        isCollapsed={isConfigPanelCollapsed}
-        onToggleCollapse={() => setConfigPanelCollapsed(!isConfigPanelCollapsed)}
       />
     </div>
   );

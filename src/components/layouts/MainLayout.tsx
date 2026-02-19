@@ -7,7 +7,7 @@
  */
 
 import type React from 'react';
-import type { RefObject } from 'react';
+import { useState, type RefObject } from 'react';
 import { useShallow } from 'zustand/shallow';
 import type {
   ColorMode,
@@ -24,13 +24,12 @@ import {
   ProjectSidebar,
   ChatPanel,
   ErrorBoundary,
-  ModelSelector,
   AIOrb,
   DSIcon,
   ContentContextSelector,
   TrustContextPanel,
-  AdvancedSettingsPanel,
 } from '../../components';
+import { SettingsModal } from '../../components/SettingsModal';
 import OnboardingModal from '../../components/OnboardingModal';
 import type { UserProfile } from '../../components/OnboardingModal';
 import { useThemeColors } from '../../theme';
@@ -138,6 +137,7 @@ export function MainLayout({
   onStopGeneration,
 }: MainLayoutProps) {
   const theme = useThemeColors();
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // Read from stores directly (no props needed)
   const {
@@ -205,6 +205,7 @@ export function MainLayout({
         userName={userProfile?.name}
         userRole={userProfile?.role}
         onEditProfile={() => setShowOnboarding(true)}
+        onSettingsOpen={() => setIsSettingsModalOpen(true)}
       />
 
       {/* Main Content */}
@@ -272,17 +273,6 @@ export function MainLayout({
                 voiceSupported={voiceSupported ?? true}
                 streamingUserTranscript={chatMode === 'voice' && appState === AppState.LISTENING ? transcript : undefined}
                 streamingAIResponse={streamingAIResponse || undefined}
-                modelSelector={
-                  <ModelSelector
-                    value={chatMode === 'copy' ? selectedLLMProvider : selectedTalkLLMProvider}
-                    onChange={chatMode === 'copy' ? setSelectedLLMProvider : setSelectedTalkLLMProvider}
-                    ttsValue={selectedTTSProvider}
-                    onTTSChange={setSelectedTTSProvider}
-                    showHealth={false}
-                    size="sm"
-                    disabled={isChatLoading || (chatMode === 'voice' && appState !== AppState.IDLE)}
-                  />
-                }
                 contextSelector={featureFlags.conversationalMode ? undefined : (
                   <div className="flex items-center gap-2">
                     <ContentContextSelector
@@ -301,25 +291,6 @@ export function MainLayout({
                     />
                   </div>
                 )}
-                settingsTrigger={
-                  <button
-                    onClick={() => setConfigPanelCollapsed(!isConfigPanelCollapsed)}
-                    className="w-[28px] h-[28px] rounded-full flex items-center justify-center transition-colors hover:opacity-90 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
-                    style={{
-                      backgroundColor: 'transparent',
-                      color: theme.text.medium,
-                    }}
-                    aria-label="Open settings"
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = theme.stroke.low;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
-                  >
-                    <DSIcon name="IcSettings" size="XS" attention="medium" />
-                  </button>
-                }
                 onTrustBadgeClick={onTrustBadgeClick}
                 onMessageFeedback={onMessageFeedback}
                 onSaveAsExample={onSaveAsExample}
@@ -343,19 +314,6 @@ export function MainLayout({
           </div>
         </ErrorBoundary>
       </main>
-
-      {/* Right Sidebar - Advanced Settings */}
-      <AdvancedSettingsPanel
-        voiceGender={activeProject.voiceGender}
-        onVoiceGenderChange={updateProjectVoiceGender}
-        config={activeProject.config}
-        onConfigChange={updateProjectConfig}
-        trustSettings={trustSettings}
-        onTrustSettingsChange={setTrustSettings}
-        disabled={appState !== AppState.IDLE && chatMode === 'voice'}
-        isCollapsed={isConfigPanelCollapsed}
-        onToggleCollapse={() => setConfigPanelCollapsed(!isConfigPanelCollapsed)}
-      />
 
       {/* Trust Context Panel - Slide-out */}
       <TrustContextPanel
@@ -401,6 +359,23 @@ export function MainLayout({
           </div>
         </div>
       )}
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        selectedLLMProvider={chatMode === 'copy' ? selectedLLMProvider : selectedTalkLLMProvider}
+        onLLMProviderChange={chatMode === 'copy' ? setSelectedLLMProvider : setSelectedTalkLLMProvider}
+        selectedTTSProvider={selectedTTSProvider}
+        onTTSProviderChange={setSelectedTTSProvider}
+        voiceGender={activeProject.voiceGender}
+        onVoiceGenderChange={updateProjectVoiceGender}
+        config={activeProject.config}
+        onConfigChange={updateProjectConfig}
+        trustSettings={trustSettings}
+        onTrustSettingsChange={setTrustSettings}
+        disabled={appState !== AppState.IDLE && chatMode === 'voice'}
+      />
     </div>
   );
 }
