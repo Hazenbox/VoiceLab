@@ -129,25 +129,16 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   
   return (
     <div className="flex items-center gap-0">
-      {isCopied ? (
-        <div 
-          className="flex items-center gap-1 px-2 h-8 rounded-full transition-opacity"
-          style={{ 
-            color: theme.semantic.positive,
-            animation: 'fadeIn 150ms ease-in-out',
-          }}
-        >
-          <DSIcon name="IcCheck" size="S" attention="low" appearance="neutral" style={{ color: theme.semantic.positive }} />
-          <span style={{ fontSize: '12px', fontWeight: 500 }}>copied!</span>
-        </div>
-      ) : (
-        <ActionButton
-          icon={<DSIcon name="IcCopyDocument" size="S" attention="low" appearance="neutral" />}
-          label="Copy"
-          onClick={handleCopy}
-          disabled={disabled}
-        />
-      )}
+      <ActionButton
+        icon={isCopied 
+          ? <DSIcon name="IcConfirm" size="S" attention="low" appearance="neutral" />
+          : <DSIcon name="IcCopyDocument" size="S" attention="low" appearance="neutral" />
+        }
+        label={isCopied ? "Copied" : "Copy"}
+        onClick={handleCopy}
+        disabled={disabled}
+        isActive={isCopied}
+      />
       {showLike && (
         <ActionButton
           icon={
@@ -191,7 +182,6 @@ export const UserMessageActions = memo(function UserMessageActions({
   disabled = false,
   hideEdit = false,
 }: UserActionsProps) {
-  const theme = useThemeColors();
   const { isCopied, copyToClipboard } = useCopyToClipboard(2000);
   
   const EditIcon = () => (
@@ -218,25 +208,16 @@ export const UserMessageActions = memo(function UserMessageActions({
   
   return (
     <div className="flex items-center gap-0">
-      {isCopied ? (
-        <div 
-          className="flex items-center gap-1 px-2 h-8 rounded-full transition-opacity"
-          style={{ 
-            color: theme.semantic.positive,
-            animation: 'fadeIn 150ms ease-in-out',
-          }}
-        >
-          <DSIcon name="IcCheck" size="S" attention="low" appearance="neutral" style={{ color: theme.semantic.positive }} />
-          <span style={{ fontSize: '12px', fontWeight: 500 }}>copied!</span>
-        </div>
-      ) : (
-        <ActionButton
-          icon={<DSIcon name="IcCopyDocument" size="S" attention="low" appearance="neutral" />}
-          label="Copy"
-          onClick={handleCopy}
-          disabled={disabled}
-        />
-      )}
+      <ActionButton
+        icon={isCopied 
+          ? <DSIcon name="IcConfirm" size="S" attention="low" appearance="neutral" />
+          : <DSIcon name="IcCopyDocument" size="S" attention="low" appearance="neutral" />
+        }
+        label={isCopied ? "Copied" : "Copy"}
+        onClick={handleCopy}
+        disabled={disabled}
+        isActive={isCopied}
+      />
       {!hideEdit && (
         <ActionButton
           icon={<EditIcon />}
