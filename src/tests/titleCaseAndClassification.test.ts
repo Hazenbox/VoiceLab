@@ -415,3 +415,45 @@ describe('Fix 7: capitalisation after full stops via applyFormatFixes', () => {
     expect(result).toBe('Done! What next? Follow these steps.');
   });
 });
+
+// =============================================================================
+// Fix 8: forbiddenPhraseChecker extracts actual verb (not [verb] placeholder)
+// =============================================================================
+import { checkForbiddenPhrases } from '../services/validation/agents/forbiddenPhraseChecker';
+
+describe('Fix 8: passive voice verb extraction in forbiddenPhraseChecker', () => {
+  it('extracts actual verb from "has been extended"', () => {
+    const content = 'Your subscription has been extended.';
+    const result = checkForbiddenPhrases(content);
+    expect(result.cleanedResponse).toContain("we've extended");
+    expect(result.cleanedResponse).not.toContain('[verb]');
+  });
+
+  it('extracts actual verb from "has been resolved"', () => {
+    const content = 'Your issue has been resolved.';
+    const result = checkForbiddenPhrases(content);
+    expect(result.cleanedResponse).toContain("we've resolved");
+    expect(result.cleanedResponse).not.toContain('[verb]');
+  });
+
+  it('extracts actual verb from "has been credited"', () => {
+    const content = 'The amount has been credited.';
+    const result = checkForbiddenPhrases(content);
+    expect(result.cleanedResponse).toContain("we've credited");
+    expect(result.cleanedResponse).not.toContain('[verb]');
+  });
+
+  it('extracts verb with adverb "has been successfully processed"', () => {
+    const content = 'Your request has been successfully processed.';
+    const result = checkForbiddenPhrases(content);
+    expect(result.cleanedResponse).toContain("we've processed");
+    expect(result.cleanedResponse).not.toContain('[verb]');
+  });
+
+  it('does not output literal [verb] placeholder', () => {
+    const content = 'Your subscription validity has been extended. Enjoy the added time.';
+    const result = checkForbiddenPhrases(content);
+    expect(result.cleanedResponse).not.toContain('[verb]');
+    expect(result.cleanedResponse).toContain("we've extended");
+  });
+});
