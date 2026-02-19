@@ -348,17 +348,15 @@ describe('Fix 6: passive voice detection via complianceVerifier', () => {
     expect(v03).toBeDefined();
   });
 
-  // Auto-fix converts to active voice
-  it('auto-fixes passive to active voice', () => {
+  // Auto-fix is disabled for passive voice (requires NLP sentence restructuring)
+  it('does NOT auto-fix passive voice (detection only)', () => {
     const content = 'Your issue has been resolved.';
     const report = runComplianceVerifier(content, {});
-    expect(report.fixedContent).toContain("we've resolved");
-  });
-
-  it('auto-fixes with adverb preserved', () => {
-    const content = 'The amount has been successfully credited.';
-    const report = runComplianceVerifier(content, {});
-    expect(report.fixedContent).toContain("we've credited");
+    const v03 = report.violations.find(v => v.id === 'v-03');
+    expect(v03).toBeDefined();
+    expect(v03?.autoFixable).toBe(false);
+    // Content should remain unchanged (no broken auto-fix)
+    expect(report.fixedContent).toContain('has been resolved');
   });
 
   // Does not flag active voice
@@ -374,5 +372,46 @@ describe('Fix 6: passive voice detection via complianceVerifier', () => {
     const report = runComplianceVerifier(content, {});
     const v03 = report.violations.find(v => v.id === 'v-03');
     expect(v03).toBeUndefined();
+  });
+});
+
+// =============================================================================
+// Fix 7: Capitalisation after full stops (. ! ?)
+// =============================================================================
+describe('Fix 7: capitalisation after full stops via applyFormatFixes', () => {
+  it('capitalises after full stop', () => {
+    const input = 'take care. enjoy your day.';
+    const result = applyFormatFixes(input);
+    expect(result).toBe('Take care. Enjoy your day.');
+  });
+
+  it('capitalises after exclamation mark', () => {
+    const input = 'great news! your recharge is done.';
+    const result = applyFormatFixes(input);
+    expect(result).toBe('Great news! Your recharge is done.');
+  });
+
+  it('capitalises after question mark', () => {
+    const input = 'need help? contact us anytime.';
+    const result = applyFormatFixes(input);
+    expect(result).toBe('Need help? Contact us anytime.');
+  });
+
+  it('handles multiple sentences', () => {
+    const input = 'step one. step two. step three.';
+    const result = applyFormatFixes(input);
+    expect(result).toBe('Step one. Step two. Step three.');
+  });
+
+  it('preserves already capitalised sentences', () => {
+    const input = 'Take care. Enjoy your day.';
+    const result = applyFormatFixes(input);
+    expect(result).toBe('Take care. Enjoy your day.');
+  });
+
+  it('handles mixed punctuation', () => {
+    const input = 'done! what next? follow these steps.';
+    const result = applyFormatFixes(input);
+    expect(result).toBe('Done! What next? Follow these steps.');
   });
 });
