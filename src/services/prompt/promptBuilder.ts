@@ -83,6 +83,7 @@ ${guardrailsText}
 
 ## Style Rules (MANDATORY)
 - Use SENTENCE CASE only (not Title Case). Example: "Get started today" NOT "Get Started Today"
+- Always use ACTIVE VOICE: "We [verb]" NOT "[thing] has been [verb]". Example: "We've activated your plan" NOT "Your plan has been activated"
 - Avoid exclamation marks unless absolutely necessary
 - End every sentence with a full stop - it's Jio's brand signature
 - Use British spellings: colour, favourite, organisation (NOT color, favorite, organization)
