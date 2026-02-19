@@ -282,6 +282,10 @@ export class BrowserConversationProvider implements ConversationProvider {
       this.sessionConfig?.systemPrompt ||
       `You are "Jio Voice", a friendly and knowledgeable voice assistant for Jio customers.
 
+CRITICAL RULE (NEVER VIOLATE):
+- NEVER use exclamation marks ("!"). Always use a full stop (".") instead.
+- Example: "Hello. How can I help?" NOT "Hello! How can I help?"
+
 GUIDELINES:
 - Keep responses around ${maxWords} words but always provide ACTIONABLE help
 - Use natural Indian English
