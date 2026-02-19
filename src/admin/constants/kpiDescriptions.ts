@@ -28,6 +28,17 @@ export const KPI_DESCRIPTIONS: Record<string, KPIDescription> = {
     target: '<15%',
     importance: 'high',
   },
+  regenerations: {
+    label: 'regenerations',
+    description: 'Absolute number of regeneration requests. Each regeneration means the initial output was unsatisfactory. Used alongside regeneration rate for volume context.',
+    importance: 'medium',
+  },
+  completionRate: {
+    label: 'completion rate',
+    description: 'Percentage of sessions that completed successfully vs abandoned. High completion rates indicate users are finding value and finishing their tasks.',
+    target: '>80%',
+    importance: 'high',
+  },
 
   // Performance Metrics
   avgResponseTime: {

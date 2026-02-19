@@ -17,6 +17,7 @@ import { AdminTable, AdminTableRow, AdminTableCell } from './components/AdminTab
 import { TimeRangeSelector, getTimestampForRange, type TimeRange } from './components/TimeRangeSelector';
 import { ChartContainer, HorizontalBarChart, VerticalBars, StatBreakdown, SentimentBar } from './components/AnalyticsCharts';
 import { DataCard, VerticalBarChart } from '@jio/datavis-components';
+import { DelayedTooltip } from '../components/DelayedTooltip';
 import { KPI_DESCRIPTIONS } from './constants/kpiDescriptions';
 import { formatDuration, formatRelativeTime } from './utils/formatters';
 import { KnowledgeItemEditor, DeleteConfirmModal } from './components/KnowledgeCRUD';
@@ -302,56 +303,72 @@ function AdminDashboard() {
         </h2>
         <div className="flex flex-col lg:flex-row">
           <div className="flex-1">
-            <DataCard 
-              title="total generations"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: String(dashboardStats.totalGenerations ?? 0),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.totalGenerations.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="total generations"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: String(dashboardStats.totalGenerations ?? 0),
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
           <div className="flex-1">
-            <DataCard 
-              title="avg trust score"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.avgTrustScore.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="avg trust score"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: dashboardStats.avgTrustScore !== null ? String(dashboardStats.avgTrustScore) : '—',
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
           <div className="flex-1">
-            <DataCard 
-              title="content copied"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: String(dashboardStats.copyCount ?? 0),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.copyCount.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="content copied"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: String(dashboardStats.copyCount ?? 0),
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
           <div className="flex-1">
-            <DataCard 
-              title="learnings applied"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: String(learningStats.totalPatternsApplied ?? 0),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.learningsApplied.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="learnings applied"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: String(learningStats.totalPatternsApplied ?? 0),
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
         </div>
       </div>
@@ -379,56 +396,72 @@ function AdminDashboard() {
         </h2>
         <div className="flex flex-col lg:flex-row">
           <div className="flex-1">
-            <DataCard 
-              title="regeneration rate"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: `${dashboardStats.regenerationRate}%`,
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.regenerationRate.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="regeneration rate"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: `${dashboardStats.regenerationRate}%`,
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
           <div className="flex-1">
-            <DataCard 
-              title="completion rate"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: `${completionRate}%`,
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.completionRate.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="completion rate"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: `${completionRate}%`,
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
           <div className="flex-1">
-            <DataCard 
-              title="regenerations"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: String(dashboardStats.regenerationCount),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.regenerations.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="regenerations"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: String(dashboardStats.regenerationCount),
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
           <div className="flex-1">
-            <DataCard 
-              title="errors"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: String(dashboardStats.errorCount),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.errorCount.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="errors"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: String(dashboardStats.errorCount),
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
         </div>
       </div>
@@ -685,56 +718,72 @@ function AdminLearningCenter() {
         </h2>
         <div className="flex flex-col lg:flex-row">
           <div className="flex-1">
-            <DataCard 
-              title="learnings applied"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: String(learningStats.totalPatternsApplied ?? 0),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.learningsApplied.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="learnings applied"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: String(learningStats.totalPatternsApplied ?? 0),
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
           <div className="flex-1">
-            <DataCard 
-              title="edit corrections"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: String(learningStats.byFeedbackType.edits ?? 0),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.editCorrections.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="edit corrections"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: String(learningStats.byFeedbackType.edits ?? 0),
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
           <div className="flex-1">
-            <DataCard 
-              title="avoid patterns"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: String(learningStats.uniqueAvoidPatterns ?? 0),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.avoidPatterns.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="avoid patterns"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: String(learningStats.uniqueAvoidPatterns ?? 0),
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
           <div className="flex-1">
-            <DataCard 
-              title="total feedback"
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: String(corrections.length ?? 0),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
+            <DelayedTooltip content={KPI_DESCRIPTIONS.totalFeedback.description} position="bottom">
+              <div>
+                <DataCard 
+                  title="total feedback"
+                  fillEmphasis="Ghost"
+                  width="100%"
+                  dataHead={{
+                    leadValue: String(corrections.length ?? 0),
+                    showDataSupporting: false,
+                    showSupportingLabel: false,
+                  }}
+                  modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
+                />
+              </div>
+            </DelayedTooltip>
           </div>
         </div>
       </div>
