@@ -766,12 +766,6 @@ export const TrustContextPanel = memo(function TrustContextPanel({
             <div>
               {allViolations.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(0, 168, 89, 0.1)' }}>
-                    <span className="text-[#00A859]">
-                      <DSIcon name="IcCheck" size="M" attention="high" />
-                    </span>
-                  </div>
                   <p className="text-sm" style={{ color: theme.text.medium }}>No violations found!</p>
                 </div>
               ) : (
