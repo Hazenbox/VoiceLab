@@ -21,6 +21,10 @@ import { useProject } from '../context/ProjectContext';
 import { useUIStore } from '../stores/uiStore';
 import { createLLMProvider as createLLMProviderFactory } from '../services/providers/llm';
 import { getSyncService } from '../services/sync/convexSync';
+import { useThemeColors } from '../theme';
+import { Button, Title, Text, Badge, Divider } from '@marcelinodzn/ds-react';
+import { chatTypography } from '../theme/typography';
+import { DSIcon } from './DSIcon';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -118,6 +122,7 @@ const testStorage = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function ComplianceTestRunner() {
+  const theme = useThemeColors();
   const { createProject, projects, deleteProject, setActiveProject } = useProject();
   const cancelRef = useRef(false);
 
@@ -427,86 +432,130 @@ export function ComplianceTestRunner() {
 
   // ─── RENDER ──────────────────────────────────────────────────────────
 
+  // Status color helpers using theme semantic colors
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pass': return theme.semantic.positive;
+      case 'fail': return theme.semantic.negative;
+      case 'warn': return theme.semantic.warning;
+      default: return theme.text.low;
+    }
+  };
+
+  const getScoreBackground = (score: number) => {
+    if (score >= 0.9) return theme.isLight ? '#E8F5E9' : '#1B3D2F';
+    if (score >= 0.7) return theme.isLight ? '#FFF3E0' : '#3D2E1B';
+    return theme.isLight ? '#FFEBEE' : '#3D1B1B';
+  };
+
+  const getScoreTextColor = (score: number) => {
+    if (score >= 0.9) return theme.semantic.positive;
+    if (score >= 0.7) return theme.semantic.warning;
+    return theme.semantic.negative;
+  };
+
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto', fontFamily: 'system-ui, -apple-system, sans-serif', height: '100vh', overflowY: 'auto' }}>
-      <button
-        onClick={() => useUIStore.getState().setActiveView('main')}
-        style={{
-          padding: '6px 14px', background: 'none', color: '#0066FF',
-          border: '1px solid #0066FF', borderRadius: 6, cursor: 'pointer',
-          fontSize: 13, marginBottom: 16,
-        }}
+    <div 
+      style={{ 
+        padding: 24, 
+        maxWidth: 1200, 
+        margin: '0 auto', 
+        height: '100vh', 
+        overflowY: 'auto',
+        backgroundColor: theme.background.ghost,
+        color: theme.text.high,
+      }}
+      className="scrollable-container"
+    >
+      {/* Back button */}
+      <Button
+        onPress={() => useUIStore.getState().setActiveView('main')}
+        appearance="neutral"
+        attention="low"
+        size="S"
+        style={{ marginBottom: 16 }}
       >
-        back to main
-      </button>
-      <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 4 }}>compliance test runner</h1>
-      <p style={{ color: '#666', marginBottom: 24 }}>{ALL_TESTS.length} tests across {TEST_GROUPS.length} groups</p>
+        <div className="flex items-center gap-2">
+          <DSIcon name="IcArrowLeft" size="S" attention="medium" />
+          <span>back to main</span>
+        </div>
+      </Button>
+
+      {/* Header */}
+      <Title size="L" as="h1" weight="high" color="high" style={{ marginBottom: 4 }}>
+        compliance test runner
+      </Title>
+      <Text size="M" color="low" style={{ marginBottom: 24 }}>
+        {ALL_TESTS.length} tests across {TEST_GROUPS.length} groups
+      </Text>
 
       {/* ── Controls ── */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
         {state.status === 'idle' && (
-          <button
-            onClick={runAllTests}
-            style={{
-              padding: '10px 24px', background: '#0066FF', color: '#fff',
-              border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 500,
-            }}
+          <Button
+            onPress={runAllTests}
+            appearance="primary"
+            size="M"
           >
             run all tests
-          </button>
+          </Button>
         )}
         {state.status === 'running' && (
-          <button
-            onClick={handleCancel}
-            style={{
-              padding: '10px 24px', background: '#FF3B30', color: '#fff',
-              border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 500,
-            }}
+          <Button
+            onPress={handleCancel}
+            appearance="primary"
+            size="M"
+            style={{ backgroundColor: theme.semantic.negative }}
           >
             cancel
-          </button>
+          </Button>
         )}
         {state.status === 'done' && (
           <>
-            <button
-              onClick={runAllTests}
-              style={{
-                padding: '10px 24px', background: '#0066FF', color: '#fff',
-                border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 500,
-              }}
+            <Button
+              onPress={runAllTests}
+              appearance="primary"
+              size="M"
             >
               re-run all tests
-            </button>
-            <button
-              onClick={handleDownloadReport}
-              style={{
-                padding: '10px 24px', background: '#34C759', color: '#fff',
-                border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 500,
+            </Button>
+            <Button
+              onPress={handleDownloadReport}
+              appearance="neutral"
+              attention="high"
+              size="M"
+              style={{ 
+                backgroundColor: theme.semantic.positive, 
+                color: '#fff',
+                border: 'none',
               }}
             >
               download report (.md)
-            </button>
-            <button
-              onClick={() => setShowReport(!showReport)}
-              style={{
-                padding: '10px 24px', background: '#8E8E93', color: '#fff',
-                border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 500,
-              }}
+            </Button>
+            <Button
+              onPress={() => setShowReport(!showReport)}
+              appearance="neutral"
+              attention="medium"
+              size="M"
             >
               {showReport ? 'hide' : 'show'} full report
-            </button>
+            </Button>
           </>
         )}
         {(state.status === 'idle' || state.status === 'done') && (
-          <button
-            onClick={handleDeleteAllTestProjects}
-            style={{
-              padding: '10px 24px', background: '#FF3B30', color: '#fff',
-              border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 500,
+          <Button
+            onPress={handleDeleteAllTestProjects}
+            appearance="neutral"
+            attention="high"
+            size="M"
+            style={{ 
+              backgroundColor: theme.semantic.negative, 
+              color: '#fff',
+              border: 'none',
             }}
           >
             delete all test projects
-          </button>
+          </Button>
         )}
       </div>
 
@@ -514,27 +563,32 @@ export function ComplianceTestRunner() {
       {state.status === 'running' && (
         <div style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 14, color: '#666' }}>
+            <Text size="S" color="medium">
               {state.totalCompleted} / {ALL_TESTS.length} ({Math.round(progress)}%)
-            </span>
-            <span style={{ fontSize: 14, color: '#666' }}>
+            </Text>
+            <Text size="S" color="medium">
               {currentGroupName}
-            </span>
+            </Text>
           </div>
-          <div style={{ height: 8, background: '#E5E5EA', borderRadius: 4, overflow: 'hidden' }}>
+          <div style={{ 
+            height: 8, 
+            background: theme.stroke.low, 
+            borderRadius: 4, 
+            overflow: 'hidden' 
+          }}>
             <div
               style={{
                 height: '100%',
                 width: `${progress}%`,
-                background: '#0066FF',
+                background: theme.accent,
                 borderRadius: 4,
                 transition: 'width 0.3s',
               }}
             />
           </div>
-          <p style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+          <Text size="XS" color="low" style={{ marginTop: 4 }}>
             running: {currentTestDesc}
-          </p>
+          </Text>
         </div>
       )}
 
@@ -542,21 +596,32 @@ export function ComplianceTestRunner() {
       {(state.status === 'done' || state.status === 'running') && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>
           {[
-            { label: 'total', value: state.totalCompleted, color: '#1C1C1E' },
-            { label: 'pass', value: Array.from(state.results.values()).filter(r => r.status === 'pass').length, color: '#34C759' },
-            { label: 'fail', value: Array.from(state.results.values()).filter(r => r.status === 'fail').length, color: '#FF3B30' },
-            { label: 'warn', value: Array.from(state.results.values()).filter(r => r.status === 'warn').length, color: '#FF9500' },
-            { label: 'error', value: Array.from(state.results.values()).filter(r => r.status === 'error').length, color: '#8E8E93' },
+            { label: 'total', value: state.totalCompleted, color: theme.text.high },
+            { label: 'pass', value: Array.from(state.results.values()).filter(r => r.status === 'pass').length, color: theme.semantic.positive },
+            { label: 'fail', value: Array.from(state.results.values()).filter(r => r.status === 'fail').length, color: theme.semantic.negative },
+            { label: 'warn', value: Array.from(state.results.values()).filter(r => r.status === 'warn').length, color: theme.semantic.warning },
+            { label: 'error', value: Array.from(state.results.values()).filter(r => r.status === 'error').length, color: theme.text.low },
           ].map(card => (
             <div
               key={card.label}
               style={{
-                padding: 16, borderRadius: 12, textAlign: 'center',
-                border: '1px solid #E5E5EA', background: '#fff',
+                padding: 16, 
+                borderRadius: 12, 
+                textAlign: 'center',
+                border: `1px solid ${theme.stroke.medium}`, 
+                background: theme.background.ghost,
               }}
             >
-              <div style={{ fontSize: 28, fontWeight: 700, color: card.color }}>{card.value}</div>
-              <div style={{ fontSize: 12, color: '#666', textTransform: 'uppercase' }}>{card.label}</div>
+              <div style={{ 
+                fontSize: chatTypography.h1.fontSize, 
+                fontWeight: chatTypography.h1.fontWeight, 
+                color: card.color 
+              }}>
+                {card.value}
+              </div>
+              <Text size="XS" color="medium" style={{ textTransform: 'uppercase' }}>
+                {card.label}
+              </Text>
             </div>
           ))}
         </div>
@@ -565,79 +630,112 @@ export function ComplianceTestRunner() {
       {/* ── Overall Score ── */}
       {state.report && (
         <div style={{
-          padding: 20, borderRadius: 12, marginBottom: 24, textAlign: 'center',
-          background: state.report.overallScore >= 0.9 ? '#E8F5E9' : state.report.overallScore >= 0.7 ? '#FFF3E0' : '#FFEBEE',
-          border: `2px solid ${state.report.overallScore >= 0.9 ? '#4CAF50' : state.report.overallScore >= 0.7 ? '#FF9800' : '#F44336'}`,
+          padding: 20, 
+          borderRadius: 12, 
+          marginBottom: 24, 
+          textAlign: 'center',
+          background: getScoreBackground(state.report.overallScore),
+          border: `2px solid ${getScoreTextColor(state.report.overallScore)}`,
         }}>
-          <div style={{ fontSize: 36, fontWeight: 700 }}>
+          <div style={{ 
+            fontSize: '36px', 
+            fontWeight: 700, 
+            color: getScoreTextColor(state.report.overallScore) 
+          }}>
             {Math.round(state.report.overallScore * 100)}%
           </div>
-          <div style={{ fontSize: 14, color: '#333' }}>
+          <Text size="M" color="high">
             overall compliance score
             {state.report.overallScore >= 0.9 ? ' -- target MET' : ' -- below 90% target'}
-          </div>
-          <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+          </Text>
+          <Text size="S" color="medium" style={{ marginTop: 4 }}>
             completed in {(state.report.durationMs / 1000).toFixed(1)}s
-          </div>
+          </Text>
         </div>
       )}
 
       {/* ── Group Table ── */}
       {state.groupResults.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>group scores</h2>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #E5E5EA' }}>
-                <th style={{ textAlign: 'left', padding: '8px 12px' }}>group</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px' }}>tests</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px' }}>pass</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px' }}>fail</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px' }}>warn</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px' }}>score</th>
-                <th style={{ textAlign: 'center', padding: '8px 12px' }}>view</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.groupResults.map(g => (
-                <tr
-                  key={g.groupId}
-                  style={{
-                    borderBottom: '1px solid #E5E5EA',
-                    cursor: 'pointer',
-                    background: selectedGroup === g.groupId ? '#F2F2F7' : undefined,
-                  }}
-                  onClick={() => setSelectedGroup(selectedGroup === g.groupId ? null : g.groupId)}
-                >
-                  <td style={{ padding: '8px 12px' }}>{g.groupName}</td>
-                  <td style={{ textAlign: 'center', padding: '8px 12px' }}>{g.tests.length}</td>
-                  <td style={{ textAlign: 'center', padding: '8px 12px', color: '#34C759' }}>{g.passCount}</td>
-                  <td style={{ textAlign: 'center', padding: '8px 12px', color: '#FF3B30' }}>{g.failCount}</td>
-                  <td style={{ textAlign: 'center', padding: '8px 12px', color: '#FF9500' }}>{g.warnCount}</td>
-                  <td style={{ textAlign: 'center', padding: '8px 12px', fontWeight: 600 }}>
-                    <span style={{
-                      display: 'inline-block', padding: '2px 8px', borderRadius: 4,
-                      background: g.score >= 0.9 ? '#E8F5E9' : g.score >= 0.7 ? '#FFF3E0' : '#FFEBEE',
-                      color: g.score >= 0.9 ? '#2E7D32' : g.score >= 0.7 ? '#E65100' : '#C62828',
-                    }}>
-                      {Math.round(g.score * 100)}%
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'center', padding: '8px 12px' }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleNavigateToProject(g.groupId); }}
-                      style={{
-                        padding: '4px 10px', fontSize: 12, border: '1px solid #ccc',
-                        borderRadius: 4, cursor: 'pointer', background: '#fff',
-                      }}
-                    >
-                      open chat
-                    </button>
-                  </td>
+          <Title size="S" as="h2" weight="high" color="high" style={{ marginBottom: 12 }}>
+            group scores
+          </Title>
+          <div style={{ 
+            border: `1px solid ${theme.stroke.medium}`, 
+            borderRadius: 12, 
+            overflow: 'hidden',
+            background: theme.background.ghost,
+          }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ 
+                  borderBottom: `2px solid ${theme.stroke.medium}`,
+                  background: theme.background.subtle,
+                }}>
+                  <th style={{ textAlign: 'left', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, fontWeight: 600, color: theme.text.medium }}>group</th>
+                  <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, fontWeight: 600, color: theme.text.medium }}>tests</th>
+                  <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, fontWeight: 600, color: theme.text.medium }}>pass</th>
+                  <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, fontWeight: 600, color: theme.text.medium }}>fail</th>
+                  <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, fontWeight: 600, color: theme.text.medium }}>warn</th>
+                  <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, fontWeight: 600, color: theme.text.medium }}>score</th>
+                  <th style={{ textAlign: 'center', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, fontWeight: 600, color: theme.text.medium }}>view</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {state.groupResults.map(g => (
+                  <tr
+                    key={g.groupId}
+                    style={{
+                      borderBottom: `1px solid ${theme.stroke.low}`,
+                      cursor: 'pointer',
+                      background: selectedGroup === g.groupId ? theme.background.bold : 'transparent',
+                      transition: 'background-color 150ms',
+                    }}
+                    onClick={() => setSelectedGroup(selectedGroup === g.groupId ? null : g.groupId)}
+                    onMouseEnter={(e) => {
+                      if (selectedGroup !== g.groupId) {
+                        e.currentTarget.style.backgroundColor = theme.background.subtle;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedGroup !== g.groupId) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    <td style={{ padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, color: theme.text.high }}>{g.groupName}</td>
+                    <td style={{ textAlign: 'center', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, color: theme.text.medium }}>{g.tests.length}</td>
+                    <td style={{ textAlign: 'center', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, color: theme.semantic.positive }}>{g.passCount}</td>
+                    <td style={{ textAlign: 'center', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, color: theme.semantic.negative }}>{g.failCount}</td>
+                    <td style={{ textAlign: 'center', padding: '12px 16px', fontSize: chatTypography.bodySm.fontSize, color: theme.semantic.warning }}>{g.warnCount}</td>
+                    <td style={{ textAlign: 'center', padding: '12px 16px' }}>
+                      <span style={{
+                        display: 'inline-block', 
+                        padding: '4px 10px', 
+                        borderRadius: 6,
+                        fontSize: chatTypography.caption.fontSize,
+                        fontWeight: 600,
+                        background: getScoreBackground(g.score),
+                        color: getScoreTextColor(g.score),
+                      }}>
+                        {Math.round(g.score * 100)}%
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'center', padding: '12px 16px' }}>
+                      <Button
+                        onPress={(e) => { e?.stopPropagation?.(); handleNavigateToProject(g.groupId); }}
+                        appearance="neutral"
+                        attention="low"
+                        size="XS"
+                      >
+                        open chat
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -646,40 +744,68 @@ export function ComplianceTestRunner() {
         const group = state.groupResults.find(g => g.groupId === selectedGroup);
         if (!group) return null;
         return (
-          <div style={{ marginBottom: 24, padding: 16, borderRadius: 12, border: '1px solid #E5E5EA', background: '#FAFAFA' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{group.groupName} -- detail</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #E5E5EA' }}>
-                  <th style={{ textAlign: 'left', padding: '6px 8px' }}>id</th>
-                  <th style={{ textAlign: 'left', padding: '6px 8px' }}>description</th>
-                  <th style={{ textAlign: 'center', padding: '6px 8px' }}>status</th>
-                  <th style={{ textAlign: 'center', padding: '6px 8px' }}>score</th>
-                  <th style={{ textAlign: 'left', padding: '6px 8px' }}>notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.tests.map(t => (
-                  <tr key={t.testId} style={{ borderBottom: '1px solid #E5E5EA' }}>
-                    <td style={{ padding: '6px 8px', fontFamily: 'monospace', fontSize: 12 }}>{t.testId}</td>
-                    <td style={{ padding: '6px 8px' }}>{t.description}</td>
-                    <td style={{ textAlign: 'center', padding: '6px 8px' }}>
-                      <span style={{
-                        display: 'inline-block', padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600,
-                        background: t.status === 'pass' ? '#E8F5E9' : t.status === 'fail' ? '#FFEBEE' : t.status === 'warn' ? '#FFF3E0' : '#F5F5F5',
-                        color: t.status === 'pass' ? '#2E7D32' : t.status === 'fail' ? '#C62828' : t.status === 'warn' ? '#E65100' : '#666',
-                      }}>
-                        {t.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: 'center', padding: '6px 8px' }}>{Math.round(t.score * 100)}%</td>
-                    <td style={{ padding: '6px 8px', fontSize: 12, color: '#666', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {t.notes.join('; ') || '-'}
-                    </td>
+          <div style={{ 
+            marginBottom: 24, 
+            padding: 16, 
+            borderRadius: 12, 
+            border: `1px solid ${theme.stroke.medium}`, 
+            background: theme.background.subtle 
+          }}>
+            <Title size="XS" as="h3" weight="high" color="high" style={{ marginBottom: 12 }}>
+              {group.groupName} -- detail
+            </Title>
+            <div style={{ 
+              border: `1px solid ${theme.stroke.low}`, 
+              borderRadius: 8, 
+              overflow: 'hidden',
+              background: theme.background.ghost,
+            }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ 
+                    borderBottom: `2px solid ${theme.stroke.medium}`,
+                    background: theme.background.subtle,
+                  }}>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: chatTypography.caption.fontSize, fontWeight: 600, color: theme.text.medium }}>id</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: chatTypography.caption.fontSize, fontWeight: 600, color: theme.text.medium }}>description</th>
+                    <th style={{ textAlign: 'center', padding: '8px 12px', fontSize: chatTypography.caption.fontSize, fontWeight: 600, color: theme.text.medium }}>status</th>
+                    <th style={{ textAlign: 'center', padding: '8px 12px', fontSize: chatTypography.caption.fontSize, fontWeight: 600, color: theme.text.medium }}>score</th>
+                    <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: chatTypography.caption.fontSize, fontWeight: 600, color: theme.text.medium }}>notes</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {group.tests.map(t => (
+                    <tr key={t.testId} style={{ borderBottom: `1px solid ${theme.stroke.low}` }}>
+                      <td style={{ padding: '8px 12px', fontFamily: 'var(--font-mono, monospace)', fontSize: chatTypography.caption.fontSize, color: theme.text.medium }}>{t.testId}</td>
+                      <td style={{ padding: '8px 12px', fontSize: chatTypography.caption.fontSize, color: theme.text.high }}>{t.description}</td>
+                      <td style={{ textAlign: 'center', padding: '8px 12px' }}>
+                        <span style={{
+                          display: 'inline-block', 
+                          padding: '2px 8px', 
+                          borderRadius: 4, 
+                          fontSize: chatTypography.label.fontSize, 
+                          fontWeight: 600,
+                          background: t.status === 'pass' 
+                            ? (theme.isLight ? '#E8F5E9' : '#1B3D2F')
+                            : t.status === 'fail' 
+                              ? (theme.isLight ? '#FFEBEE' : '#3D1B1B')
+                              : t.status === 'warn' 
+                                ? (theme.isLight ? '#FFF3E0' : '#3D2E1B')
+                                : theme.background.bold,
+                          color: getStatusColor(t.status),
+                        }}>
+                          {t.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center', padding: '8px 12px', fontSize: chatTypography.caption.fontSize, color: theme.text.medium }}>{Math.round(t.score * 100)}%</td>
+                      <td style={{ padding: '8px 12px', fontSize: chatTypography.caption.fontSize, color: theme.text.low, maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {t.notes.join('; ') || '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         );
       })()}
@@ -687,11 +813,21 @@ export function ComplianceTestRunner() {
       {/* ── Full Report ── */}
       {showReport && state.report && (
         <div style={{ marginBottom: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>full markdown report</h2>
+          <Title size="S" as="h2" weight="high" color="high" style={{ marginBottom: 12 }}>
+            full markdown report
+          </Title>
           <pre style={{
-            background: '#1C1C1E', color: '#E5E5EA', padding: 20, borderRadius: 12,
-            overflow: 'auto', maxHeight: 600, fontSize: 13, lineHeight: 1.5,
-            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+            background: theme.isLight ? '#1C1C1E' : theme.background.bold, 
+            color: theme.isLight ? '#E5E5EA' : theme.text.high, 
+            padding: 20, 
+            borderRadius: 12,
+            overflow: 'auto', 
+            maxHeight: 600, 
+            fontSize: chatTypography.caption.fontSize, 
+            lineHeight: 1.5,
+            whiteSpace: 'pre-wrap', 
+            wordBreak: 'break-word',
+            border: `1px solid ${theme.stroke.medium}`,
           }}>
             {generateMarkdownReport(state.report)}
           </pre>
