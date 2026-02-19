@@ -804,29 +804,51 @@ export const ChatPanel = memo(function ChatPanel({
           </div>
         )}
 
-        {/* Arrow send button - Jio DS Button (high attention style) */}
+        {/* Send/Stop button - swaps between send and stop during loading */}
         <div className="flex-shrink-0 self-end" style={{ width: '36px', height: '36px' }}>
-          <Button
-            onPress={handleSubmit}
-            isDisabled={!inputValue.trim() || isLoading || inputDisabled}
-            aria-label="Send message"
-            appearance="primary"
-            size="S"
-            style={{ 
-              width: '36px', 
-              height: '36px', 
-              minHeight: '36px',
-              padding: '0',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: SEND_BUTTON_COLOR,
-              color: '#ffffff',
-            }}
-          >
-            <DSIcon name="IcArrowUp" size="S" attention="high" style={{ color: '#ffffff' }} />
-          </Button>
+          {isLoading && onStopGeneration ? (
+            <Button
+              onPress={onStopGeneration}
+              aria-label="Stop generating"
+              appearance="neutral"
+              attention="bold"
+              size="S"
+              style={{ 
+                width: '36px', 
+                height: '36px', 
+                minHeight: '36px',
+                padding: '0',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <DSIcon name="IcStop" size="S" attention="high" />
+            </Button>
+          ) : (
+            <Button
+              onPress={handleSubmit}
+              isDisabled={!inputValue.trim() || inputDisabled}
+              aria-label="Send message"
+              appearance="primary"
+              size="S"
+              style={{ 
+                width: '36px', 
+                height: '36px', 
+                minHeight: '36px',
+                padding: '0',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: SEND_BUTTON_COLOR,
+                color: '#ffffff',
+              }}
+            >
+              <DSIcon name="IcArrowUp" size="S" attention="high" style={{ color: '#ffffff' }} />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -843,7 +865,7 @@ export const ChatPanel = memo(function ChatPanel({
         </div>
       )}
     </div>
-  ), [theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, inputDisabled, handleSubmit, isLoading, contextSelector, channelSelector, platformSelector]);
+  ), [theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, inputDisabled, handleSubmit, isLoading, onStopGeneration, contextSelector, channelSelector, platformSelector]);
 
   return (
     <div 
@@ -981,23 +1003,6 @@ export const ChatPanel = memo(function ChatPanel({
             </div>
           )}
           
-          {/* Stop Generation Button - shown while streaming */}
-          {isLoading && streamingAIResponse && onStopGeneration && (
-            <div className="max-w-3xl mx-auto w-full px-4 py-2 flex justify-center">
-              <Button
-                appearance="secondary"
-                size="S"
-                onPress={onStopGeneration}
-                aria-label="Stop generating"
-              >
-                <div className="flex items-center gap-2">
-                  <DSIcon name="IcStop" size="XS" attention="medium" />
-                  <span>stop generating</span>
-                </div>
-              </Button>
-            </div>
-          )}
-
           {/* Input Area - fixed at bottom, centered */}
           <div className="max-w-3xl mx-auto w-full px-4 pb-4">
             {renderInputArea()}
