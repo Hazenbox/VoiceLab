@@ -3,7 +3,7 @@ import { useProject } from '../context/ProjectContext';
 import { useThemeColors } from '../theme';
 import { useUIStore } from '../stores/uiStore';
 import type { ColorMode } from '../types';
-import { Button, Avatar, Text, Label, Divider, Input, Icon } from '@marcelinodzn/ds-react';
+import { Button, Avatar, Text, Label, Divider, Icon } from '@marcelinodzn/ds-react';
 import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 import { DSIcon } from './DSIcon';
 import { DropdownMenu, type DropdownMenuItem } from './DropdownMenu';
@@ -354,21 +354,30 @@ export const ProjectSidebar = memo(function ProjectSidebar({
                 className="relative"
               >
                 {renamingProject === project.id ? (
-                  // Rename input mode - match 36px height of normal items
+                  // Rename input mode - simple native input styled with DS tokens
                   <div 
-                    className="w-full flex items-center rounded-xl"
+                    className="w-full flex items-center rounded-xl px-2.5"
                     style={{ backgroundColor: theme.stroke.low, height: '36px' }}
                   >
-                    <Input
+                    <input
                       ref={renameInputRef}
+                      type="text"
                       value={renameValue}
-                      onChange={(val: string) => setRenameValue(val)}
-                      onKeyDown={(e: React.KeyboardEvent) => {
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter') handleRenameSubmit(project.id);
                         if (e.key === 'Escape') handleRenameCancel();
                       }}
                       onBlur={() => handleRenameSubmit(project.id)}
                       aria-label="Rename project"
+                      className="w-full bg-transparent outline-none"
+                      style={{
+                        color: theme.text.high,
+                        fontSize: '14px',
+                        fontWeight: 400,
+                        border: 'none',
+                        padding: 0,
+                      }}
                     />
                   </div>
                 ) : (
