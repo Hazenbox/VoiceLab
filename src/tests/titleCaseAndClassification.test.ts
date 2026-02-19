@@ -385,10 +385,10 @@ describe('Fix 7: capitalisation after full stops via applyFormatFixes', () => {
     expect(result).toBe('Take care. Enjoy your day.');
   });
 
-  it('capitalises after exclamation mark', () => {
-    const input = 'great news! your recharge is done.';
+  it('capitalises after full stop (previously exclamation mark)', () => {
+    const input = 'great news. your recharge is done.';
     const result = applyFormatFixes(input);
-    expect(result).toBe('Great news! Your recharge is done.');
+    expect(result).toBe('Great news. Your recharge is done.');
   });
 
   it('capitalises after question mark', () => {
@@ -410,9 +410,9 @@ describe('Fix 7: capitalisation after full stops via applyFormatFixes', () => {
   });
 
   it('handles mixed punctuation', () => {
-    const input = 'done! what next? follow these steps.';
+    const input = 'done. what next? follow these steps.';
     const result = applyFormatFixes(input);
-    expect(result).toBe('Done! What next? Follow these steps.');
+    expect(result).toBe('Done. What next? Follow these steps.');
   });
 });
 

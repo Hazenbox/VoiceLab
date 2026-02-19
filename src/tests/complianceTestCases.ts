@@ -283,9 +283,9 @@ const B_COMPLIANCE_VERIFIER: ComplianceTestCase[] = [
   t('B4-05', 'B', 'B', 's-05: excessive bold', 'checker',
     '', any, [], [],
     's-05', '**step 1** open app. **step 2** tap menu. **step 3** settings. **step 4** network. **step 5** plan. **step 6** confirm.'),
-  t('B4-06', 'B', 'B', 's-06: multiple exclamation marks', 'checker',
-    '', any, ['great news.'], ['!!'],
-    's-06', 'great news!! your plan is active!!'),
+  t('B4-06', 'B', 'B', 's-06: exclamation marks not allowed', 'checker',
+    '', any, ['great news.'], ['!'],
+    's-06', 'great news! your plan is active!'),
   // Brand
   t('B5-01', 'B', 'B', 'b-01: Jio Fiber → JioFiber', 'checker',
     '', any, ['JioFiber'], ['Jio Fiber'],

@@ -469,6 +469,7 @@ export const HARD_LIMITS = {
     'override regulatory, safety, or identity-verification processes',
     'continue sensitive workflows when risk validation fails',
     'replace human support in emergency or high-risk scenarios',
+    'use exclamation marks ("!") in any response -- always use a full stop (".") instead',
   ],
   escalationTriggers: [
     'identity verification cannot be completed',

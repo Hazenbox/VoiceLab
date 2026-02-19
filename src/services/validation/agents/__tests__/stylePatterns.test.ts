@@ -417,7 +417,7 @@ describe('exclamation mark usage', () => {
     expect(exclamViolation?.severity).toBe('error');
   });
 
-  it('should flag single exclamation (info level)', () => {
+  it('should flag single exclamation (error level)', () => {
     const violations = styleConsistencyAgent.runPatternValidation(
       'Welcome to Jio!'
     );
@@ -426,7 +426,7 @@ describe('exclamation mark usage', () => {
       v.rule.includes('exclamation marks') && !v.rule.includes('multiple')
     );
     expect(exclamViolation).toBeDefined();
-    expect(exclamViolation?.severity).toBe('info');
+    expect(exclamViolation?.severity).toBe('error');
   });
 });
 

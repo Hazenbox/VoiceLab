@@ -19,7 +19,7 @@ const STYLE_PATTERNS: PatternRule[] = [
   
   // Exclamation marks
   { id: 'st-007', pattern: /[!]{2,}/g, severity: 'error', rule: 'Never use multiple exclamations', suggestion: 'Remove extra exclamation marks', category: 'punctuation' },
-  { id: 'st-008', pattern: /!/g, severity: 'info', rule: 'Avoid exclamation marks unless absolutely necessary', suggestion: '.', category: 'punctuation' },
+  { id: 'st-008', pattern: /!/g, severity: 'error', rule: 'Never use exclamation marks -- use full stop instead', suggestion: '.', category: 'punctuation' },
   
   // Title Case Detection
   { id: 'st-009', pattern: /(?:^|[.!?]\s+)(?:[A-Z][a-z]+\s+){2,}[A-Z][a-z]+(?:\s|$|[.!?])/gm, severity: 'warning', rule: 'Use sentence case, not Title Case', suggestion: 'Lowercase non-proper nouns', category: 'capitalization' },

@@ -291,6 +291,18 @@ export class ConstitutionalWrapper {
       });
     }
     
+    // Check 2.5: Exclamation marks (HARD RULE - no exceptions)
+    const exclamationMatch = response.match(/!/);
+    if (exclamationMatch) {
+      checks.push({
+        name: 'exclamation_mark',
+        passed: false,
+        message: 'Response contains exclamation mark(s) -- must use full stop instead',
+        severity: 'warning',
+      });
+      suggestions.push('Replace all "!" with "."');
+    }
+    
     // Check 3: Emotion appropriateness
     const emotionDirective = context.directives?.emotionDirective;
     const forbiddenToneShifts = emotionDirective?.forbiddenToneShifts || [];

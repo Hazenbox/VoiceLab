@@ -346,11 +346,11 @@ const CHECKS: Check[] = [
   {
     id: 's-06',
     category: 'structure',
-    severity: 'warning',
-    description: 'multiple exclamation marks',
-    test: (c) => match(c, /[!]{2,}/),
+    severity: 'error',
+    description: 'exclamation marks not allowed',
+    test: (c) => match(c, /!/),
     autoFixable: true,
-    fix: (c) => c.replace(/!{2,}/g, '.'),
+    fix: (c) => c.replace(/!/g, '.'),
   },
 
   // ── BRAND (KB/07) ─────────────────────────────────────────────────────
