@@ -1,9 +1,9 @@
-import { useState, useCallback, useRef, useEffect, memo } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { useThemeColors } from '../../theme/useColors';
 import { DSIcon } from '../../components/DSIcon';
 import { SidebarNavItem, SidebarContainer } from '../../components/sidebar';
-import { DropdownMenu, type DropdownMenuItem } from '../../components/DropdownMenu';
-import { Divider, Label, Avatar, Text } from '@marcelinodzn/ds-react';
+import { UserMenu } from '../../components/UserMenu';
+import { Divider, Label } from '@marcelinodzn/ds-react';
 import type { ColorMode } from '../../types';
 
 // ── Types ────────────────────────────────────────────────────────
@@ -25,18 +25,6 @@ interface AdminSidebarProps {
   onColorModeChange: (mode: ColorMode) => void;
   onEditProfile?: () => void;
   onNavigateToHowItWorks?: () => void;
-}
-
-// ── Helper Functions ─────────────────────────────────────────────
-
-function getInitials(name?: string): string {
-  if (!name) return '?';
-  return name.charAt(0).toUpperCase();
-}
-
-function formatRole(role?: string): string {
-  if (!role) return 'Not set';
-  return role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ');
 }
 
 // Primary navigation items - always visible
@@ -67,68 +55,24 @@ export const AdminSidebar = memo(function AdminSidebar({
 }: AdminSidebarProps) {
   const theme = useThemeColors();
   const [showAdvanced, setShowAdvanced] = useState(false);
-  
-  // User menu state
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isUserProfileHovered, setIsUserProfileHovered] = useState(false);
-  const userMenuContainerRef = useRef<HTMLDivElement>(null);
 
-  // Close user menu on click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        userMenuContainerRef.current &&
-        !userMenuContainerRef.current.contains(event.target as Node)
-      ) {
-        setIsUserMenuOpen(false);
-      }
-    };
-
-    if (isUserMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isUserMenuOpen]);
-
-  // User menu options (same as main app, but without Admin Panel option)
-  const userMenuOptions: MenuOption[] = [
+  // Admin-specific additional menu items
+  const adminMenuAdditionalItems: MenuOption[] = onNavigateToHowItWorks ? [
     {
-      value: 'edit-profile',
-      label: 'Edit Profile',
-      icon: <DSIcon name="IcUser" size="S" attention="high" appearance="neutral" />,
-    },
-    ...(onNavigateToHowItWorks ? [{
       value: 'how-it-works',
       label: 'How it Works',
       icon: <DSIcon name="IcLightbulb" size="S" attention="high" appearance="neutral" />,
-    }] : []),
-    {
-      value: 'toggle-theme',
-      label: `${colorMode === 'Light' ? 'Dark' : 'Light'} Mode`,
-      icon: colorMode === 'Light' 
-        ? <DSIcon name="IcNightClear" size="S" attention="high" appearance="neutral" />
-        : <DSIcon name="IcSunnyClear" size="S" attention="high" appearance="neutral" />,
     },
-  ];
+  ] : [];
 
-  // Handle user menu actions
-  const handleUserMenuAction = useCallback((action: string) => {
+  // Handle additional menu actions
+  const handleAdditionalAction = useCallback((action: string) => {
     switch (action) {
-      case 'edit-profile':
-        onEditProfile?.();
-        break;
       case 'how-it-works':
         onNavigateToHowItWorks?.();
         break;
-      case 'toggle-theme':
-        onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light');
-        break;
     }
-    setIsUserMenuOpen(false);
-  }, [onEditProfile, onNavigateToHowItWorks, onColorModeChange, colorMode]);
+  }, [onNavigateToHowItWorks]);
 
   return (
     <SidebarContainer>
@@ -203,54 +147,15 @@ export const AdminSidebar = memo(function AdminSidebar({
       <div className="p-2.5">
         {/* User Profile Menu */}
         {userName && onEditProfile && (
-          <div ref={userMenuContainerRef} className="relative">
-            <button
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              onMouseEnter={() => setIsUserProfileHovered(true)}
-              onMouseLeave={() => setIsUserProfileHovered(false)}
-              className="w-full px-2 py-2 rounded-xl cursor-pointer focus:outline-none"
-              style={{
-                backgroundColor: (isUserProfileHovered || isUserMenuOpen) ? theme.stroke.low : 'transparent',
-              }}
-              aria-label="User menu"
-              aria-haspopup="menu"
-              aria-expanded={isUserMenuOpen}
-            >
-              <div className="flex items-center gap-3">
-                {/* Avatar with DS component */}
-                <Avatar 
-                  content="initials" 
-                  initials={getInitials(userName)} 
-                  size="L" 
-                  attention="medium"
-                />
-
-                {/* Name and role */}
-                <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-                  <div className="truncate">
-                    <Text size="S" weight="low">
-                      {userName}
-                    </Text>
-                  </div>
-                  <Text size="XS" weight="low" color="low-tinted">
-                    {formatRole(userRole)}
-                  </Text>
-                </div>
-              </div>
-            </button>
-            
-            <DropdownMenu
-              isOpen={isUserMenuOpen}
-              onClose={() => setIsUserMenuOpen(false)}
-              items={userMenuOptions}
-              onSelect={handleUserMenuAction}
-              direction="up"
-              width="239px"
-              position="left"
-              showIcons={true}
-              anchorRef={userMenuContainerRef}
-            />
-          </div>
+          <UserMenu
+            userName={userName}
+            userRole={userRole}
+            colorMode={colorMode}
+            onColorModeChange={onColorModeChange}
+            onEditProfile={onEditProfile}
+            additionalItems={adminMenuAdditionalItems}
+            onAdditionalAction={handleAdditionalAction}
+          />
         )}
       </div>
     </SidebarContainer>

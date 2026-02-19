@@ -3,33 +3,21 @@ import { useProject } from '../context/ProjectContext';
 import { useThemeColors } from '../theme';
 import { useUIStore } from '../stores/uiStore';
 import type { ColorMode } from '../types';
-import { Button, Avatar, Text, Label, Divider, Icon } from '@marcelinodzn/ds-react';
+import { Button, Text, Label, Divider, Icon } from '@marcelinodzn/ds-react';
 import { LazyIcon } from '@marcelinodzn/ds-react/icons';
 import { DSIcon } from './DSIcon';
-import { DropdownMenu, type DropdownMenuItem } from './DropdownMenu';
+import { DropdownMenu } from './DropdownMenu';
 import { SidebarItem, SidebarNavItem, SidebarContainer } from './sidebar';
+import { UserMenu } from './UserMenu';
 
 // Re-export SidebarItem for backward compatibility (used by DropdownMenu)
 export { SidebarItem } from './sidebar';
 
 // ── Local Types ──────────────────────────────────────────────────
-// Previously imported from ./Dropdown -- inlined here for independence
 interface MenuOption {
   value: string;
   label: string;
   icon?: React.ReactNode;
-}
-
-// ── Helper Functions ─────────────────────────────────────────────
-
-function getInitials(name?: string): string {
-  if (!name) return '?';
-  return name.charAt(0).toUpperCase();
-}
-
-function formatRole(role?: string): string {
-  if (!role) return 'Not set';
-  return role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ');
 }
 
 // ── Types ────────────────────────────────────────────────────────
@@ -43,6 +31,7 @@ interface ProjectSidebarProps {
   userName?: string;
   userRole?: string;
   onEditProfile?: () => void;
+  onSettingsOpen?: () => void;
 }
 
 // SidebarItem and SidebarNavItem imported from ./sidebar
@@ -193,15 +182,11 @@ export const ProjectSidebar = memo(function ProjectSidebar({
   userName,
   userRole,
   onEditProfile,
+  onSettingsOpen,
 }: ProjectSidebarProps) {
   void isHowItWorksActive; // Available for future use
   const theme = useThemeColors();
   const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
-  
-  // User menu state
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isUserProfileHovered, setIsUserProfileHovered] = useState(false);
-  const userMenuContainerRef = useRef<HTMLDivElement>(null);
   
   // Rename state
   const [renamingProject, setRenamingProject] = useState<string | null>(null);
@@ -215,21 +200,6 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       renameInputRef.current.select();
     }
   }, [renamingProject]);
-
-  // Close user menu on click outside
-  useEffect(() => {
-    if (!isUserMenuOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (userMenuContainerRef.current && !userMenuContainerRef.current.contains(event.target as Node)) {
-        setIsUserMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isUserMenuOpen]);
-
 
   const handleDeleteProject = useCallback((id: string) => {
     if (confirm('Are you sure you want to delete this project? All associated audios will be deleted.')) {
@@ -256,13 +226,8 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     setRenameValue('');
   }, []);
 
-  // User menu options
-  const userMenuOptions: MenuOption[] = [
-    {
-      value: 'edit-profile',
-      label: 'Edit Profile',
-      icon: <DSIcon name="IcUser" size="S" attention="high" appearance="neutral" />,
-    },
+  // User menu additional items (main app specific)
+  const userMenuAdditionalItems: MenuOption[] = [
     ...(onNavigateToHowItWorks ? [{
       value: 'how-it-works',
       label: 'How it Works',
@@ -271,28 +236,18 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     {
       value: 'compliance-tests',
       label: 'Compliance Tests',
-      icon: <DSIcon name="IcSettings" size="S" attention="high" appearance="neutral" />,
+      icon: <DSIcon name="IcCode" size="S" attention="high" appearance="neutral" />,
     },
     {
       value: 'admin-panel',
       label: 'Admin Panel',
-      icon: <DSIcon name="IcSettings" size="S" attention="high" appearance="neutral" />,
-    },
-    {
-      value: 'toggle-theme',
-      label: `${colorMode === 'Light' ? 'Dark' : 'Light'} Mode`,
-      icon: colorMode === 'Light' 
-        ? <DSIcon name="IcNightClear" size="S" attention="high" appearance="neutral" />
-        : <DSIcon name="IcSunnyClear" size="S" attention="high" appearance="neutral" />,
+      icon: <DSIcon name="IcAnalytics" size="S" attention="high" appearance="neutral" />,
     },
   ];
 
-  // Handle user menu actions
-  const handleUserMenuAction = useCallback((action: string) => {
+  // Handle additional menu actions
+  const handleAdditionalAction = useCallback((action: string) => {
     switch (action) {
-      case 'edit-profile':
-        onEditProfile?.();
-        break;
       case 'how-it-works':
         onNavigateToHowItWorks?.();
         break;
@@ -302,12 +257,8 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       case 'admin-panel':
         window.location.href = '/admin';
         break;
-      case 'toggle-theme':
-        onColorModeChange(colorMode === 'Light' ? 'Dark' : 'Light');
-        break;
     }
-    setIsUserMenuOpen(false);
-  }, [onEditProfile, onNavigateToHowItWorks, onColorModeChange, colorMode]);
+  }, [onNavigateToHowItWorks]);
 
   return (
     <SidebarContainer>
@@ -413,54 +364,16 @@ export const ProjectSidebar = memo(function ProjectSidebar({
       <div className="p-2.5">
         {/* User Profile Menu */}
         {userName && onEditProfile && (
-          <div ref={userMenuContainerRef} className="relative">
-          <button
-            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            onMouseEnter={() => setIsUserProfileHovered(true)}
-            onMouseLeave={() => setIsUserProfileHovered(false)}
-            className="w-full px-2 py-2 rounded-xl cursor-pointer focus:outline-none"
-            style={{
-              backgroundColor: (isUserProfileHovered || isUserMenuOpen) ? theme.stroke.low : 'transparent',
-            }}
-            aria-label="User menu"
-            aria-haspopup="menu"
-            aria-expanded={isUserMenuOpen}
-          >
-            <div className="flex items-center gap-3">
-              {/* Avatar with DS component */}
-              <Avatar 
-                content="initials" 
-                initials={getInitials(userName)} 
-                size="L" 
-                attention="medium"
-              />
-
-              {/* Name and role */}
-              <div style={{ flex: 1, overflow: 'hidden', minWidth: 0 }}>
-                <div className="truncate">
-                  <Text size="S" weight="low">
-                    {userName}
-                  </Text>
-                </div>
-                <Text size="XS" weight="low" color="low-tinted">
-                  {formatRole(userRole)}
-                </Text>
-              </div>
-            </div>
-          </button>
-          
-          <DropdownMenu
-            isOpen={isUserMenuOpen}
-            onClose={() => setIsUserMenuOpen(false)}
-            items={userMenuOptions}
-            onSelect={handleUserMenuAction}
-            direction="up"
-            width="239px"
-            position="left"
-            showIcons={true}
-            anchorRef={userMenuContainerRef}
+          <UserMenu
+            userName={userName}
+            userRole={userRole}
+            colorMode={colorMode}
+            onColorModeChange={onColorModeChange}
+            onEditProfile={onEditProfile}
+            onSettingsOpen={onSettingsOpen}
+            additionalItems={userMenuAdditionalItems}
+            onAdditionalAction={handleAdditionalAction}
           />
-          </div>
         )}
       </div>
     </SidebarContainer>

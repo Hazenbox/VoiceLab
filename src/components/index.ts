@@ -31,6 +31,8 @@ export { DropdownSectionHeader } from './DropdownSectionHeader';
 export { AIOrb } from './AIOrb';
 export type { AIOrbProps } from './AIOrb';
 export { DSIcon } from './DSIcon';
+export { UserMenu } from './UserMenu';
+export type { UserMenuProps } from './UserMenu';
 
 // UI Components
 export { Accordion } from './ui/Accordion';
