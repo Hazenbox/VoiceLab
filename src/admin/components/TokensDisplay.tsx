@@ -8,7 +8,8 @@
 import { useState, useMemo, useRef, useCallback, memo } from 'react';
 import { useThemeColors } from '../../theme/useColors';
 import { DSIcon } from '../../components/DSIcon';
-import { Title, Text, Tabs, TabList, Tab } from '@marcelinodzn/ds-react';
+import { Title, Text, Chip, SearchField, Tabs, TabList, Tab } from '@marcelinodzn/ds-react';
+import { Badge } from '../../components/ui/Badge';
 import { 
   TOKEN_GROUPS, 
   TOTAL_TOKEN_COUNT 
@@ -768,37 +769,6 @@ const TOKEN_DOCUMENTATION: Record<string, {
 
 const MAX_VISIBLE_CHIPS = 8;
 
-function StatPill({ label, value }: { label: string; value: number }) {
-  const theme = useThemeColors();
-  return (
-    <div
-      className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-      style={{ border: `1px solid ${theme.stroke.medium}` }}
-    >
-      <span
-        style={{
-          fontFamily: '"JioType Var"',
-          fontWeight: 700,
-          fontSize: '16px',
-          color: theme.text.high,
-        }}
-      >
-        {value}
-      </span>
-      <span
-        style={{
-          fontFamily: '"JioType Var"',
-          fontWeight: 400,
-          fontSize: '11px',
-          color: theme.text.low,
-        }}
-      >
-        {label}
-      </span>
-    </div>
-  );
-}
-
 interface TokenCardProps {
   tokenKey: string;
   doc: typeof TOKEN_DOCUMENTATION[string];
@@ -818,40 +788,15 @@ const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardPro
       onClick={() => setIsExpanded(!isExpanded)}
       style={{
         border: `1px solid ${isExpanded ? theme.accent + '40' : theme.stroke.medium}`,
-        backgroundColor: isExpanded ? theme.accent + '05' : 'transparent',
       }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <code
-              className="px-2 py-0.5 rounded-md text-xs font-mono"
-              style={{
-                backgroundColor: theme.accent + '15',
-                color: theme.accent,
-              }}
-            >
-              {tokenKey}
-            </code>
-            <span
-              className="text-xs px-1.5 py-0.5 rounded-full"
-              style={{
-                backgroundColor: theme.stroke.low,
-                color: theme.text.low,
-              }}
-            >
-              {doc.values.length} values
-            </span>
+            <Badge variant="informative">{tokenKey}</Badge>
+            <Badge variant="neutral">{doc.values.length} values</Badge>
             {hasRules && (
-              <span
-                className="text-xs px-1.5 py-0.5 rounded-full"
-                style={{
-                  backgroundColor: theme.semantic.informative + '15',
-                  color: theme.semantic.informative,
-                }}
-              >
-                rules
-              </span>
+              <Badge variant="warning">{Object.keys(rules!).length} rules</Badge>
             )}
           </div>
           <p
@@ -868,7 +813,7 @@ const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardPro
         </div>
         <DSIcon
           name={isExpanded ? 'IcChevronUp' : 'IcChevronDown'}
-          size="XS"
+          size="S"
           attention="low"
         />
       </div>
@@ -1061,34 +1006,21 @@ export const TokensDisplay = memo(function TokensDisplay() {
       </div>
 
       {/* Summary stats */}
-      <div className="flex gap-3 mb-5">
-        <StatPill label="tokens" value={TOTAL_TOKEN_COUNT} />
-        <StatPill label="categories" value={groupNames.length} />
-        <StatPill label="values" value={totalValues} />
-        <StatPill label="rules" value={totalRules} />
+      <div className="flex gap-2 mb-5">
+        <Chip size="S" appearance="neutral" content={`${TOTAL_TOKEN_COUNT} tokens`} />
+        <Chip size="S" appearance="neutral" content={`${groupNames.length} categories`} />
+        <Chip size="S" appearance="neutral" content={`${totalValues} values`} />
+        <Chip size="S" appearance="neutral" content={`${totalRules} rules`} />
       </div>
 
       {/* Search */}
-      <div className="mb-5 relative">
-        <DSIcon
-          name="IcSearch"
-          size="XS"
-          attention="low"
-          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-        />
-        <input
-          type="text"
+      <div className="mb-5">
+        <SearchField
+          size="S"
           placeholder="search tokens, values, or descriptions..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 rounded-lg text-sm outline-none"
-          style={{
-            backgroundColor: theme.background.subtle,
-            border: `1px solid ${theme.stroke.medium}`,
-            color: theme.text.high,
-            fontFamily: '"JioType Var"',
-            fontSize: '12px',
-          }}
+          onChange={setSearchQuery}
+          onClear={() => setSearchQuery('')}
         />
       </div>
 
@@ -1114,7 +1046,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
                   className="flex items-center gap-2 mb-3 pb-2"
                   style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
                 >
-                  <Title size="S" as="h2" weight="high" color="high">
+                  <Title size="L" as="h2" weight="high" color="high">
                     {groupName.replace(/_/g, ' ').toLowerCase()}
                   </Title>
                   <span
