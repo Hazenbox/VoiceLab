@@ -95,30 +95,8 @@ export function DocsLayout({
         onVoiceGenderChange={updateProjectVoiceGender}
         config={activeProject.config}
         onConfigChange={updateProjectConfig}
-        defaultEcosystem={ecosystem}
-        defaultChannel={contentChannel}
-        defaultLanguage={activeProject.defaultLanguage || 'english'}
-        defaultRegion={activeProject.defaultRegion || 'pan_india'}
-        onDefaultEcosystemChange={(eco) => {
-          setEcosystem(eco);
-          updateProjectDefaultEcosystem(eco);
-        }}
-        onDefaultChannelChange={(ch) => {
-          setContentChannel(ch);
-          updateProjectDefaultChannel(ch);
-        }}
-        onDefaultLanguageChange={updateProjectDefaultLanguage}
-        onDefaultRegionChange={updateProjectDefaultRegion}
         trustSettings={trustSettings}
         onTrustSettingsChange={setTrustSettings}
-        colorMode={colorMode}
-        onColorModeChange={onColorModeChange}
-        temperature={temperature}
-        maxTokens={maxTokens}
-        streamResponse={streamResponse}
-        onTemperatureChange={setTemperature}
-        onMaxTokensChange={setMaxTokens}
-        onStreamResponseChange={setStreamResponse}
         disabled={voiceAppState !== AppState.IDLE}
         isCollapsed={isConfigPanelCollapsed}
         onToggleCollapse={() => setConfigPanelCollapsed(!isConfigPanelCollapsed)}

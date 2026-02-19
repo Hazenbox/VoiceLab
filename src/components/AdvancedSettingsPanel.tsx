@@ -1,24 +1,16 @@
 /**
  * AdvancedSettingsPanel Component
  * 
- * Repurposed ConfigPanel for the Content Trust System.
  * Contains advanced settings organized in collapsible sections:
  * 
- * 1. Voice & TTS - Voice selection, TTS provider, preview
- * 2. Project Defaults - Default ecosystem, channel, language, region
- * 3. Trust Settings - Score thresholds, blocking behavior
- * 4. Appearance - Theme, design system
+ * 1. Voice settings - Voice selection, greeting, pace, response length
+ * 2. Trust settings - Score thresholds, blocking behavior
  */
 
 import { memo, useCallback } from 'react';
 import { DSIcon } from './DSIcon';
 import type { 
   VoiceGender, 
-  ColorMode, 
-  EcosystemType, 
-  ContentChannelType,
-  SupportedLanguage,
-  IndianRegion,
   TrustSettings,
   ValidationStrictness,
   ConversationConfig,
@@ -32,8 +24,6 @@ import { Toggle } from './Toggle';
 import { SearchableDropdown } from './SearchableDropdown';
 import { TooltipIcon } from './TooltipIcon';
 import { useThemeColors } from '../theme';
-// Design system context removed - now using single Jio DS
-import { getEcosystemOptions, getChannelOptions, getLanguageOptions, getRegionOptions } from '../services/guidelines';
 import { TextArea, Title } from '@marcelinodzn/ds-react';
 import { Accordion } from './ui/Accordion';
 
@@ -50,31 +40,9 @@ interface AdvancedSettingsPanelProps {
   config: ConversationConfig;
   onConfigChange: (config: ConversationConfig) => void;
   
-  // Project defaults
-  defaultEcosystem: EcosystemType;
-  defaultChannel: ContentChannelType;
-  defaultLanguage: SupportedLanguage;
-  defaultRegion: IndianRegion;
-  onDefaultEcosystemChange: (ecosystem: EcosystemType) => void;
-  onDefaultChannelChange: (channel: ContentChannelType) => void;
-  onDefaultLanguageChange: (language: SupportedLanguage) => void;
-  onDefaultRegionChange: (region: IndianRegion) => void;
-  
   // Trust settings
   trustSettings: TrustSettings;
   onTrustSettingsChange: (settings: TrustSettings) => void;
-  
-  // Appearance
-  colorMode: ColorMode;
-  onColorModeChange: (mode: ColorMode) => void;
-  
-  // Chat generation settings
-  temperature?: number;
-  maxTokens?: number;
-  streamResponse?: boolean;
-  onTemperatureChange?: (value: number) => void;
-  onMaxTokensChange?: (value: number) => void;
-  onStreamResponseChange?: (checked: boolean) => void;
   
   // UI state
   disabled?: boolean;
@@ -82,20 +50,13 @@ interface AdvancedSettingsPanelProps {
   onToggleCollapse?: () => void;
 }
 
-// Inline components removed - now using dedicated Slider and Toggle components
-// Section component replaced with shared Accordion component
-
 // =============================================================================
 // Icons - Using DSIcon wrapper
 // =============================================================================
 
 const VoiceIcon = () => <DSIcon name="IcMic" size="S" attention="medium" appearance="neutral" />;
 
-const ProjectIcon = () => <DSIcon name="IcFolder" size="S" attention="medium" appearance="neutral" />;
-
 const TrustIcon = () => <DSIcon name="IcProtection" size="S" attention="medium" appearance="neutral" />;
-
-const ChatIcon = () => <DSIcon name="IcChat" size="S" attention="medium" appearance="neutral" />;
 
 // =============================================================================
 // Main Component
@@ -106,36 +67,13 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
   onVoiceGenderChange,
   config,
   onConfigChange,
-  defaultEcosystem,
-  defaultChannel,
-  defaultLanguage,
-  defaultRegion,
-  onDefaultEcosystemChange,
-  onDefaultChannelChange,
-  onDefaultLanguageChange,
-  onDefaultRegionChange,
   trustSettings,
   onTrustSettingsChange,
-  colorMode: _colorMode, // Prefix with _ to indicate intentionally unused
-  onColorModeChange: _onColorModeChange, // Prefix with _ to indicate intentionally unused
-  temperature = 0.7,
-  maxTokens = 2000,
-  streamResponse = true,
-  onTemperatureChange,
-  onMaxTokensChange,
-  onStreamResponseChange,
   disabled = false,
   isCollapsed = false,
   onToggleCollapse,
 }: AdvancedSettingsPanelProps) {
   const theme = useThemeColors();
-  
-  // Get options
-  const ecosystemOptions = getEcosystemOptions().map(o => ({ value: o.value, label: o.label }));
-  const channelGroups = getChannelOptions();
-  const channelOptions = channelGroups.flatMap(g => g.channels.map(c => ({ value: c.value, label: c.label })));
-  const languageOptions = getLanguageOptions().map(o => ({ value: o.value, label: o.label }));
-  const regionOptions = getRegionOptions().map(o => ({ value: o.value, label: o.label }));
   
   // Strictness options
   const strictnessOptions = [
@@ -204,44 +142,8 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
       
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 pt-0 pb-4 space-y-3 scrollable-container">
-          {/* Chat Settings Section */}
-          <Accordion title="Chat settings" icon={<ChatIcon />} defaultOpen>
-            {/* Temperature */}
-            <Slider
-              label="Temperature"
-              value={temperature}
-              min={0}
-              max={1}
-              step={0.1}
-              onChange={(value) => onTemperatureChange?.(value)}
-              disabled={disabled}
-              tooltip="Controls randomness. Low (0) = focused/predictable. High (1) = creative/varied"
-            />
-            
-            {/* Max Tokens */}
-            <Slider
-              label="Max Tokens"
-              value={maxTokens}
-              min={100}
-              max={4000}
-              step={100}
-              onChange={(value) => onMaxTokensChange?.(value)}
-              disabled={disabled}
-              tooltip="Maximum response length in tokens. Higher = longer possible responses"
-            />
-            
-            {/* Stream Response */}
-            <Toggle
-              label="Stream Response"
-              checked={streamResponse}
-              onChange={(checked) => onStreamResponseChange?.(checked)}
-              disabled={disabled}
-              tooltip="Show response word-by-word as it generates, instead of all at once"
-            />
-          </Accordion>
-          
-          {/* Voice Settings Section - Merged Voice & TTS with Conversation Settings */}
-          <Accordion title="Voice settings" icon={<VoiceIcon />}>
+          {/* Voice Settings Section */}
+          <Accordion title="Voice settings" icon={<VoiceIcon />} defaultOpen>
             <VoiceSelector
               value={voiceGender}
               onChange={onVoiceGenderChange}
@@ -309,82 +211,6 @@ export const AdvancedSettingsPanel = memo(function AdvancedSettingsPanel({
               disabled={disabled}
               tooltip="How long AI responses should be. Short (30 words), Medium (50), Long (100)"
             />
-          </Accordion>
-          
-          {/* Project Defaults Section */}
-          <Accordion title="Project defaults" icon={<ProjectIcon />}>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
-                  Default Ecosystem
-                </label>
-                <TooltipIcon tooltip="Pre-selects the product category for new content" />
-              </div>
-              <div className="max-w-[50%] ml-auto">
-                <SearchableDropdown
-                  value={defaultEcosystem}
-                  onChange={(v) => onDefaultEcosystemChange(v as EcosystemType)}
-                  options={ecosystemOptions}
-                  placeholder="Select ecosystem"
-                  disabled={disabled}
-                  compact={true}
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
-                  Default Channel
-                </label>
-                <TooltipIcon tooltip="Pre-selects the content format for new content" />
-              </div>
-              <div className="max-w-[50%] ml-auto">
-                <SearchableDropdown
-                  value={defaultChannel}
-                  onChange={(v) => onDefaultChannelChange(v as ContentChannelType)}
-                  options={channelOptions}
-                  placeholder="Select channel"
-                  disabled={disabled}
-                  compact={true}
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
-                  Default Language
-                </label>
-                <TooltipIcon tooltip="Pre-selects the language for content generation" />
-              </div>
-              <div className="max-w-[50%] ml-auto">
-                <SearchableDropdown
-                  value={defaultLanguage}
-                  onChange={(v) => onDefaultLanguageChange(v as SupportedLanguage)}
-                  options={languageOptions}
-                  placeholder="Select language"
-                  disabled={disabled}
-                  compact={true}
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
-                  Default Region
-                </label>
-                <TooltipIcon tooltip="Pre-selects regional preferences for content" />
-              </div>
-              <div className="max-w-[50%] ml-auto">
-                <SearchableDropdown
-                  value={defaultRegion}
-                  onChange={(v) => onDefaultRegionChange(v as IndianRegion)}
-                  options={regionOptions}
-                  placeholder="Select region"
-                  disabled={disabled}
-                  compact={true}
-                />
-              </div>
-            </div>
           </Accordion>
           
           {/* Trust Settings Section */}
