@@ -1,19 +1,16 @@
 /**
  * Tokens Display Component
  * 
- * Displays all 50+ tokens from the Tokens specification with:
- * - Grouped by category (Routing, Safety, Nudge, User, Context, Emotion, etc.)
- * - Collapsible sections
- * - Search/filter functionality
- * - Token documentation
+ * Admin page showing all tokens. Flat category sections with
+ * right-side TOC using DS vertical Tabs. Replaces nested accordions.
  */
 
-import { useState, useMemo, memo } from 'react';
+import { useState, useMemo, useRef, useCallback, memo } from 'react';
 import { useThemeColors } from '../../theme/useColors';
 import { DSIcon } from '../../components/DSIcon';
+import { Title, Text, Tabs, TabList, Tab } from '@marcelinodzn/ds-react';
 import { 
   TOKEN_GROUPS, 
-  TOKEN_COUNTS, 
   TOTAL_TOKEN_COUNT 
 } from '../../services/tokens/tokenTypes';
 import { TOKEN_RULES } from '../../services/tokens/tokenRules';
@@ -769,6 +766,39 @@ const TOKEN_DOCUMENTATION: Record<string, {
 // Components
 // ═══════════════════════════════════════════════════════════════════════════════
 
+const MAX_VISIBLE_CHIPS = 8;
+
+function StatPill({ label, value }: { label: string; value: number }) {
+  const theme = useThemeColors();
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+      style={{ border: `1px solid ${theme.stroke.medium}` }}
+    >
+      <span
+        style={{
+          fontFamily: '"JioType Var"',
+          fontWeight: 700,
+          fontSize: '16px',
+          color: theme.text.high,
+        }}
+      >
+        {value}
+      </span>
+      <span
+        style={{
+          fontFamily: '"JioType Var"',
+          fontWeight: 400,
+          fontSize: '11px',
+          color: theme.text.low,
+        }}
+      >
+        {label}
+      </span>
+    </div>
+  );
+}
+
 interface TokenCardProps {
   tokenKey: string;
   doc: typeof TOKEN_DOCUMENTATION[string];
@@ -778,75 +808,116 @@ interface TokenCardProps {
 const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardProps) {
   const theme = useThemeColors();
   const [isExpanded, setIsExpanded] = useState(false);
+  const hasRules = rules && Object.keys(rules).length > 0;
+  const visibleChips = doc.values.slice(0, MAX_VISIBLE_CHIPS);
+  const hiddenCount = Math.max(0, doc.values.length - MAX_VISIBLE_CHIPS);
 
   return (
     <div
-      className="rounded-lg p-3 mb-2"
+      className="rounded-xl p-4 cursor-pointer transition-all duration-150"
+      onClick={() => setIsExpanded(!isExpanded)}
       style={{
-        backgroundColor: theme.background.layer,
-        border: `1px solid ${theme.stroke.low}`,
+        border: `1px solid ${isExpanded ? theme.accent + '40' : theme.stroke.medium}`,
+        backgroundColor: isExpanded ? theme.accent + '05' : 'transparent',
       }}
     >
-      {/* Header */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between cursor-pointer"
-      >
-        <div className="flex items-center gap-2">
-          <code
-            className="px-2 py-0.5 rounded text-sm font-mono"
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <code
+              className="px-2 py-0.5 rounded-md text-xs font-mono"
+              style={{
+                backgroundColor: theme.accent + '15',
+                color: theme.accent,
+              }}
+            >
+              {tokenKey}
+            </code>
+            <span
+              className="text-xs px-1.5 py-0.5 rounded-full"
+              style={{
+                backgroundColor: theme.stroke.low,
+                color: theme.text.low,
+              }}
+            >
+              {doc.values.length} values
+            </span>
+            {hasRules && (
+              <span
+                className="text-xs px-1.5 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: theme.semantic.informative + '15',
+                  color: theme.semantic.informative,
+                }}
+              >
+                rules
+              </span>
+            )}
+          </div>
+          <p
             style={{
-              backgroundColor: theme.stroke.low,
-              color: theme.accent.primary,
+              fontFamily: '"JioType Var"',
+              fontSize: '12px',
+              lineHeight: 1.4,
+              color: theme.text.medium,
+              margin: 0,
             }}
           >
-            {tokenKey}
-          </code>
-          <span
-            className="text-xs"
-            style={{ color: theme.text.low }}
-          >
-            {doc.values.length} values
-          </span>
+            {doc.description}
+          </p>
         </div>
         <DSIcon
           name={isExpanded ? 'IcChevronUp' : 'IcChevronDown'}
           size="XS"
           attention="low"
         />
-      </button>
+      </div>
 
-      {/* Description */}
-      <p
-        className="text-sm mt-2"
-        style={{ color: theme.text.medium }}
-      >
-        {doc.description}
-      </p>
+      {/* Value chips — always visible */}
+      <div className="flex flex-wrap gap-1.5 mt-3">
+        {visibleChips.map((v) => (
+          <span
+            key={v.value}
+            className="px-2 py-0.5 rounded-md text-xs font-mono"
+            title={v.description}
+            style={{
+              backgroundColor: theme.background.bold,
+              color: theme.text.high,
+            }}
+          >
+            {v.value}
+          </span>
+        ))}
+        {hiddenCount > 0 && !isExpanded && (
+          <span
+            className="px-2 py-0.5 rounded-md text-xs"
+            style={{ color: theme.text.low }}
+          >
+            +{hiddenCount} more
+          </span>
+        )}
+      </div>
 
-      {/* Expanded Content */}
+      {/* Expanded: full value details + rules + example */}
       {isExpanded && (
-        <div className="mt-3 space-y-2">
-          {/* Values */}
+        <div className="mt-4 space-y-4" onClick={(e) => e.stopPropagation()}>
           <div>
-            <h4
-              className="text-xs font-medium mb-1"
+            <div
+              className="text-xs font-medium mb-2"
               style={{ color: theme.text.low }}
             >
-              Possible values
-            </h4>
-            <div className="space-y-1">
+              possible values
+            </div>
+            <div className="grid gap-1.5">
               {doc.values.map((v) => (
                 <div
                   key={v.value}
-                  className="flex items-start gap-2 text-sm"
+                  className="flex items-start gap-2 py-1 px-2 rounded-lg text-xs"
+                  style={{ backgroundColor: theme.background.subtle }}
                 >
                   <code
-                    className="px-1.5 py-0.5 rounded text-xs font-mono shrink-0"
-                    style={{
-                      backgroundColor: theme.background.ghost,
-                      color: theme.text.high,
-                    }}
+                    className="font-mono shrink-0 py-0.5"
+                    style={{ color: theme.accent, minWidth: '120px' }}
                   >
                     {v.value}
                   </code>
@@ -858,32 +929,28 @@ const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardPro
             </div>
           </div>
 
-          {/* Rules */}
-          {rules && Object.keys(rules).length > 0 && (
+          {hasRules && (
             <div>
-              <h4
-                className="text-xs font-medium mb-1 mt-3"
+              <div
+                className="text-xs font-medium mb-2"
                 style={{ color: theme.text.low }}
               >
-                LLM behavior rules
-              </h4>
-              <div className="space-y-1">
-                {Object.entries(rules).map(([value, rule]) => (
+                llm behavior rules
+              </div>
+              <div className="grid gap-1">
+                {Object.entries(rules!).map(([value, rule]) => (
                   <div
                     key={value}
-                    className="text-xs p-2 rounded"
+                    className="text-xs py-1.5 px-2 rounded-lg"
                     style={{
-                      backgroundColor: theme.background.ghost,
+                      backgroundColor: theme.background.subtle,
                       border: `1px solid ${theme.stroke.low}`,
                     }}
                   >
-                    <code
-                      className="font-mono"
-                      style={{ color: theme.accent.primary }}
-                    >
+                    <code className="font-mono" style={{ color: theme.accent }}>
                       {value}
                     </code>
-                    <span style={{ color: theme.text.low }}> → </span>
+                    <span style={{ color: theme.text.low }}>{' → '}</span>
                     <span style={{ color: theme.text.medium }}>{rule}</span>
                   </div>
                 ))}
@@ -891,95 +958,19 @@ const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardPro
             </div>
           )}
 
-          {/* Example */}
           {doc.example && (
             <div
-              className="text-xs mt-2 p-2 rounded"
+              className="text-xs p-3 rounded-lg"
               style={{
-                backgroundColor: theme.accent.primary + '10',
+                backgroundColor: theme.accent + '08',
+                border: `1px solid ${theme.accent + '20'}`,
                 color: theme.text.medium,
               }}
             >
-              <strong>Example:</strong> {doc.example}
+              <strong style={{ color: theme.text.high }}>example:</strong>{' '}
+              {doc.example}
             </div>
           )}
-        </div>
-      )}
-    </div>
-  );
-});
-
-interface TokenGroupProps {
-  groupName: string;
-  tokens: string[];
-  tokenDocs: typeof TOKEN_DOCUMENTATION;
-  tokenRules: typeof TOKEN_RULES;
-}
-
-const TokenGroup = memo(function TokenGroup({ 
-  groupName, 
-  tokens, 
-  tokenDocs, 
-  tokenRules 
-}: TokenGroupProps) {
-  const theme = useThemeColors();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const displayName = groupName.replace(/_/g, ' ').toLowerCase();
-
-  return (
-    <div className="mb-4">
-      {/* Group Header */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="w-full flex items-center justify-between py-2 px-3 rounded-lg cursor-pointer mb-2"
-        style={{
-          backgroundColor: theme.stroke.low,
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <DSIcon
-            name={isCollapsed ? 'IcChevronRight' : 'IcChevronDown'}
-            size="XS"
-            attention="medium"
-          />
-          <span
-            className="text-sm font-medium"
-            style={{ color: theme.text.high }}
-          >
-            {displayName}
-          </span>
-          <span
-            className="text-xs px-1.5 py-0.5 rounded"
-            style={{
-              backgroundColor: theme.accent.primary + '20',
-              color: theme.accent.primary,
-            }}
-          >
-            {tokens.length} tokens
-          </span>
-        </div>
-      </button>
-
-      {/* Tokens */}
-      {!isCollapsed && (
-        <div className="pl-4">
-          {tokens.map((tokenKey) => {
-            const doc = tokenDocs[tokenKey] || {
-              description: `Token: ${tokenKey}`,
-              values: [],
-            };
-            const rules = tokenRules[tokenKey];
-
-            return (
-              <TokenCard
-                key={tokenKey}
-                tokenKey={tokenKey}
-                doc={doc}
-                rules={rules}
-              />
-            );
-          })}
         </div>
       )}
     </div>
@@ -993,20 +984,29 @@ const TokenGroup = memo(function TokenGroup({
 export const TokensDisplay = memo(function TokensDisplay() {
   const theme = useThemeColors();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGroup, setSelectedGroup] = useState<string | 'all'>('all');
+  const [activeCategory, setActiveCategory] = useState<string>(
+    Object.keys(TOKEN_GROUPS)[0]
+  );
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Filter tokens based on search and group selection
+  const { totalValues, totalRules } = useMemo(() => {
+    let values = 0;
+    let ruleCount = 0;
+    for (const tokens of Object.values(TOKEN_GROUPS)) {
+      for (const token of tokens) {
+        const doc = TOKEN_DOCUMENTATION[token];
+        if (doc) values += doc.values.length;
+        const tokenRules = TOKEN_RULES[token];
+        if (tokenRules) ruleCount += Object.keys(tokenRules).length;
+      }
+    }
+    return { totalValues: values, totalRules: ruleCount };
+  }, []);
+
   const filteredGroups = useMemo(() => {
     const groups = Object.entries(TOKEN_GROUPS);
-    
-    if (selectedGroup !== 'all') {
-      return groups.filter(([name]) => name === selectedGroup);
-    }
-    
-    if (!searchQuery) {
-      return groups;
-    }
-    
+    if (!searchQuery) return groups;
+
     const query = searchQuery.toLowerCase();
     return groups
       .map(([name, tokens]) => {
@@ -1014,9 +1014,10 @@ export const TokensDisplay = memo(function TokensDisplay() {
           const doc = TOKEN_DOCUMENTATION[token];
           return (
             token.toLowerCase().includes(query) ||
+            name.toLowerCase().includes(query) ||
             (doc && doc.description.toLowerCase().includes(query)) ||
-            (doc && doc.values.some((v) => 
-              v.value.toLowerCase().includes(query) || 
+            (doc && doc.values.some((v) =>
+              v.value.toLowerCase().includes(query) ||
               v.description.toLowerCase().includes(query)
             ))
           );
@@ -1024,100 +1025,163 @@ export const TokensDisplay = memo(function TokensDisplay() {
         return [name, filteredTokens] as [string, string[]];
       })
       .filter(([, tokens]) => tokens.length > 0);
-  }, [searchQuery, selectedGroup]);
+  }, [searchQuery]);
+
+  const handleCategoryClick = useCallback((groupKey: string) => {
+    setActiveCategory(groupKey);
+    const el = sectionRefs.current[groupKey];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
+  const groupNames = Object.keys(TOKEN_GROUPS);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-4 border-b" style={{ borderColor: theme.stroke.low }}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1
-              className="text-xl font-semibold"
-              style={{ color: theme.text.high }}
-            >
-              Tokens specification
-            </h1>
-            <p
-              className="text-sm mt-1"
-              style={{ color: theme.text.low }}
-            >
-              {TOTAL_TOKEN_COUNT} tokens across {Object.keys(TOKEN_GROUPS).length} categories
-            </p>
-          </div>
-          <div
-            className="text-right text-sm"
-            style={{ color: theme.text.low }}
-          >
-            <div>controls LLM behavior</div>
-            <div>routing, safety, emotion, identity</div>
-          </div>
-        </div>
-
-        {/* Search and Filter */}
-        <div className="flex gap-3">
-          {/* Search */}
-          <div className="flex-1 relative">
-            <DSIcon
-              name="IcSearch"
-              size="XS"
-              attention="low"
-              className="absolute left-3 top-1/2 -translate-y-1/2"
-            />
-            <input
-              type="text"
-              placeholder="Search tokens..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 rounded-lg text-sm"
-              style={{
-                backgroundColor: theme.background.layer,
-                border: `1px solid ${theme.stroke.low}`,
-                color: theme.text.high,
-              }}
-            />
-          </div>
-
-          {/* Group Filter */}
-          <select
-            value={selectedGroup}
-            onChange={(e) => setSelectedGroup(e.target.value)}
-            className="px-3 py-2 rounded-lg text-sm cursor-pointer"
-            style={{
-              backgroundColor: theme.background.layer,
-              border: `1px solid ${theme.stroke.low}`,
-              color: theme.text.high,
-            }}
-          >
-            <option value="all">All groups ({TOTAL_TOKEN_COUNT})</option>
-            {Object.entries(TOKEN_COUNTS).map(([group, count]) => (
-              <option key={group} value={group}>
-                {group.replace(/_/g, ' ').toLowerCase()} ({count})
-              </option>
-            ))}
-          </select>
-        </div>
+    <div>
+      {/* Page header — matches dashboard PageHeader pattern */}
+      <div className="mb-6">
+        <Title size="L" as="h1" weight="high" color="high">
+          tokens specification
+        </Title>
+        <p
+          style={{
+            fontFamily: '"JioType Var"',
+            fontWeight: 400,
+            fontSize: '12px',
+            lineHeight: 1.3,
+            fontVariationSettings: '"opsz" 24',
+            color: theme.text.low,
+            margin: 0,
+            marginTop: '6px',
+          }}
+        >
+          {TOTAL_TOKEN_COUNT} tokens across {groupNames.length} categories — controls LLM behavior, routing, safety, emotion, identity
+        </p>
       </div>
 
-      {/* Token List */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {filteredGroups.length === 0 ? (
+      {/* Summary stats */}
+      <div className="flex gap-3 mb-5">
+        <StatPill label="tokens" value={TOTAL_TOKEN_COUNT} />
+        <StatPill label="categories" value={groupNames.length} />
+        <StatPill label="values" value={totalValues} />
+        <StatPill label="rules" value={totalRules} />
+      </div>
+
+      {/* Search */}
+      <div className="mb-5 relative">
+        <DSIcon
+          name="IcSearch"
+          size="XS"
+          attention="low"
+          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+        />
+        <input
+          type="text"
+          placeholder="search tokens, values, or descriptions..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-9 pr-3 py-2 rounded-lg text-sm outline-none"
+          style={{
+            backgroundColor: theme.background.subtle,
+            border: `1px solid ${theme.stroke.medium}`,
+            color: theme.text.high,
+            fontFamily: '"JioType Var"',
+            fontSize: '12px',
+          }}
+        />
+      </div>
+
+      {/* Content + TOC */}
+      <div className="flex gap-6">
+        {/* Left: token sections */}
+        <div className="flex-1 min-w-0 space-y-6">
+          {filteredGroups.length === 0 ? (
+            <div className="text-center py-12">
+              <Text size="XS" weight="low" color="low">
+                no tokens found matching &ldquo;{searchQuery}&rdquo;
+              </Text>
+            </div>
+          ) : (
+            filteredGroups.map(([groupName, tokens]) => (
+              <div
+                key={groupName}
+                ref={(el) => { sectionRefs.current[groupName] = el; }}
+                data-group={groupName}
+              >
+                {/* Section header */}
+                <div
+                  className="flex items-center gap-2 mb-3 pb-2"
+                  style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
+                >
+                  <Title size="S" as="h2" weight="high" color="high">
+                    {groupName.replace(/_/g, ' ').toLowerCase()}
+                  </Title>
+                  <span
+                    className="text-xs px-1.5 py-0.5 rounded-full"
+                    style={{
+                      backgroundColor: theme.accent + '15',
+                      color: theme.accent,
+                    }}
+                  >
+                    {tokens.length}
+                  </span>
+                </div>
+
+                {/* Token cards */}
+                <div className="space-y-2">
+                  {tokens.map((tokenKey) => {
+                    const doc = TOKEN_DOCUMENTATION[tokenKey] || {
+                      description: `Token: ${tokenKey}`,
+                      values: [],
+                    };
+                    return (
+                      <TokenCard
+                        key={tokenKey}
+                        tokenKey={tokenKey}
+                        doc={doc}
+                        rules={TOKEN_RULES[tokenKey]}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Right: TOC — DS vertical Tabs */}
+        {!searchQuery && (
           <div
-            className="text-center py-8"
-            style={{ color: theme.text.low }}
+            className="shrink-0 hidden lg:block"
+            style={{
+              width: '180px',
+              position: 'sticky',
+              top: '20px',
+              alignSelf: 'flex-start',
+            }}
           >
-            No tokens found matching "{searchQuery}"
+            <div
+              className="text-xs font-medium mb-2 px-1"
+              style={{ color: theme.text.low, fontFamily: '"JioType Var"' }}
+            >
+              categories
+            </div>
+            <Tabs
+              orientation="vertical"
+              size="S"
+              selectedKey={activeCategory}
+              onSelectionChange={(key) => handleCategoryClick(String(key))}
+            >
+              <TabList>
+                {groupNames.map((name) => (
+                  <Tab key={name} id={name}>
+                    {name.replace(/_/g, ' ').toLowerCase()}
+                  </Tab>
+                ))}
+              </TabList>
+            </Tabs>
           </div>
-        ) : (
-          filteredGroups.map(([groupName, tokens]) => (
-            <TokenGroup
-              key={groupName}
-              groupName={groupName}
-              tokens={tokens}
-              tokenDocs={TOKEN_DOCUMENTATION}
-              tokenRules={TOKEN_RULES}
-            />
-          ))
         )}
       </div>
     </div>
