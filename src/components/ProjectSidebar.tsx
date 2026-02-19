@@ -146,9 +146,19 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
               onClick();
             }
           }}
-          className="flex-1 text-left cursor-pointer focus:outline-none rounded py-1"
+          className="flex-1 min-w-0 overflow-hidden text-left cursor-pointer focus:outline-none rounded py-1"
         >
-          <div className="truncate">
+          <div 
+            className="whitespace-nowrap overflow-hidden"
+            style={{
+              maskImage: (isHovered || isMenuOpen)
+                ? 'linear-gradient(to right, black calc(100% - 24px), transparent)'
+                : 'linear-gradient(to right, black calc(100% - 8px), transparent)',
+              WebkitMaskImage: (isHovered || isMenuOpen)
+                ? 'linear-gradient(to right, black calc(100% - 24px), transparent)'
+                : 'linear-gradient(to right, black calc(100% - 8px), transparent)',
+            }}
+          >
             <Text size="S" weight="low">
               {projectName}
             </Text>
@@ -156,7 +166,7 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
         </button>
         
         {/* More menu - visible on hover or when open */}
-        <div className={`transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+        <div className={`flex-shrink-0 transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
           <ProjectMenu
             options={menuOptions}
             onSelect={onMenuAction}

@@ -39,7 +39,7 @@ export const SidebarItem = memo(function SidebarItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-2 text-left cursor-pointer w-full px-2.5 rounded-lg focus:outline-none"
+      className="flex items-center gap-2 text-left cursor-pointer w-full px-2.5 rounded-lg focus:outline-none min-w-0 overflow-hidden"
       style={{
         backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
         height: '36px',
@@ -53,10 +53,12 @@ export const SidebarItem = memo(function SidebarItem({
       {icon && (
         <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">{icon}</span>
       )}
-      <Text size="S" weight="low">
-        {label}
-      </Text>
-      {badge}
+      <span className="truncate">
+        <Text size="S" weight="low">
+          {label}
+        </Text>
+      </span>
+      {badge && <span className="flex-shrink-0">{badge}</span>}
     </button>
   );
 });
