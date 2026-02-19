@@ -21,6 +21,7 @@ initSyncService();
 const AdminLayout = lazy(() => import('./admin/AdminLayout'))
 
 // Loading fallback for lazy-loaded admin panel
+// Uses inline styles since it renders before DsProvider context is available
 function AdminLoadingFallback() {
   return (
     <div style={{
@@ -28,22 +29,28 @@ function AdminLoadingFallback() {
       alignItems: 'center',
       justifyContent: 'center',
       height: '100vh',
-      background: '#1a1a2e',
-      color: '#e0e0e0',
-      fontFamily: 'system-ui, sans-serif',
+      background: '#ffffff',
+      fontFamily: 'JioType, system-ui, -apple-system, sans-serif',
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{
-          width: 40,
-          height: 40,
-          border: '3px solid rgba(255,255,255,0.1)',
-          borderTopColor: '#0066ff',
+          width: 32,
+          height: 32,
+          border: '3px solid #e4e4e7',
+          borderTopColor: '#6366f1',
           borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
+          animation: 'spin 0.8s linear infinite',
           margin: '0 auto 16px',
         }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <p style={{ margin: 0, fontSize: 14 }}>loading admin panel...</p>
+        <p style={{ 
+          margin: 0, 
+          fontSize: 14, 
+          color: '#71717a',
+          fontWeight: 400,
+        }}>
+          loading admin panel...
+        </p>
       </div>
     </div>
   );
