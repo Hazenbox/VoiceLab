@@ -82,9 +82,9 @@ const STATE_SUGGESTIONS: Record<ConversationState, Partial<StateSuggestions>> = 
     detailLevel: 2,
     targetEmotion: 'shanta',
     openingPhrases: [
-      'Hello! How can I help you today?',
-      'Welcome! What can I assist you with?',
-      'Hi there! I\'m here to help.',
+      'Hello. How can I help you today?',
+      'Welcome. What can I assist you with?',
+      'Hi there. I\'m here to help.',
     ],
     includeNudge: false,
     offerEscalation: false,

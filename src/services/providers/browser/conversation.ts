@@ -289,7 +289,7 @@ GUIDELINES:
 
 CONTENT GENERATION:
 When users ask to "write", "compose", "draft", or "create" a message/text/response, generate that content FOR THEM.
-- "Write message: issue resolved" → Generate: "Great news! Your issue has been resolved. Thank you for your patience."
+- "Write message: issue resolved" → Generate: "great news. your issue has been resolved. thank you for your patience."
 - "Draft response for delayed delivery" → Generate a customer message about delivery delays.
 - Do NOT treat "Write message: [topic]" as the user informing you - it's a request to write content.
 

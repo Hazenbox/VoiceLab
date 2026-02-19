@@ -120,12 +120,12 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
   
   whatsapp_alert: {
     opening: {
-      initial: ['Hi!'], // Brief, friendly
-      returning: ['Hey again!'],
-      resuming: ['Thanks for waiting!'],
+      initial: ['Hi.'], // Brief, friendly
+      returning: ['Hey again.'],
+      resuming: ['Thanks for waiting.'],
     },
     closing: {
-      resolved: ['Need anything else? Just message us!'],
+      resolved: ['Need anything else? Just message us.'],
       pending: ['We\'ll message you once it\'s ready'],
       escalating: ['Our team will reach out shortly'],
       abandoned: ['We\'re here whenever you need us'],
@@ -152,24 +152,24 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
   customer_care_chat: {
     opening: {
       initial: [
-        'Hi there! I\'m here to help. What can I assist you with today?',
-        'Hello! Welcome to Jio support. How may I help you?',
-        'Namaste! I\'m your Jio assistant. What brings you here today?',
+        'Hi there. I\'m here to help. What can I assist you with today?',
+        'Hello. Welcome to Jio support. How may I help you?',
+        'Namaste. I\'m your Jio assistant. What brings you here today?',
       ],
       returning: [
-        'Welcome back! How can I help you today?',
-        'Good to see you again! What can I assist with?',
+        'Welcome back. How can I help you today?',
+        'Good to see you again. What can I assist with?',
       ],
       resuming: [
-        'Thanks for waiting! I\'m back with you now.',
+        'Thanks for waiting. I\'m back with you now.',
         'Apologies for the wait. Let me continue helping you.',
       ],
     },
     closing: {
       resolved: [
-        'Happy to help! Is there anything else you need?',
-        'Glad I could assist! Let me know if you have other questions.',
-        'Great! Feel free to reach out anytime.',
+        'Happy to help. Is there anything else you need?',
+        'Glad I could assist. Let me know if you have other questions.',
+        'Great. Feel free to reach out anytime.',
       ],
       pending: [
         'I\'ve logged this for you. We\'ll update you within [timeframe].',
@@ -198,7 +198,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
       toResolution: [
         'Here\'s what I found.',
         'I have the information you need.',
-        'Good news! Here\'s the solution.',
+        'Good news. Here\'s the solution.',
       ],
       toConfirmation: [
         'Did this resolve your concern?',
@@ -218,35 +218,35 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
   whatsapp_support: {
     opening: {
       initial: [
-        'Hey! Thanks for reaching out. How can I help?',
-        'Hi there! What can I assist you with today?',
-        'Hello! I\'m here to help. What\'s on your mind?',
+        'Hey. Thanks for reaching out. How can I help?',
+        'Hi there. What can I assist you with today?',
+        'Hello. I\'m here to help. What\'s on your mind?',
       ],
       returning: [
-        'Hey, welcome back! What can I do for you?',
-        'Good to hear from you again! How can I help?',
+        'Hey, welcome back. What can I do for you?',
+        'Good to hear from you again. How can I help?',
       ],
       resuming: [
-        'Thanks for your patience! Let\'s continue.',
+        'Thanks for your patience. Let\'s continue.',
         'Sorry for the wait. I\'m back to help you.',
       ],
     },
     closing: {
       resolved: [
-        'Glad I could help! Reach out anytime.',
-        'Happy to assist! Message us whenever you need.',
-        'All sorted! We\'re always here for you.',
+        'Glad I could help. Reach out anytime.',
+        'Happy to assist. Message us whenever you need.',
+        'All sorted. We\'re always here for you.',
       ],
       pending: [
         'I\'ve noted this down. We\'ll get back to you soon.',
-        'Working on it! You\'ll receive an update shortly.',
+        'Working on it. You\'ll receive an update shortly.',
       ],
       escalating: [
         'Connecting you with our team. They\'ll message you shortly.',
         'Our specialist will reach out within [timeframe].',
       ],
       abandoned: [
-        'No problem! Message us anytime you\'re ready.',
+        'No problem. Message us anytime you\'re ready.',
         'We\'re here whenever you need us.',
       ],
     },
@@ -261,7 +261,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
         'Let me pull that up for you.',
       ],
       toResolution: [
-        'Found it! Here\'s what you need to know:',
+        'Found it. Here\'s what you need to know:',
         'Here you go:',
         'Got the info for you:',
       ],
@@ -283,12 +283,12 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
   chatbot_faq: {
     opening: {
       initial: [
-        'Hi! I can help you find quick answers. What would you like to know?',
-        'Hello! Ask me anything about Jio services.',
-        'Welcome! How can I assist you today?',
+        'Hi. I can help you find quick answers. What would you like to know?',
+        'Hello. Ask me anything about Jio services.',
+        'Welcome. How can I assist you today?',
       ],
       returning: [
-        'Back for more info? Happy to help!',
+        'Back for more info? Happy to help.',
         'What else would you like to know?',
       ],
       resuming: [
@@ -297,8 +297,8 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
     },
     closing: {
       resolved: [
-        'Found what you needed? Great! Ask me anything else.',
-        'Happy to help! Any other questions?',
+        'Found what you needed? Great. Ask me anything else.',
+        'Happy to help. Any other questions?',
       ],
       pending: [
         'For this query, our support team can help better. Would you like to connect?',
@@ -308,7 +308,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
         'Transferring you to an agent who can help better.',
       ],
       abandoned: [
-        'Come back anytime you have questions!',
+        'Come back anytime you have questions.',
       ],
     },
     transitions: {
@@ -347,7 +347,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
       initial: [
         'Welcome to Jio customer care.',
         'Thank you for calling Jio.',
-        'Namaste! Welcome to Jio support.',
+        'Namaste. Welcome to Jio support.',
       ],
       returning: [
         'Welcome back to Jio.',
@@ -358,7 +358,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
     },
     closing: {
       resolved: [
-        'Thank you for calling Jio. Have a great day!',
+        'Thank you for calling Jio. Have a great day.',
         'Glad we could help. Thank you for choosing Jio.',
       ],
       pending: [
@@ -403,24 +403,24 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
   voice_assistant: {
     opening: {
       initial: [
-        'Hi there! How can I help you today?',
-        'Hello! What would you like to do?',
-        'Hey! I\'m your Jio assistant. What can I do for you?',
+        'Hi there. How can I help you today?',
+        'Hello. What would you like to do?',
+        'Hey. I\'m your Jio assistant. What can I do for you?',
       ],
       returning: [
-        'Welcome back! What can I help with?',
-        'Hey again! What do you need?',
+        'Welcome back. What can I help with?',
+        'Hey again. What do you need?',
       ],
       resuming: [
-        'I\'m back! Let\'s continue.',
-        'Ready to help! Where were we?',
+        'I\'m back. Let\'s continue.',
+        'Ready to help. Where were we?',
       ],
     },
     closing: {
       resolved: [
-        'All done! Anything else?',
-        'Happy to help! Just say "Hey Jio" if you need me.',
-        'That\'s sorted! Let me know if you need more help.',
+        'All done. Anything else?',
+        'Happy to help. Just say "Hey Jio" if you need me.',
+        'That\'s sorted. Let me know if you need more help.',
       ],
       pending: [
         'I\'ll keep working on that. Check back with me later.',
@@ -431,7 +431,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
         'I\'ll connect you to support for this one.',
       ],
       abandoned: [
-        'Okay! Just say "Hey Jio" whenever you need me.',
+        'Okay. Just say "Hey Jio" whenever you need me.',
         'No problem. I\'m here when you need me.',
       ],
     },
@@ -448,7 +448,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
       ],
       toResolution: [
         'Here\'s what I found.',
-        'Got it!',
+        'Got it.',
         'Here you go.',
       ],
       toConfirmation: [
@@ -501,12 +501,12 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
     opening: {
       initial: [
         'Dear valued customer,',
-        'Hello!',
-        'Great news!',
+        'Hello.',
+        'Great news.',
       ],
       returning: [
         'We thought you\'d like to know...',
-        'Here\'s something special for you!',
+        'Here\'s something special for you.',
       ],
       resuming: [],
     },
@@ -517,7 +517,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
         'Warm wishes,\nJio',
       ],
       pending: [
-        'Stay tuned for more!\nTeam Jio',
+        'Stay tuned for more.\nTeam Jio',
       ],
       escalating: [],
       abandoned: [],
@@ -597,7 +597,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
     },
     closing: {
       resolved: [
-        'Link in bio!',
+        'Link in bio.',
         'Tap to learn more',
         '#JioForAll',
       ],
@@ -609,7 +609,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
       toInfoGathering: [],
       toProcessing: [],
       toResolution: [],
-      toConfirmation: ['What do you think? Comment below!'],
+      toConfirmation: ['What do you think? Comment below.'],
     },
     constraints: {
       maxLength: 280,
@@ -628,7 +628,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
     },
     closing: {
       resolved: [
-        'Get started today!',
+        'Get started today.',
         'Try now',
         'Learn more',
       ],
@@ -715,28 +715,28 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
   onboarding_screen: {
     opening: {
       initial: [
-        'Welcome to Jio!',
+        'Welcome to Jio.',
         'Let\'s get you started',
-        'Glad you\'re here!',
+        'Glad you\'re here.',
       ],
       returning: [
-        'Welcome back!',
-        'Good to see you again!',
+        'Welcome back.',
+        'Good to see you again.',
       ],
       resuming: [
         'Let\'s continue where you left off',
-        'Almost there!',
+        'Almost there.',
       ],
     },
     closing: {
       resolved: [
-        'You\'re all set!',
-        'Ready to go!',
-        'Let\'s explore!',
+        'You\'re all set.',
+        'Ready to go.',
+        'Let\'s explore.',
       ],
       pending: [
         'Just a few more steps...',
-        'Almost done!',
+        'Almost done.',
       ],
       escalating: [
         'Need help? Contact support',
@@ -756,7 +756,7 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
       ],
       toResolution: [
         'Here\'s what you get:',
-        'Your account is ready!',
+        'Your account is ready.',
       ],
       toConfirmation: [
         'Look good? Let\'s continue',
@@ -821,12 +821,12 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
   training_module: {
     opening: {
       initial: [
-        'Welcome to this training module!',
+        'Welcome to this training module.',
         'Let\'s learn together.',
         'Ready to explore?',
       ],
       returning: [
-        'Welcome back! Let\'s continue learning.',
+        'Welcome back. Let\'s continue learning.',
       ],
       resuming: [
         'Let\'s pick up where you left off.',
@@ -834,18 +834,18 @@ export const CHANNEL_PHRASES: Record<ContentChannelType, ChannelPhrases> = {
     },
     closing: {
       resolved: [
-        'Great job completing this module!',
-        'You\'ve learned the key concepts. Test your knowledge!',
-        'Well done! Ready for the next module?',
+        'Great job completing this module.',
+        'You\'ve learned the key concepts. Test your knowledge.',
+        'Well done. Ready for the next module?',
       ],
       pending: [
-        'You\'re making progress! Continue when ready.',
+        'You\'re making progress. Continue when ready.',
       ],
       escalating: [
         'Need help? Contact your trainer.',
       ],
       abandoned: [
-        'Your progress is saved. Come back anytime!',
+        'Your progress is saved. Come back anytime.',
       ],
     },
     transitions: {

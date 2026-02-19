@@ -41,7 +41,7 @@ describe('chatStorage', () => {
     it('should save and load messages for a project', () => {
       const messages: ChatMessage[] = [
         createTestMessage('user', 'Hello'),
-        createTestMessage('assistant', 'Hi there!'),
+        createTestMessage('assistant', 'Hi there.'),
       ];
 
       chatStorage.save(testProjectId, messages);
@@ -50,7 +50,7 @@ describe('chatStorage', () => {
       const loaded = chatStorage.load(testProjectId);
       expect(loaded).toHaveLength(2);
       expect(loaded[0].content).toBe('Hello');
-      expect(loaded[1].content).toBe('Hi there!');
+      expect(loaded[1].content).toBe('Hi there.');
     });
 
     it('should return empty array for non-existent project', () => {
