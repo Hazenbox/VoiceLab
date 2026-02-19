@@ -513,6 +513,85 @@ export const MessageContent = memo(function MessageContent({
     
     return {
       ...components,
+      // Override headings to process highlights
+      h1: ({ children }: { children?: React.ReactNode }) => (
+        <h1 
+          className="mt-8 mb-3"
+          style={{ 
+            fontSize: chatTypography.h1.fontSize,
+            lineHeight: chatTypography.h1.lineHeight,
+            fontWeight: chatTypography.h1.fontWeight,
+            color: theme.text.high,
+          }}
+        >
+          {processChildren(children, theme.isLight)}
+        </h1>
+      ),
+      h2: ({ children }: { children?: React.ReactNode }) => (
+        <h2 
+          className="mt-6 mb-3"
+          style={{ 
+            fontSize: chatTypography.h2.fontSize,
+            lineHeight: chatTypography.h2.lineHeight,
+            fontWeight: chatTypography.h2.fontWeight,
+            color: theme.text.high,
+          }}
+        >
+          {processChildren(children, theme.isLight)}
+        </h2>
+      ),
+      h3: ({ children }: { children?: React.ReactNode }) => (
+        <h3 
+          className="mt-4 mb-3"
+          style={{ 
+            fontSize: chatTypography.h3.fontSize,
+            lineHeight: chatTypography.h3.lineHeight,
+            fontWeight: chatTypography.h3.fontWeight,
+            color: theme.text.high,
+          }}
+        >
+          {processChildren(children, theme.isLight)}
+        </h3>
+      ),
+      h4: ({ children }: { children?: React.ReactNode }) => (
+        <h4 
+          className="mt-3 mb-1.5"
+          style={{ 
+            fontSize: chatTypography.h4.fontSize,
+            lineHeight: chatTypography.h4.lineHeight,
+            fontWeight: chatTypography.h4.fontWeight,
+            color: theme.text.high,
+          }}
+        >
+          {processChildren(children, theme.isLight)}
+        </h4>
+      ),
+      h5: ({ children }: { children?: React.ReactNode }) => (
+        <h5 
+          className="mt-3 mb-1.5"
+          style={{ 
+            fontSize: chatTypography.h5.fontSize,
+            lineHeight: chatTypography.h5.lineHeight,
+            fontWeight: chatTypography.h5.fontWeight,
+            color: theme.text.medium,
+          }}
+        >
+          {processChildren(children, theme.isLight)}
+        </h5>
+      ),
+      h6: ({ children }: { children?: React.ReactNode }) => (
+        <h6 
+          className="mt-3 mb-1.5"
+          style={{ 
+            fontSize: chatTypography.h6.fontSize,
+            lineHeight: chatTypography.h6.lineHeight,
+            fontWeight: chatTypography.h6.fontWeight,
+            color: theme.text.medium,
+          }}
+        >
+          {processChildren(children, theme.isLight)}
+        </h6>
+      ),
       // Override paragraph to process highlights
       p: ({ children }: { children?: React.ReactNode }) => {
         const processedChildren = processChildren(children, theme.isLight);
@@ -545,8 +624,57 @@ export const MessageContent = memo(function MessageContent({
           </li>
         );
       },
+      // Override inline elements to process highlights
+      strong: ({ children }: { children?: React.ReactNode }) => (
+        <strong className="font-semibold">
+          {processChildren(children, theme.isLight)}
+        </strong>
+      ),
+      em: ({ children }: { children?: React.ReactNode }) => (
+        <em className="italic">
+          {processChildren(children, theme.isLight)}
+        </em>
+      ),
+      // Override links to process highlights
+      a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:no-underline transition-colors"
+          style={{ color: BRAND_ACCENT }}
+        >
+          {processChildren(children, theme.isLight)}
+        </a>
+      ),
+      // Override blockquotes to process highlights
+      blockquote: ({ children }: { children?: React.ReactNode }) => (
+        <blockquote
+          className="border-l-4 pl-3 py-1 my-3 italic"
+          style={{
+            borderColor: BRAND_ACCENT,
+            backgroundColor: theme.background.bold,
+          }}
+        >
+          {processChildren(children, theme.isLight)}
+        </blockquote>
+      ),
+      // Override table cells to process highlights
+      th: ({ children }: { children?: React.ReactNode }) => (
+        <th className="px-3 py-2 text-left font-semibold">
+          {processChildren(children, theme.isLight)}
+        </th>
+      ),
+      td: ({ children }: { children?: React.ReactNode }) => (
+        <td 
+          className="px-3 py-2"
+          style={{ color: theme.text.medium }}
+        >
+          {processChildren(children, theme.isLight)}
+        </td>
+      ),
     };
-  }, [components, hasHighlights, theme.isLight, theme.text.high]);
+  }, [components, hasHighlights, theme.isLight, theme.text.high, theme.text.medium, theme.background.bold]);
 
   return (
     <div className="markdown-content">
