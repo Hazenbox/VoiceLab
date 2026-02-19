@@ -146,6 +146,20 @@ export const DOMAIN_PLAYBOOKS: Record<DomainType, DomainPlaybook> = {
         estimatedResolutionTime: '24-48 hours for refund',
         selfServiceable: false,
       },
+      {
+        id: 'plan_recommendation',
+        name: 'plan recommendation',
+        keywords: ['recommend', 'best plan', 'which plan', 'suggest', 'upgrade', 'compare plans', 'most expensive', 'cheapest plan'],
+        resolution: [
+          'ask about current usage patterns (data, voice, streaming)',
+          'ask about budget preference or flexibility',
+          'ask about duration preference (monthly vs annual)',
+          'present 2-3 matching options with trade-offs',
+          'let user choose - no pressure',
+        ],
+        estimatedResolutionTime: '3-5 minutes',
+        selfServiceable: true,
+      },
     ],
     responsePatterns: [
       {
@@ -153,6 +167,20 @@ export const DOMAIN_PLAYBOOKS: Record<DomainType, DomainPlaybook> = {
         opening: ['i understand connectivity issues can be really frustrating'],
         body: ['let me help you get back online'],
         closing: ['is your connection working now?'],
+      },
+      {
+        scenario: 'plan_recommendation',
+        opening: ['i would be happy to help you find the right plan'],
+        body: [
+          'before i suggest anything, could you share a bit about how you use your phone?',
+          'how much data do you typically use per month?',
+          'do you stream content often?',
+          'is this for just yourself or do you need a family plan?',
+        ],
+        closing: [
+          'based on what you have shared, here are a few options that could work for you',
+          'you can also continue with your current plan if it still meets your needs',
+        ],
       },
     ],
     vocabulary: [
