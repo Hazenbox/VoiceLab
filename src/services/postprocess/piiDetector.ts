@@ -56,7 +56,7 @@ const PII_PATTERNS: Array<{
   },
   {
     name: 'upi_id',
-    pattern: /\b[a-zA-Z0-9._-]+@[a-zA-Z]{2,}\b/g,
+    pattern: /\b[a-zA-Z0-9._-]+@(ybl|paytm|oksbi|okaxis|okhdfcbank|okicici|axisbank|ibl|sbi|upi|apl|yapl|rapl|icici|hdfcbank|axisb|unionbank|boi|kotak|indus|federal|rbl|citi|hsbc|sc|dbs|idbi|pnb|bob|canara|indian|iob|syndicate|uco|central|allahabad|andhra|vijaya|dena|oriental|corporation|bankofmaharashtra|jio|freecharge|amazonpay|gpay|phonepe|mobikwik|airtel|slice|cred|groww|jupiter|fi|niyo)\b/gi,
     mask: (m) => m.slice(0, 3) + '***@' + m.split('@')[1],
   },
 ];
