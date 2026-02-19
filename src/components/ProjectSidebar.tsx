@@ -117,7 +117,7 @@ const SidebarProjectItem = memo(function SidebarProjectItem({
     <div
       className="w-full group rounded-xl"
       style={{
-        backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
+        backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.background.minimal : 'transparent'),
         height: '36px',
       }}
       onMouseEnter={() => setIsHovered(true)}
