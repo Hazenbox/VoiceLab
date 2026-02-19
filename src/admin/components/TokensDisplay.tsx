@@ -1029,23 +1029,21 @@ export const TokensDisplay = memo(function TokensDisplay() {
         </p>
       </div>
 
-      {/* Summary stats */}
-      <div className="flex gap-2 mb-5">
+      {/* Summary stats + search in one row */}
+      <div className="flex items-center gap-2 mb-5">
         <Chip size="S" appearance="neutral" content={`${TOTAL_TOKEN_COUNT} tokens`} />
         <Chip size="S" appearance="neutral" content={`${groupNames.length} categories`} />
         <Chip size="S" appearance="neutral" content={`${totalValues} values`} />
         <Chip size="S" appearance="neutral" content={`${totalRules} rules`} />
-      </div>
-
-      {/* Search */}
-      <div className="mb-5">
-        <SearchField
-          size="S"
-          placeholder="search tokens, values, or descriptions..."
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onClear={() => setSearchQuery('')}
-        />
+        <div className="flex-1 ml-2">
+          <SearchField
+            size="S"
+            placeholder="search tokens, values, or descriptions..."
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+          />
+        </div>
       </div>
 
       {/* Content + TOC */}
@@ -1066,22 +1064,10 @@ export const TokensDisplay = memo(function TokensDisplay() {
                 data-group={groupName}
               >
                 {/* Section header */}
-                <div
-                  className="flex items-center gap-2 mb-3 pb-2"
-                  style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
-                >
+                <div className="flex items-center gap-2 mb-3">
                   <Title size="L" as="h2" weight="high" color="high">
                     {capitalize(groupName.replace(/_/g, ' ').toLowerCase())}
                   </Title>
-                  <span
-                    className="text-xs px-1.5 py-0.5 rounded-full"
-                    style={{
-                      backgroundColor: theme.accent + '15',
-                      color: theme.accent,
-                    }}
-                  >
-                    {tokens.length}
-                  </span>
                 </div>
 
                 {/* Token cards */}
