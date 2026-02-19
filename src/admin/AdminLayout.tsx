@@ -650,8 +650,11 @@ function AdminLearningCenter() {
   // Get user profile for deviceId (needed for admin mutations)
   const userProfile = loadUserProfile();
   
-  // Direct Convex queries
-  const corrections = useQuery(api.corrections.listAll, { limit: 200 });
+  // Direct Convex queries — skip when deviceId isn't available yet
+  const corrections = useQuery(
+    api.corrections.listAll,
+    userProfile?.deviceId ? { limit: 200, deviceId: userProfile.deviceId } : "skip"
+  );
   const learningStats = useQuery(api.corrections.getLearningStats, {});
   const feedbackCounts = useQuery(api.corrections.countByFeedbackType, {});
   
@@ -1406,13 +1409,17 @@ function AdminKnowledge() {
 function AdminUsageAnalytics() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
+  const userProfile = loadUserProfile();
   
   const [timeRange, setTimeRange] = useState<TimeRange>('week');
   const since = useMemo(() => getTimestampForRange(timeRange), [timeRange]);
   
   // Direct Convex queries
   const contextStats = useQuery(api.analytics.statsByEcosystemChannel, { since });
-  const users = useQuery(api.users.listAll);
+  const users = useQuery(
+    api.users.listAll,
+    userProfile?.deviceId ? { deviceId: userProfile.deviceId } : "skip"
+  );
   
   // Debug logging for production troubleshooting
   useEffect(() => {
@@ -1547,10 +1554,14 @@ function AdminUsageAnalytics() {
 function AdminUsers() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
+  const userProfile = loadUserProfile();
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Direct Convex query - no localStorage fallback
-  const users = useQuery(api.users.listAll);
+  // Direct Convex query — skip when deviceId isn't available
+  const users = useQuery(
+    api.users.listAll,
+    userProfile?.deviceId ? { deviceId: userProfile.deviceId } : "skip"
+  );
 
   // Debug logging for production troubleshooting
   useEffect(() => {

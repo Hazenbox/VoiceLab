@@ -249,11 +249,13 @@ export function CorrectionApprovalList({ deviceId, feedbackCounts }: CorrectionA
   const [selectedCorrection, setSelectedCorrection] = useState<Correction | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  // Fetch corrections (filtered by adminStatus via API)
-  const corrections = useQuery(api.corrections.listAll, { 
-    limit: 100,
-    adminStatus: statusFilter !== 'all' ? statusFilter : undefined,
-  });
+  // Fetch corrections (filtered by adminStatus via API) — skip when deviceId isn't available
+  const corrections = useQuery(
+    api.corrections.listAll,
+    deviceId
+      ? { limit: 100, adminStatus: statusFilter !== 'all' ? statusFilter : undefined, deviceId }
+      : "skip"
+  );
   
   // Update mutation
   const updateStatus = useMutation(api.corrections.updateAdminStatus);
