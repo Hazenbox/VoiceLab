@@ -288,10 +288,12 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
   // KB/11: Passive/institutional phrasing
   passive_institutional: [
     {
-      pattern: /\b(the request has been|your request has been|the issue has been) (logged|noted|recorded|registered)\b/gi,
+      // Grammatical passive: "has/have/had been [adverb?] [past participle]"
+      // Past participles typically end in -ed, -en, -wn, -nt, -t
+      pattern: /\b(?:has|have|had)\s+been\s+(?:\w+ly\s+)?(\w+(?:ed|en|wn|nt|t))\b/gi,
       severity: 'warning',
-      replacement: "i'm looking into this now",
-      description: 'passive institutional language',
+      replacement: "we've [verb]",
+      description: 'passive voice - use active voice with we/you as subject',
     },
     {
       pattern: /\b(please be (informed|advised|noted) that)\b/gi,
