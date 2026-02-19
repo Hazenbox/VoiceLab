@@ -417,43 +417,49 @@ describe('Fix 7: capitalisation after full stops via applyFormatFixes', () => {
 });
 
 // =============================================================================
-// Fix 8: forbiddenPhraseChecker extracts actual verb (not [verb] placeholder)
+// Fix 8: forbiddenPhraseChecker detects passive voice but preserves original text
 // =============================================================================
 import { checkForbiddenPhrases } from '../services/validation/agents/forbiddenPhraseChecker';
 
-describe('Fix 8: passive voice verb extraction in forbiddenPhraseChecker', () => {
-  it('extracts actual verb from "has been extended"', () => {
+describe('Fix 8: passive voice detection (no auto-fix, preserve original)', () => {
+  it('detects passive voice "has been extended"', () => {
     const content = 'Your subscription has been extended.';
     const result = checkForbiddenPhrases(content);
-    expect(result.cleanedResponse).toContain("we've extended");
-    expect(result.cleanedResponse).not.toContain('[verb]');
+    // Should detect the violation
+    expect(result.violations.some(v => v.category === 'passive_institutional')).toBe(true);
+    // Should preserve original text (no broken replacement)
+    expect(result.cleanedResponse).toContain('has been extended');
   });
 
-  it('extracts actual verb from "has been resolved"', () => {
+  it('detects passive voice "has been resolved"', () => {
     const content = 'Your issue has been resolved.';
     const result = checkForbiddenPhrases(content);
-    expect(result.cleanedResponse).toContain("we've resolved");
-    expect(result.cleanedResponse).not.toContain('[verb]');
+    expect(result.violations.some(v => v.category === 'passive_institutional')).toBe(true);
+    expect(result.cleanedResponse).toContain('has been resolved');
   });
 
-  it('extracts actual verb from "has been credited"', () => {
-    const content = 'The amount has been credited.';
+  it('preserves original text - no broken grammar', () => {
+    const content = "We're glad that your issue has been resolved.";
     const result = checkForbiddenPhrases(content);
-    expect(result.cleanedResponse).toContain("we've credited");
-    expect(result.cleanedResponse).not.toContain('[verb]');
-  });
-
-  it('extracts verb with adverb "has been successfully processed"', () => {
-    const content = 'Your request has been successfully processed.';
-    const result = checkForbiddenPhrases(content);
-    expect(result.cleanedResponse).toContain("we've processed");
-    expect(result.cleanedResponse).not.toContain('[verb]');
+    // Should NOT produce broken grammar like "your issue we've resolved"
+    expect(result.cleanedResponse).not.toContain("we've resolved");
+    // Should preserve original passive phrase
+    expect(result.cleanedResponse).toContain('has been resolved');
   });
 
   it('does not output literal [verb] placeholder', () => {
-    const content = 'Your subscription validity has been extended. Enjoy the added time.';
+    const content = 'Your subscription validity has been extended.';
     const result = checkForbiddenPhrases(content);
     expect(result.cleanedResponse).not.toContain('[verb]');
-    expect(result.cleanedResponse).toContain("we've extended");
+  });
+
+  it('detects multiple passive phrases', () => {
+    const content = 'Your issue has been resolved. The amount has been credited.';
+    const result = checkForbiddenPhrases(content);
+    const passiveViolations = result.violations.filter(v => v.category === 'passive_institutional');
+    expect(passiveViolations.length).toBe(2);
+    // Both should be preserved
+    expect(result.cleanedResponse).toContain('has been resolved');
+    expect(result.cleanedResponse).toContain('has been credited');
   });
 });
