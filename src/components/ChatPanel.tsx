@@ -635,17 +635,9 @@ export const ChatPanel = memo(function ChatPanel({
             highlightedText={isHighlighted ? highlightedText ?? undefined : undefined}
           />
           
-          {/* Actions row: Trust Badge + Message Actions + Auto-fixed badge */}
+          {/* Actions row: Message Actions + Trust Badge + Auto-fixed badge */}
           {/* Trust badge and auto-fixed label only shown for branded content, not general chat */}
           <div className="flex items-center gap-0 mt-1.5 -ml-2">
-            {message.trustScore && message.messageIntent !== 'general_chat' && (
-              <TrustBadge
-                trustScore={message.trustScore}
-                onClick={() => onTrustBadgeClick?.(message.id)}
-                size="sm"
-                showScore={true}
-              />
-            )}
             {onLike && onDislike && onTryAgain && (
               <AssistantMessageActions
                 messageId={message.id}
@@ -655,6 +647,14 @@ export const ChatPanel = memo(function ChatPanel({
                 onTryAgain={onTryAgain}
                 disabled={isLoading}
                 feedbackGiven={message.userFeedback}
+              />
+            )}
+            {message.trustScore && message.messageIntent !== 'general_chat' && (
+              <TrustBadge
+                trustScore={message.trustScore}
+                onClick={() => onTrustBadgeClick?.(message.id)}
+                size="sm"
+                showScore={true}
               />
             )}
             {hasAutoFixPreview && message.messageIntent !== 'general_chat' && (

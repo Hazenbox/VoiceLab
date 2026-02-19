@@ -150,7 +150,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
       <ActionButton
         icon={isCopied 
           ? <DSIcon name="IcConfirm" size="S" attention="low" appearance="neutral" />
-          : <CopyIcon />
+          : <CopyIcon style={{ color: theme.text.low }} />
         }
         label={isCopied ? "Copied" : "Copy"}
         onClick={handleCopy}
@@ -200,6 +200,7 @@ export const UserMessageActions = memo(function UserMessageActions({
   disabled = false,
   hideEdit = false,
 }: UserActionsProps) {
+  const theme = useThemeColors();
   const { isCopied, copyToClipboard } = useCopyToClipboard(2000);
   
   const EditIcon = () => (
@@ -229,7 +230,7 @@ export const UserMessageActions = memo(function UserMessageActions({
       <ActionButton
         icon={isCopied 
           ? <DSIcon name="IcConfirm" size="S" attention="low" appearance="neutral" />
-          : <CopyIcon />
+          : <CopyIcon style={{ color: theme.text.low }} />
         }
         label={isCopied ? "Copied" : "Copy"}
         onClick={handleCopy}
