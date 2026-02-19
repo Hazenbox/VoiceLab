@@ -209,7 +209,8 @@ export class AlibabaConversationProvider implements ConversationProvider {
       : 30;
 
     const systemPrompt = this.sessionConfig?.systemPrompt || 
-      `You are a helpful Jio voice assistant. Keep responses concise (max ${maxWords} words).`;
+      `You are a helpful Jio voice assistant. Keep responses concise (max ${maxWords} words).
+When users ask to "write", "compose", or "draft" content, generate that content FOR them. "Write message: [topic]" means create a message about that topic.`;
 
     const messages = [
       { role: 'system', content: systemPrompt },
