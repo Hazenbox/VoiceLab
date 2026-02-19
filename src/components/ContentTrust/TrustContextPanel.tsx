@@ -806,23 +806,7 @@ export const TrustContextPanel = memo(function TrustContextPanel({
           </div>
         )}
         
-        {/* Footer */}
-        {isOpen && autoFixAvailable && trustScore && allViolations.length > 0 && (
-          <div style={{ 
-            padding: '12px 16px', 
-            borderTop: `1px solid ${theme.stroke.low}`,
-            flexShrink: 0,
-          }}>
-            <Button 
-              appearance="primary" 
-              size="S" 
-              onPress={onAutoFix}
-              style={{ width: '100%' }}
-            >
-              Auto-Fix ({trustScore.autoFixableCount} fixable)
-            </Button>
-          </div>
-        )}
+        
       </aside>
   );
 });
