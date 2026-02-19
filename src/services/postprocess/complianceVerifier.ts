@@ -149,17 +149,9 @@ const CHECKS: Check[] = [
     // Grammatical passive: "has/have/had been [adverb?] [past participle]"
     // Past participles typically end in -ed, -en, -t, -n, or irregular forms
     test: (c) => match(c, /\b((?:has|have|had)\s+been\s+(?:\w+ly\s+)?(\w+(?:ed|en|wn|nt|t)\b))/i),
-    autoFixable: true,
-    fix: (c, m) => {
-      // Extract the past participle from the match
-      const ppMatch = m.match(/been\s+(?:\w+ly\s+)?(\w+)$/i);
-      if (ppMatch) {
-        const pastParticiple = ppMatch[1].toLowerCase();
-        // Convert to active: "has been resolved" -> "we've resolved"
-        return c.replace(new RegExp(escapeRe(m), 'gi'), `we've ${pastParticiple}`);
-      }
-      return c;
-    },
+    // Auto-fix disabled: requires NLP sentence restructuring to convert properly
+    // e.g. "Your issue has been resolved" -> "We've resolved your issue" (not just string replace)
+    autoFixable: false,
   },
   {
     id: 'v-04',
