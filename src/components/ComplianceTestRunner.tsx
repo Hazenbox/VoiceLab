@@ -141,6 +141,8 @@ export function ComplianceTestRunner() {
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [cleanedUp, setCleanedUp] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<string | null>(null);
 
   const createLLMProvider = useCallback((type: 'openai' | 'claude' | 'gemini-text' | 'qwen-text' | 'inworld') => {
     return createLLMProviderFactory(type);
@@ -407,6 +409,10 @@ export function ComplianceTestRunner() {
   }, [projectMappings, setActiveProject]);
 
   const handleDeleteAllTestProjects = useCallback(() => {
+    // Count how many projects will be deleted
+    const existingProjects = storageProjects.getAll();
+    const testProjectCount = existingProjects.filter(p => p.name.startsWith(TEST_PROJECT_PREFIX)).length;
+    
     cleanupTestProjects();
     setProjectMappings([]);
     setState({
@@ -419,6 +425,16 @@ export function ComplianceTestRunner() {
       startTime: 0,
       report: null,
     });
+    setShowDeleteConfirm(false);
+    
+    // Show success message
+    const message = testProjectCount > 0 
+      ? `deleted ${testProjectCount} test project${testProjectCount > 1 ? 's' : ''}`
+      : 'no test projects to delete';
+    setDeleteSuccessMessage(message);
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => setDeleteSuccessMessage(null), 3000);
   }, [cleanupTestProjects]);
 
   // ─── COMPUTED VALUES ─────────────────────────────────────────────────
@@ -544,7 +560,7 @@ export function ComplianceTestRunner() {
         )}
         {(state.status === 'idle' || state.status === 'done') && (
           <Button
-            onPress={handleDeleteAllTestProjects}
+            onPress={() => setShowDeleteConfirm(true)}
             appearance="neutral"
             attention="high"
             size="M"
@@ -558,6 +574,68 @@ export function ComplianceTestRunner() {
           </Button>
         )}
       </div>
+
+      {/* ── Delete Confirmation Dialog ── */}
+      {showDeleteConfirm && (
+        <div 
+          style={{ 
+            marginBottom: 24, 
+            padding: 16, 
+            borderRadius: 12, 
+            border: `1px solid ${theme.semantic.negative}`,
+            background: theme.isLight ? '#FEF2F2' : '#3D1B1B',
+          }}
+        >
+          <Text size="M" color="high" weight="medium" style={{ marginBottom: 12 }}>
+            are you sure you want to delete all test projects?
+          </Text>
+          <Text size="S" color="medium" style={{ marginBottom: 16 }}>
+            this will remove all projects with the "[test]" prefix from your workspace.
+          </Text>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Button
+              onPress={handleDeleteAllTestProjects}
+              appearance="primary"
+              size="S"
+              style={{ 
+                backgroundColor: theme.semantic.negative, 
+                color: '#fff',
+              }}
+            >
+              yes, delete all
+            </Button>
+            <Button
+              onPress={() => setShowDeleteConfirm(false)}
+              appearance="neutral"
+              attention="medium"
+              size="S"
+            >
+              cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Success Message ── */}
+      {deleteSuccessMessage && (
+        <div 
+          style={{ 
+            marginBottom: 24, 
+            padding: 12, 
+            borderRadius: 8, 
+            background: theme.isLight ? '#ECFDF5' : '#1B3D2F',
+            border: `1px solid ${theme.semantic.positive}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <DSIcon name="IcCheck" size="S" attention="high" style={{ color: theme.semantic.positive }} />
+          <Text size="S" style={{ color: theme.semantic.positive }}>
+            {deleteSuccessMessage}
+          </Text>
+        </div>
+      )}
 
       {/* ── Progress ── */}
       {state.status === 'running' && (
