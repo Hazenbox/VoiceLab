@@ -626,7 +626,7 @@ export const ChatPanel = memo(function ChatPanel({
                   multiLineMessages.has(message.id) ? 'px-4 py-4' : 'px-4 py-2'
                 }`}
                 style={{
-                  backgroundColor: theme.background.subtle,
+                  backgroundColor: theme.background.bold,
                   color: theme.text.high,
                 }}
               >
@@ -738,7 +738,7 @@ export const ChatPanel = memo(function ChatPanel({
       <div 
         className="rounded-[28px] flex items-center p-2.5 gap-1"
         style={{ 
-          backgroundColor: theme.background.subtle,
+          backgroundColor: theme.background.bold,
         }}
       >
         {/* Multi-line textarea */}
