@@ -35,6 +35,7 @@ export interface PhraseMatch {
   category: ViolationCategory;
   severity: 'warning' | 'error' | 'critical';
   replacement?: string;
+  replaceFn?: (match: string) => string;
   position: number;
 }
 
@@ -60,6 +61,7 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
   pattern: RegExp;
   severity: 'warning' | 'error' | 'critical';
   replacement?: string;
+  replaceFn?: (match: string) => string;
   description: string;
 }>> = {
   ai_identity: [
@@ -292,7 +294,15 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
       // Past participles typically end in -ed, -en, -wn, -nt, -t
       pattern: /\b(?:has|have|had)\s+been\s+(?:\w+ly\s+)?(\w+(?:ed|en|wn|nt|t))\b/gi,
       severity: 'warning',
-      replacement: "we've [verb]",
+      replacement: '',  // fallback, not used when replaceFn exists
+      replaceFn: (match: string) => {
+        // Extract past participle from "has been [adverb?] [verb]"
+        const verbMatch = match.match(/been\s+(?:\w+ly\s+)?(\w+)$/i);
+        if (verbMatch) {
+          return `we've ${verbMatch[1].toLowerCase()}`;
+        }
+        return match; // keep original if extraction fails
+      },
       description: 'passive voice - use active voice with we/you as subject',
     },
     {
@@ -321,7 +331,7 @@ export function checkForbiddenPhrases(response: string): ForbiddenPhraseResult {
   const violations: PhraseMatch[] = [];
   
   for (const [category, phrases] of Object.entries(FORBIDDEN_PHRASES)) {
-    for (const { pattern, severity, replacement, description } of phrases) {
+    for (const { pattern, severity, replacement, replaceFn, description } of phrases) {
       let match;
       const regex = new RegExp(pattern.source, pattern.flags);
       
@@ -331,6 +341,7 @@ export function checkForbiddenPhrases(response: string): ForbiddenPhraseResult {
           category: category as ViolationCategory,
           severity,
           replacement,
+          replaceFn,
           position: match.index,
         });
       }
@@ -380,7 +391,13 @@ function cleanResponse(response: string, violations: PhraseMatch[]): string {
   const sortedViolations = [...violations].sort((a, b) => b.position - a.position);
   
   for (const violation of sortedViolations) {
-    const replacement = violation.replacement || '';
+    // Use replaceFn if available, otherwise fall back to static replacement
+    let replacement: string;
+    if (violation.replaceFn) {
+      replacement = violation.replaceFn(violation.phrase);
+    } else {
+      replacement = violation.replacement || '';
+    }
     cleaned = cleaned.slice(0, violation.position) + 
               replacement + 
               cleaned.slice(violation.position + violation.phrase.length);
