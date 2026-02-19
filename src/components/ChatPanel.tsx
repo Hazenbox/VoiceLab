@@ -821,10 +821,10 @@ export const ChatPanel = memo(function ChatPanel({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#000000',
+                backgroundColor: theme.text.high,
               }}
             >
-              <DSIcon name="IcStop" size="S" attention="high" style={{ color: '#ffffff' }} />
+              <DSIcon name="IcStop" size="S" attention="high" style={{ color: theme.background.ghost }} />
             </Button>
           ) : (
             <Button
