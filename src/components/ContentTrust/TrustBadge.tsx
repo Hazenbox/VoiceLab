@@ -80,8 +80,7 @@ export const TrustBadge = memo(function TrustBadge({
       <DSIcon 
         name={iconName} 
         size={size === 'sm' ? 'S' : size === 'lg' ? 'M' : 'S'} 
-        attention="low" 
-        appearance="neutral" 
+        style={{ color: theme.text.low }}
       />
     );
   };

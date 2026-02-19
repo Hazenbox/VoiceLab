@@ -146,14 +146,14 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
   }, [messageId, onTryAgain]);
   
   // Consistent icon color for all action buttons
-  const iconColor = theme.text.low;
+  const iconStyle = { color: theme.text.low };
   
   return (
     <div className="flex items-center gap-0">
       <ActionButton
         icon={isCopied 
-          ? <span style={{ color: iconColor, display: 'inline-flex' }}><DSIcon name="IcConfirm" size="S" attention="low" appearance="neutral" /></span>
-          : <CopyIcon style={{ color: iconColor }} />
+          ? <DSIcon name="IcConfirm" size="S" style={iconStyle} />
+          : <CopyIcon style={iconStyle} />
         }
         label={isCopied ? "Copied" : "Copy"}
         onClick={handleCopy}
@@ -163,8 +163,8 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
       {showLike && (
         <ActionButton
           icon={
-            <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex', color: iconColor }}>
-              <DSIcon name="IcDislike" size="S" attention="low" appearance="neutral" />
+            <span style={{ transform: 'scale(-1, -1)', display: 'inline-flex' }}>
+              <DSIcon name="IcDislike" size="S" style={iconStyle} />
             </span>
           }
           label="Good response"
@@ -175,7 +175,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
       )}
       {showDislike && (
         <ActionButton
-          icon={<span style={{ color: iconColor, display: 'inline-flex' }}><DSIcon name="IcDislike" size="S" attention="low" appearance="neutral" /></span>}
+          icon={<DSIcon name="IcDislike" size="S" style={iconStyle} />}
           label="Bad response"
           onClick={handleDislike}
           disabled={disabled}
@@ -183,7 +183,7 @@ export const AssistantMessageActions = memo(function AssistantMessageActions({
         />
       )}
       <ActionButton
-        icon={<span style={{ color: iconColor, display: 'inline-flex' }}><DSIcon name="IcRefresh" size="S" attention="low" appearance="neutral" /></span>}
+        icon={<DSIcon name="IcRefresh" size="S" style={iconStyle} />}
         label="Try again"
         onClick={handleTryAgain}
         disabled={disabled}
@@ -207,7 +207,7 @@ export const UserMessageActions = memo(function UserMessageActions({
   const { isCopied, copyToClipboard } = useCopyToClipboard(2000);
   
   // Consistent icon color for all action buttons
-  const iconColor = theme.text.low;
+  const iconStyle = { color: theme.text.low };
   
   const handleCopy = useCallback(() => {
     copyToClipboard(content);
@@ -231,8 +231,8 @@ export const UserMessageActions = memo(function UserMessageActions({
     <div className="flex items-center gap-0">
       <ActionButton
         icon={isCopied 
-          ? <span style={{ color: iconColor, display: 'inline-flex' }}><DSIcon name="IcConfirm" size="S" attention="low" appearance="neutral" /></span>
-          : <CopyIcon style={{ color: iconColor }} />
+          ? <DSIcon name="IcConfirm" size="S" style={iconStyle} />
+          : <CopyIcon style={iconStyle} />
         }
         label={isCopied ? "Copied" : "Copy"}
         onClick={handleCopy}
@@ -241,7 +241,7 @@ export const UserMessageActions = memo(function UserMessageActions({
       />
       {!hideEdit && (
         <ActionButton
-          icon={<span style={{ color: iconColor, display: 'inline-flex' }}><DSIcon name="IcEdit" size="S" attention="low" appearance="neutral" /></span>}
+          icon={<DSIcon name="IcEdit" size="S" style={iconStyle} />}
           label="Edit"
           onClick={handleEdit}
           disabled={disabled}
