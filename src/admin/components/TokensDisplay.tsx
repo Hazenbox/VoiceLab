@@ -5,7 +5,7 @@
  * right-side TOC using DS vertical Tabs. Replaces nested accordions.
  */
 
-import { useState, useMemo, useRef, useCallback, memo } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react';
 import { useThemeColors } from '../../theme/useColors';
 import { DSIcon } from '../../components/DSIcon';
 import { Title, Text, Chip, SearchField, Tabs, TabList, Tab } from '@marcelinodzn/ds-react';
@@ -769,6 +769,10 @@ const TOKEN_DOCUMENTATION: Record<string, {
 
 const MAX_VISIBLE_CHIPS = 8;
 
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 interface TokenCardProps {
   tokenKey: string;
   doc: typeof TOKEN_DOCUMENTATION[string];
@@ -843,72 +847,66 @@ const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardPro
         )}
       </div>
 
-      {/* Expanded: full value details + rules + example */}
+      {/* Expanded: merged table of values + rules + example */}
       {isExpanded && (
         <div className="mt-4 space-y-4" onClick={(e) => e.stopPropagation()}>
-          <div>
-            <div
-              className="text-xs font-medium mb-2"
-              style={{ color: theme.text.low }}
-            >
-              possible values
-            </div>
-            <div className="grid gap-1.5">
-              {doc.values.map((v) => (
-                <div
-                  key={v.value}
-                  className="flex items-start gap-2 py-1 px-2 rounded-lg text-xs"
-                  style={{ backgroundColor: theme.background.subtle }}
-                >
-                  <code
-                    className="font-mono shrink-0 py-0.5"
-                    style={{ color: theme.accent, minWidth: '120px' }}
+          <div
+            className="rounded-lg overflow-hidden"
+            style={{ backgroundColor: theme.background.bold }}
+          >
+            <table className="w-full text-xs" style={{ borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${theme.stroke.low}` }}>
+                  <th
+                    className="text-left py-2 px-3 font-medium"
+                    style={{ color: theme.text.low, width: '140px' }}
                   >
-                    {v.value}
-                  </code>
-                  <span style={{ color: theme.text.medium }}>
-                    {v.description}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {hasRules && (
-            <div>
-              <div
-                className="text-xs font-medium mb-2"
-                style={{ color: theme.text.low }}
-              >
-                llm behavior rules
-              </div>
-              <div className="grid gap-1">
-                {Object.entries(rules!).map(([value, rule]) => (
-                  <div
-                    key={value}
-                    className="text-xs py-1.5 px-2 rounded-lg"
-                    style={{
-                      backgroundColor: theme.background.subtle,
-                      border: `1px solid ${theme.stroke.low}`,
-                    }}
+                    value
+                  </th>
+                  <th
+                    className="text-left py-2 px-3 font-medium"
+                    style={{ color: theme.text.low }}
                   >
-                    <code className="font-mono" style={{ color: theme.accent }}>
-                      {value}
-                    </code>
-                    <span style={{ color: theme.text.low }}>{' → '}</span>
-                    <span style={{ color: theme.text.medium }}>{rule}</span>
-                  </div>
+                    description
+                  </th>
+                  {hasRules && (
+                    <th
+                      className="text-left py-2 px-3 font-medium"
+                      style={{ color: theme.text.low }}
+                    >
+                      llm rule
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {doc.values.map((v, i) => (
+                  <tr
+                    key={v.value}
+                    style={i < doc.values.length - 1 ? { borderBottom: `1px solid ${theme.stroke.low}` } : undefined}
+                  >
+                    <td className="py-1.5 px-3 font-mono" style={{ color: theme.text.high, fontWeight: 600 }}>
+                      {v.value}
+                    </td>
+                    <td className="py-1.5 px-3" style={{ color: theme.text.medium }}>
+                      {v.description}
+                    </td>
+                    {hasRules && (
+                      <td className="py-1.5 px-3" style={{ color: theme.text.medium }}>
+                        {rules![v.value] || '—'}
+                      </td>
+                    )}
+                  </tr>
                 ))}
-              </div>
-            </div>
-          )}
+              </tbody>
+            </table>
+          </div>
 
           {doc.example && (
             <div
               className="text-xs p-3 rounded-lg"
               style={{
-                backgroundColor: theme.accent + '08',
-                border: `1px solid ${theme.accent + '20'}`,
+                backgroundColor: theme.background.bold,
                 color: theme.text.medium,
               }}
             >
@@ -933,6 +931,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
     Object.keys(TOKEN_GROUPS)[0]
   );
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const isClickScrolling = useRef(false);
 
   const { totalValues, totalRules } = useMemo(() => {
     let values = 0;
@@ -972,11 +971,36 @@ export const TokensDisplay = memo(function TokensDisplay() {
       .filter(([, tokens]) => tokens.length > 0);
   }, [searchQuery]);
 
+  useEffect(() => {
+    const scrollParent = document.querySelector('main');
+    if (!scrollParent) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isClickScrolling.current) return;
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute('data-group');
+            if (id) setActiveCategory(id);
+          }
+        }
+      },
+      { root: scrollParent, rootMargin: '-10% 0px -80% 0px', threshold: 0 }
+    );
+
+    for (const el of Object.values(sectionRefs.current)) {
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, [filteredGroups]);
+
   const handleCategoryClick = useCallback((groupKey: string) => {
     setActiveCategory(groupKey);
     const el = sectionRefs.current[groupKey];
     if (el) {
+      isClickScrolling.current = true;
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => { isClickScrolling.current = false; }, 800);
     }
   }, []);
 
@@ -987,7 +1011,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
       {/* Page header — matches dashboard PageHeader pattern */}
       <div className="mb-6">
         <Title size="L" as="h1" weight="high" color="high">
-          tokens specification
+          Tokens specification
         </Title>
         <p
           style={{
@@ -1047,7 +1071,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
                   style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
                 >
                   <Title size="L" as="h2" weight="high" color="high">
-                    {groupName.replace(/_/g, ' ').toLowerCase()}
+                    {capitalize(groupName.replace(/_/g, ' ').toLowerCase())}
                   </Title>
                   <span
                     className="text-xs px-1.5 py-0.5 rounded-full"
