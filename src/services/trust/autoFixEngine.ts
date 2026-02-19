@@ -814,7 +814,8 @@ function toSentenceCase(text: string): string {
  * - Paragraph starts after blank lines
  */
 function capitaliseSentenceStarts(text: string): string {
-  return text.split('\n').map((line, idx, arr) => {
+  // First pass: handle line-based capitalisation (bullets, headings, paragraphs)
+  let result = text.split('\n').map((line, idx, arr) => {
     const trimmed = line.trim();
     if (!trimmed) return line;
 
@@ -846,6 +847,14 @@ function capitaliseSentenceStarts(text: string): string {
 
     return line;
   }).join('\n');
+
+  // Second pass: capitalise after sentence-ending punctuation (. ! ?)
+  // Pattern: [.!?] + space(s) + lowercase letter
+  result = result.replace(/([.!?])\s+([a-z])/g, (_m, punct, letter) => {
+    return `${punct} ${letter.toUpperCase()}`;
+  });
+
+  return result;
 }
 
 /**
