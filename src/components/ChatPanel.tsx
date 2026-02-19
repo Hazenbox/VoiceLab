@@ -811,8 +811,8 @@ export const ChatPanel = memo(function ChatPanel({
               onPress={onStopGeneration}
               aria-label="Stop generating"
               appearance="neutral"
-              attention="bold"
-              size="S"
+              surface="bold"
+              single
               style={{ 
                 width: '36px', 
                 height: '36px', 
