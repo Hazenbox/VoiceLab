@@ -399,6 +399,21 @@ export function ComplianceTestRunner() {
     }
   }, [projectMappings, setActiveProject]);
 
+  const handleDeleteAllTestProjects = useCallback(() => {
+    cleanupTestProjects();
+    setProjectMappings([]);
+    setState({
+      status: 'idle',
+      currentGroup: 0,
+      currentTest: 0,
+      totalCompleted: 0,
+      results: new Map(),
+      groupResults: [],
+      startTime: 0,
+      report: null,
+    });
+  }, [cleanupTestProjects]);
+
   // ─── COMPUTED VALUES ─────────────────────────────────────────────────
 
   const progress = ALL_TESTS.length > 0
@@ -479,6 +494,17 @@ export function ComplianceTestRunner() {
               {showReport ? 'hide' : 'show'} full report
             </button>
           </>
+        )}
+        {(state.status === 'idle' || state.status === 'done') && (
+          <button
+            onClick={handleDeleteAllTestProjects}
+            style={{
+              padding: '10px 24px', background: '#FF3B30', color: '#fff',
+              border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 500,
+            }}
+          >
+            delete all test projects
+          </button>
         )}
       </div>
 
