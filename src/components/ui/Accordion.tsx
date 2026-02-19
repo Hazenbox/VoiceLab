@@ -62,7 +62,7 @@ export const Accordion = memo(function Accordion({
       </button>
       {isOpen && (
         <div 
-          className={isCard ? 'p-3' : 'px-4 pt-3 pb-3 space-y-4'}
+          className={isCard ? 'px-3' : 'px-4 pt-3 pb-3 space-y-4'}
           style={isCard ? { backgroundColor: theme.background.ghost } : undefined}
         >
           {children}
