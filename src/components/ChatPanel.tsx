@@ -811,7 +811,6 @@ export const ChatPanel = memo(function ChatPanel({
               onPress={onStopGeneration}
               aria-label="Stop generating"
               appearance="neutral"
-              surface="bold"
               single
               style={{ 
                 width: '36px', 
@@ -822,9 +821,10 @@ export const ChatPanel = memo(function ChatPanel({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                backgroundColor: '#000000',
               }}
             >
-              <DSIcon name="IcStop" size="S" attention="high" />
+              <DSIcon name="IcStop" size="S" attention="high" style={{ color: '#ffffff' }} />
             </Button>
           ) : (
             <Button
