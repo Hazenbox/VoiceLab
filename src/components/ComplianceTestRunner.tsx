@@ -236,6 +236,7 @@ export function ComplianceTestRunner() {
       parentMessageId: chatUserMsg.id,
     };
     await chatStorage.save(projectId, [...existingChat, chatUserMsg, chatAssistantMsg]);
+    chatStorage.flush();
   }, []);
 
   // ─── RUN ALL TESTS ──────────────────────────────────────────────────
@@ -396,6 +397,7 @@ export function ComplianceTestRunner() {
     const mapping = projectMappings.find(m => m.groupId === groupId);
     if (mapping) {
       setActiveProject(mapping.projectId);
+      useUIStore.getState().setActiveView('main');
     }
   }, [projectMappings, setActiveProject]);
 
