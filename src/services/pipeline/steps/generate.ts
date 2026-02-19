@@ -40,6 +40,9 @@ export async function generate(
   if (input.stream && input.callbacks?.onStreamChunk) {
     // Streaming mode
     let accumulatedText = '';
+    let chunkCount = 0;
+    const streamStartTime = performance.now();
+    console.log('[Streaming] generate: stream started');
     try {
       const streamResult = await orchestrator.generateStream(
         input.llmProvider,
@@ -52,7 +55,10 @@ export async function generate(
         createProvider,
         (chunk: string) => {
           accumulatedText += chunk;
-          // Protect stream callback from throwing and breaking the stream
+          chunkCount++;
+          if (chunkCount <= 3 || chunkCount % 10 === 0) {
+            console.log(`[Streaming] generate: chunk #${chunkCount}, accumulated ${accumulatedText.length} chars, +${chunk.length} chars`);
+          }
           try {
             input.callbacks!.onStreamChunk!(accumulatedText);
           } catch (callbackError) {
@@ -60,6 +66,9 @@ export async function generate(
           }
         },
       );
+
+      const streamDuration = performance.now() - streamStartTime;
+      console.log(`[Streaming] generate: stream complete in ${streamDuration.toFixed(0)}ms, ${chunkCount} chunks, ${accumulatedText.length} chars total`);
 
       return {
         content: streamResult.content,
@@ -71,6 +80,7 @@ export async function generate(
         } : undefined,
       };
     } finally {
+      console.log('[Streaming] generate: onStreamEnd firing');
       input.callbacks.onStreamEnd?.();
     }
   }

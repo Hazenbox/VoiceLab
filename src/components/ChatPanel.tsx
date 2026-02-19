@@ -81,112 +81,183 @@ function buildStreamingUnits(text: string): Array<{ text: string; isInstant: boo
 
 /**
  * Custom hook for ChatGPT-like word-by-word streaming animation.
- * Processes line-by-line first, then word-by-word within each line.
- * This preserves markdown structure (numbered lists, bullets, code blocks).
+ * 
+ * Key behaviors:
+ * - Normal pace: 30ms per word while chunks are still arriving
+ * - Catch-up: accelerates to 10ms when animation falls behind incoming content
+ * - Finish mode: when isStreaming goes false (committed message ready), 
+ *   quickly finishes remaining words at 5ms instead of showing all at once
+ * - displayedText is NOT in the deps array to avoid re-trigger loops
  */
 const useStreamingText = (fullText: string, isStreaming: boolean) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
   const lastFullTextRef = useRef('');
+  const displayedTextRef = useRef('');
   const unitsRef = useRef<Array<{ text: string; isInstant: boolean }>>([]);
   const currentIndexRef = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
+  const animatingRef = useRef(false);
+  const lastChunkTimeRef = useRef(0);
+  const isStreamingRef = useRef(isStreaming);
+
+  // Keep isStreamingRef in sync so the animation loop can read it
+  isStreamingRef.current = isStreaming;
+
+  // Compute dynamic delay based on how far behind the animation is
+  const getDelay = useCallback((unit: { isInstant: boolean }, wordsBehind: number): number => {
+    if (unit.isInstant) return 0;
+    // Stream ended or committed message arrived -- finish fast
+    if (!isStreamingRef.current) return 5;
+    // Far behind -- batch quickly
+    if (wordsBehind > 30) return 8;
+    // Moderately behind
+    if (wordsBehind > 15) return 15;
+    // Normal streaming pace
+    return 30;
+  }, []);
+
+  // The animation loop. Reads refs only, no deps on state.
+  const startAnimation = useCallback(() => {
+    if (animatingRef.current) return;
+    animatingRef.current = true;
+
+    const animateNext = () => {
+      const units = unitsRef.current;
+      const idx = currentIndexRef.current;
+
+      if (idx >= units.length) {
+        // Caught up to current content -- pause animation until new content arrives
+        animatingRef.current = false;
+        // If streaming is done and we've shown everything, mark complete
+        if (!isStreamingRef.current) {
+          setIsComplete(true);
+          console.log('[Streaming] animation: complete (all units shown)');
+        }
+        return;
+      }
+
+      const unit = units[idx];
+      currentIndexRef.current = idx + 1;
+
+      // Build displayed text from units
+      const text = units
+        .slice(0, currentIndexRef.current)
+        .map(u => u.text)
+        .join('');
+      displayedTextRef.current = text;
+      setDisplayedText(text);
+
+      const wordsBehind = units.length - currentIndexRef.current;
+      const delay = getDelay(unit, wordsBehind);
+
+      timeoutRef.current = setTimeout(animateNext, delay);
+    };
+
+    animateNext();
+  }, [getDelay]);
+
+  // Main effect: reacts to fullText or isStreaming changes
   useEffect(() => {
-    // If not streaming, show full text immediately
-    if (!isStreaming) {
-      setDisplayedText(fullText);
-      setIsComplete(true);
-      lastFullTextRef.current = fullText;
-      unitsRef.current = [];
-      currentIndexRef.current = 0;
+    // Stream just ended (committed message is ready) -- 
+    // if animation is still running, it will pick up the fast finish via isStreamingRef.
+    // If animation was paused (caught up), restart it to finish any remaining units.
+    if (!isStreaming && fullText && lastFullTextRef.current) {
+      console.log(`[Streaming] hook: isStreaming=false, animation behind by ${unitsRef.current.length - currentIndexRef.current} units`);
+      if (!animatingRef.current && currentIndexRef.current < unitsRef.current.length) {
+        startAnimation();
+      }
+      // If animation already caught up and fullText matches, just mark complete
+      if (currentIndexRef.current >= unitsRef.current.length && unitsRef.current.length > 0) {
+        setIsComplete(true);
+      }
       return;
     }
-    
-    // If fullText is empty, reset state
-    if (!fullText) {
+
+    // If not streaming and no text, reset everything
+    if (!isStreaming && !fullText) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      animatingRef.current = false;
       setDisplayedText('');
+      displayedTextRef.current = '';
       setIsComplete(false);
       lastFullTextRef.current = '';
       unitsRef.current = [];
       currentIndexRef.current = 0;
       return;
     }
-    
-    // Check if this is new streaming content (fullText changed)
-    const isNewContent = fullText !== lastFullTextRef.current;
-    
-    if (isNewContent) {
+
+    // Empty text while streaming -- reset and wait
+    if (!fullText) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      animatingRef.current = false;
+      setDisplayedText('');
+      displayedTextRef.current = '';
+      setIsComplete(false);
+      lastFullTextRef.current = '';
+      unitsRef.current = [];
+      currentIndexRef.current = 0;
+      return;
+    }
+
+    // New content arrived
+    if (fullText !== lastFullTextRef.current) {
+      const prevText = lastFullTextRef.current;
       lastFullTextRef.current = fullText;
-      
-      // Build streaming units (line-by-line, then word-by-word)
+      lastChunkTimeRef.current = performance.now();
+
       const newUnits = buildStreamingUnits(fullText);
-      
-      // If completely new content (reset), start from 0
-      if (!displayedText || !fullText.startsWith(displayedText.substring(0, Math.min(displayedText.length, 10)))) {
+
+      // Detect if this is a continuation (same prefix) or completely new content
+      const isContinuation = prevText && fullText.startsWith(
+        prevText.substring(0, Math.min(prevText.length, 20))
+      );
+
+      if (isContinuation) {
+        // Update units but keep the current animation position
+        unitsRef.current = newUnits;
+      } else {
+        // Completely new content -- reset animation
+        console.log('[Streaming] animation: new content detected, resetting');
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        animatingRef.current = false;
         unitsRef.current = newUnits;
         currentIndexRef.current = 0;
+        displayedTextRef.current = '';
         setDisplayedText('');
-      } else {
-        // Continue from where we were - update units but keep index
-        unitsRef.current = newUnits;
+        setIsComplete(false);
       }
-      
-      // Clear any existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+
+      // Start or resume animation if not already running
+      if (!animatingRef.current) {
+        startAnimation();
       }
-      
-      // Animate units with appropriate delays
-      const animateNext = () => {
-        if (currentIndexRef.current < unitsRef.current.length) {
-          const unit = unitsRef.current[currentIndexRef.current];
-          setDisplayedText(
-            unitsRef.current
-              .slice(0, currentIndexRef.current + 1)
-              .map(u => u.text)
-              .join('')
-          );
-          currentIndexRef.current++;
-          
-          // Use 0ms for instant units (newlines), 35ms for regular words
-          const delay = unit.isInstant ? 0 : 35;
-          timeoutRef.current = setTimeout(animateNext, delay);
-        } else {
-          setIsComplete(true);
-        }
-      };
-      
-      // Start animation
-      animateNext();
-      
-      return () => {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
-      };
     }
-  }, [fullText, isStreaming, displayedText]);
-  
+  }, [fullText, isStreaming, startAnimation]);
+
   // Reset when streaming starts fresh
   useEffect(() => {
     if (isStreaming && !fullText) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      animatingRef.current = false;
       setDisplayedText('');
+      displayedTextRef.current = '';
       setIsComplete(false);
       unitsRef.current = [];
       currentIndexRef.current = 0;
     }
   }, [isStreaming, fullText]);
-  
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      animatingRef.current = false;
     };
   }, []);
-  
+
   return { displayedText, isComplete };
 };
 

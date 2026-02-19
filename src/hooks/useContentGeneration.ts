@@ -235,8 +235,15 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
           externalData,
           abortSignal: getChatAbortSignal(),
           callbacks: {
-            onStreamChunk: (text: string) => setStreamingAIResponse(text),
-            onStreamEnd: () => setStreamingAIResponse(''),
+            onStreamChunk: (text: string) => {
+              console.log(`[Streaming] hook: onStreamChunk, ${text.length} chars`);
+              setStreamingAIResponse(text);
+            },
+            onStreamEnd: () => {
+              // Do NOT clear streaming here -- keep text visible until committed
+              // message replaces it. Cleared after addMessage() or in finally block.
+              console.log('[Streaming] hook: onStreamEnd (keeping text visible for animation)');
+            },
           },
           createLLMProvider: createLLMProvider,
         };
@@ -269,7 +276,10 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
           const serverResult = await generateViaAPI(
             serverInput,
             {
-              onChunk: (text: string) => setStreamingAIResponse(text),
+              onChunk: (text: string) => {
+                console.log(`[Streaming] hook: server onChunk, ${text.length} chars`);
+                setStreamingAIResponse(text);
+              },
               onValidation: (v) => {
                 logger.debug('[Pipeline] Server validation:', v);
               },
@@ -289,6 +299,7 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
         }
 
         // ── Handle safety blocks (early return paths) ─────────────────
+        console.log(`[Streaming] hook: pipeline returned, path=${result.pipelinePath}, success=${result.success}`);
         if (result.pipelinePath === 'emergency_response' || result.pipelinePath === 'safety_blocked') {
           const safetyMessage = {
             ...createTextMessage('assistant', result.output, chatMode, userMessageId),
@@ -337,6 +348,10 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
         } else {
           addMessage(aiMessage);
         }
+
+        // Clear streaming AFTER committed message is in place
+        console.log('[Streaming] hook: committed message added, clearing streaming state');
+        setStreamingAIResponse('');
 
         tryAutoRenameProject(message, result.output);
 
@@ -442,6 +457,8 @@ export function useContentGeneration(deps: ContentGenerationDeps) {
         });
         return { userMessageId, aiMessageId: '', success: false } as SendMessageResult;
       } finally {
+        // Safety net: always clear streaming on any exit path (error, abort, etc.)
+        setStreamingAIResponse('');
         setIsChatLoading(false);
         markIdempotencyKeyProcessed(idempotencyKey);
       }

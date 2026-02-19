@@ -83,7 +83,10 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     const assembled = assemble(input, classification, retrieval.knowledge);
 
     // 5. Generate content (supports streaming via callbacks)
+    console.log('[Streaming] pipeline: starting generate step');
+    const generateStart = performance.now();
     let generated = await generate(input, assembled.systemPrompt, classification);
+    console.log(`[Streaming] pipeline: generate step complete in ${(performance.now() - generateStart).toFixed(0)}ms`);
 
     // 6-10: For general_chat, skip validation/trust/auto-fix/compliance.
     //        These are content-trust features for branded content only.
@@ -120,7 +123,10 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     }
 
     // 6. Validate (content_generation and jio_inquiry only)
+    console.log('[Streaming] pipeline: starting validation');
+    const validateStart = performance.now();
     let validation = await validate(input, generated.content, assembled);
+    console.log(`[Streaming] pipeline: validation complete in ${(performance.now() - validateStart).toFixed(0)}ms, passed=${validation.passed}`);
 
     // 7. Smart retry with failure feedback (max 1 retry)
     if (!validation.passed && retryCount < MAX_RETRIES) {
@@ -129,9 +135,10 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       const retryPrompt = retryFeedback
         ? `${assembled.systemPrompt}\n\n---\n\n${retryFeedback}`
         : assembled.systemPrompt;
-      console.log(`[Pipeline] Validation failed, retrying with feedback (${retryCount}/${MAX_RETRIES})`);
+      console.log(`[Streaming] pipeline: validation failed, retrying (${retryCount}/${MAX_RETRIES})`);
       generated = await generate(input, retryPrompt, classification);
       validation = await validate(input, generated.content, assembled);
+      console.log(`[Streaming] pipeline: retry validation complete, passed=${validation.passed}`);
     }
 
     // 8. LLM-as-judge compliance check (only for content_generation intent)
@@ -206,6 +213,8 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
     }
 
     // 9b. Post-process steps (individually protected so one failure doesn't skip the rest)
+    console.log('[Streaming] pipeline: starting post-processing (entity norm, replacements, forbidden phrases, format fixes)');
+    const postProcessStart = performance.now();
     let postProcessed = verifiedContent;
 
     try {
@@ -228,8 +237,11 @@ export async function run(input: PipelineInput): Promise<PipelineResult> {
       postProcessed = applyFormatFixes(postProcessed);
     } catch (e) { console.warn('[Pipeline] Format fixes failed:', e); }
 
+    console.log(`[Streaming] pipeline: post-processing complete in ${(performance.now() - postProcessStart).toFixed(0)}ms`);
+
     // 10. Finalize (finishing layer + privacy masking)
     const finalized = finalize(postProcessed, input, classification, assembled);
+    console.log('[Streaming] pipeline: finalize complete, returning result');
 
     // 11. Build evidence for transparency panel
     const evidence = buildEvidence(retrieval, validation, input);
