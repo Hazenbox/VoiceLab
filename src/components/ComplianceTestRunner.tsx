@@ -593,19 +593,11 @@ export function ComplianceTestRunner() {
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                <Title size="S" as="h2" weight="high" color="high">
-                  Delete all test projects?
-                </Title>
-                <ActionButton
-                  icon={<DSIcon name="IcClose" size="S" style={{ color: theme.text.medium }} />}
-                  label="Close"
-                  onClick={() => setShowDeleteConfirm(false)}
-                />
-              </div>
+            <div className="px-6 pt-6 pb-2">
+              <Title size="L" as="h2" weight="high" color="high">
+                Delete all test projects?
+              </Title>
             </div>
-            <Divider />
             
             {/* Body */}
             <div className="px-6 py-4">
