@@ -40,10 +40,15 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-1.5 relative">
         <label 
-          className="text-xs font-normal"
-          style={{ color: theme.text.medium }}
+          style={{
+            display: 'block',
+            fontSize: '14px',
+            lineHeight: 1.3,
+            fontWeight: 500,
+            color: theme.text.high,
+          }}
         >
-          Voice Model
+          Voice model
         </label>
         {tooltip && (
           <>

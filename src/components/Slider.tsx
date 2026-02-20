@@ -1,11 +1,11 @@
 import React from 'react';
 import { useThemeColors } from '../theme';
-import { Label, Text } from '@marcelinodzn/ds-react';
+import { Text } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
-/** Slider track colors -- matches DS Switch component color */
-const TRACK_ACTIVE_LIGHT = '#f7ab21';
-const TRACK_ACTIVE_DARK = '#f7ab21';
+/** Slider track colors -- matches DS Radio secondary appearance (orange) */
+const TRACK_ACTIVE_LIGHT = '#fa7d1a';
+const TRACK_ACTIVE_DARK = '#fa7d1a';
 
 interface SliderProps {
   label: string;
@@ -68,9 +68,17 @@ export const Slider: React.FC<SliderProps> = ({
       {/* Label and Value */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 relative">
-          <Label size="XS" weight="low" attention="high" as="label">
+          <label
+            style={{
+              display: 'block',
+              fontSize: '14px',
+              lineHeight: 1.3,
+              fontWeight: 500,
+              color: theme.text.high,
+            }}
+          >
             {label}
-          </Label>
+          </label>
           {tooltip && (
             <>
               <div

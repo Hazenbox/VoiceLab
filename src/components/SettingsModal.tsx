@@ -7,12 +7,12 @@
  * Redesigned with sidebar navigation layout.
  */
 
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState, useMemo } from 'react';
 import { useThemeColors } from '../theme';
 import { Title, Text } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 import { ActionButton } from './ActionButton';
-import { ModelSelector, type TTSProviderType } from './ModelSelector';
+import { type TTSProviderType } from './ModelSelector';
 import { VoiceSelector } from './VoiceSelector';
 import { LabeledSlider } from './LabeledSlider';
 import { Slider } from './Slider';
@@ -20,6 +20,8 @@ import { Toggle } from './Toggle';
 import { SearchableDropdown } from './SearchableDropdown';
 import { TooltipIcon } from './TooltipIcon';
 import { TextArea } from '@marcelinodzn/ds-react';
+import SearchableCombobox, { type ComboboxOption } from './SearchableCombobox';
+import { getAvailableLLMProviders, type LLMProviderType } from '../services/providers/llm';
 import type { 
   VoiceGender, 
   TrustSettings,
@@ -28,7 +30,13 @@ import type {
   Pace,
   ResponseLength,
 } from '../types';
-import type { LLMProviderType } from '../services/providers/llm';
+
+// TTS Provider display names
+const TTS_PROVIDERS: { type: TTSProviderType; displayName: string }[] = [
+  { type: 'dashscope', displayName: 'Alibaba DashScope' },
+  { type: 'gemini', displayName: 'Google Gemini' },
+  { type: 'elevenlabs', displayName: 'ElevenLabs' },
+];
 
 // =============================================================================
 // Types
@@ -99,7 +107,7 @@ const SettingsNavItem = memo(function SettingsNavItem({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Text size="XS" weight={isActive ? 'high' : 'low'}>
+      <Text size="S" weight="low">
         {label}
       </Text>
     </button>
@@ -127,6 +135,26 @@ export const SettingsModal = memo(function SettingsModal({
 }: SettingsModalProps) {
   const theme = useThemeColors();
   const [activeSection, setActiveSection] = useState<SettingsSection>('model');
+  
+  // LLM provider options for SearchableCombobox
+  const llmOptions: ComboboxOption[] = useMemo(() => {
+    return getAvailableLLMProviders()
+      .filter(p => p.type !== 'openai' && p.type !== 'claude' && p.isConfigured)
+      .map(p => ({
+        id: p.type,
+        label: p.displayName,
+        searchableText: `${p.displayName} ${p.type}`,
+      }));
+  }, []);
+  
+  // TTS provider options for SearchableCombobox
+  const ttsOptions: ComboboxOption[] = useMemo(() => {
+    return TTS_PROVIDERS.map(p => ({
+      id: p.type,
+      label: p.displayName,
+      searchableText: `${p.displayName} ${p.type}`,
+    }));
+  }, []);
   
   // Strictness options
   const strictnessOptions = [
@@ -187,8 +215,9 @@ export const SettingsModal = memo(function SettingsModal({
           left: '50%',
           top: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '750px',
+          width: '650px',
           maxWidth: '95vw',
+          height: '500px',
           maxHeight: '85vh',
           backgroundColor: theme.background.ghost,
           borderRadius: '16px',
@@ -207,7 +236,6 @@ export const SettingsModal = memo(function SettingsModal({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: `1px solid ${theme.stroke.low}`,
             flexShrink: 0,
           }}
         >
@@ -259,7 +287,7 @@ export const SettingsModal = memo(function SettingsModal({
             style={{
               flex: 1,
               overflow: 'auto',
-              padding: '1.5rem',
+              padding: '1rem',
             }}
             className="scrollable-container"
           >
@@ -273,14 +301,22 @@ export const SettingsModal = memo(function SettingsModal({
             {/* Model Selection Content */}
             {activeSection === 'model' && (
               <div className="space-y-4">
-                <ModelSelector
+                <SearchableCombobox
+                  label="Chat model"
+                  placeholder="Select chat model..."
+                  options={llmOptions}
                   value={selectedLLMProvider}
-                  onChange={onLLMProviderChange}
-                  ttsValue={selectedTTSProvider}
-                  onTTSChange={onTTSProviderChange}
-                  showHealth={false}
-                  disabled={disabled}
+                  onChange={(value) => onLLMProviderChange(value as LLMProviderType)}
                 />
+                {selectedTTSProvider !== undefined && onTTSProviderChange && (
+                  <SearchableCombobox
+                    label="Voice model"
+                    placeholder="Select voice model..."
+                    options={ttsOptions}
+                    value={selectedTTSProvider}
+                    onChange={(value) => onTTSProviderChange(value as TTSProviderType)}
+                  />
+                )}
               </div>
             )}
             
@@ -298,8 +334,13 @@ export const SettingsModal = memo(function SettingsModal({
                 <div className="space-y-2">
                   <div className="flex items-center gap-1.5">
                     <label 
-                      className="block text-xs font-normal"
-                      style={{ color: theme.text.medium }}
+                      style={{
+                        display: 'block',
+                        fontSize: '14px',
+                        lineHeight: 1.3,
+                        fontWeight: 500,
+                        color: theme.text.high,
+                      }}
                     >
                       Greeting
                     </label>
@@ -371,7 +412,16 @@ export const SettingsModal = memo(function SettingsModal({
                 />
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5">
-                    <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
+                    <label 
+                      style={{
+                        display: 'block',
+                        fontSize: '14px',
+                        lineHeight: 1.3,
+                        fontWeight: 500,
+                        color: theme.text.high,
+                        flexShrink: 0,
+                      }}
+                    >
                       Validation strictness
                     </label>
                     <TooltipIcon tooltip="Lenient = fewer warnings, Strict = catches more potential issues" />

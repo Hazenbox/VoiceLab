@@ -1,6 +1,6 @@
 import React from 'react';
 import { useThemeColors } from '../theme';
-import { Switch, Label } from '@marcelinodzn/ds-react';
+import { Switch } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
 interface ToggleProps {
@@ -41,9 +41,17 @@ export const Toggle: React.FC<ToggleProps> = ({
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-1.5 relative">
-        <Label size="XS" weight="low" attention="high" as="label">
+        <label
+          style={{
+            display: 'block',
+            fontSize: '14px',
+            lineHeight: 1.3,
+            fontWeight: 500,
+            color: theme.text.high,
+          }}
+        >
           {label}
-        </Label>
+        </label>
         {tooltip && (
           <>
             <div
