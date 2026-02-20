@@ -902,11 +902,11 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               />
               <StatCounter
                 value={18} label="Channels" visible={scaleInView.visible} delay={100}
-                pills={['Push Notification', 'SMS', 'WhatsApp', 'Customer Care', 'Email', 'IVR', 'Social Media', 'Digital Ads']}
+                pills={['Push Notification', 'SMS', 'WhatsApp Alert', 'Customer Care Chat', 'WhatsApp Support', 'Chatbot / FAQ', 'IVR / Voice Menu', 'Voice Assistant', 'Voice Prompts', 'Marketing Email', 'Transactional Email', 'Social Media Post', 'Digital Ads', 'TV / Video Ad', 'App Notification', 'Onboarding Screen', 'Internal Announcement', 'Training Module']}
               />
               <StatCounter
                 value={15} label="Languages" visible={scaleInView.visible} delay={200}
-                pills={['English', 'Hindi', 'Hinglish', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Marathi', 'Gujarati', 'Bengali']}
+                pills={['English', 'Hindi', 'Hinglish', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Marathi', 'Gujarati', 'Bengali', 'Punjabi', 'Odia', 'Assamese', 'Urdu', 'Konkani']}
               />
               <StatCounter
                 value={9} label="Emotions" visible={scaleInView.visible} delay={300}
