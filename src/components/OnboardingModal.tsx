@@ -195,52 +195,51 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
         {/* Header -- DS Title + Text */}
         <div style={{ padding: '1.5rem 1.5rem 0.5rem', paddingRight: onClose ? '3rem' : '1.5rem' }}>
           <Title size="L" as="h2" weight="high" color="high">
-            {isEditMode ? 'edit profile' : 'welcome to voice lab'}
+            {isEditMode ? 'Edit Profile' : 'Welcome to Voice Lab'}
           </Title>
           <div style={{ marginTop: '0.375rem' }}>
             <Text size="S" color="medium">
-              your role and product help fine-tune AI content generation to match your context, tone, and goals.
+              Your role and product help fine-tune AI content generation to match your context, tone, and goals.
             </Text>
           </div>
         </div>
 
-        {/* Content - Scrollable */}
-        <div style={{ padding: '0 1.25rem 1.25rem', flex: 1, position: 'relative' }}>
-          <div style={{ overflowY: 'auto', maxHeight: '100%' }}>
-            {/* Name Field -- DS Input */}
-            <div style={{ marginBottom: '1rem' }}>
-              <Input
-                label="name"
-                value={name}
-                onChange={(val: string) => { setName(val); setNameError(''); }}
-                placeholder="enter your name"
-                isInvalid={!!nameError}
-              />
-              {nameError && (
-                <p style={{ color: SEMANTIC_COLORS.negative, fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                  {nameError}
-                </p>
-              )}
-            </div>
-
-            {/* Role Field */}
-            <SearchableCombobox
-              label="role"
-              placeholder="select your role"
-              options={ROLES_WITH_SEARCH}
-              value={role}
-              onChange={(id) => setRole(id as UserRole)}
+        {/* Content */}
+        <div style={{ padding: '0 1.5rem 1rem' }}>
+          {/* Name Field -- DS Input */}
+          <div style={{ marginBottom: '1rem' }}>
+            <Input
+              label="Name"
+              size="S"
+              value={name}
+              onChange={(val: string) => { setName(val); setNameError(''); }}
+              placeholder="Enter your name"
+              isInvalid={!!nameError}
             />
-
-            {/* Ecosystem Field */}
-            <SearchableCombobox
-              label="product ecosystem"
-              placeholder="select product ecosystem"
-              options={ECOSYSTEMS_WITH_SEARCH}
-              value={product}
-              onChange={setProduct}
-            />
+            {nameError && (
+              <p style={{ color: SEMANTIC_COLORS.negative, fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                {nameError}
+              </p>
+            )}
           </div>
+
+          {/* Role Field */}
+          <SearchableCombobox
+            label="Role"
+            placeholder="Select your role"
+            options={ROLES_WITH_SEARCH}
+            value={role}
+            onChange={(id) => setRole(id as UserRole)}
+          />
+
+          {/* Ecosystem Field */}
+          <SearchableCombobox
+            label="Product Ecosystem"
+            placeholder="Select product ecosystem"
+            options={ECOSYSTEMS_WITH_SEARCH}
+            value={product}
+            onChange={setProduct}
+          />
         </div>
 
         {/* Footer */}
@@ -251,6 +250,7 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
         }}>
           <Button
             appearance="primary"
+            attention="high"
             size="S"
             onPress={handleSubmit}
             isDisabled={!isValid}
