@@ -295,52 +295,12 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
   const theme = useThemeColors();
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const scrollTo = useCallback((id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
 
   const pipelineInView = useInView(0.1);
   const scaleInView = useInView(0.2);
 
-  const navItems = [
-    { id: 'hiw-hero', label: 'Overview' },
-    { id: 'hiw-onboarding', label: 'Onboarding' },
-    { id: 'hiw-pipeline', label: 'Pipeline' },
-    { id: 'hiw-knowledge', label: 'Knowledge' },
-    { id: 'hiw-llm', label: 'LLM' },
-    { id: 'hiw-trust', label: 'Trust' },
-    { id: 'hiw-modes', label: 'Modes' },
-    { id: 'hiw-learning', label: 'Learning' },
-    { id: 'hiw-scale', label: 'Scale' },
-    { id: 'hiw-admin', label: 'Admin' },
-    { id: 'hiw-arch', label: 'Architecture' },
-  ];
-
   return (
     <div className="h-full flex flex-col" style={{ backgroundColor: theme.background.ghost }}>
-      {/* Sticky Header */}
-      <header
-        className="flex items-center gap-4 px-6 py-2 flex-shrink-0 overflow-x-auto"
-        style={{ borderBottom: `1px solid ${theme.stroke.low}`, backgroundColor: theme.background.ghost }}
-      >
-        <h1 className="text-lg font-extrabold flex-shrink-0" style={{ color: theme.text.high }}>
-          How it works
-        </h1>
-        <div className="flex items-center gap-1 ml-4">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => scrollTo(item.id)}
-              className="text-[11px] px-2.5 py-1 rounded-full hover:opacity-80 transition-opacity flex-shrink-0"
-              style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </header>
-
       {/* Scrollable Content */}
       <main ref={scrollRef} className="flex-1 overflow-y-auto">
 
