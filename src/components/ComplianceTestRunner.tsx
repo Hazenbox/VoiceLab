@@ -630,24 +630,19 @@ export function ComplianceTestRunner() {
         </div>
       )}
 
-      {/* ── Success Message ── */}
+      {/* ── Success Toast ── */}
       {deleteSuccessMessage && (
-        <div 
-          style={{ 
-            marginBottom: 24, 
-            padding: 12, 
-            borderRadius: 8, 
-            background: theme.isLight ? '#ECFDF5' : '#1B3D2F',
-            border: `1px solid ${theme.semantic.positive}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-          }}
-        >
-          <DSIcon name="IcCheck" size="S" attention="high" style={{ color: theme.semantic.positive }} />
-          <Text size="S" style={{ color: theme.semantic.positive }}>
-            {deleteSuccessMessage}
-          </Text>
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+          <div
+            className="flex items-center gap-2 px-4 py-2 rounded-full shadow-lg"
+            style={{
+              backgroundColor: theme.background.bold,
+              color: theme.text.high,
+            }}
+          >
+            <DSIcon name="IcCheck" size="S" style={{ color: theme.text.high }} />
+            <Text size="S" color="high">{deleteSuccessMessage}</Text>
+          </div>
         </div>
       )}
 
