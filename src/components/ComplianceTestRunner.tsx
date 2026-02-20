@@ -519,6 +519,7 @@ export function ComplianceTestRunner() {
           <Button
             onPress={runAllTests}
             appearance="primary"
+            attention="high"
             size="S"
           >
             Run all tests
@@ -539,6 +540,7 @@ export function ComplianceTestRunner() {
             <Button
               onPress={runAllTests}
               appearance="primary"
+              attention="high"
               size="S"
             >
               Re-run all tests
