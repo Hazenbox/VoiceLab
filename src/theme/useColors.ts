@@ -36,6 +36,14 @@ const LOCAL_COLORS = {
   accent: '#6366f1',
   
   /**
+   * Brand secondary orange - matches radio button secondary appearance
+   * @token Secondary brand color for highlights, selections, emphasis
+   * @value #c2410c (Tailwind orange-700)
+   * @usage Radio buttons, selection indicators, warmth bars, brand emphasis
+   */
+  secondary: '#c2410c',
+  
+  /**
    * Semantic colors for status and feedback
    * @token Not yet exposed by DS - based on component implementations
    */
@@ -180,6 +188,7 @@ export function useThemeColors() {
       low: strokeLow,
     },
     accent,
+    secondary: LOCAL_COLORS.secondary,
     semantic: {
       positive: LOCAL_COLORS.positive,
       negative: LOCAL_COLORS.negative,

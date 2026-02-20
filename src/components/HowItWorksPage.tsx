@@ -6,6 +6,7 @@
 import { memo, useRef, useEffect, useState, useCallback } from 'react';
 import { useThemeColors } from '../theme';
 import { FlowCanvas, FlowNode, FlowArrow, CurvedFlowArrow } from './FlowDiagram';
+import { Badge } from './ui/Badge';
 
 interface HowItWorksPageProps {
   onBack: () => void;
@@ -106,7 +107,7 @@ const StatCounter = memo(function StatCounter({ value, label, pills, visible, de
     <div className="text-center flex-1">
       <div
         className="text-5xl font-extrabold tabular-nums mb-1"
-        style={{ color: theme.accent }}
+        style={{ color: theme.secondary }}
       >
         {count}
       </div>
@@ -119,13 +120,7 @@ const StatCounter = memo(function StatCounter({ value, label, pills, visible, de
       {pills && (
         <div className="flex flex-wrap justify-center gap-1">
           {pills.map((p) => (
-            <span
-              key={p}
-              className="text-[10px] px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
-            >
-              {p}
-            </span>
+            <Badge key={p} variant="neutral" emphasis="low">{p}</Badge>
           ))}
         </div>
       )}
@@ -187,12 +182,12 @@ const PipelineStep = memo(function PipelineStep({ number, label, description, ex
       <div className="flex flex-col items-center flex-shrink-0">
         <div
           className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold z-10"
-          style={{ backgroundColor: theme.accent, color: '#fff' }}
+          style={{ backgroundColor: theme.secondary, color: '#fff' }}
         >
           {number}
         </div>
         {!isLast && (
-          <div className="w-px my-1" style={{ height: '52px', backgroundImage: `repeating-linear-gradient(to bottom, ${theme.accent}50 0, ${theme.accent}50 4px, transparent 4px, transparent 8px)` }} />
+          <div className="w-px my-1" style={{ height: '60px', backgroundImage: `repeating-linear-gradient(to bottom, ${theme.secondary}50 0, ${theme.secondary}50 4px, transparent 4px, transparent 8px)` }} />
         )}
       </div>
       {/* Content */}
@@ -229,19 +224,19 @@ const BeforeAfter = memo(function BeforeAfter({ beforeLabel, beforeText, afterLa
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      <div className="rounded-xl p-4" style={{ border: `1px solid ${theme.stroke.medium}` }}>
+      <div className="rounded-xl p-4" style={{ backgroundColor: theme.stroke.low }}>
         <div
           className="text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 py-0.5 rounded inline-block"
-          style={{ backgroundColor: theme.stroke.low, color: theme.text.low }}
+          style={{ backgroundColor: theme.background.ghost, color: theme.text.low }}
         >
           {beforeLabel}
         </div>
         <p className="text-sm" style={{ color: theme.text.medium }}>{beforeText}</p>
       </div>
-      <div className="rounded-xl p-4" style={{ border: `1px solid ${theme.accent}`, backgroundColor: `${theme.accent}08` }}>
+      <div className="rounded-xl p-4" style={{ backgroundColor: `${theme.secondary}08` }}>
         <div
           className="text-[10px] font-semibold uppercase tracking-wider mb-2 px-2 py-0.5 rounded inline-block"
-          style={{ backgroundColor: theme.accent, color: '#fff' }}
+          style={{ backgroundColor: theme.secondary, color: '#fff' }}
         >
           {afterLabel}
         </div>
@@ -270,8 +265,8 @@ const PromptLayer = memo(function PromptLayer({ label, phase, index, total }: Pr
     <div
       className="flex items-center gap-3 px-4 py-2 rounded-lg"
       style={{
-        backgroundColor: isCore ? theme.background.ghost : `${theme.accent}12`,
-        border: `1px solid ${isCore ? theme.stroke.low : theme.accent}`,
+        backgroundColor: isCore ? theme.background.ghost : `${theme.secondary}12`,
+        border: `1px solid ${isCore ? theme.stroke.low : theme.secondary}`,
         opacity,
       }}
     >
@@ -282,7 +277,7 @@ const PromptLayer = memo(function PromptLayer({ label, phase, index, total }: Pr
       <span
         className="text-[9px] px-1.5 py-0.5 rounded-full flex-shrink-0 uppercase tracking-wider font-medium"
         style={{
-          backgroundColor: isCore ? theme.stroke.low : theme.accent,
+          backgroundColor: isCore ? theme.stroke.low : theme.secondary,
           color: isCore ? theme.text.low : '#fff',
         }}
       >
@@ -466,18 +461,13 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: theme.stroke.low }}>
                     <div
                       className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${p.warmth}%`, backgroundColor: theme.accent }}
+                      style={{ width: `${p.warmth}%`, backgroundColor: theme.secondary }}
                     />
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className="text-[10px]" style={{ color: theme.text.low }}>Emotion</span>
-                  <span
-                    className="text-[10px] px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: `${theme.accent}15`, color: theme.accent }}
-                  >
-                    {p.emotion}
-                  </span>
+                  <Badge variant="neutral" emphasis="low">{p.emotion}</Badge>
                 </div>
               </div>
             ))}
@@ -486,9 +476,9 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
           {/* Marketing persona example */}
           <div
             className="rounded-2xl p-5"
-            style={{ backgroundColor: `${theme.accent}08`, border: `1px solid ${theme.accent}30` }}
+            style={{ backgroundColor: `${theme.secondary}08` }}
           >
-            <div className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: theme.accent }}>
+            <div className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: theme.secondary }}>
               Example: Marketing Persona Auto-Configuration
             </div>
             <div className="text-xs mb-4" style={{ color: theme.text.medium }}>
@@ -505,16 +495,11 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               ].map((item) => (
                 <div key={item.param} className="flex items-center gap-2">
                   <span className="text-[10px] font-medium" style={{ color: theme.text.low }}>{item.param}:</span>
-                  <span
-                    className="text-[10px] px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: theme.accent, color: '#fff' }}
-                  >
-                    {item.value}
-                  </span>
+                  <Badge variant="neutral" emphasis="high">{item.value}</Badge>
                 </div>
               ))}
             </div>
-            <div className="mt-3 text-xs italic" style={{ color: theme.text.medium }}>
+            <div className="mt-3 text-xs" style={{ color: theme.text.medium }}>
               The AI prompt personality is also injected: &quot;Write with energy and hooks. Focus on CTAs, engagement, and shareability. Avoid dry or formal tone.&quot;
             </div>
           </div>
@@ -573,8 +558,8 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               <div className="space-y-2">
                 {[
                   { tier: 'Tier 1: Code Defaults', items: ['101 Regex Patterns', '10 Brand Guardrails', '18 Channel Rules', '9 Navarasa Emotions'], color: theme.stroke.low },
-                  { tier: 'Tier 2: Convex Database', items: ['283 Avoid Words', '200+ Preferred Vocab', '33 Auto-Fix Rules', '14 Product Definitions', '11 Festivals'], color: `${theme.accent}15` },
-                  { tier: 'Tier 3: User Learnings', items: ['Corrections from Feedback', 'Style Preferences', 'Saved Examples'], color: `${theme.accent}25` },
+                  { tier: 'Tier 2: Convex Database', items: ['283 Avoid Words', '200+ Preferred Vocab', '33 Auto-Fix Rules', '14 Product Definitions', '11 Festivals'], color: `${theme.secondary}15` },
+                  { tier: 'Tier 3: User Learnings', items: ['Corrections from Feedback', 'Style Preferences', 'Saved Examples'], color: `${theme.secondary}25` },
                 ].map((t) => (
                   <div
                     key={t.tier}
@@ -586,13 +571,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {t.items.map((item) => (
-                        <span
-                          key={item}
-                          className="text-[10px] px-2 py-0.5 rounded-full"
-                          style={{ backgroundColor: theme.background.ghost, color: theme.text.medium, border: `1px solid ${theme.stroke.low}` }}
-                        >
-                          {item}
-                        </span>
+                        <Badge key={item} variant="neutral" emphasis="low">{item}</Badge>
                       ))}
                     </div>
                   </div>
@@ -601,16 +580,16 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               {/* RAG merge arrow */}
               <div className="flex items-center justify-center my-3">
                 <svg width="200" height="30" viewBox="0 0 200 30">
-                  <path d="M 30 0 L 100 25" stroke={theme.accent} strokeWidth={1.5} strokeDasharray="4" fill="none" />
-                  <path d="M 100 0 L 100 25" stroke={theme.accent} strokeWidth={1.5} strokeDasharray="4" fill="none" />
-                  <path d="M 170 0 L 100 25" stroke={theme.accent} strokeWidth={1.5} strokeDasharray="4" fill="none" />
-                  <circle cx={100} cy={25} r={4} fill={theme.accent} />
+                  <path d="M 30 0 L 100 25" stroke={theme.secondary} strokeWidth={1.5} strokeDasharray="4" fill="none" />
+                  <path d="M 100 0 L 100 25" stroke={theme.secondary} strokeWidth={1.5} strokeDasharray="4" fill="none" />
+                  <path d="M 170 0 L 100 25" stroke={theme.secondary} strokeWidth={1.5} strokeDasharray="4" fill="none" />
+                  <circle cx={100} cy={25} r={4} fill={theme.secondary} />
                 </svg>
               </div>
               <div className="text-center">
                 <span
                   className="text-xs font-semibold px-4 py-1.5 rounded-full inline-block"
-                  style={{ backgroundColor: theme.accent, color: '#fff' }}
+                  style={{ backgroundColor: theme.secondary, color: '#fff' }}
                 >
                   Semantic RAG Search (384-dim)
                 </span>
@@ -762,11 +741,11 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 return (
                   <g key={name}>
                     <FlowNode x={x} y={0} width={65} height={35} label={name} color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                    <CurvedFlowArrow startX={x + 32} startY={38} endX={260} endY={85} color={theme.accent} />
+                    <CurvedFlowArrow startX={x + 32} startY={38} endX={260} endY={85} color={theme.secondary} />
                   </g>
                 );
               })}
-              <FlowNode x={210} y={80} width={180} height={35} label="Trust Score" sublabel="0 -- 100" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+              <FlowNode x={210} y={80} width={180} height={35} label="Trust Score" sublabel="0 -- 100" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
             </FlowCanvas>
           </div>
 
@@ -857,13 +836,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               {/* Orb states */}
               <div className="flex gap-2 mt-3 flex-wrap">
                 {['Idle', 'Connecting', 'Listening', 'Speaking', 'Error', 'Fallback'].map((state) => (
-                  <span
-                    key={state}
-                    className="text-[10px] px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
-                  >
-                    {state}
-                  </span>
+                  <Badge key={state} variant="neutral" emphasis="low">{state}</Badge>
                 ))}
               </div>
             </div>
@@ -929,7 +902,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
         <section id="hiw-scale" ref={scaleInView.ref}>
           <VisualSection
             title="Scale at a Glance"
-            tagline="14 x 18 x 15 x 9 = over 34,000 unique content contexts. One interface."
+            tagline="One interface for all ecosystems, channels, languages, and emotions."
           >
             {/* Stat counters */}
             <div className="flex gap-6 mb-12">
@@ -967,7 +940,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 >
                   <span
                     className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-                    style={{ backgroundColor: theme.accent, color: '#fff' }}
+                    style={{ backgroundColor: theme.secondary, color: '#fff' }}
                   >
                     {i + 1}
                   </span>
@@ -979,13 +952,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             {/* Signature phrases */}
             <div className="flex flex-wrap gap-2">
               {['With love, from Jio.', 'Life is beautiful.', 'Made in India, with love.', 'We are Jio.', 'JioTogether.'].map((phrase) => (
-                <span
-                  key={phrase}
-                  className="text-xs px-3 py-1.5 rounded-full italic"
-                  style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
-                >
-                  {phrase}
-                </span>
+                <Badge key={phrase} variant="neutral" emphasis="low">{phrase}</Badge>
               ))}
             </div>
           </VisualSection>
@@ -1092,13 +1059,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               'PII Detection', 'Sentry Monitoring', 'Upstash Redis',
               'Vector Search', 'Offline Queue', '333 Compliance Tests',
             ].map((badge) => (
-              <span
-                key={badge}
-                className="text-[10px] px-3 py-1 rounded-full font-medium"
-                style={{ backgroundColor: theme.accent, color: '#fff' }}
-              >
-                {badge}
-              </span>
+              <Badge key={badge} variant="neutral" emphasis="high">{badge}</Badge>
             ))}
           </div>
         </VisualSection>
