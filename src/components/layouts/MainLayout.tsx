@@ -260,11 +260,11 @@ export function MainLayout({
                 mode={chatMode}
                 placeholder={featureFlags.conversationalMode
                   ? [
-                      'ask me anything...',
-                      'create sms, emails, scripts...',
-                      'explore jio products and plans...',
+                      'Ask me anything...',
+                      'Create sms, emails, scripts...',
+                      'Explore jio products and plans...',
                     ]
-                  : 'ask or describe what you need...'}
+                  : 'Ask or describe what you need...'}
                 showEmptyState={chatMode !== 'voice'}
                 emptyStateMessage={chatMode === 'copy'
                   ? (featureFlags.conversationalMode

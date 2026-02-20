@@ -751,7 +751,7 @@ export const ChatPanel = memo(function ChatPanel({
           backgroundColor: theme.background.bold,
         }}
       >
-        <div className="flex-1 relative">
+        <div className="flex-1 relative flex items-center">
           <textarea
             ref={inputRef}
             data-chat-input
@@ -781,7 +781,10 @@ export const ChatPanel = memo(function ChatPanel({
               style={{
                 position: 'absolute',
                 left: '8px',
-                top: '3px',
+                top: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
                 lineHeight: '22px',
                 fontSize: '15px',
                 color: theme.text.low,
