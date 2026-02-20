@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TEST_GROUPS, ALL_TESTS, type TestGroup, type ComplianceTestCase } from '../tests/complianceTestCases';
 import { evaluateTest, type TestResult, type GroupResult, type FullReport } from '../tests/complianceEvaluator';
 import { generateMarkdownReport } from '../tests/generateComplianceReport';
@@ -18,7 +19,6 @@ import { chatStorage } from '../services/chatStorage';
 import type { Project, ChatMessage, ChatMode } from '../types';
 import { generateMessageId } from '../types';
 import { useProject } from '../context/ProjectContext';
-import { useUIStore } from '../stores/uiStore';
 import { createLLMProvider as createLLMProviderFactory } from '../services/providers/llm';
 import { getSyncService } from '../services/sync/convexSync';
 import { useThemeColors } from '../theme';
@@ -124,6 +124,7 @@ const testStorage = {
 
 export function ComplianceTestRunner() {
   const theme = useThemeColors();
+  const navigate = useNavigate();
   const { createProject, projects, deleteProject, setActiveProject } = useProject();
   const cancelRef = useRef(false);
 
@@ -405,9 +406,9 @@ export function ComplianceTestRunner() {
     const mapping = projectMappings.find(m => m.groupId === groupId);
     if (mapping) {
       setActiveProject(mapping.projectId);
-      useUIStore.getState().setActiveView('main');
+      navigate('/');
     }
-  }, [projectMappings, setActiveProject]);
+  }, [projectMappings, setActiveProject, navigate]);
 
   const handleDeleteAllTestProjects = useCallback(() => {
     // Count how many projects will be deleted
@@ -508,7 +509,7 @@ export function ComplianceTestRunner() {
         <ActionButton
           icon={<DSIcon name="IcClose" size="S" style={{ color: theme.text.medium }} />}
           label="Close"
-          onClick={() => useUIStore.getState().setActiveView('main')}
+          onClick={() => navigate('/')}
           size={36}
         />
       </div>

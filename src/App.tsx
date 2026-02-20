@@ -4,7 +4,7 @@ import type {
   ColorMode,
   ChatMode,
 } from './types';
-import { MainLayout, DocsLayout, HowItWorksLayout } from './components/layouts';
+import { MainLayout } from './components/layouts';
 import { useChatPersistence, useVoiceConversation, useMessageInteractions, useTrustPanel, useContentGeneration, useConvexData, useProfileSync } from './hooks';
 import { useThemeColors } from './theme';
 // Design system context removed - locked to Jio only
@@ -35,7 +35,6 @@ import {
 } from './services/knowledge';
 // Project auto-naming (ChatGPT-style)
 import { generateProjectNameFromExchange } from './services/projectNaming';
-import { ComplianceTestRunner } from './components/ComplianceTestRunner';
 import type { 
   FeedbackPayload, 
 } from './types';
@@ -92,15 +91,12 @@ function App({ colorMode, onColorModeChange }: AppProps) {
   })));
 
   // UI store -- only fields used directly by App.tsx logic
-  // (Layouts read activeView, isConfigPanelCollapsed, showOnboarding directly)
   const {
     chatMode, setChatMode,
-    activeView,
     error, clearError,
     setShowOnboarding,
   } = useUIStore(useShallow((s) => ({
     chatMode: s.chatMode, setChatMode: s.setChatMode,
-    activeView: s.activeView,
     error: s.error, clearError: s.clearError,
     setShowOnboarding: s.setShowOnboarding,
   })));
@@ -381,17 +377,8 @@ function App({ colorMode, onColorModeChange }: AppProps) {
     onEditProfile: () => setShowOnboarding(true),
   };
 
-  if (activeView === 'docs') {
-    return <DocsLayout {...sidebarProps} voiceAppState={appState} />;
-  }
-
-  if (activeView === 'how-it-works') {
-    return <HowItWorksLayout {...sidebarProps} />;
-  }
-
-  if (activeView === 'compliance-tests') {
-    return <ComplianceTestRunner />;
-  }
+  // Note: docs, how-it-works, and compliance-tests views are now handled by
+  // separate routes in main.tsx (/docs, /how-it-works, /testrunner)
 
   return (
     <MainLayout

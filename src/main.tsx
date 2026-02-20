@@ -1,6 +1,6 @@
-import { StrictMode, useState, useEffect, lazy, Suspense } from 'react'
+import { StrictMode, useState, useEffect, lazy, Suspense, createContext, useContext } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom'
 import { ConvexProvider, ConvexReactClient } from 'convex/react'
 import { DsProvider } from '@marcelinodzn/ds-react'
 // DesignSystemProvider removed -- Jio DS is the sole design system
@@ -10,7 +10,12 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { initSentry } from './config/sentry'
 import './index.css'
 import App from './App.tsx'
+import { ComplianceTestRunner } from './components/ComplianceTestRunner'
+import { DocsLayout } from './components/layouts/DocsLayout'
+import { HowItWorksLayout } from './components/layouts/HowItWorksLayout'
+import { AppState } from './types'
 import type { ColorMode } from './types'
+import { loadUserProfile } from './components/OnboardingModal'
 
 // ── Initialize Sync Service at Module Level ──────────────────────────
 // CRITICAL: Must happen BEFORE React render so ConvexSyncBridge can inject mutationFn
@@ -60,6 +65,62 @@ function AdminLoadingFallback() {
 initSentry();
 
 const COLOR_MODE_KEY = 'voiceDesigner_colorMode';
+
+// ── Color Mode Context ─────────────────────────────────────────────
+// Shared context for colorMode and setColorMode across all routes
+interface ColorModeContextValue {
+  colorMode: ColorMode;
+  setColorMode: (mode: ColorMode) => void;
+}
+const ColorModeContext = createContext<ColorModeContextValue | null>(null);
+
+export function useColorMode() {
+  const context = useContext(ColorModeContext);
+  if (!context) {
+    throw new Error('useColorMode must be used within ColorModeProvider');
+  }
+  return context;
+}
+
+// ── Route Wrapper Components ───────────────────────────────────────
+// These wrap standalone page components with necessary context/props
+
+function DocsRoute() {
+  const { colorMode, setColorMode } = useColorMode();
+  const navigate = useNavigate();
+  const userProfile = loadUserProfile();
+  
+  return (
+    <DocsLayout
+      colorMode={colorMode}
+      onColorModeChange={setColorMode}
+      userName={userProfile?.name}
+      userRole={userProfile?.role}
+      onEditProfile={() => navigate('/')}
+      voiceAppState={AppState.IDLE}
+    />
+  );
+}
+
+function HowItWorksRoute() {
+  const { colorMode, setColorMode } = useColorMode();
+  const navigate = useNavigate();
+  const userProfile = loadUserProfile();
+  
+  return (
+    <HowItWorksLayout
+      colorMode={colorMode}
+      onColorModeChange={setColorMode}
+      userName={userProfile?.name}
+      userRole={userProfile?.role}
+      onEditProfile={() => navigate('/')}
+    />
+  );
+}
+
+function TestRunnerRoute() {
+  return <ComplianceTestRunner />;
+}
 
 // ── Convex Client (REQUIRED) ────────────────────────────────────────
 // Convex is required for data sync, analytics, and RAG features.
@@ -142,24 +203,41 @@ function Root() {
       density="Compact"
       theme="MyJio"
     >
-      <ProjectProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/admin/*" element={
-              <ErrorBoundary>
-                <Suspense fallback={<AdminLoadingFallback />}>
-                  <AdminLayout colorMode={colorMode} onColorModeChange={setColorMode} />
-                </Suspense>
-              </ErrorBoundary>
-            } />
-            <Route path="/*" element={
-              <ErrorBoundary>
-                <App colorMode={colorMode} onColorModeChange={setColorMode} />
-              </ErrorBoundary>
-            } />
-          </Routes>
-        </BrowserRouter>
-      </ProjectProvider>
+      <ColorModeContext.Provider value={{ colorMode, setColorMode }}>
+        <ProjectProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/admin/*" element={
+                <ErrorBoundary>
+                  <Suspense fallback={<AdminLoadingFallback />}>
+                    <AdminLayout colorMode={colorMode} onColorModeChange={setColorMode} />
+                  </Suspense>
+                </ErrorBoundary>
+              } />
+              <Route path="/testrunner" element={
+                <ErrorBoundary>
+                  <TestRunnerRoute />
+                </ErrorBoundary>
+              } />
+              <Route path="/docs" element={
+                <ErrorBoundary>
+                  <DocsRoute />
+                </ErrorBoundary>
+              } />
+              <Route path="/how-it-works" element={
+                <ErrorBoundary>
+                  <HowItWorksRoute />
+                </ErrorBoundary>
+              } />
+              <Route path="/" element={
+                <ErrorBoundary>
+                  <App colorMode={colorMode} onColorModeChange={setColorMode} />
+                </ErrorBoundary>
+              } />
+            </Routes>
+          </BrowserRouter>
+        </ProjectProvider>
+      </ColorModeContext.Provider>
     </DsProvider>
   );
 

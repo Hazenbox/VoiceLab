@@ -1,12 +1,12 @@
 /**
  * HowItWorksLayout -- documentation-style page explaining the platform.
- * Reads activeView from uiStore directly.
+ * Uses react-router-dom for navigation.
  */
 
+import { useNavigate } from 'react-router-dom';
 import type { ColorMode } from '../../types';
 import { ProjectSidebar, HowItWorksPage } from '../../components';
 import { useThemeColors } from '../../theme';
-import { useUIStore } from '../../stores/uiStore';
 
 interface HowItWorksLayoutProps {
   colorMode: ColorMode;
@@ -24,7 +24,7 @@ export function HowItWorksLayout({
   onEditProfile,
 }: HowItWorksLayoutProps) {
   const theme = useThemeColors();
-  const setActiveView = useUIStore((s) => s.setActiveView);
+  const navigate = useNavigate();
 
   return (
     <div
@@ -32,8 +32,8 @@ export function HowItWorksLayout({
       style={{ backgroundColor: theme.background.ghost }}
     >
       <ProjectSidebar
-        onProjectSelect={() => setActiveView('main')}
-        onNavigateToHowItWorks={() => setActiveView('how-it-works')}
+        onProjectSelect={() => navigate('/')}
+        onNavigateToHowItWorks={() => navigate('/how-it-works')}
         isHowItWorksActive={true}
         colorMode={colorMode}
         onColorModeChange={onColorModeChange}
@@ -42,7 +42,7 @@ export function HowItWorksLayout({
         onEditProfile={onEditProfile}
       />
       <main className="flex-1 overflow-hidden">
-        <HowItWorksPage onBack={() => setActiveView('main')} />
+        <HowItWorksPage onBack={() => navigate('/')} />
       </main>
     </div>
   );

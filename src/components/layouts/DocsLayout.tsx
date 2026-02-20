@@ -1,9 +1,10 @@
 /**
  * DocsLayout -- documentation view with sidebar and docs panel.
- * Reads from conversationStore + uiStore + useProject directly to minimize props.
+ * Reads from conversationStore + useProject directly to minimize props.
  */
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { ColorMode } from '../../types';
 import { AppState } from '../../types';
 import { useShallow } from 'zustand/shallow';
@@ -15,7 +16,6 @@ import { SettingsModal } from '../../components/SettingsModal';
 import { useThemeColors } from '../../theme';
 import { useProject } from '../../context/ProjectContext';
 import { useConversationStore } from '../../stores/conversationStore';
-import { useUIStore } from '../../stores/uiStore';
 
 interface DocsLayoutProps {
   colorMode: ColorMode;
@@ -36,6 +36,7 @@ export function DocsLayout({
   voiceAppState,
 }: DocsLayoutProps) {
   const theme = useThemeColors();
+  const navigate = useNavigate();
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   const {
@@ -54,10 +55,6 @@ export function DocsLayout({
     selectedTTSProvider: s.selectedTTSProvider, setSelectedTTSProvider: s.setSelectedTTSProvider,
   })));
 
-  const { setActiveView } = useUIStore(useShallow((s) => ({
-    setActiveView: s.setActiveView,
-  })));
-
   if (!activeProject) return null;
 
   return (
@@ -66,8 +63,8 @@ export function DocsLayout({
       style={{ backgroundColor: theme.background.ghost }}
     >
       <ProjectSidebar
-        onProjectSelect={() => setActiveView('main')}
-        onNavigateToHowItWorks={() => setActiveView('how-it-works')}
+        onProjectSelect={() => navigate('/')}
+        onNavigateToHowItWorks={() => navigate('/how-it-works')}
         isHowItWorksActive={false}
         colorMode={colorMode}
         onColorModeChange={onColorModeChange}
@@ -77,7 +74,7 @@ export function DocsLayout({
         onSettingsOpen={() => setIsSettingsModalOpen(true)}
       />
       <main className="flex-1 overflow-hidden">
-        <DocumentationPanel onBack={() => setActiveView('main')} />
+        <DocumentationPanel onBack={() => navigate('/')} />
       </main>
 
       {/* Settings Modal */}

@@ -84,7 +84,7 @@ export const AdminSidebar = memo(function AdminSidebar({
         onNavigateToHowItWorks?.();
         break;
       case 'compliance-tests':
-        window.location.href = '/?view=compliance-tests';
+        window.location.href = '/testrunner';
         break;
       case 'back-to-chat':
         window.location.href = '/';

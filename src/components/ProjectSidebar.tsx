@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { useThemeColors } from '../theme';
-import { useUIStore } from '../stores/uiStore';
 import type { ColorMode } from '../types';
 import { Button, Text, Label, Divider, Icon } from '@marcelinodzn/ds-react';
 import { LazyIcon } from '@marcelinodzn/ds-react/icons';
@@ -186,6 +186,7 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 }: ProjectSidebarProps) {
   void isHowItWorksActive; // Available for future use
   const theme = useThemeColors();
+  const navigate = useNavigate();
   const { projects, activeProject, setActiveProject, createProject, deleteProject, updateProject } = useProject();
   
   // Rename state
@@ -245,20 +246,20 @@ export const ProjectSidebar = memo(function ProjectSidebar({
     },
   ];
 
-  // Handle additional menu actions
+  // Handle additional menu actions - navigate to URL routes
   const handleAdditionalAction = useCallback((action: string) => {
     switch (action) {
       case 'how-it-works':
-        onNavigateToHowItWorks?.();
+        navigate('/how-it-works');
         break;
       case 'compliance-tests':
-        useUIStore.getState().setActiveView('compliance-tests');
+        navigate('/testrunner');
         break;
       case 'admin-panel':
-        window.location.href = '/admin';
+        navigate('/admin');
         break;
     }
-  }, [onNavigateToHowItWorks]);
+  }, [navigate]);
 
   return (
     <SidebarContainer>

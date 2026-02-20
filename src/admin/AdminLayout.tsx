@@ -1807,7 +1807,7 @@ export default function AdminLayout({ colorMode, onColorModeChange }: AdminLayou
         onColorModeChange={onColorModeChange}
         onEditProfile={() => setShowEditProfile(true)}
         onSettingsOpen={handleSettingsOpen}
-        onNavigateToHowItWorks={() => { window.location.href = '/?view=how-it-works'; }}
+        onNavigateToHowItWorks={() => { window.location.href = '/how-it-works'; }}
       />
 
       {/* Content Area */}
