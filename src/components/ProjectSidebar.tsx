@@ -273,24 +273,24 @@ export const ProjectSidebar = memo(function ProjectSidebar({
 
       {/* Main Content Area - Projects */}
       <div className="flex-1 overflow-hidden flex flex-col">
+        {/* New Project Button - Fixed at top */}
+        <div className="px-2.5 pt-1.5 pb-1">
+          <Button
+            onPress={() => createProject()}
+            appearance="primary"
+            size="S"
+            fullWidth
+            aria-label="Create new project"
+          >
+            <div className="flex items-center gap-2">
+              <DSIcon name="IcAdd" size="S" attention="high" />
+              <span>Create</span>
+            </div>
+          </Button>
+        </div>
+
         {/* Projects List */}
         <div className="flex-1 overflow-y-auto px-2.5 py-1.5 scrollable-container">
-          {/* New Project Button */}
-          <div className="mb-4">
-            <Button
-              onPress={() => createProject()}
-              appearance="primary"
-              size="S"
-              fullWidth
-              aria-label="Create new project"
-            >
-              <div className="flex items-center gap-2">
-                <DSIcon name="IcAdd" size="S" attention="high" />
-                <span>Create</span>
-              </div>
-            </Button>
-          </div>
-
           {/* Recent title */}
           <div className="px-2 py-1.5">
             <Label size="XS" weight="medium" attention="low" as="span">
