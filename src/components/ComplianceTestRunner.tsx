@@ -22,7 +22,7 @@ import { useProject } from '../context/ProjectContext';
 import { createLLMProvider as createLLMProviderFactory } from '../services/providers/llm';
 import { getSyncService } from '../services/sync/convexSync';
 import { useThemeColors } from '../theme';
-import { Button, Title, Text, Badge, Divider } from '@marcelinodzn/ds-react';
+import { Button, Title, Text, Badge, Divider, globalToastQueue, ToastRegion } from '@marcelinodzn/ds-react';
 import { chatTypography } from '../theme/typography';
 import { DSIcon } from './DSIcon';
 import { ActionButton } from './ActionButton';
@@ -144,7 +144,6 @@ export function ComplianceTestRunner() {
   const [showReport, setShowReport] = useState(false);
   const [cleanedUp, setCleanedUp] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<string | null>(null);
 
   const createLLMProvider = useCallback((type: 'openai' | 'claude' | 'gemini-text' | 'qwen-text' | 'inworld') => {
     return createLLMProviderFactory(type);
@@ -429,14 +428,16 @@ export function ComplianceTestRunner() {
     });
     setShowDeleteConfirm(false);
     
-    // Show success message
+    // Show success toast
     const message = testProjectCount > 0 
-      ? `deleted ${testProjectCount} test project${testProjectCount > 1 ? 's' : ''}`
-      : 'no test projects to delete';
-    setDeleteSuccessMessage(message);
-    
-    // Auto-dismiss after 3 seconds
-    setTimeout(() => setDeleteSuccessMessage(null), 3000);
+      ? `Deleted ${testProjectCount} test project${testProjectCount > 1 ? 's' : ''}`
+      : 'No test projects to delete';
+    globalToastQueue.add({
+      title: message,
+      appearance: 'neutral',
+      showIcon: false,
+      closable: true,
+    }, { timeout: 5000 });
   }, [cleanupTestProjects]);
 
   // ─── COMPUTED VALUES ─────────────────────────────────────────────────
@@ -630,21 +631,8 @@ export function ComplianceTestRunner() {
         </div>
       )}
 
-      {/* ── Success Toast ── */}
-      {deleteSuccessMessage && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
-          <div
-            className="flex items-center gap-2 px-4 py-2 rounded-full shadow-lg"
-            style={{
-              backgroundColor: theme.background.bold,
-              color: theme.text.high,
-            }}
-          >
-            <DSIcon name="IcCheck" size="S" style={{ color: theme.text.high }} />
-            <Text size="S" color="high">{deleteSuccessMessage}</Text>
-          </div>
-        </div>
-      )}
+      {/* ── DS Toast Region ── */}
+      <ToastRegion queue={globalToastQueue} position="bottom" size="S" />
 
       {/* ── Progress ── */}
       {state.status === 'running' && (
