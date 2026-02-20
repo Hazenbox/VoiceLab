@@ -17,14 +17,11 @@ import { VoiceSelector } from './VoiceSelector';
 import { LabeledSlider } from './LabeledSlider';
 import { Slider } from './Slider';
 import { Toggle } from './Toggle';
-import { SearchableDropdown } from './SearchableDropdown';
-import { TooltipIcon } from './TooltipIcon';
 import SearchableCombobox, { type ComboboxOption } from './SearchableCombobox';
 import { getAvailableLLMProviders, type LLMProviderType } from '../services/providers/llm';
 import type { 
   VoiceGender, 
   TrustSettings,
-  ValidationStrictness,
   ConversationConfig,
   Pace,
   ResponseLength,
@@ -154,13 +151,6 @@ export const SettingsModal = memo(function SettingsModal({
       searchableText: `${p.displayName} ${p.type}`,
     }));
   }, []);
-  
-  // Strictness options
-  const strictnessOptions = [
-    { value: 'lenient' as ValidationStrictness, label: 'Lenient' },
-    { value: 'standard' as ValidationStrictness, label: 'Standard' },
-    { value: 'strict' as ValidationStrictness, label: 'Strict' },
-  ];
   
   // Conversation config updater
   const updatePersona = useCallback((key: string, value: unknown) => {
@@ -364,33 +354,6 @@ export const SettingsModal = memo(function SettingsModal({
                   disabled={disabled}
                   tooltip="Content below this trust score gets flagged for review"
                 />
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <label 
-                      style={{
-                        display: 'block',
-                        fontSize: '14px',
-                        lineHeight: 1.3,
-                        fontWeight: 500,
-                        color: theme.text.high,
-                        flexShrink: 0,
-                      }}
-                    >
-                      Validation strictness
-                    </label>
-                    <TooltipIcon tooltip="Lenient = fewer warnings, Strict = catches more potential issues" />
-                  </div>
-                  <div className="max-w-[50%] ml-auto">
-                    <SearchableDropdown
-                      value={trustSettings.validationStrictness}
-                      onChange={(v) => updateTrustSetting('validationStrictness', v as ValidationStrictness)}
-                      options={strictnessOptions}
-                      placeholder="Select strictness"
-                      disabled={disabled}
-                      compact={true}
-                    />
-                  </div>
-                </div>
                 <Toggle
                   label="Block below threshold"
                   checked={trustSettings.blockBelowThreshold}

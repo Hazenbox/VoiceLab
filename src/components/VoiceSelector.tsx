@@ -53,11 +53,11 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
         {tooltip && (
           <>
             <div
-              className="cursor-help opacity-50"
+              className="cursor-help flex items-center"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
             >
-              <DSIcon name="IcInfo" size="XS" attention="low" />
+              <DSIcon name="IcInfo" size="XS" attention="low" appearance="neutral" />
             </div>
             {showTooltip && (
               <div
