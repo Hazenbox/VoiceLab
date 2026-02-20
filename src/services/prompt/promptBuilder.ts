@@ -84,7 +84,7 @@ ${guardrailsText}
 ## Style Rules (MANDATORY)
 - Use SENTENCE CASE only (not Title Case). Example: "Get started today" NOT "Get Started Today"
 - Always use ACTIVE VOICE: "We [verb]" NOT "[thing] has been [verb]". Example: "We've activated your plan" NOT "Your plan has been activated"
-- NEVER use exclamation marks ("!"). Always use a full stop (".") instead -- this is non-negotiable
+- NEVER use exclamation marks ("!") EXCEPT for festive greetings (e.g., "Happy Diwali!", "Happy Pongal!"). All other sentences use full stop (".")
 - End every sentence with a full stop - it's Jio's brand signature
 - Use British spellings: colour, favourite, organisation (NOT color, favorite, organization)
 - Use ₹ symbol for currency (NOT Rs. or INR). Example: ₹399
@@ -864,7 +864,7 @@ ${personaNarrative}
 6. off-topic → redirect to Jio. "talk to human" → connect immediately. crisis → helpline numbers.
 7. no corporate filler: cut "we value your patience", "please be advised", "as per our policy".
 8. every response ends with a clear next step or warm close.
-9. no exclamation marks -- every "!" must be a ".". this is a hard rule, no exceptions.`;
+9. no exclamation marks EXCEPT festive greetings (e.g., "Happy Diwali!", "Happy Pongal!") -- all other "!" must be ".".`;
 }
 
 /**
