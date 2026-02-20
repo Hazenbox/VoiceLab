@@ -182,7 +182,7 @@ const PipelineStep = memo(function PipelineStep({ number, label, description, ex
   const theme = useThemeColors();
 
   return (
-    <div className={`hiw-reveal ${visible ? 'hiw-visible' : ''} hiw-stagger-${number} flex gap-3 ${isLast ? '' : 'mb-4'}`}>
+    <div className={`hiw-reveal ${visible ? 'hiw-visible' : ''} hiw-stagger-${number} flex gap-3`}>
       {/* Timeline spine */}
       <div className="flex flex-col items-center flex-shrink-0">
         <div
@@ -192,11 +192,11 @@ const PipelineStep = memo(function PipelineStep({ number, label, description, ex
           {number}
         </div>
         {!isLast && (
-          <div className="w-px flex-1 my-0.5" style={{ backgroundImage: `repeating-linear-gradient(to bottom, ${theme.accent}50 0, ${theme.accent}50 4px, transparent 4px, transparent 8px)` }} />
+          <div className="w-px my-1" style={{ height: '52px', backgroundImage: `repeating-linear-gradient(to bottom, ${theme.accent}50 0, ${theme.accent}50 4px, transparent 4px, transparent 8px)` }} />
         )}
       </div>
       {/* Content */}
-      <div className="flex-1">
+      <div className={`flex-1 ${isLast ? '' : 'mb-6'}`}>
         <div className="text-sm font-semibold" style={{ color: theme.text.high }}>
           {label}
         </div>
