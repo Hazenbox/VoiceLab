@@ -819,6 +819,7 @@ function AdminLearningCenter() {
             aria-label="filter by feedback type"
             size="S"
             emphasis="low"
+            className="segmented-no-gap"
           >
             <SegmentedControlItem value="all">all</SegmentedControlItem>
             <SegmentedControlItem value="thumbs_up">thumbs up</SegmentedControlItem>

@@ -242,6 +242,11 @@ input[type="range"][data-at-zero="true"]::-moz-range-thumb {
   line-height: 1.4 !important;     /* Tighter line spacing */
 }
 
+/* SegmentedControl: remove gap between pills */
+.segmented-no-gap > div {
+  gap: 0 !important;
+}
+
 /* Screen reader only - visually hidden but accessible */
 .sr-only {
   position: absolute;
