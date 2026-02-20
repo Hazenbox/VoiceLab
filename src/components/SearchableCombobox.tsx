@@ -240,7 +240,7 @@ export default function SearchableCombobox({
                   alignItems: 'center',
                   cursor: 'pointer',
                   borderRadius: '8px',
-                  background: (index === highlightedIndex || value === option.id)
+                  background: index === highlightedIndex
                     ? theme.stroke.low
                     : 'transparent',
                 }}
