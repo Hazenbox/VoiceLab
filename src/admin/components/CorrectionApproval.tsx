@@ -5,7 +5,7 @@ import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import { AdminTable, AdminTableRow, AdminTableCell } from './AdminTable';
 import { formatRelativeTime } from '../utils/formatters';
 import type { Id } from '../../../convex/_generated/dataModel';
-import { Divider, Label, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
+import { Label, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
 
 // ── Types ────────────────────────────────────────────────────────
 interface Correction {
@@ -315,24 +315,6 @@ export function CorrectionApprovalList({ deviceId, feedbackCounts }: CorrectionA
     <>
       {/* Filters */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
-        {/* Status filters */}
-        <SegmentedControl
-          value={statusFilter}
-          onChange={setStatusFilter}
-          aria-label="filter by status"
-          size="S"
-          emphasis="low"
-          className="segmented-no-gap"
-        >
-          {statusTabs.map(tab => (
-            <SegmentedControlItem key={tab.key} value={tab.key}>
-              {tab.label}
-            </SegmentedControlItem>
-          ))}
-        </SegmentedControl>
-        
-        <Divider orientation="vertical" />
-        
         {/* Feedback type filters */}
         <SegmentedControl
           value={typeFilter}
