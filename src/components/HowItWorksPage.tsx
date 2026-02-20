@@ -357,7 +357,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               className="text-4xl font-extrabold tracking-tight mb-3"
               style={{ color: theme.text.high }}
             >
-              How Voice Lab works
+              How Tone Studio works
             </h2>
           </div>
 
@@ -699,61 +699,74 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
           tagline="8 AI agents verify every response. The weighted scores produce a trust certificate."
           alt
         >
-          {/* Side-by-side layout: agents on left, trust score on right */}
-          <div className="grid grid-cols-2 gap-6 mb-6">
-            {/* Left: 8 agent cards stacked */}
-            <div className="space-y-2">
+          {/* Flow diagram with agents on left, arrows, trust score on right */}
+          <div
+            className="p-6 rounded-2xl overflow-hidden mb-6"
+            style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
+          >
+            <FlowCanvas height={320} viewBox="0 0 700 320" dotColor={theme.stroke.low}>
+              {/* 8 agent nodes on the left */}
               {[
-                { name: 'Gender neutrality',     weight: '12%', color: '#E0F2FE' },
-                { name: 'Inclusivity',            weight: '12%', color: '#F0FDF4' },
-                { name: 'Cultural sensitivity',   weight: '12%', color: '#FEF3C7' },
-                { name: 'Accessibility',          weight: '10%', color: '#F3E8FF' },
-                { name: 'Compliance',             weight: '14%', color: '#FCE7F3' },
-                { name: 'Style consistency',      weight: '14%', color: '#FFEDD5' },
-                { name: 'Brand alignment',        weight: '14%', color: '#E1EFFE' },
-                { name: 'Readability',            weight: '12%', color: '#DCFCE7' },
-              ].map((agent) => (
-                <div
-                  key={agent.name}
-                  className="rounded-lg p-3 flex items-center justify-between"
-                  style={{ backgroundColor: agent.color }}
-                >
-                  <div className="text-xs font-semibold" style={{ color: theme.text.high }}>
-                    {agent.name}
-                  </div>
-                  <div className="text-xs font-medium" style={{ color: theme.text.medium }}>
-                    {agent.weight}
-                  </div>
-                </div>
+                { name: 'Gender neutrality',   weight: '12%', y: 0 },
+                { name: 'Inclusivity',          weight: '12%', y: 40 },
+                { name: 'Cultural sensitivity', weight: '12%', y: 80 },
+                { name: 'Accessibility',        weight: '10%', y: 120 },
+                { name: 'Compliance',           weight: '14%', y: 160 },
+                { name: 'Style consistency',    weight: '14%', y: 200 },
+                { name: 'Brand alignment',      weight: '14%', y: 240 },
+                { name: 'Readability',          weight: '12%', y: 280 },
+              ].map((agent, i) => (
+                <g key={agent.name}>
+                  <FlowNode
+                    x={0}
+                    y={agent.y}
+                    width={180}
+                    height={32}
+                    label={`${agent.name} (${agent.weight})`}
+                    color={i % 2 === 0 ? theme.stroke.low : theme.background.ghost}
+                    textColor={theme.text.high}
+                    strokeColor={theme.stroke.medium}
+                  />
+                  <CurvedFlowArrow
+                    startX={185}
+                    startY={agent.y + 16}
+                    endX={450}
+                    endY={160}
+                    color={theme.stroke.medium}
+                  />
+                </g>
               ))}
-            </div>
+              {/* Trust score circle on the right */}
+              <FlowNode
+                x={455}
+                y={110}
+                width={100}
+                height={100}
+                label="94"
+                sublabel="Trust score"
+                color={theme.secondary}
+                textColor="#fff"
+                strokeColor={theme.secondary}
+              />
+            </FlowCanvas>
+          </div>
 
-            {/* Right: Trust score result */}
-            <div className="flex flex-col items-center justify-center">
+          {/* Trust level legend */}
+          <div className="flex justify-center gap-4">
+            {[
+              { level: 'Certified', range: '90-100' },
+              { level: 'Needs review', range: '70-89' },
+              { level: 'Has issues', range: 'Below 70' },
+            ].map((l) => (
               <div
-                className="w-32 h-32 rounded-full flex flex-col items-center justify-center mb-4"
-                style={{ backgroundColor: theme.secondary }}
+                key={l.level}
+                className="rounded-lg px-4 py-2 flex items-center gap-3"
+                style={{ backgroundColor: theme.stroke.low }}
               >
-                <div className="text-3xl font-bold text-white">94</div>
-                <div className="text-xs text-white opacity-80">Trust score</div>
+                <div className="text-xs font-semibold" style={{ color: theme.text.high }}>{l.level}</div>
+                <div className="text-[10px]" style={{ color: theme.text.medium }}>{l.range}</div>
               </div>
-              <div className="space-y-2 w-full max-w-xs">
-                {[
-                  { level: 'Certified', color: '#16a34a', bg: '#DCFCE7', range: '90-100' },
-                  { level: 'Needs review', color: '#ca8a04', bg: '#FEF3C7', range: '70-89' },
-                  { level: 'Has issues', color: '#dc2626', bg: '#FEE2E2', range: 'Below 70' },
-                ].map((l) => (
-                  <div
-                    key={l.level}
-                    className="rounded-lg px-4 py-2 flex items-center justify-between"
-                    style={{ backgroundColor: l.bg }}
-                  >
-                    <div className="text-xs font-semibold" style={{ color: l.color }}>{l.level}</div>
-                    <div className="text-[10px]" style={{ color: l.color + '99' }}>{l.range}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </VisualSection>
 
