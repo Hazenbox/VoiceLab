@@ -244,16 +244,15 @@ interface CorrectionApprovalListProps {
 
 export function CorrectionApprovalList({ deviceId, feedbackCounts }: CorrectionApprovalListProps) {
   const theme = useThemeColors();
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedCorrection, setSelectedCorrection] = useState<Correction | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  // Fetch corrections (filtered by adminStatus via API) — skip when deviceId isn't available
+  // Fetch corrections — skip when deviceId isn't available
   const corrections = useQuery(
     api.corrections.listAll,
     deviceId
-      ? { limit: 100, adminStatus: statusFilter !== 'all' ? statusFilter : undefined, deviceId }
+      ? { limit: 100, deviceId }
       : "skip"
   );
   
@@ -303,13 +302,6 @@ export function CorrectionApprovalList({ deviceId, feedbackCounts }: CorrectionA
       </div>
     );
   }
-
-  // Status filter tabs
-  const statusTabs = [
-    { key: 'all', label: 'all' },
-    { key: 'approved', label: 'approved' },
-    { key: 'rejected', label: 'rejected' },
-  ];
 
   // Cast corrections to typed array
   const typedCorrections = (corrections || []) as Correction[];
