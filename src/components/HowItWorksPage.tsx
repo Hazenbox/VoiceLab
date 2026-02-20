@@ -929,7 +929,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
                 >
                   <span
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
                     style={{ backgroundColor: theme.secondary, color: '#fff' }}
                   >
                     {i + 1}
