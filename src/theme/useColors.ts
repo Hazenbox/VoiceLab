@@ -36,12 +36,12 @@ const LOCAL_COLORS = {
   accent: '#6366f1',
   
   /**
-   * Brand secondary orange - matches radio button secondary appearance
+   * Brand secondary orange - matches slider/radio button appearance
    * @token Secondary brand color for highlights, selections, emphasis
-   * @value #c2410c (Tailwind orange-700)
+   * @value #fa7d1a (bright orange - matches Slider.tsx TRACK_ACTIVE)
    * @usage Radio buttons, selection indicators, warmth bars, brand emphasis
    */
-  secondary: '#c2410c',
+  secondary: '#fa7d1a',
   
   /**
    * Semantic colors for status and feedback
