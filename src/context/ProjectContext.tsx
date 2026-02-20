@@ -279,11 +279,17 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     [projects, activeProjectId]
   );
 
+  // Sort projects by updatedAt (latest first) for the recents list
+  const sortedProjects = useMemo(
+    () => [...projects].sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt)),
+    [projects]
+  );
+
   // Memoize context value to prevent unnecessary re-renders of consumers
   // Only recreates when actual dependencies change
   const value = useMemo<ProjectContextValue>(
     () => ({
-      projects,
+      projects: sortedProjects,
       activeProject,
       createProject,
       updateProject,
@@ -301,7 +307,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
       updateProjectDefaultRegion,
     }),
     [
-      projects,
+      sortedProjects,
       activeProject,
       createProject,
       updateProject,
