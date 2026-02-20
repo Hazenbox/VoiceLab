@@ -580,43 +580,59 @@ export function ComplianceTestRunner() {
         )}
       </div>
 
-      {/* ── Delete Confirmation Dialog ── */}
+      {/* ── Delete Confirmation Modal ── */}
       {showDeleteConfirm && (
-        <div 
-          style={{ 
-            marginBottom: 24, 
-            padding: 16, 
-            borderRadius: 12, 
-            border: `1px solid ${theme.semantic.negative}`,
-            background: theme.isLight ? '#FEF2F2' : '#3D1B1B',
-          }}
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          onClick={() => setShowDeleteConfirm(false)}
         >
-          <Text size="M" color="high" weight="medium" style={{ marginBottom: 12 }}>
-            are you sure you want to delete all test projects?
-          </Text>
-          <Text size="S" color="medium" style={{ marginBottom: 16 }}>
-            this will remove all projects with the "[test]" prefix from your workspace.
-          </Text>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <Button
-              onPress={handleDeleteAllTestProjects}
-              appearance="primary"
-              size="S"
-              style={{ 
-                backgroundColor: theme.semantic.negative, 
-                color: '#fff',
-              }}
-            >
-              yes, delete all
-            </Button>
-            <Button
-              onPress={() => setShowDeleteConfirm(false)}
-              appearance="neutral"
-              attention="medium"
-              size="S"
-            >
-              cancel
-            </Button>
+          <div
+            className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden"
+            style={{ backgroundColor: theme.background.ghost }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between">
+                <Title size="S" as="h2" weight="high" color="high">
+                  Delete all test projects?
+                </Title>
+                <ActionButton
+                  icon={<DSIcon name="IcClose" size="S" style={{ color: theme.text.medium }} />}
+                  label="Close"
+                  onClick={() => setShowDeleteConfirm(false)}
+                />
+              </div>
+            </div>
+            <Divider />
+            
+            {/* Body */}
+            <div className="px-6 py-4">
+              <Text size="S" color="medium">
+                This will remove all projects with the "[test]" prefix from your workspace.
+              </Text>
+            </div>
+            
+            {/* Footer */}
+            <div className="px-6 py-4 flex justify-end gap-3">
+              <Button
+                onPress={() => setShowDeleteConfirm(false)}
+                appearance="neutral"
+                attention="low"
+                size="S"
+              >
+                Cancel
+              </Button>
+              <Button
+                onPress={handleDeleteAllTestProjects}
+                appearance="negative"
+                attention="high"
+                size="S"
+              >
+                Yes, delete all
+              </Button>
+            </div>
           </div>
         </div>
       )}
