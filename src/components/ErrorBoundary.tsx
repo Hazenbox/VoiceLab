@@ -11,7 +11,10 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Button, Title, Text, Label } from '@marcelinodzn/ds-react';
 import { getErrorLogger } from '../services/analytics/errorLogger';
+import { DSIcon } from './DSIcon';
+import { useThemeColors } from '../theme';
 
 // ── Error Classification ──────────────────────────────────────────────
 
@@ -191,10 +194,16 @@ interface InlineErrorFallbackProps {
 }
 
 function InlineErrorFallback({ error, severity, onRetry, boundaryName }: InlineErrorFallbackProps): JSX.Element {
+  const theme = useThemeColors();
   const isWarning = severity === 'warning';
-  const bgColor = isWarning ? '#fffbeb' : '#fef2f2';
-  const borderColor = isWarning ? '#fbbf24' : '#fca5a5';
-  const textColor = isWarning ? '#92400e' : '#991b1b';
+  
+  const semanticColor = isWarning ? theme.semantic.warning : theme.semantic.negative;
+  const bgColor = theme.isLight 
+    ? (isWarning ? '#fffbeb' : '#fef2f2')
+    : (isWarning ? '#451a03' : '#450a0a');
+  const borderColor = theme.isLight
+    ? (isWarning ? '#fbbf24' : '#fca5a5')
+    : (isWarning ? '#b45309' : '#b91c1c');
   
   return (
     <div
@@ -207,32 +216,28 @@ function InlineErrorFallback({ error, severity, onRetry, boundaryName }: InlineE
       }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-        <span style={{ fontSize: '20px' }}>{isWarning ? '⚠️' : '❌'}</span>
+        <DSIcon 
+          name={isWarning ? 'IcWarning' : 'IcClose'} 
+          size="M" 
+          appearance={isWarning ? 'warning' : 'negative'}
+        />
         <div style={{ flex: 1 }}>
-          <p style={{ margin: 0, fontSize: '14px', fontWeight: 500, color: textColor }}>
+          <Label size="M" weight="high" style={{ color: semanticColor }}>
             {boundaryName ? `${boundaryName} failed to load` : 'something went wrong'}
-          </p>
-          {error && process.env.NODE_ENV === 'development' && (
-            <p style={{ margin: '4px 0 0', fontSize: '12px', color: textColor, opacity: 0.8 }}>
+          </Label>
+          {error && import.meta.env.DEV && (
+            <Label size="S" weight="low" style={{ color: semanticColor, opacity: 0.8, marginTop: '4px', display: 'block' }}>
               {error.message}
-            </p>
+            </Label>
           )}
         </div>
-        <button
-          onClick={onRetry}
-          style={{
-            padding: '6px 12px',
-            fontSize: '12px',
-            fontWeight: 500,
-            color: 'white',
-            backgroundColor: '#5046e5',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-          }}
+        <Button
+          appearance="primary"
+          size="XS"
+          onPress={onRetry}
         >
           retry
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -248,7 +253,13 @@ interface ErrorFallbackProps {
 }
 
 function ErrorFallback({ error, severity, onRetry, onReload }: ErrorFallbackProps): JSX.Element {
+  const theme = useThemeColors();
   const isFatal = severity === 'fatal';
+  
+  const errorDetailsBg = theme.isLight ? '#fef2f2' : '#450a0a';
+  const errorDetailsBorder = theme.isLight ? '#fca5a5' : '#b91c1c';
+  const errorDetailsText = theme.isLight ? '#991b1b' : '#fca5a5';
+  
   return (
     <div
       style={{
@@ -258,79 +269,70 @@ function ErrorFallback({ error, severity, onRetry, onReload }: ErrorFallbackProp
         justifyContent: 'center',
         minHeight: '100vh',
         padding: '24px',
-        backgroundColor: '#f8f9fa',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        backgroundColor: theme.background.subtle,
       }}
     >
       <div
         style={{
           maxWidth: '480px',
           textAlign: 'center',
-          backgroundColor: 'white',
+          backgroundColor: theme.background.ghost,
           borderRadius: '12px',
           padding: '32px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          boxShadow: theme.isLight 
+            ? '0 2px 8px rgba(0,0,0,0.1)'
+            : '0 2px 8px rgba(0,0,0,0.3)',
         }}
       >
-        <div
-          style={{
-            fontSize: '48px',
-            marginBottom: '16px',
-          }}
-        >
-          ⚠️
+        <div style={{ marginBottom: '16px' }}>
+          <DSIcon 
+            name="IcWarning" 
+            size="XL" 
+            appearance="negative"
+          />
         </div>
         
-        <h1
-          style={{
-            fontSize: '24px',
-            fontWeight: 600,
-            color: '#1a1a1a',
-            marginBottom: '8px',
-          }}
+        <Title 
+          size="M" 
+          as="h1" 
+          weight="high" 
+          color="high"
+          style={{ marginBottom: '8px' }}
         >
           something went wrong
-        </h1>
+        </Title>
         
-        <p
-          style={{
-            fontSize: '14px',
-            color: '#666',
-            marginBottom: '24px',
-            lineHeight: 1.5,
-          }}
+        <Text 
+          size="S" 
+          color="medium"
+          style={{ marginBottom: '24px', lineHeight: 1.5 }}
         >
           {isFatal 
             ? 'a critical error occurred. please reload the page to continue.'
             : 'we\'ve logged this error and will look into it. you can try again or reload the page.'}
-        </p>
+        </Text>
 
-        {error && process.env.NODE_ENV === 'development' && (
+        {error && import.meta.env.DEV && (
           <details
             style={{
               textAlign: 'left',
               marginBottom: '24px',
               padding: '12px',
-              backgroundColor: '#fff5f5',
+              backgroundColor: errorDetailsBg,
               borderRadius: '8px',
-              border: '1px solid #feb2b2',
+              border: `1px solid ${errorDetailsBorder}`,
             }}
           >
-            <summary
-              style={{
-                cursor: 'pointer',
-                fontSize: '12px',
-                fontWeight: 500,
-                color: '#c53030',
-              }}
-            >
-              error details (dev only)
+            <summary style={{ cursor: 'pointer' }}>
+              <Label size="S" weight="high" style={{ color: errorDetailsText }}>
+                error details (dev only)
+              </Label>
             </summary>
             <pre
               style={{
                 marginTop: '8px',
                 fontSize: '11px',
-                color: '#742a2a',
+                color: errorDetailsText,
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
               }}
@@ -349,51 +351,21 @@ function ErrorFallback({ error, severity, onRetry, onReload }: ErrorFallbackProp
             justifyContent: 'center',
           }}
         >
-          <button
-            onClick={onRetry}
-            style={{
-              padding: '10px 20px',
-              fontSize: '14px',
-              fontWeight: 500,
-              color: 'white',
-              backgroundColor: '#5046e5',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#4338ca';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#5046e5';
-            }}
+          <Button
+            appearance="primary"
+            size="M"
+            onPress={onRetry}
           >
             try again
-          </button>
+          </Button>
           
-          <button
-            onClick={onReload}
-            style={{
-              padding: '10px 20px',
-              fontSize: '14px',
-              fontWeight: 500,
-              color: '#374151',
-              backgroundColor: '#f3f4f6',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#e5e7eb';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#f3f4f6';
-            }}
+          <Button
+            appearance="ghost"
+            size="M"
+            onPress={onReload}
           >
             reload page
-          </button>
+          </Button>
         </div>
       </div>
     </div>
