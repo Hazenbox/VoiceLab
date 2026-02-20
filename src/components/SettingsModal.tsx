@@ -3,12 +3,15 @@
  * 
  * Modal dialog containing model selection and advanced settings.
  * Opened from the user menu "Settings" option.
+ * 
+ * Redesigned with sidebar navigation layout.
  */
 
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { useThemeColors } from '../theme';
-import { Title, Button, Divider } from '@marcelinodzn/ds-react';
+import { Title, Text } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
+import { ActionButton } from './ActionButton';
 import { ModelSelector, type TTSProviderType } from './ModelSelector';
 import { VoiceSelector } from './VoiceSelector';
 import { LabeledSlider } from './LabeledSlider';
@@ -17,7 +20,6 @@ import { Toggle } from './Toggle';
 import { SearchableDropdown } from './SearchableDropdown';
 import { TooltipIcon } from './TooltipIcon';
 import { TextArea } from '@marcelinodzn/ds-react';
-import { Accordion } from './ui/Accordion';
 import type { 
   VoiceGender, 
   TrustSettings,
@@ -31,6 +33,8 @@ import type { LLMProviderType } from '../services/providers/llm';
 // =============================================================================
 // Types
 // =============================================================================
+
+type SettingsSection = 'model' | 'voice' | 'trust';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -59,12 +63,48 @@ interface SettingsModalProps {
 }
 
 // =============================================================================
-// Icons
+// Sidebar Nav Item (compact version)
 // =============================================================================
 
-const VoiceIcon = () => <DSIcon name="IcMic" size="S" attention="medium" appearance="neutral" />;
-const TrustIcon = () => <DSIcon name="IcProtection" size="S" attention="medium" appearance="neutral" />;
-const ModelIcon = () => <DSIcon name="IcCode" size="S" attention="medium" appearance="neutral" />;
+interface SettingsNavItemProps {
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const SettingsNavItem = memo(function SettingsNavItem({
+  label,
+  isActive,
+  onClick,
+}: SettingsNavItemProps) {
+  const theme = useThemeColors();
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        width: '100%',
+        padding: '0 8px',
+        height: '32px',
+        borderRadius: '6px',
+        backgroundColor: isActive ? theme.stroke.low : (isHovered ? theme.stroke.low : 'transparent'),
+        border: 'none',
+        cursor: 'pointer',
+        textAlign: 'left',
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <Text size="XS" weight={isActive ? 'high' : 'low'}>
+        {label}
+      </Text>
+    </button>
+  );
+});
 
 // =============================================================================
 // Component
@@ -86,6 +126,7 @@ export const SettingsModal = memo(function SettingsModal({
   disabled = false,
 }: SettingsModalProps) {
   const theme = useThemeColors();
+  const [activeSection, setActiveSection] = useState<SettingsSection>('model');
   
   // Strictness options
   const strictnessOptions = [
@@ -117,22 +158,43 @@ export const SettingsModal = memo(function SettingsModal({
   }, [trustSettings, onTrustSettingsChange]);
   
   if (!isOpen) return null;
+
+  // Section titles
+  const sectionTitles: Record<SettingsSection, string> = {
+    model: 'Model Selection',
+    voice: 'Voice Settings',
+    trust: 'Trust Settings',
+  };
   
   return (
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 z-40"
-        style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9998,
+          backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        }}
         onClick={onClose}
       />
       
       {/* Modal */}
       <div 
-        className="fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl shadow-2xl flex flex-col"
         style={{
+          position: 'fixed',
+          zIndex: 9999,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '750px',
+          maxWidth: '95vw',
+          maxHeight: '85vh',
           backgroundColor: theme.background.ghost,
-          border: `1px solid ${theme.stroke.medium}`,
+          borderRadius: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
         role="dialog"
         aria-modal="true"
@@ -140,179 +202,215 @@ export const SettingsModal = memo(function SettingsModal({
       >
         {/* Header */}
         <div
-          className="px-6 py-4 flex items-center justify-between shrink-0"
-          style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
+          style={{
+            padding: '1rem 1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: `1px solid ${theme.stroke.low}`,
+            flexShrink: 0,
+          }}
         >
-          <Title size="M" as="h2" weight="high" color="high" id="settings-modal-title">
-            settings
+          <Title size="L" as="h2" weight="high" color="high" id="settings-modal-title">
+            Settings
           </Title>
-          <button
+          <ActionButton
+            icon={<DSIcon name="IcClose" size="S" style={{ color: theme.text.medium }} />}
+            label="Close"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-            style={{
-              backgroundColor: 'transparent',
-              color: theme.text.medium,
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.stroke.low}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            aria-label="Close settings"
-          >
-            <DSIcon name="IcClose" size="S" attention="medium" />
-          </button>
+            size={36}
+            tooltipDelay={999999}
+          />
         </div>
         
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 scrollable-container">
-          {/* Model Selection Section */}
-          <Accordion title="Model selection" icon={<ModelIcon />} defaultOpen>
-            <div className="py-2">
-              <ModelSelector
-                value={selectedLLMProvider}
-                onChange={onLLMProviderChange}
-                ttsValue={selectedTTSProvider}
-                onTTSChange={onTTSProviderChange}
-                showHealth={false}
-                disabled={disabled}
-              />
-            </div>
-          </Accordion>
-          
-          {/* Voice Settings Section */}
-          <Accordion title="Voice settings" icon={<VoiceIcon />}>
-            <VoiceSelector
-              value={voiceGender}
-              onChange={onVoiceGenderChange}
-              disabled={disabled}
-              tooltip="Choose male or female voice for audio generation"
+        {/* Body - Sidebar + Content */}
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          {/* Sidebar */}
+          <div
+            style={{
+              width: '180px',
+              flexShrink: 0,
+              padding: '1rem 0.75rem',
+              borderRight: `1px solid ${theme.stroke.low}`,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+            }}
+          >
+            <SettingsNavItem
+              label="Model selection"
+              isActive={activeSection === 'model'}
+              onClick={() => setActiveSection('model')}
             />
-            
-            {/* Greeting */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5">
-                <label 
-                  className="block text-xs font-normal"
-                  style={{ color: theme.text.medium }}
-                >
-                  Greeting
-                </label>
-                <TooltipIcon tooltip="The first message the AI says when starting a conversation" />
-              </div>
-              <div className="scaled-textarea-wrapper-modal">
-                <div style={{ maxHeight: '80px', overflow: 'auto' }}>
-                  <TextArea
-                    value={config.greeting}
-                    onChange={(value: string) => onConfigChange({ ...config, greeting: value })}
-                    isDisabled={disabled}
-                    rows={2}
-                    size="S"
-                    placeholder="Initial greeting message..."
-                  />
-                </div>
-                <style>{`
-                  .scaled-textarea-wrapper-modal > div > div > div {
-                    gap: 16px !important;
-                    justify-content: center !important;
-                    align-items: flex-start !important;
-                    padding: 8px !important;
-                    width: 100% !important;
-                  }
-                  .scaled-textarea-wrapper-modal textarea {
-                    font-size: 14px !important;
-                    padding: 8px !important;
-                    min-height: 56px !important;
-                    width: 100% !important;
-                    box-sizing: border-box !important;
-                  }
-                `}</style>
-              </div>
+            <SettingsNavItem
+              label="Voice settings"
+              isActive={activeSection === 'voice'}
+              onClick={() => setActiveSection('voice')}
+            />
+            <SettingsNavItem
+              label="Trust settings"
+              isActive={activeSection === 'trust'}
+              onClick={() => setActiveSection('trust')}
+            />
+          </div>
+          
+          {/* Content Area */}
+          <div
+            style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: '1.5rem',
+            }}
+            className="scrollable-container"
+          >
+            {/* Section Title */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <Title size="M" as="h3" weight="high" color="high">
+                {sectionTitles[activeSection]}
+              </Title>
             </div>
             
-            {/* Pace */}
-            <LabeledSlider
-              label="Pace"
-              value={config.persona.pace}
-              options={['slow', 'medium', 'fast']}
-              onChange={(value) => updatePersona('pace', value as Pace)}
-              disabled={disabled}
-              tooltip="How the AI structures its responses - slow gives more detail, fast is more concise"
-            />
-            
-            {/* Response Length */}
-            <LabeledSlider
-              label="Response Length"
-              value={config.maxResponseLength}
-              options={['short', 'medium', 'long']}
-              onChange={(value) => onConfigChange({ ...config, maxResponseLength: value as ResponseLength })}
-              disabled={disabled}
-              tooltip="How long AI responses should be. Short (30 words), Medium (50), Long (100)"
-            />
-          </Accordion>
-          
-          {/* Trust Settings Section */}
-          <Accordion title="Trust settings" icon={<TrustIcon />}>
-            <Slider
-              label="Minimum Score"
-              value={trustSettings.minimumScore}
-              min={70}
-              max={100}
-              onChange={(value) => updateTrustSetting('minimumScore', value)}
-              disabled={disabled}
-              tooltip="Content below this trust score gets flagged for review"
-            />
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
-                  Validation Strictness
-                </label>
-                <TooltipIcon tooltip="Lenient = fewer warnings, Strict = catches more potential issues" />
-              </div>
-              <div className="max-w-[50%] ml-auto">
-                <SearchableDropdown
-                  value={trustSettings.validationStrictness}
-                  onChange={(v) => updateTrustSetting('validationStrictness', v as ValidationStrictness)}
-                  options={strictnessOptions}
-                  placeholder="Select strictness"
+            {/* Model Selection Content */}
+            {activeSection === 'model' && (
+              <div className="space-y-4">
+                <ModelSelector
+                  value={selectedLLMProvider}
+                  onChange={onLLMProviderChange}
+                  ttsValue={selectedTTSProvider}
+                  onTTSChange={onTTSProviderChange}
+                  showHealth={false}
                   disabled={disabled}
-                  compact={true}
                 />
               </div>
-            </div>
-            <Toggle
-              label="Block Below Threshold"
-              checked={trustSettings.blockBelowThreshold}
-              onChange={(checked) => updateTrustSetting('blockBelowThreshold', checked)}
-              disabled={disabled}
-              tooltip="Reject content that scores below minimum instead of just flagging"
-            />
-            <Toggle
-              label="Auto-fix Minor Issues"
-              checked={trustSettings.autoFixMinorIssues}
-              onChange={(checked) => updateTrustSetting('autoFixMinorIssues', checked)}
-              disabled={disabled}
-              tooltip="Automatically fix small issues like punctuation and capitalization"
-            />
-            <Toggle
-              label="Show Detailed Breakdown"
-              checked={trustSettings.showDetailedBreakdown}
-              onChange={(checked) => updateTrustSetting('showDetailedBreakdown', checked)}
-              disabled={disabled}
-              tooltip="Show individual scores from each validation agent"
-            />
-          </Accordion>
-        </div>
-        
-        {/* Footer */}
-        <div
-          className="px-6 py-4 flex justify-end shrink-0"
-          style={{ borderTop: `1px solid ${theme.stroke.low}` }}
-        >
-          <Button
-            onPress={onClose}
-            appearance="primary"
-            size="M"
-          >
-            done
-          </Button>
+            )}
+            
+            {/* Voice Settings Content */}
+            {activeSection === 'voice' && (
+              <div className="space-y-4">
+                <VoiceSelector
+                  value={voiceGender}
+                  onChange={onVoiceGenderChange}
+                  disabled={disabled}
+                  tooltip="Choose male or female voice for audio generation"
+                />
+                
+                {/* Greeting */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <label 
+                      className="block text-xs font-normal"
+                      style={{ color: theme.text.medium }}
+                    >
+                      Greeting
+                    </label>
+                    <TooltipIcon tooltip="The first message the AI says when starting a conversation" />
+                  </div>
+                  <div className="scaled-textarea-wrapper-modal">
+                    <div style={{ maxHeight: '80px', overflow: 'auto' }}>
+                      <TextArea
+                        value={config.greeting}
+                        onChange={(value: string) => onConfigChange({ ...config, greeting: value })}
+                        isDisabled={disabled}
+                        rows={2}
+                        size="S"
+                        placeholder="Initial greeting message..."
+                      />
+                    </div>
+                    <style>{`
+                      .scaled-textarea-wrapper-modal > div > div > div {
+                        gap: 16px !important;
+                        justify-content: center !important;
+                        align-items: flex-start !important;
+                        padding: 8px !important;
+                        width: 100% !important;
+                      }
+                      .scaled-textarea-wrapper-modal textarea {
+                        font-size: 14px !important;
+                        padding: 8px !important;
+                        min-height: 56px !important;
+                        width: 100% !important;
+                        box-sizing: border-box !important;
+                      }
+                    `}</style>
+                  </div>
+                </div>
+                
+                {/* Pace */}
+                <LabeledSlider
+                  label="Pace"
+                  value={config.persona.pace}
+                  options={['slow', 'medium', 'fast']}
+                  onChange={(value) => updatePersona('pace', value as Pace)}
+                  disabled={disabled}
+                  tooltip="How the AI structures its responses - slow gives more detail, fast is more concise"
+                />
+                
+                {/* Response Length */}
+                <LabeledSlider
+                  label="Response length"
+                  value={config.maxResponseLength}
+                  options={['short', 'medium', 'long']}
+                  onChange={(value) => onConfigChange({ ...config, maxResponseLength: value as ResponseLength })}
+                  disabled={disabled}
+                  tooltip="How long AI responses should be. Short (30 words), Medium (50), Long (100)"
+                />
+              </div>
+            )}
+            
+            {/* Trust Settings Content */}
+            {activeSection === 'trust' && (
+              <div className="space-y-4">
+                <Slider
+                  label="Minimum score"
+                  value={trustSettings.minimumScore}
+                  min={70}
+                  max={100}
+                  onChange={(value) => updateTrustSetting('minimumScore', value)}
+                  disabled={disabled}
+                  tooltip="Content below this trust score gets flagged for review"
+                />
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-normal flex-shrink-0" style={{ color: theme.text.medium }}>
+                      Validation strictness
+                    </label>
+                    <TooltipIcon tooltip="Lenient = fewer warnings, Strict = catches more potential issues" />
+                  </div>
+                  <div className="max-w-[50%] ml-auto">
+                    <SearchableDropdown
+                      value={trustSettings.validationStrictness}
+                      onChange={(v) => updateTrustSetting('validationStrictness', v as ValidationStrictness)}
+                      options={strictnessOptions}
+                      placeholder="Select strictness"
+                      disabled={disabled}
+                      compact={true}
+                    />
+                  </div>
+                </div>
+                <Toggle
+                  label="Block below threshold"
+                  checked={trustSettings.blockBelowThreshold}
+                  onChange={(checked) => updateTrustSetting('blockBelowThreshold', checked)}
+                  disabled={disabled}
+                  tooltip="Reject content that scores below minimum instead of just flagging"
+                />
+                <Toggle
+                  label="Auto-fix minor issues"
+                  checked={trustSettings.autoFixMinorIssues}
+                  onChange={(checked) => updateTrustSetting('autoFixMinorIssues', checked)}
+                  disabled={disabled}
+                  tooltip="Automatically fix small issues like punctuation and capitalization"
+                />
+                <Toggle
+                  label="Show detailed breakdown"
+                  checked={trustSettings.showDetailedBreakdown}
+                  onChange={(checked) => updateTrustSetting('showDetailedBreakdown', checked)}
+                  disabled={disabled}
+                  tooltip="Show individual scores from each validation agent"
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </>
