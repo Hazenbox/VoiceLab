@@ -182,21 +182,21 @@ const PipelineStep = memo(function PipelineStep({ number, label, description, ex
   const theme = useThemeColors();
 
   return (
-    <div className={`hiw-reveal ${visible ? 'hiw-visible' : ''} hiw-stagger-${number} flex gap-4`}>
+    <div className={`hiw-reveal ${visible ? 'hiw-visible' : ''} hiw-stagger-${number} flex gap-3`}>
       {/* Timeline spine */}
       <div className="flex flex-col items-center flex-shrink-0">
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold z-10"
+          className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10"
           style={{ backgroundColor: theme.accent, color: '#fff' }}
         >
           {number}
         </div>
         {!isLast && (
-          <div className="w-px flex-1 my-1" style={{ backgroundImage: `repeating-linear-gradient(to bottom, ${theme.accent} 0, ${theme.accent} 4px, transparent 4px, transparent 8px)` }} />
+          <div className="w-px flex-1 my-0.5" style={{ backgroundImage: `repeating-linear-gradient(to bottom, ${theme.accent}50 0, ${theme.accent}50 4px, transparent 4px, transparent 8px)` }} />
         )}
       </div>
       {/* Content */}
-      <div className={`flex-1 rounded-xl p-4 ${isLast ? '' : 'mb-2'}`} style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}>
+      <div className={`flex-1 ${isLast ? '' : 'mb-1.5'}`}>
         <div className="text-sm font-semibold" style={{ color: theme.text.high }}>
           {label}
         </div>
@@ -204,8 +204,8 @@ const PipelineStep = memo(function PipelineStep({ number, label, description, ex
           {description}
         </div>
         <div
-          className="text-[11px] mt-2 px-3 py-1.5 rounded-lg italic"
-          style={{ backgroundColor: `${theme.accent}08`, color: theme.text.medium, borderLeft: `2px solid ${theme.accent}` }}
+          className="text-[11px] mt-1.5 px-3 py-1.5 rounded-lg"
+          style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
         >
           {example}
         </div>
@@ -528,7 +528,10 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             title="The 7-Step Pipeline"
             tagline="Every piece of content passes through 7 stages before it reaches you."
           >
-            <div className="max-w-2xl">
+            <div
+              className="p-6 rounded-2xl max-w-2xl mx-auto"
+              style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
+            >
               {[
                 { n: 1, label: 'Intent Classify',     desc: 'Routes your request to the right pipeline -- content, question, or product inquiry', example: '"Write a push notification for JioFiber" -> classified as content generation for Connectivity ecosystem' },
                 { n: 2, label: 'Safety Gate',          desc: 'Blocks harmful, sensitive, or crisis content before generation (production-locked)', example: '"Write something offensive about competitors" -> blocked before any LLM call is made' },
