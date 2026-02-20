@@ -74,6 +74,12 @@ const BRAND_WORDS = new Set([
   'PhonePe', 'Google', 'WiFi',
 ]);
 
+/**
+ * Pattern to match festive greetings that are allowed to have exclamation marks.
+ * These greetings come from timingEngine.ts and Convex seed data.
+ */
+const FESTIVE_GREETING_PATTERN = /\b(Happy\s+(Diwali|Holi|Navratri|Onam|Pongal|New\s+Year|Independence\s+Day|Republic\s+Day)|Merry\s+Christmas|Eid\s+Mubarak|Ganpati\s+Bappa\s+Morya|Shubh\s+Deepavali)!/gi;
+
 const CHECKS: Check[] = [
   // ── CONSTITUTIONAL (KB/01) ────────────────────────────────────────────
   {
@@ -351,9 +357,26 @@ const CHECKS: Check[] = [
     category: 'structure',
     severity: 'error',
     description: 'exclamation marks not allowed',
-    test: (c) => match(c, /!/),
+    test: (c) => {
+      // Skip festive greetings when checking for exclamation marks
+      const withoutFestive = c.replace(FESTIVE_GREETING_PATTERN, '');
+      return match(withoutFestive, /!/);
+    },
     autoFixable: true,
-    fix: (c) => c.replace(/!/g, '.'),
+    fix: (c) => {
+      // Preserve festive greeting exclamation marks, replace others
+      const festiveMatches: string[] = [];
+      const placeholder = '___FESTIVE___';
+      let processed = c.replace(FESTIVE_GREETING_PATTERN, (m) => {
+        festiveMatches.push(m);
+        return placeholder + (festiveMatches.length - 1) + '___';
+      });
+      processed = processed.replace(/!/g, '.');
+      festiveMatches.forEach((g, i) => {
+        processed = processed.replace(placeholder + i + '___', g);
+      });
+      return processed;
+    },
   },
 
   // ── BRAND (KB/07) ─────────────────────────────────────────────────────

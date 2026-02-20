@@ -360,6 +360,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                       color={i === arr.length - 1 ? theme.secondary : '#ffffff'}
                       textColor={i === arr.length - 1 ? '#fff' : theme.text.high}
                       strokeColor={i === arr.length - 1 ? theme.secondary : theme.stroke.medium}
+                      noShadow
                     />
                     {i < arr.length - 1 && (
                       <FlowArrow
@@ -392,13 +393,13 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
           >
             <FlowCanvas height={70} viewBox="0 0 800 70" dotColor={theme.stroke.low}>
-              <FlowNode x={0} y={10} width={140} height={50} label="Step 1" sublabel="Your name" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={0} y={10} width={140} height={50} label="Step 1" sublabel="Your name" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
               <CurvedFlowArrow startX={145} startY={35} endX={195} endY={35} color={theme.secondary} />
-              <FlowNode x={200} y={10} width={140} height={50} label="Step 2" sublabel="Your role" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={200} y={10} width={140} height={50} label="Step 2" sublabel="Your role" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
               <CurvedFlowArrow startX={345} startY={35} endX={395} endY={35} color={theme.secondary} />
-              <FlowNode x={400} y={10} width={160} height={50} label="Step 3" sublabel="Product ecosystem" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={400} y={10} width={160} height={50} label="Step 3" sublabel="Product ecosystem" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
               <CurvedFlowArrow startX={565} startY={35} endX={615} endY={35} color={theme.secondary} />
-              <FlowNode x={620} y={10} width={160} height={50} label="Auto-configured" sublabel="Ready to generate" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
+              <FlowNode x={620} y={10} width={160} height={50} label="Auto-configured" sublabel="Ready to generate" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} noShadow />
             </FlowCanvas>
           </div>
 
@@ -614,17 +615,17 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
           >
             <FlowCanvas height={200} viewBox="0 0 750 200" dotColor={theme.stroke.low}>
-              <FlowNode x={0} y={75} width={85} height={50} label="Request" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={0} y={75} width={85} height={50} label="Request" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
               <CurvedFlowArrow startX={88} startY={100} endX={118} endY={100} color={theme.stroke.medium} />
 
-              <FlowNode x={122} y={75} width={95} height={50} label="Cache check" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={122} y={75} width={95} height={50} label="Cache check" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
 
               <CurvedFlowArrow startX={170} startY={75} endX={170} endY={30} color={theme.secondary} label="Hit" />
-              <FlowNode x={135} y={0} width={70} height={28} label="Instant" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
+              <FlowNode x={135} y={0} width={70} height={28} label="Instant" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} noShadow />
 
               <CurvedFlowArrow startX={220} startY={100} endX={260} endY={100} color={theme.stroke.medium} label="Miss" />
 
-              <FlowNode x={264} y={75} width={100} height={50} label="Provider" sublabel="selection" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={264} y={75} width={100} height={50} label="Provider" sublabel="selection" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
 
               {[
                 { label: 'Qwen',        y: 20,  primary: true },
@@ -643,15 +644,16 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                     color={prov.primary ? theme.secondary : '#ffffff'}
                     textColor={prov.primary ? '#fff' : theme.text.high}
                     strokeColor={prov.primary ? theme.secondary : theme.stroke.medium}
+                    noShadow
                   />
                 </g>
               ))}
 
               <CurvedFlowArrow startX={500} startY={37} endX={545} endY={80} color={theme.stroke.medium} />
-              <FlowNode x={548} y={65} width={80} height={45} label="Retry" sublabel="+ backoff" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={548} y={65} width={80} height={45} label="Retry" sublabel="+ backoff" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
 
               <CurvedFlowArrow startX={632} startY={87} endX={665} endY={87} color={theme.secondary} />
-              <FlowNode x={668} y={65} width={75} height={45} label="Stream" sublabel="response" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
+              <FlowNode x={668} y={65} width={75} height={45} label="Stream" sublabel="response" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} noShadow />
 
               <path d="M 588 110 L 588 160 L 458 160 L 458 110" fill="none" stroke={theme.stroke.medium} strokeWidth={1.5} strokeDasharray="4" />
               <text x={523} y={175} textAnchor="middle" fill={theme.text.low} fontSize={10} fontFamily="'JioType', system-ui, sans-serif">
@@ -768,15 +770,15 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
               >
                 <FlowCanvas height={55} viewBox="0 0 500 55" dotColor={theme.stroke.low}>
-                  <FlowNode x={0} y={7} width={80} height={40} label="Type" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={0} y={7} width={80} height={40} label="Type" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                   <FlowArrow x1={84} y1={27} x2={98} y2={27} color={theme.secondary} />
-                  <FlowNode x={102} y={7} width={80} height={40} label="Context" sublabel="Eco+channel" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={102} y={7} width={80} height={40} label="Context" sublabel="Eco+channel" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                   <FlowArrow x1={186} y1={27} x2={200} y2={27} color={theme.secondary} />
-                  <FlowNode x={204} y={7} width={80} height={40} label="Generate" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
+                  <FlowNode x={204} y={7} width={80} height={40} label="Generate" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} noShadow />
                   <FlowArrow x1={288} y1={27} x2={302} y2={27} color={theme.secondary} />
-                  <FlowNode x={306} y={7} width={80} height={40} label="Stream" sublabel="response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={306} y={7} width={80} height={40} label="Stream" sublabel="response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                   <FlowArrow x1={390} y1={27} x2={404} y2={27} color={theme.secondary} />
-                  <FlowNode x={408} y={7} width={80} height={40} label="Feedback" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={408} y={7} width={80} height={40} label="Feedback" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                 </FlowCanvas>
               </div>
             </div>
@@ -797,15 +799,15 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
               >
                 <FlowCanvas height={55} viewBox="0 0 500 55" dotColor={theme.stroke.low}>
-                  <FlowNode x={0} y={7} width={70} height={40} label="Tap orb" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={0} y={7} width={70} height={40} label="Tap orb" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                   <FlowArrow x1={74} y1={27} x2={88} y2={27} color={theme.secondary} />
-                  <FlowNode x={92} y={7} width={70} height={40} label="STT" sublabel="3 providers" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={92} y={7} width={70} height={40} label="STT" sublabel="3 providers" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                   <FlowArrow x1={166} y1={27} x2={180} y2={27} color={theme.secondary} />
-                  <FlowNode x={184} y={7} width={80} height={40} label="AI process" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
+                  <FlowNode x={184} y={7} width={80} height={40} label="AI process" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} noShadow />
                   <FlowArrow x1={268} y1={27} x2={282} y2={27} color={theme.secondary} />
-                  <FlowNode x={286} y={7} width={70} height={40} label="TTS" sublabel="3 providers" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={286} y={7} width={70} height={40} label="TTS" sublabel="3 providers" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                   <FlowArrow x1={360} y1={27} x2={374} y2={27} color={theme.secondary} />
-                  <FlowNode x={378} y={7} width={110} height={40} label="Orb speaks" sublabel="Audio response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={378} y={7} width={110} height={40} label="Orb speaks" sublabel="Audio response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                 </FlowCanvas>
               </div>
 
@@ -835,16 +837,16 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
             >
               <FlowCanvas height={180} viewBox="0 0 600 180" dotColor={theme.stroke.low}>
-                <FlowNode x={220} y={0} width={160} height={45} label="Generate content" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
+                <FlowNode x={220} y={0} width={160} height={45} label="Generate content" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} noShadow />
                 <CurvedFlowArrow startX={380} startY={22} endX={470} endY={60} color={theme.secondary} />
 
-                <FlowNode x={420} y={60} width={160} height={45} label="User sees response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={420} y={60} width={160} height={45} label="User sees response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                 <CurvedFlowArrow startX={500} startY={105} endX={420} endY={135} color={theme.secondary} />
 
-                <FlowNode x={220} y={130} width={200} height={45} label="5 feedback actions" sublabel="Thumbs, edit, comment, save" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={220} y={130} width={200} height={45} label="5 feedback actions" sublabel="Thumbs, edit, comment, save" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                 <CurvedFlowArrow startX={220} startY={152} endX={130} endY={105} color={theme.secondary} />
 
-                <FlowNode x={20} y={60} width={160} height={45} label="Learning engine" sublabel="Extract patterns" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={20} y={60} width={160} height={45} label="Learning engine" sublabel="Extract patterns" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
                 <CurvedFlowArrow startX={100} startY={60} endX={220} endY={22} color={theme.secondary} />
               </FlowCanvas>
             </div>
@@ -1019,12 +1021,12 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
           >
             <FlowCanvas height={60} viewBox="0 0 700 60" dotColor={theme.stroke.low}>
-              <FlowNode x={0} y={5} width={130} height={50} label="Browser" sublabel="React + Zustand" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={0} y={5} width={130} height={50} label="Browser" sublabel="React + Zustand" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
               <CurvedFlowArrow startX={135} startY={30} endX={195} endY={30} color={theme.secondary} />
-              <FlowNode x={200} y={5} width={130} height={50} label="Vercel Edge" sublabel="Serverless proxy" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={200} y={5} width={130} height={50} label="Vercel Edge" sublabel="Serverless proxy" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
               <CurvedFlowArrow startX={335} startY={30} endX={395} endY={30} color={theme.secondary} />
-              <FlowNode x={400} y={5} width={130} height={50} label="LLM providers" sublabel="Qwen / OpenAI / Claude" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
-              <FlowNode x={560} y={5} width={130} height={50} label="Convex" sublabel="Real-time DB" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={400} y={5} width={130} height={50} label="LLM providers" sublabel="Qwen / OpenAI / Claude" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} noShadow />
+              <FlowNode x={560} y={5} width={130} height={50} label="Convex" sublabel="Real-time DB" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} noShadow />
             </FlowCanvas>
           </div>
 

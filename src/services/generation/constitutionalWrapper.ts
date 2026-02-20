@@ -291,8 +291,11 @@ export class ConstitutionalWrapper {
       });
     }
     
-    // Check 2.5: Exclamation marks (HARD RULE - no exceptions)
-    const exclamationMatch = response.match(/!/);
+    // Check 2.5: Exclamation marks (HARD RULE - except festive greetings)
+    // Pattern matches festive greetings from timingEngine.ts that are allowed to have !
+    const FESTIVE_GREETING_PATTERN = /\b(Happy\s+(Diwali|Holi|Navratri|Onam|Pongal|New\s+Year|Independence\s+Day|Republic\s+Day)|Merry\s+Christmas|Eid\s+Mubarak|Ganpati\s+Bappa\s+Morya|Shubh\s+Deepavali)!/gi;
+    const responseWithoutFestive = response.replace(FESTIVE_GREETING_PATTERN, '');
+    const exclamationMatch = responseWithoutFestive.match(/!/);
     if (exclamationMatch) {
       checks.push({
         name: 'exclamation_mark',
