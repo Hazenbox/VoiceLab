@@ -221,7 +221,7 @@ export const SettingsModal = memo(function SettingsModal({
         {/* Header */}
         <div
           style={{
-            padding: '1rem 1rem 1rem 1.5rem',
+            padding: '0.75rem 1rem 0.75rem 1.5rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -283,7 +283,7 @@ export const SettingsModal = memo(function SettingsModal({
           >
             {/* Section Title */}
             <div style={{ marginBottom: '1.5rem' }}>
-              <Title size="M" as="h3" weight="high" color="high">
+              <Title size="S" as="h3" weight="high" color="high">
                 {sectionTitles[activeSection]}
               </Title>
             </div>
