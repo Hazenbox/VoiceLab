@@ -167,39 +167,47 @@ const IconCard = memo(function IconCard({ label, sublabel, color, textColor, lar
 });
 
 // ---------------------------------------------------------------------------
-// PipelineStep -- numbered zigzag step card
+// PipelineStep -- vertical timeline step card with example
 // ---------------------------------------------------------------------------
 interface PipelineStepProps {
   number: number;
   label: string;
   description: string;
-  isRight: boolean;
+  example: string;
+  isLast: boolean;
   visible: boolean;
 }
 
-const PipelineStep = memo(function PipelineStep({ number, label, description, isRight, visible }: PipelineStepProps) {
+const PipelineStep = memo(function PipelineStep({ number, label, description, example, isLast, visible }: PipelineStepProps) {
   const theme = useThemeColors();
-  const animClass = isRight ? 'hiw-slide-right' : 'hiw-slide-left';
 
   return (
-    <div className={`flex ${isRight ? 'justify-end' : 'justify-start'}`}>
-      <div
-        className={`${animClass} ${visible ? 'hiw-visible' : ''} hiw-stagger-${number} flex items-center gap-4 p-4 rounded-xl max-w-md`}
-        style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
-      >
+    <div className={`hiw-reveal ${visible ? 'hiw-visible' : ''} hiw-stagger-${number} flex gap-4`}>
+      {/* Timeline spine */}
+      <div className="flex flex-col items-center flex-shrink-0">
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-lg font-bold"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold z-10"
           style={{ backgroundColor: theme.accent, color: '#fff' }}
         >
           {number}
         </div>
-        <div>
-          <div className="text-sm font-semibold" style={{ color: theme.text.high }}>
-            {label}
-          </div>
-          <div className="text-xs mt-0.5" style={{ color: theme.text.medium }}>
-            {description}
-          </div>
+        {!isLast && (
+          <div className="w-px flex-1 my-1" style={{ backgroundImage: `repeating-linear-gradient(to bottom, ${theme.accent} 0, ${theme.accent} 4px, transparent 4px, transparent 8px)` }} />
+        )}
+      </div>
+      {/* Content */}
+      <div className={`flex-1 rounded-xl p-4 ${isLast ? '' : 'mb-2'}`} style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}>
+        <div className="text-sm font-semibold" style={{ color: theme.text.high }}>
+          {label}
+        </div>
+        <div className="text-xs mt-0.5" style={{ color: theme.text.medium }}>
+          {description}
+        </div>
+        <div
+          className="text-[11px] mt-2 px-3 py-1.5 rounded-lg italic"
+          style={{ backgroundColor: `${theme.accent}08`, color: theme.text.medium, borderLeft: `2px solid ${theme.accent}` }}
+        >
+          {example}
         </div>
       </div>
     </div>
@@ -284,28 +292,6 @@ const PromptLayer = memo(function PromptLayer({ label, phase, index, total }: Pr
   );
 });
 
-// ---------------------------------------------------------------------------
-// ConnectorLine -- SVG dashed vertical connector between pipeline steps
-// ---------------------------------------------------------------------------
-const ConnectorLine = memo(function ConnectorLine({ direction }: { direction: 'left' | 'right' | 'center' }) {
-  const theme = useThemeColors();
-  const xStart = direction === 'left' ? 120 : direction === 'right' ? 280 : 200;
-  const xEnd = direction === 'left' ? 280 : direction === 'right' ? 120 : 200;
-
-  return (
-    <svg width="100%" height="40" viewBox="0 0 400 40" className="my-1">
-      <path
-        d={`M ${xStart} 0 C ${xStart} 20, ${xEnd} 20, ${xEnd} 40`}
-        fill="none"
-        stroke={theme.accent}
-        strokeWidth={2}
-        strokeDasharray="6 4"
-        className="hiw-animated-dash"
-        opacity={0.5}
-      />
-    </svg>
-  );
-});
 
 // ===========================================================================
 // MAIN COMPONENT
@@ -542,26 +528,25 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             title="The 7-Step Pipeline"
             tagline="Every piece of content passes through 7 stages before it reaches you."
           >
-            <div className="space-y-1">
+            <div className="max-w-2xl">
               {[
-                { n: 1, label: 'Intent Classify',     desc: 'Routes your request to the right pipeline -- content, question, or product inquiry' },
-                { n: 2, label: 'Safety Gate',          desc: 'Blocks harmful, sensitive, or crisis content before generation (production-locked)' },
-                { n: 3, label: 'Knowledge RAG',        desc: 'Retrieves relevant rules via 384-dimension vector search from the knowledge base' },
-                { n: 4, label: 'Prompt Assembly',      desc: 'Builds a 14-layer context-aware system prompt from persona, channel, emotion, and rules' },
-                { n: 5, label: 'LLM Generate',         desc: 'Multi-provider architecture with automatic fallback -- no single point of failure' },
-                { n: 6, label: '15+ Validators',       desc: '8 AI agents score across gender, inclusivity, cultural, A11Y, compliance, style, brand, readability' },
-                { n: 7, label: 'Auto-Fix + Finalize',  desc: 'Corrects fixable violations, scrubs PII, normalises entities, formats output' },
-              ].map((step, i) => (
-                <div key={step.n}>
-                  <PipelineStep
-                    number={step.n}
-                    label={step.label}
-                    description={step.desc}
-                    isRight={i % 2 !== 0}
-                    visible={pipelineInView.visible}
-                  />
-                  {i < 6 && <ConnectorLine direction={i % 2 === 0 ? 'right' : 'left'} />}
-                </div>
+                { n: 1, label: 'Intent Classify',     desc: 'Routes your request to the right pipeline -- content, question, or product inquiry', example: '"Write a push notification for JioFiber" -> classified as content generation for Connectivity ecosystem' },
+                { n: 2, label: 'Safety Gate',          desc: 'Blocks harmful, sensitive, or crisis content before generation (production-locked)', example: '"Write something offensive about competitors" -> blocked before any LLM call is made' },
+                { n: 3, label: 'Knowledge RAG',        desc: 'Retrieves relevant rules via 384-dimension vector search from the knowledge base', example: 'Query embeds to 384-dim vector, finds "avoid word: leverage" and "prefer: use" from Convex DB' },
+                { n: 4, label: 'Prompt Assembly',      desc: 'Builds a 14-layer context-aware system prompt from persona, channel, emotion, and rules', example: 'Loads JioFiber tone, push notification format (60 chars), Adbhuta emotion, 10 guardrails, avoid-words' },
+                { n: 5, label: 'LLM Generate',         desc: 'Multi-provider architecture with automatic fallback -- no single point of failure', example: 'Qwen generates response in 1.2s; if Qwen fails, HuggingFace takes over in 0.3s' },
+                { n: 6, label: '15+ Validators',       desc: '8 AI agents score across gender, inclusivity, cultural, A11Y, compliance, style, brand, readability', example: 'Brand agent flags "Amazing deal!" as too informal (score 72), Style agent flags title case violation' },
+                { n: 7, label: 'Auto-Fix + Finalize',  desc: 'Corrects fixable violations, scrubs PII, normalises entities, formats output', example: '"Rs. 999" auto-fixed to "₹999", title case corrected to sentence case, trust score: 94 (certified)' },
+              ].map((step, i, arr) => (
+                <PipelineStep
+                  key={step.n}
+                  number={step.n}
+                  label={step.label}
+                  description={step.desc}
+                  example={step.example}
+                  isLast={i === arr.length - 1}
+                  visible={pipelineInView.visible}
+                />
               ))}
             </div>
           </VisualSection>
