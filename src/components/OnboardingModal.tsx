@@ -3,6 +3,7 @@ import { Button, Title, Text, Label, Input } from '@marcelinodzn/ds-react';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme';
 import SearchableCombobox from './SearchableCombobox';
 import { DSIcon } from './DSIcon';
+import { ActionButton } from './ActionButton';
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -165,30 +166,32 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
         alignItems: 'center',
         justifyContent: 'center',
         background: 'rgba(0,0,0,0.65)',
-        backdropFilter: 'blur(8px)',
       }}
       onClick={onClose ? (e) => e.target === e.currentTarget && onClose() : undefined}
     >
       <div
         style={{
           background: theme.background.ghost,
-          borderRadius: '20px',
+          borderRadius: '16px',
           border: 'none',
           maxWidth: '420px',
           width: '92%',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 24px 48px rgba(0,0,0,0.4)',
           position: 'relative',
         }}
       >
         {/* Close button - only in edit mode */}
         {onClose && (
-          <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1 }}>
-            <Button appearance="ghost" size="S" onPress={onClose} aria-label="Close">
-              <DSIcon name="IcClose" size="S" attention="medium" />
-            </Button>
+          <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem', zIndex: 1 }}>
+            <ActionButton
+              icon={<DSIcon name="IcClose" size="S" style={{ color: theme.text.medium }} />}
+              label="Close"
+              onClick={onClose}
+              size={36}
+              tooltipDelay={999999}
+            />
           </div>
         )}
 
@@ -205,7 +208,7 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
         </div>
 
         {/* Content */}
-        <div style={{ padding: '0 1.5rem 1rem' }}>
+        <div style={{ padding: '1rem 1.5rem 1rem' }}>
           {/* Name Field -- DS Input */}
           <div style={{ marginBottom: '1rem' }}>
             <Input
@@ -234,7 +237,7 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
 
           {/* Ecosystem Field */}
           <SearchableCombobox
-            label="Product Ecosystem"
+            label="Product ecosystem"
             placeholder="Select product ecosystem"
             options={ECOSYSTEMS_WITH_SEARCH}
             value={product}

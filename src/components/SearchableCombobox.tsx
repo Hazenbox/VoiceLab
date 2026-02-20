@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import Fuse from 'fuse.js';
-import { useThemeColors, SELECTION_COLORS } from '../theme';
-import { Label } from '@marcelinodzn/ds-react';
+import { useThemeColors } from '../theme';
+import { Label, Text } from '@marcelinodzn/ds-react';
 import { DSIcon } from './DSIcon';
 
 // ── Types ────────────────────────────────────────────────────────
@@ -31,7 +31,6 @@ export default function SearchableCombobox({
   onChange,
 }: SearchableComboboxProps) {
   const theme = useThemeColors();
-  const sel = theme.isLight ? SELECTION_COLORS.light : SELECTION_COLORS.dark;
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
@@ -205,19 +204,19 @@ export default function SearchableCombobox({
             top: 'calc(100% + 0.25rem)',
             left: 0,
             right: 0,
-            background: theme.background.ghost,
-            borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            background: theme.isLight ? '#ffffff' : '#1f1f1f',
+            borderRadius: '12px',
             maxHeight: '280px',
             overflowY: 'auto',
             zIndex: 1000,
-            border: `1px solid ${theme.stroke.low}`,
+            border: `1px solid ${theme.stroke.medium}`,
+            padding: '4px',
           }}
         >
           {filteredOptions.length === 0 ? (
             <div
               style={{
-                padding: '0.75rem',
+                padding: '0.625rem',
                 color: theme.text.low,
                 fontSize: '0.8125rem',
                 textAlign: 'center',
@@ -235,49 +234,20 @@ export default function SearchableCombobox({
                 onClick={() => handleSelect(option.id)}
                 onMouseEnter={() => setHighlightedIndex(index)}
                 style={{
-                  padding: '0.5rem 0.75rem',
+                  padding: '0 0.625rem',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
                   cursor: 'pointer',
-                  background:
-                    index === highlightedIndex
-                      ? theme.background.bold
-                      : value === option.id
-                      ? sel.background
-                      : 'transparent',
-                  borderLeft: value === option.id ? `3px solid ${sel.text}` : '3px solid transparent',
-                  transition: 'all 0.15s ease',
+                  borderRadius: '8px',
+                  background: (index === highlightedIndex || value === option.id)
+                    ? theme.stroke.low
+                    : 'transparent',
                 }}
               >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <span
-                    style={{
-                      color: value === option.id ? sel.text : theme.text.high,
-                      fontSize: '0.8125rem',
-                      fontWeight: value === option.id ? 600 : 400,
-                    }}
-                  >
-                    {option.label}
-                  </span>
-                  {option.description && (
-                    <>
-                      <span style={{ color: theme.stroke.medium, fontSize: '0.75rem' }}>•</span>
-                      <span
-                        style={{
-                          color: theme.text.low,
-                          fontSize: '0.75rem',
-                        }}
-                      >
-                        {option.description}
-                      </span>
-                    </>
-                  )}
-                </div>
+                <Text size="S" weight="low">
+                  {option.label}
+                </Text>
               </div>
             ))
           )}
