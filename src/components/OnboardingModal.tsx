@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Button, Title, Text, Label, Input, Divider } from '@marcelinodzn/ds-react';
+import { Button, Title, Text, Label, Input } from '@marcelinodzn/ds-react';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme';
 import SearchableCombobox from './SearchableCombobox';
 import { DSIcon } from './DSIcon';
@@ -193,12 +193,12 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
         )}
 
         {/* Header -- DS Title + Text */}
-        <div style={{ padding: '1.25rem', paddingRight: onClose ? '3rem' : '1.25rem' }}>
-          <Title size="S" as="h2" weight="high" color="high">
+        <div style={{ padding: '1.5rem 1.5rem 0.5rem', paddingRight: onClose ? '3rem' : '1.5rem' }}>
+          <Title size="L" as="h2" weight="high" color="high">
             {isEditMode ? 'edit profile' : 'welcome to voice lab'}
           </Title>
           <div style={{ marginTop: '0.375rem' }}>
-            <Text variant="caption" weight="regular">
+            <Text size="S" color="medium">
               your role and product help fine-tune AI content generation to match your context, tone, and goals.
             </Text>
           </div>
@@ -225,8 +225,8 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
 
             {/* Role Field */}
             <SearchableCombobox
-              label="Role"
-              placeholder="Select your role"
+              label="role"
+              placeholder="select your role"
               options={ROLES_WITH_SEARCH}
               value={role}
               onChange={(id) => setRole(id as UserRole)}
@@ -234,8 +234,8 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
 
             {/* Ecosystem Field */}
             <SearchableCombobox
-              label="Product Ecosystem"
-              placeholder="Select product ecosystem"
+              label="product ecosystem"
+              placeholder="select product ecosystem"
               options={ECOSYSTEMS_WITH_SEARCH}
               value={product}
               onChange={setProduct}
@@ -244,9 +244,8 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
         </div>
 
         {/* Footer */}
-        <Divider />
         <div style={{
-          padding: '1.25rem',
+          padding: '0.5rem 1.5rem 1.5rem',
           display: 'flex',
           justifyContent: 'flex-end',
         }}>

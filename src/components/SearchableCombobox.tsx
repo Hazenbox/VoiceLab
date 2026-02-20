@@ -170,7 +170,7 @@ export default function SearchableCombobox({
             padding: '0.625rem 2.5rem 0.625rem 0.75rem',
             borderRadius: '8px',
             border: `1px solid ${theme.stroke.medium}`,
-            background: theme.background.subtle,
+            background: 'transparent',
             color: theme.text.high,
             fontSize: '0.8125rem',
             outline: 'none',
@@ -191,7 +191,7 @@ export default function SearchableCombobox({
             color: theme.text.low,
           }}
         >
-          <DSIcon name="IcChevronDown" size="XS" attention="low" />
+          <DSIcon name="IcChevronDown" size="S" attention="low" />
         </div>
       </div>
 
