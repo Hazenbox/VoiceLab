@@ -118,13 +118,13 @@ body.dark {
   @apply bg-zinc-500;
 }
 
-/* Rotating placeholder slide-up + fade */
+/* Rotating placeholder slide-up + fade (spring-timed) */
 @keyframes placeholderSlideIn {
   0% {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px);
   }
-  12% {
+  10% {
     opacity: 1;
     transform: translateY(0);
   }
@@ -134,12 +134,12 @@ body.dark {
   }
   100% {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-8px);
   }
 }
 
 .rotating-placeholder {
-  animation: placeholderSlideIn 3s ease-in-out both;
+  animation: placeholderSlideIn 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

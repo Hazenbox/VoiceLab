@@ -15,7 +15,7 @@ interface UseRotatingPlaceholderReturn {
 
 export function useRotatingPlaceholder({
   placeholders,
-  intervalMs = 3000,
+  intervalMs = 2400,
   paused = false,
 }: UseRotatingPlaceholderOptions): UseRotatingPlaceholderReturn {
   const [index, setIndex] = useState(0);
