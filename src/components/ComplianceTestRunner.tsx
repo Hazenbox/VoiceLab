@@ -25,6 +25,7 @@ import { useThemeColors } from '../theme';
 import { Button, Title, Text, Badge, Divider } from '@marcelinodzn/ds-react';
 import { chatTypography } from '../theme/typography';
 import { DSIcon } from './DSIcon';
+import { ActionButton } from './ActionButton';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -483,27 +484,34 @@ export function ComplianceTestRunner() {
       }}
       className="scrollable-container"
     >
-      {/* Back button */}
-      <Button
-        onPress={() => useUIStore.getState().setActiveView('main')}
-        appearance="neutral"
-        attention="low"
-        size="S"
-        style={{ marginBottom: 16 }}
-      >
-        <div className="flex items-center gap-2">
-          <DSIcon name="IcArrowLeft" size="S" attention="medium" />
-          <span>back to main</span>
+      {/* Header with close button */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <Title size="L" as="h1" weight="high" color="high">
+            Compliance test runner
+          </Title>
+          <p 
+            style={{
+              fontFamily: '"JioType Var"',
+              fontWeight: 400,
+              fontSize: '12px',
+              lineHeight: 1.3,
+              fontVariationSettings: '"opsz" 24',
+              color: theme.text.low,
+              margin: 0,
+              marginTop: '6px',
+            }}
+          >
+            {ALL_TESTS.length} tests across {TEST_GROUPS.length} groups
+          </p>
         </div>
-      </Button>
-
-      {/* Header */}
-      <Title size="L" as="h1" weight="high" color="high" style={{ marginBottom: 4 }}>
-        compliance test runner
-      </Title>
-      <Text size="M" color="low" style={{ marginBottom: 24 }}>
-        {ALL_TESTS.length} tests across {TEST_GROUPS.length} groups
-      </Text>
+        <ActionButton
+          icon={<DSIcon name="IcClose" size="S" style={{ color: theme.text.medium }} />}
+          label="Close"
+          onClick={() => useUIStore.getState().setActiveView('main')}
+          size={36}
+        />
+      </div>
 
       {/* ── Controls ── */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
@@ -511,19 +519,19 @@ export function ComplianceTestRunner() {
           <Button
             onPress={runAllTests}
             appearance="primary"
-            size="M"
+            size="S"
           >
-            run all tests
+            Run all tests
           </Button>
         )}
         {state.status === 'running' && (
           <Button
             onPress={handleCancel}
             appearance="primary"
-            size="M"
+            size="S"
             style={{ backgroundColor: theme.semantic.negative }}
           >
-            cancel
+            Cancel
           </Button>
         )}
         {state.status === 'done' && (
@@ -531,30 +539,30 @@ export function ComplianceTestRunner() {
             <Button
               onPress={runAllTests}
               appearance="primary"
-              size="M"
+              size="S"
             >
-              re-run all tests
+              Re-run all tests
             </Button>
             <Button
               onPress={handleDownloadReport}
               appearance="neutral"
               attention="high"
-              size="M"
+              size="S"
               style={{ 
                 backgroundColor: theme.semantic.positive, 
                 color: '#fff',
                 border: 'none',
               }}
             >
-              download report (.md)
+              Download report (.md)
             </Button>
             <Button
               onPress={() => setShowReport(!showReport)}
               appearance="neutral"
               attention="medium"
-              size="M"
+              size="S"
             >
-              {showReport ? 'hide' : 'show'} full report
+              {showReport ? 'Hide' : 'Show'} full report
             </Button>
           </>
         )}
@@ -562,15 +570,10 @@ export function ComplianceTestRunner() {
           <Button
             onPress={() => setShowDeleteConfirm(true)}
             appearance="neutral"
-            attention="high"
-            size="M"
-            style={{ 
-              backgroundColor: theme.semantic.negative, 
-              color: '#fff',
-              border: 'none',
-            }}
+            attention="low"
+            size="S"
           >
-            delete all test projects
+            Delete all test projects
           </Button>
         )}
       </div>
