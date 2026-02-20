@@ -3,10 +3,11 @@
  * 11 scroll-driven sections, each anchored by a flow diagram, icon grid, or visual workflow.
  */
 
-import { memo, useRef, useEffect, useState, useCallback } from 'react';
+import { memo, useRef, useEffect, useState } from 'react';
 import { useThemeColors } from '../theme';
 import { FlowCanvas, FlowNode, FlowArrow, CurvedFlowArrow } from './FlowDiagram';
 import { Badge } from './ui/Badge';
+import { Title } from '@marcelinodzn/ds-react';
 
 interface HowItWorksPageProps {
   onBack: () => void;
@@ -56,15 +57,25 @@ const VisualSection = memo(function VisualSection({ title, tagline, alt, childre
       style={{ backgroundColor: alt ? theme.background.ghost : 'transparent' }}
     >
       <div className="max-w-6xl mx-auto">
-        <h2
-          className="text-2xl font-bold mb-1 tracking-tight"
-          style={{ color: theme.text.high }}
-        >
-          {title}
-        </h2>
-        <p className="text-sm mb-10" style={{ color: theme.text.low }}>
-          {tagline}
-        </p>
+        <div className="mb-6">
+          <Title size="L" as="h2" weight="high" color="high">
+            {title}
+          </Title>
+          <p 
+            style={{
+              fontFamily: '"JioType Var"',
+              fontWeight: 400,
+              fontSize: '12px',
+              lineHeight: 1.3,
+              fontVariationSettings: '"opsz" 24',
+              color: theme.text.low,
+              margin: 0,
+              marginTop: '6px',
+            }}
+          >
+            {tagline}
+          </p>
+        </div>
         {children}
       </div>
     </section>
