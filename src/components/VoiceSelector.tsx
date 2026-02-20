@@ -76,31 +76,18 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
           </>
         )}
       </div>
-      <div className="voice-selector-radio-group" style={{ transform: 'scale(0.85)', transformOrigin: 'right top' }}>
-        <RadioGroup
-          name="voice-gender"
-          value={value}
-          onChange={handleChange}
-          orientation="horizontal"
-          size="S"
-          appearance="secondary"
-          isDisabled={disabled}
-        >
-          <Radio value={VoiceGender.FEMALE} label="Female" />
-          <Radio value={VoiceGender.MALE} label="Male" />
-        </RadioGroup>
-        <style>{`
-          .voice-selector-radio-group [role="radiogroup"] > div {
-            gap: 16px !important;
-            justify-content: center !important;
-            align-items: flex-start !important;
-          }
-          .voice-selector-radio-group [role="radiogroup"] span {
-            font-size: 14px !important;
-            font-weight: 400 !important;
-          }
-        `}</style>
-      </div>
+      <RadioGroup
+        name="voice-gender"
+        value={value}
+        onChange={handleChange}
+        orientation="horizontal"
+        size="S"
+        appearance="secondary"
+        isDisabled={disabled}
+      >
+        <Radio value={VoiceGender.FEMALE} label="Female" />
+        <Radio value={VoiceGender.MALE} label="Male" />
+      </RadioGroup>
     </div>
   );
 };

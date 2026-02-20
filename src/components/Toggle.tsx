@@ -78,12 +78,19 @@ export const Toggle: React.FC<ToggleProps> = ({
           </>
         )}
       </div>
-      <Switch
-        isSelected={checked}
-        onChange={onChange}
-        isDisabled={disabled}
-        size="S"
-      />
+      <div className="toggle-switch-wrapper">
+        <Switch
+          isSelected={checked}
+          onChange={onChange}
+          isDisabled={disabled}
+          size="S"
+        />
+        <style>{`
+          .toggle-switch-wrapper [style*="background-color: rgb(247, 171, 33)"] {
+            background-color: #fa7d1a !important;
+          }
+        `}</style>
+      </div>
     </div>
   );
 };

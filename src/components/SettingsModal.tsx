@@ -19,7 +19,6 @@ import { Slider } from './Slider';
 import { Toggle } from './Toggle';
 import { SearchableDropdown } from './SearchableDropdown';
 import { TooltipIcon } from './TooltipIcon';
-import { TextArea } from '@marcelinodzn/ds-react';
 import SearchableCombobox, { type ComboboxOption } from './SearchableCombobox';
 import { getAvailableLLMProviders, type LLMProviderType } from '../services/providers/llm';
 import type { 
@@ -232,10 +231,11 @@ export const SettingsModal = memo(function SettingsModal({
         {/* Header */}
         <div
           style={{
-            padding: '1rem 1.5rem',
+            padding: '1rem 1rem 1rem 1.5rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            borderBottom: `1px solid ${theme.stroke.low}`,
             flexShrink: 0,
           }}
         >
@@ -330,52 +330,6 @@ export const SettingsModal = memo(function SettingsModal({
                   tooltip="Choose male or female voice for audio generation"
                 />
                 
-                {/* Greeting */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5">
-                    <label 
-                      style={{
-                        display: 'block',
-                        fontSize: '14px',
-                        lineHeight: 1.3,
-                        fontWeight: 500,
-                        color: theme.text.high,
-                      }}
-                    >
-                      Greeting
-                    </label>
-                    <TooltipIcon tooltip="The first message the AI says when starting a conversation" />
-                  </div>
-                  <div className="scaled-textarea-wrapper-modal">
-                    <div style={{ maxHeight: '80px', overflow: 'auto' }}>
-                      <TextArea
-                        value={config.greeting}
-                        onChange={(value: string) => onConfigChange({ ...config, greeting: value })}
-                        isDisabled={disabled}
-                        rows={2}
-                        size="S"
-                        placeholder="Initial greeting message..."
-                      />
-                    </div>
-                    <style>{`
-                      .scaled-textarea-wrapper-modal > div > div > div {
-                        gap: 16px !important;
-                        justify-content: center !important;
-                        align-items: flex-start !important;
-                        padding: 8px !important;
-                        width: 100% !important;
-                      }
-                      .scaled-textarea-wrapper-modal textarea {
-                        font-size: 14px !important;
-                        padding: 8px !important;
-                        min-height: 56px !important;
-                        width: 100% !important;
-                        box-sizing: border-box !important;
-                      }
-                    `}</style>
-                  </div>
-                </div>
-                
                 {/* Pace */}
                 <LabeledSlider
                   label="Pace"
@@ -400,7 +354,7 @@ export const SettingsModal = memo(function SettingsModal({
             
             {/* Trust Settings Content */}
             {activeSection === 'trust' && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <Slider
                   label="Minimum score"
                   value={trustSettings.minimumScore}
