@@ -166,10 +166,15 @@ export default function SearchableCombobox({
           }
           style={{
             width: '100%',
-            padding: '0.625rem 2.5rem 0.625rem 0.75rem',
-            borderRadius: '8px',
-            border: `1px solid ${theme.stroke.medium}`,
-            background: 'transparent',
+            height: '45px',
+            padding: '0 2.5rem 0 0.75rem',
+            borderRadius: '6px',
+            border: theme.isLight 
+              ? '1.5px solid rgba(36, 38, 43, 0.12)' 
+              : '1.5px solid rgba(255, 255, 255, 0.12)',
+            background: theme.isLight 
+              ? 'rgba(255, 255, 255, 0.01)' 
+              : 'rgba(0, 0, 0, 0.01)',
             color: theme.text.high,
             fontSize: '0.8125rem',
             outline: 'none',
@@ -190,7 +195,7 @@ export default function SearchableCombobox({
             color: theme.text.low,
           }}
         >
-          <DSIcon name="IcChevronDown" size="S" attention="low" />
+          <DSIcon name="IcChevronDown" size="M" attention="low" />
         </div>
       </div>
 

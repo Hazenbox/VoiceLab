@@ -202,7 +202,7 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
           </Title>
           <div style={{ marginTop: '0.375rem' }}>
             <Text size="S" color="medium">
-              Your role and product help fine-tune AI content generation to match your context, tone, and goals.
+              Helps tailor AI content to your context and goals.
             </Text>
           </div>
         </div>
@@ -254,7 +254,7 @@ export default function OnboardingModal({ onComplete, existingProfile, onClose }
           <Button
             appearance="primary"
             attention="high"
-            size="S"
+            size="M"
             onPress={handleSubmit}
             isDisabled={!isValid}
           >
