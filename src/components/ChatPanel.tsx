@@ -24,6 +24,7 @@ import { TrustBadge } from './ContentTrust';
 import { AssistantMessageActions, UserMessageActions } from './MessageActions';
 import { VersionNavigator } from './VersionNavigator';
 import { DislikeFeedbackModal } from './DislikeFeedbackModal';
+import { ActionButton } from './ActionButton';
 import { Button } from '@marcelinodzn/ds-react';
 import { Badge } from './ui/Badge';
 import { DSIcon } from './DSIcon';
@@ -764,43 +765,23 @@ export const ChatPanel = memo(function ChatPanel({
           }}
         />
 
-        {/* Voice button - matches submit button size */}
+        {/* Voice button - uses ActionButton for consistency with chat bubble actions */}
         {onVoiceClick && (
-          <div className="flex-shrink-0 self-end" style={{ width: '36px', height: '36px' }}>
-            <Button
-              onPress={onVoiceClick}
-              isDisabled={!voiceSupported}
-              appearance="neutral"
-              attention="low"
-              single
-              aria-label={!voiceSupported 
+          <div className="flex-shrink-0 self-end">
+            <ActionButton
+              icon={_mode === 'voice' 
+                ? <DSIcon name="IcStop" size="S" style={{ color: theme.text.medium }} />
+                : <DSIcon name="IcMic" size="S" style={{ color: theme.text.medium }} />
+              }
+              label={!voiceSupported 
                 ? "Voice chat not supported in this browser" 
                 : _mode === 'voice' 
-                  ? "Stop voice chat and return to text" 
-                  : "Switch to voice chat"}
-              title={!voiceSupported 
-                ? "Voice chat not supported in this browser" 
-                : _mode === 'voice'
-                  ? "Stop voice chat"
-                  : "Voice chat (speak with AI)"}
-              className="voice-button"
-              style={{
-                width: '36px',
-                height: '36px',
-                minHeight: '36px',
-                padding: '0',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {_mode === 'voice' ? (
-                <DSIcon name="IcStop" size="S" attention="high" />
-              ) : (
-                <DSIcon name="IcMic" size="S" attention="medium" />
-              )}
-            </Button>
+                  ? "Stop voice chat" 
+                  : "Voice chat"}
+              onClick={onVoiceClick}
+              disabled={!voiceSupported}
+              size={36}
+            />
           </div>
         )}
 
@@ -875,16 +856,6 @@ export const ChatPanel = memo(function ChatPanel({
       aria-label="Chat conversation"
       id={id}
     >
-      <style>{`
-        .voice-button {
-          padding: 0 !important;
-        }
-        .voice-button:hover:not(:disabled) {
-          background-color: ${theme.background.bold} !important;
-          transition: none !important;
-        }
-      `}</style>
-      
       {messages.length === 0 && showEmptyState ? (
         /* Empty State: Centered Layout - takes full height */
         <div 
