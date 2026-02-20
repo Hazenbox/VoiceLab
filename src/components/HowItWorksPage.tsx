@@ -107,7 +107,7 @@ const StatCounter = memo(function StatCounter({ value, label, pills, visible, de
     <div className="text-center flex-1">
       <div
         className="text-5xl font-extrabold tabular-nums mb-1"
-        style={{ color: theme.secondary }}
+        style={{ color: theme.text.high }}
       >
         {count}
       </div>
@@ -187,7 +187,7 @@ const PipelineStep = memo(function PipelineStep({ number, label, description, ex
           {number}
         </div>
         {!isLast && (
-          <div className="w-px my-1" style={{ height: '60px', backgroundImage: `repeating-linear-gradient(to bottom, ${theme.secondary}50 0, ${theme.secondary}50 4px, transparent 4px, transparent 8px)` }} />
+          <div className="w-px my-1" style={{ height: '60px', backgroundImage: `repeating-linear-gradient(to bottom, ${theme.stroke.medium} 0, ${theme.stroke.medium} 2px, transparent 2px, transparent 6px)` }} />
         )}
       </div>
       {/* Content */}
@@ -266,7 +266,6 @@ const PromptLayer = memo(function PromptLayer({ label, phase, index, total }: Pr
       className="flex items-center gap-3 px-4 py-2 rounded-lg"
       style={{
         backgroundColor: isCore ? theme.background.ghost : `${theme.secondary}12`,
-        border: `1px solid ${isCore ? theme.stroke.low : theme.secondary}`,
         opacity,
       }}
     >
@@ -360,9 +359,6 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             >
               How Voice Lab works
             </h2>
-            <p className="text-base" style={{ color: theme.text.medium }}>
-              From your words to brand-certified content in under 3 seconds
-            </p>
           </div>
 
           {/* Hero pipeline diagram -- VERTICAL */}
@@ -478,7 +474,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             className="rounded-2xl p-5"
             style={{ backgroundColor: `${theme.secondary}08` }}
           >
-            <div className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: theme.secondary }}>
+            <div className="text-xs font-medium mb-3" style={{ color: theme.text.high }}>
               Example: Marketing persona auto-configuration
             </div>
             <div className="text-xs mb-4" style={{ color: theme.text.medium }}>
@@ -564,7 +560,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   <div
                     key={t.tier}
                     className="rounded-xl p-4"
-                    style={{ backgroundColor: t.color, border: `1px solid ${theme.stroke.medium}` }}
+                    style={{ backgroundColor: t.color }}
                   >
                     <div className="text-xs font-semibold mb-2" style={{ color: theme.text.high }}>
                       {t.tier}
@@ -703,67 +699,61 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
           tagline="8 AI agents verify every response. The weighted scores produce a trust certificate."
           alt
         >
-          {/* 8 agent cards */}
-          <div className="grid grid-cols-4 gap-3 mb-6">
-            {[
-              { name: 'Gender neutrality',     weight: '12%', color: '#E0F2FE' },
-              { name: 'Inclusivity',            weight: '12%', color: '#F0FDF4' },
-              { name: 'Cultural sensitivity',   weight: '12%', color: '#FEF3C7' },
-              { name: 'Accessibility',          weight: '10%', color: '#F3E8FF' },
-              { name: 'Compliance',             weight: '14%', color: '#FCE7F3' },
-              { name: 'Style consistency',      weight: '14%', color: '#FFEDD5' },
-              { name: 'Brand alignment',        weight: '14%', color: '#E1EFFE' },
-              { name: 'Readability',            weight: '12%', color: '#DCFCE7' },
-            ].map((agent) => (
-              <div
-                key={agent.name}
-                className="rounded-xl p-3 text-center"
-                style={{ backgroundColor: agent.color, border: `1px solid ${theme.stroke.low}` }}
-              >
-                <div className="text-xs font-semibold" style={{ color: theme.text.high }}>
-                  {agent.name}
+          {/* Side-by-side layout: agents on left, trust score on right */}
+          <div className="grid grid-cols-2 gap-6 mb-6">
+            {/* Left: 8 agent cards stacked */}
+            <div className="space-y-2">
+              {[
+                { name: 'Gender neutrality',     weight: '12%', color: '#E0F2FE' },
+                { name: 'Inclusivity',            weight: '12%', color: '#F0FDF4' },
+                { name: 'Cultural sensitivity',   weight: '12%', color: '#FEF3C7' },
+                { name: 'Accessibility',          weight: '10%', color: '#F3E8FF' },
+                { name: 'Compliance',             weight: '14%', color: '#FCE7F3' },
+                { name: 'Style consistency',      weight: '14%', color: '#FFEDD5' },
+                { name: 'Brand alignment',        weight: '14%', color: '#E1EFFE' },
+                { name: 'Readability',            weight: '12%', color: '#DCFCE7' },
+              ].map((agent) => (
+                <div
+                  key={agent.name}
+                  className="rounded-lg p-3 flex items-center justify-between"
+                  style={{ backgroundColor: agent.color }}
+                >
+                  <div className="text-xs font-semibold" style={{ color: theme.text.high }}>
+                    {agent.name}
+                  </div>
+                  <div className="text-xs font-medium" style={{ color: theme.text.medium }}>
+                    {agent.weight}
+                  </div>
                 </div>
-                <div className="text-[10px] mt-1" style={{ color: theme.text.medium }}>
-                  {agent.weight}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* Converging arrows + trust score -- standardised diagram */}
-          <div
-            className="p-6 rounded-2xl overflow-hidden mb-6"
-            style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
-          >
-            <FlowCanvas height={120} viewBox="0 0 600 120" dotColor={theme.stroke.low}>
-              {['Gender', 'Inclusivity', 'Cultural', 'A11Y', 'Compliance', 'Style', 'Brand', 'Readability'].map((name, i) => {
-                const x = 10 + i * 72;
-                return (
-                  <g key={name}>
-                    <FlowNode x={x} y={0} width={65} height={35} label={name} color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
-                    <CurvedFlowArrow startX={x + 32} startY={38} endX={260} endY={85} color={theme.secondary} />
-                  </g>
-                );
-              })}
-              <FlowNode x={210} y={80} width={180} height={35} label="Trust score" sublabel="0 -- 100" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
-            </FlowCanvas>
-          </div>
-
-          <div className="flex justify-center gap-4">
-            {[
-              { level: 'Certified', color: '#16a34a', bg: '#DCFCE7', range: '90-100' },
-              { level: 'Needs Review', color: '#ca8a04', bg: '#FEF3C7', range: '70-89' },
-              { level: 'Has Issues', color: '#dc2626', bg: '#FEE2E2', range: 'Below 70' },
-            ].map((l) => (
+            {/* Right: Trust score result */}
+            <div className="flex flex-col items-center justify-center">
               <div
-                key={l.level}
-                className="rounded-xl px-5 py-3 text-center"
-                style={{ backgroundColor: l.bg, border: `1px solid ${l.color}30` }}
+                className="w-32 h-32 rounded-full flex flex-col items-center justify-center mb-4"
+                style={{ backgroundColor: theme.secondary }}
               >
-                <div className="text-xs font-semibold" style={{ color: l.color }}>{l.level}</div>
-                <div className="text-[10px] mt-0.5" style={{ color: l.color + '99' }}>{l.range}</div>
+                <div className="text-3xl font-bold text-white">94</div>
+                <div className="text-xs text-white opacity-80">Trust score</div>
               </div>
-            ))}
+              <div className="space-y-2 w-full max-w-xs">
+                {[
+                  { level: 'Certified', color: '#16a34a', bg: '#DCFCE7', range: '90-100' },
+                  { level: 'Needs review', color: '#ca8a04', bg: '#FEF3C7', range: '70-89' },
+                  { level: 'Has issues', color: '#dc2626', bg: '#FEE2E2', range: 'Below 70' },
+                ].map((l) => (
+                  <div
+                    key={l.level}
+                    className="rounded-lg px-4 py-2 flex items-center justify-between"
+                    style={{ backgroundColor: l.bg }}
+                  >
+                    <div className="text-xs font-semibold" style={{ color: l.color }}>{l.level}</div>
+                    <div className="text-[10px]" style={{ color: l.color + '99' }}>{l.range}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </VisualSection>
 
@@ -1059,7 +1049,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               'PII Detection', 'Sentry Monitoring', 'Upstash Redis',
               'Vector Search', 'Offline Queue', '333 Compliance Tests',
             ].map((badge) => (
-              <Badge key={badge} variant="neutral" emphasis="high">{badge}</Badge>
+              <Badge key={badge} variant="informative" emphasis="low">{badge}</Badge>
             ))}
           </div>
         </VisualSection>
