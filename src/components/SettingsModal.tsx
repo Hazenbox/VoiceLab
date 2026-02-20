@@ -175,13 +175,6 @@ export const SettingsModal = memo(function SettingsModal({
   }, [trustSettings, onTrustSettingsChange]);
   
   if (!isOpen) return null;
-
-  // Section titles
-  const sectionTitles: Record<SettingsSection, string> = {
-    model: 'Model Selection',
-    voice: 'Voice Settings',
-    trust: 'Trust Settings',
-  };
   
   return (
     <>
@@ -281,13 +274,6 @@ export const SettingsModal = memo(function SettingsModal({
             }}
             className="scrollable-container"
           >
-            {/* Section Title */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <Title size="S" as="h3" weight="high" color="high">
-                {sectionTitles[activeSection]}
-              </Title>
-            </div>
-            
             {/* Model Selection Content */}
             {activeSection === 'model' && (
               <div className="space-y-4">
