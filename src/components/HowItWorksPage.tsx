@@ -182,11 +182,11 @@ const PipelineStep = memo(function PipelineStep({ number, label, description, ex
   const theme = useThemeColors();
 
   return (
-    <div className={`hiw-reveal ${visible ? 'hiw-visible' : ''} hiw-stagger-${number} flex gap-3`}>
+    <div className={`hiw-reveal ${visible ? 'hiw-visible' : ''} hiw-stagger-${number} flex gap-3 ${isLast ? '' : 'mb-4'}`}>
       {/* Timeline spine */}
       <div className="flex flex-col items-center flex-shrink-0">
         <div
-          className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold z-10"
+          className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold z-10"
           style={{ backgroundColor: theme.accent, color: '#fff' }}
         >
           {number}
@@ -196,7 +196,7 @@ const PipelineStep = memo(function PipelineStep({ number, label, description, ex
         )}
       </div>
       {/* Content */}
-      <div className={`flex-1 ${isLast ? '' : 'mb-1.5'}`}>
+      <div className="flex-1">
         <div className="text-sm font-semibold" style={{ color: theme.text.high }}>
           {label}
         </div>
@@ -204,7 +204,7 @@ const PipelineStep = memo(function PipelineStep({ number, label, description, ex
           {description}
         </div>
         <div
-          className="text-[11px] mt-1.5 px-3 py-1.5 rounded-lg"
+          className="text-[11px] mt-1.5 px-2.5 py-1 rounded-lg"
           style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
         >
           {example}
