@@ -122,24 +122,24 @@ body.dark {
 @keyframes placeholderSlideIn {
   0% {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
-  10% {
+  6% {
     opacity: 1;
     transform: translateY(0);
   }
-  88% {
+  92% {
     opacity: 1;
     transform: translateY(0);
   }
   100% {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
 }
 
 .rotating-placeholder {
-  animation: placeholderSlideIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: placeholderSlideIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
