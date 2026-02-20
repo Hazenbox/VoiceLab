@@ -27,10 +27,11 @@ export interface FlowNodeProps {
   textColor: string;
   strokeColor: string;
   badge?: { text: string; color: string; textColor: string };
+  noShadow?: boolean;
 }
 
 export const FlowNode = memo(function FlowNode({ 
-  x, y, width, height, label, sublabel, color, textColor, strokeColor, badge
+  x, y, width, height, label, sublabel, color, textColor, strokeColor, badge, noShadow
 }: FlowNodeProps) {
   return (
     <g>
@@ -44,7 +45,7 @@ export const FlowNode = memo(function FlowNode({
         fill={color}
         stroke={strokeColor}
         strokeWidth={1}
-        filter="drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.05))"
+        filter={noShadow ? undefined : "drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.05))"}
       />
       
       {/* Badge (if present) */}

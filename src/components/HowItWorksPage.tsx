@@ -691,17 +691,18 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   <FlowNode
                     x={0}
                     y={agent.y}
-                    width={180}
+                    width={220}
                     height={32}
                     label={`${agent.name} (${agent.weight})`}
                     color={i % 2 === 0 ? theme.stroke.low : theme.background.ghost}
                     textColor={theme.text.high}
                     strokeColor={theme.stroke.medium}
+                    noShadow
                   />
                   <CurvedFlowArrow
-                    startX={185}
+                    startX={225}
                     startY={agent.y + 16}
-                    endX={450}
+                    endX={480}
                     endY={160}
                     color={theme.stroke.medium}
                   />
@@ -709,7 +710,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               ))}
               {/* Trust score circle on the right */}
               <FlowNode
-                x={455}
+                x={485}
                 y={110}
                 width={100}
                 height={100}
@@ -718,6 +719,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 color={theme.secondary}
                 textColor="#fff"
                 strokeColor={theme.secondary}
+                noShadow
               />
             </FlowCanvas>
           </div>
