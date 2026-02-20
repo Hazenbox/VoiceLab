@@ -197,29 +197,16 @@ export const FlowArrow = memo(function FlowArrow({ x1, y1, x2, y2, color, label,
         <marker
           id={`arrowhead-${x1}-${y1}-${x2}-${y2}`}
           markerWidth="12"
-          markerHeight="8"
+          markerHeight="12"
           refX="10"
-          refY="4"
+          refY="6"
           orient="auto"
           markerUnits="userSpaceOnUse"
         >
-          <line
-            x1="0"
-            y1="0"
-            x2="10"
-            y2="4"
-            stroke={color}
-            strokeWidth={2.5}
-            strokeLinecap="round"
-          />
-          <line
-            x1="0"
-            y1="8"
-            x2="10"
-            y2="4"
-            stroke={color}
-            strokeWidth={2.5}
-            strokeLinecap="round"
+          <path
+            d="M 0 0 L 10 6 L 0 12 L 2 6 Z"
+            fill={color}
+            stroke="none"
           />
         </marker>
       </defs>
@@ -229,11 +216,13 @@ export const FlowArrow = memo(function FlowArrow({ x1, y1, x2, y2, color, label,
         x2={x2}
         y2={y2}
         stroke={color}
-        strokeWidth={2.5}
+        strokeWidth={2}
         strokeLinecap="round"
         strokeDasharray={dashed ? "4" : undefined}
         markerEnd={`url(#arrowhead-${x1}-${y1}-${x2}-${y2})`}
       />
+      {/* Start dot */}
+      <circle cx={x1} cy={y1} r={3} fill={color} />
       {label && (
         <text
           x={midX}
