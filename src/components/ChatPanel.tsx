@@ -409,7 +409,7 @@ export const ChatPanel = memo(function ChatPanel({
   const placeholderArray = isRotating ? placeholder : [placeholder];
   const { currentText: rotatingText, animKey } = useRotatingPlaceholder({
     placeholders: placeholderArray,
-    intervalMs: 2000,
+    intervalMs: 1500,
     paused: !isRotating || inputValue.length > 0,
   });
   
