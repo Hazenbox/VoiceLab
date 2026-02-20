@@ -13,7 +13,7 @@ const SYSTEM_PROMPT = `You are a professional text editor. Rephrase the given te
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!handleCors(req, res)) return;
   if (!handleApiAuth(req, res)) return;
-  if (!handleRateLimit(req, res, 'rewrite')) return;
+  if (!handleRateLimit(req, res, 'llm')) return;
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
