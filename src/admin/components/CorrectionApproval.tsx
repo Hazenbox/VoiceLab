@@ -5,7 +5,7 @@ import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import { AdminTable, AdminTableRow, AdminTableCell } from './AdminTable';
 import { formatRelativeTime } from '../utils/formatters';
 import type { Id } from '../../../convex/_generated/dataModel';
-import { Chip, Divider, Label, Button } from '@marcelinodzn/ds-react';
+import { Divider, Label, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
 
 // ── Types ────────────────────────────────────────────────────────
 interface Correction {
@@ -321,36 +321,42 @@ export function CorrectionApprovalList({ deviceId, feedbackCounts }: CorrectionA
 
   return (
     <>
-      {/* Filter Chips */}
+      {/* Filters */}
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px', alignItems: 'center' }}>
         {/* Status filters */}
-        {statusTabs.map(tab => (
-          <Chip
-            key={tab.key}
-            size="S"
-            appearance="neutral"
-            isSelected={statusFilter === tab.key}
-            onPress={() => setStatusFilter(tab.key)}
-          >
-            {tab.label}
-          </Chip>
-        ))}
+        <SegmentedControl
+          value={statusFilter}
+          onChange={setStatusFilter}
+          aria-label="filter by status"
+          size="S"
+          emphasis="low"
+          className="segmented-no-gap"
+        >
+          {statusTabs.map(tab => (
+            <SegmentedControlItem key={tab.key} value={tab.key}>
+              {tab.label}
+            </SegmentedControlItem>
+          ))}
+        </SegmentedControl>
         
-        {/* Visual separator */}
         <Divider orientation="vertical" />
         
-        {/* Feedback type filters - functional */}
-        {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
-          <Chip
-            key={type}
-            size="S"
-            appearance="neutral"
-            isSelected={typeFilter === type}
-            onPress={() => setTypeFilter(typeFilter === type ? 'all' : type)}
-          >
-            {feedbackCounts?.[type] ?? 0} {type.replace('_', ' ')}
-          </Chip>
-        ))}
+        {/* Feedback type filters */}
+        <SegmentedControl
+          value={typeFilter}
+          onChange={setTypeFilter}
+          aria-label="filter by feedback type"
+          size="S"
+          emphasis="low"
+          className="segmented-no-gap"
+        >
+          <SegmentedControlItem value="all">all</SegmentedControlItem>
+          {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
+            <SegmentedControlItem key={type} value={type}>
+              {feedbackCounts?.[type] ?? 0} {type.replace('_', ' ')}
+            </SegmentedControlItem>
+          ))}
+        </SegmentedControl>
       </div>
 
       {/* Corrections Table */}
