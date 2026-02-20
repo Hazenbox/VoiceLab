@@ -607,7 +607,7 @@ export function ComplianceTestRunner() {
             </div>
             
             {/* Footer */}
-            <div className="px-6 py-4 flex justify-end gap-3">
+            <div className="px-6 pt-2 pb-6 flex justify-end gap-3">
               <Button
                 onPress={() => setShowDeleteConfirm(false)}
                 appearance="neutral"
