@@ -326,7 +326,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
         style={{ borderBottom: `1px solid ${theme.stroke.low}`, backgroundColor: theme.background.ghost }}
       >
         <h1 className="text-lg font-extrabold flex-shrink-0" style={{ color: theme.text.high }}>
-          How It Works
+          How it works
         </h1>
         <div className="flex items-center gap-1 ml-4">
           {navItems.map((item) => (
@@ -358,7 +358,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               className="text-4xl font-extrabold tracking-tight mb-3"
               style={{ color: theme.text.high }}
             >
-              How Voice Lab Works
+              How Voice Lab works
             </h2>
             <p className="text-base" style={{ color: theme.text.medium }}>
               From your words to brand-certified content in under 3 seconds
@@ -373,14 +373,14 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             >
               <FlowCanvas height={620} viewBox="0 0 300 620" dotColor={theme.stroke.low}>
                 {[
-                  { y: 0,   label: 'Your Input',       sub: '' },
-                  { y: 75,  label: 'Intent Classify',   sub: 'Route' },
-                  { y: 150, label: 'Safety Gate',       sub: 'Block' },
+                  { y: 0,   label: 'Your input',       sub: '' },
+                  { y: 75,  label: 'Intent classify',   sub: 'Route' },
+                  { y: 150, label: 'Safety gate',       sub: 'Block' },
                   { y: 225, label: 'Knowledge RAG',     sub: 'Retrieve' },
-                  { y: 300, label: 'Prompt Assembly',   sub: '14 Layers' },
-                  { y: 375, label: 'LLM Generate',      sub: 'Multi-Provider' },
-                  { y: 450, label: '15+ Validators',    sub: '8 AI Agents' },
-                  { y: 525, label: 'Trusted Output',    sub: 'Scored' },
+                  { y: 300, label: 'Prompt assembly',   sub: '14 layers' },
+                  { y: 375, label: 'LLM generate',      sub: 'Multi-provider' },
+                  { y: 450, label: '15+ validators',    sub: '8 AI agents' },
+                  { y: 525, label: 'Trusted output',    sub: 'Scored' },
                 ].map((node, i, arr) => (
                   <g key={node.label}>
                     <FlowNode
@@ -415,7 +415,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             ================================================================ */}
         <VisualSection
           id="hiw-onboarding"
-          title="Onboarding & Persona Engine"
+          title="Onboarding & persona engine"
           tagline="3 steps to set up. The system auto-configures everything else."
           alt
         >
@@ -425,13 +425,13 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
           >
             <FlowCanvas height={70} viewBox="0 0 800 70" dotColor={theme.stroke.low}>
-              <FlowNode x={0} y={10} width={140} height={50} label="Step 1" sublabel="Your Name" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={0} y={10} width={140} height={50} label="Step 1" sublabel="Your name" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
               <CurvedFlowArrow startX={145} startY={35} endX={195} endY={35} color={theme.accent} />
-              <FlowNode x={200} y={10} width={140} height={50} label="Step 2" sublabel="Your Role" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={200} y={10} width={140} height={50} label="Step 2" sublabel="Your role" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
               <CurvedFlowArrow startX={345} startY={35} endX={395} endY={35} color={theme.accent} />
-              <FlowNode x={400} y={10} width={160} height={50} label="Step 3" sublabel="Product Ecosystem" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={400} y={10} width={160} height={50} label="Step 3" sublabel="Product ecosystem" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
               <CurvedFlowArrow startX={565} startY={35} endX={615} endY={35} color={theme.accent} />
-              <FlowNode x={620} y={10} width={160} height={50} label="Auto-Configured" sublabel="Ready to Generate" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+              <FlowNode x={620} y={10} width={160} height={50} label="Auto-configured" sublabel="Ready to generate" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
             </FlowCanvas>
           </div>
 
@@ -479,19 +479,19 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             style={{ backgroundColor: `${theme.secondary}08` }}
           >
             <div className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: theme.secondary }}>
-              Example: Marketing Persona Auto-Configuration
+              Example: Marketing persona auto-configuration
             </div>
             <div className="text-xs mb-4" style={{ color: theme.text.medium }}>
               When a user selects &quot;Marketing&quot; as their role, the system automatically configures the following parameters without any manual input:
             </div>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { param: 'Default Channel', value: 'Social Media Post' },
-                { param: 'Content Goal', value: 'Engagement' },
-                { param: 'Warmth Level', value: '8/10' },
-                { param: 'Detail Level', value: '4/10' },
-                { param: 'Default Emotion', value: 'Adbhuta (Wonder)' },
-                { param: 'Focus Areas', value: 'Hooks, CTAs, Engagement' },
+                { param: 'Default channel', value: 'Social media post' },
+                { param: 'Content goal', value: 'Engagement' },
+                { param: 'Warmth level', value: '8/10' },
+                { param: 'Detail level', value: '4/10' },
+                { param: 'Default emotion', value: 'Adbhuta (Wonder)' },
+                { param: 'Focus areas', value: 'Hooks, CTAs, engagement' },
               ].map((item) => (
                 <div key={item.param} className="flex items-center gap-2">
                   <span className="text-[10px] font-medium" style={{ color: theme.text.low }}>{item.param}:</span>
@@ -510,7 +510,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             ================================================================ */}
         <section id="hiw-pipeline" ref={pipelineInView.ref}>
           <VisualSection
-            title="The 7-Step Pipeline"
+            title="The 7-step pipeline"
             tagline="Every piece of content passes through 7 stages before it reaches you."
           >
             <div
@@ -518,13 +518,13 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
             >
               {[
-                { n: 1, label: 'Intent Classify',     desc: 'Routes your request to the right pipeline -- content, question, or product inquiry', example: '"Write a push notification for JioFiber" -> classified as content generation for Connectivity ecosystem' },
-                { n: 2, label: 'Safety Gate',          desc: 'Blocks harmful, sensitive, or crisis content before generation (production-locked)', example: '"Write something offensive about competitors" -> blocked before any LLM call is made' },
+                { n: 1, label: 'Intent classify',     desc: 'Routes your request to the right pipeline -- content, question, or product inquiry', example: '"Write a push notification for JioFiber" -> classified as content generation for Connectivity ecosystem' },
+                { n: 2, label: 'Safety gate',          desc: 'Blocks harmful, sensitive, or crisis content before generation (production-locked)', example: '"Write something offensive about competitors" -> blocked before any LLM call is made' },
                 { n: 3, label: 'Knowledge RAG',        desc: 'Retrieves relevant rules via 384-dimension vector search from the knowledge base', example: 'Query embeds to 384-dim vector, finds "avoid word: leverage" and "prefer: use" from Convex DB' },
-                { n: 4, label: 'Prompt Assembly',      desc: 'Builds a 14-layer context-aware system prompt from persona, channel, emotion, and rules', example: 'Loads JioFiber tone, push notification format (60 chars), Adbhuta emotion, 10 guardrails, avoid-words' },
-                { n: 5, label: 'LLM Generate',         desc: 'Multi-provider architecture with automatic fallback -- no single point of failure', example: 'Qwen generates response in 1.2s; if Qwen fails, HuggingFace takes over in 0.3s' },
-                { n: 6, label: '15+ Validators',       desc: '8 AI agents score across gender, inclusivity, cultural, A11Y, compliance, style, brand, readability', example: 'Brand agent flags "Amazing deal!" as too informal (score 72), Style agent flags title case violation' },
-                { n: 7, label: 'Auto-Fix + Finalize',  desc: 'Corrects fixable violations, scrubs PII, normalises entities, formats output', example: '"Rs. 999" auto-fixed to "₹999", title case corrected to sentence case, trust score: 94 (certified)' },
+                { n: 4, label: 'Prompt assembly',      desc: 'Builds a 14-layer context-aware system prompt from persona, channel, emotion, and rules', example: 'Loads JioFiber tone, push notification format (60 chars), Adbhuta emotion, 10 guardrails, avoid-words' },
+                { n: 5, label: 'LLM generate',         desc: 'Multi-provider architecture with automatic fallback -- no single point of failure', example: 'Qwen generates response in 1.2s; if Qwen fails, HuggingFace takes over in 0.3s' },
+                { n: 6, label: '15+ validators',       desc: '8 AI agents score across gender, inclusivity, cultural, A11Y, compliance, style, brand, readability', example: 'Brand agent flags "Amazing deal!" as too informal (score 72), Style agent flags title case violation' },
+                { n: 7, label: 'Auto-fix + finalize',  desc: 'Corrects fixable violations, scrubs PII, normalises entities, formats output', example: '"Rs. 999" auto-fixed to "₹999", title case corrected to sentence case, trust score: 94 (certified)' },
               ].map((step, i, arr) => (
                 <PipelineStep
                   key={step.n}
@@ -545,7 +545,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             ================================================================ */}
         <VisualSection
           id="hiw-knowledge"
-          title="Knowledge & Prompt Assembly"
+          title="Knowledge & prompt assembly"
           tagline="Three tiers of knowledge merge through RAG into a 14-layer system prompt."
           alt
         >
@@ -553,13 +553,13 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             {/* Left: 3-tier knowledge hierarchy */}
             <div>
               <div className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: theme.text.low }}>
-                Knowledge Hierarchy
+                Knowledge hierarchy
               </div>
               <div className="space-y-2">
                 {[
-                  { tier: 'Tier 1: Code Defaults', items: ['101 Regex Patterns', '10 Brand Guardrails', '18 Channel Rules', '9 Navarasa Emotions'], color: theme.stroke.low },
-                  { tier: 'Tier 2: Convex Database', items: ['283 Avoid Words', '200+ Preferred Vocab', '33 Auto-Fix Rules', '14 Product Definitions', '11 Festivals'], color: `${theme.secondary}15` },
-                  { tier: 'Tier 3: User Learnings', items: ['Corrections from Feedback', 'Style Preferences', 'Saved Examples'], color: `${theme.secondary}25` },
+                  { tier: 'Tier 1: Code defaults', items: ['101 regex patterns', '10 brand guardrails', '18 channel rules', '9 Navarasa emotions'], color: theme.stroke.low },
+                  { tier: 'Tier 2: Convex database', items: ['283 avoid words', '200+ preferred vocab', '33 auto-fix rules', '14 product definitions', '11 festivals'], color: `${theme.secondary}15` },
+                  { tier: 'Tier 3: User learnings', items: ['Corrections from feedback', 'Style preferences', 'Saved examples'], color: `${theme.secondary}25` },
                 ].map((t) => (
                   <div
                     key={t.tier}
@@ -599,27 +599,27 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             {/* Right: 14-layer prompt tower */}
             <div>
               <div className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: theme.text.low }}>
-                14-Layer Prompt Assembly
+                14-layer prompt assembly
               </div>
               <p className="text-xs mb-4" style={{ color: theme.text.medium }}>
                 Every generation request assembles a system prompt from 14 contextual layers. Core layers are always present. Phase layers are injected progressively as the system learns -- persona config (P1), knowledge base rules (P2), user corrections (P3), and semantic RAG results (P4). The final prompt can contain hundreds of directives, but only the most relevant 5--10 per category are selected based on the current ecosystem, channel, and emotion.
               </p>
               <div className="space-y-1">
                 {[
-                  { label: 'System Header',            phase: 'Core' },
-                  { label: 'Ecosystem + Channel Tone',  phase: 'Core' },
-                  { label: 'Content Topic Context',     phase: 'Core' },
-                  { label: '10 Brand Guardrails',       phase: 'Core' },
-                  { label: 'Style Rules (Mandatory)',    phase: 'Core' },
-                  { label: 'Conversation Flow',         phase: 'Core' },
-                  { label: 'Persona Personality',       phase: 'P1' },
-                  { label: 'Channel Guidelines (18)',    phase: 'Core' },
-                  { label: 'Knowledge Sections',        phase: 'P2' },
-                  { label: 'Learned Corrections',       phase: 'P3' },
-                  { label: 'Semantic RAG Results',      phase: 'P4' },
-                  { label: 'User Profile Adaptations',  phase: 'Core' },
-                  { label: 'Navarasa Emotion Map',      phase: 'Core' },
-                  { label: 'Timing + Final Reminders',  phase: 'Core' },
+                  { label: 'System header',            phase: 'Core' },
+                  { label: 'Ecosystem + channel tone',  phase: 'Core' },
+                  { label: 'Content topic context',     phase: 'Core' },
+                  { label: '10 brand guardrails',       phase: 'Core' },
+                  { label: 'Style rules (mandatory)',    phase: 'Core' },
+                  { label: 'Conversation flow',         phase: 'Core' },
+                  { label: 'Persona personality',       phase: 'P1' },
+                  { label: 'Channel guidelines (18)',    phase: 'Core' },
+                  { label: 'Knowledge sections',        phase: 'P2' },
+                  { label: 'Learned corrections',       phase: 'P3' },
+                  { label: 'Semantic RAG results',      phase: 'P4' },
+                  { label: 'User profile adaptations',  phase: 'Core' },
+                  { label: 'Navarasa emotion map',      phase: 'Core' },
+                  { label: 'Timing + final reminders',  phase: 'Core' },
                 ].map((layer, i, arr) => (
                   <PromptLayer
                     key={layer.label}
@@ -639,7 +639,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             ================================================================ */}
         <VisualSection
           id="hiw-llm"
-          title="LLM Orchestration"
+          title="LLM orchestration"
           tagline="Smart request management with caching, retry, and multi-provider fallback."
         >
           <div
@@ -650,14 +650,14 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               <FlowNode x={0} y={75} width={85} height={50} label="Request" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
               <CurvedFlowArrow startX={88} startY={100} endX={118} endY={100} color={theme.stroke.medium} />
 
-              <FlowNode x={122} y={75} width={95} height={50} label="Cache Check" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={122} y={75} width={95} height={50} label="Cache check" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
 
               <CurvedFlowArrow startX={170} startY={75} endX={170} endY={30} color={theme.accent} label="Hit" />
               <FlowNode x={135} y={0} width={70} height={28} label="Instant" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
 
               <CurvedFlowArrow startX={220} startY={100} endX={260} endY={100} color={theme.stroke.medium} label="Miss" />
 
-              <FlowNode x={264} y={75} width={100} height={50} label="Provider" sublabel="Selection" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={264} y={75} width={100} height={50} label="Provider" sublabel="selection" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
 
               {[
                 { label: 'Qwen',        y: 20,  primary: true },
@@ -681,14 +681,14 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               ))}
 
               <CurvedFlowArrow startX={500} startY={37} endX={545} endY={80} color={theme.stroke.medium} />
-              <FlowNode x={548} y={65} width={80} height={45} label="Retry" sublabel="+ Backoff" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={548} y={65} width={80} height={45} label="Retry" sublabel="+ backoff" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
 
               <CurvedFlowArrow startX={632} startY={87} endX={665} endY={87} color={theme.accent} />
-              <FlowNode x={668} y={65} width={75} height={45} label="Stream" sublabel="Response" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+              <FlowNode x={668} y={65} width={75} height={45} label="Stream" sublabel="response" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
 
               <path d="M 588 110 L 588 160 L 458 160 L 458 110" fill="none" stroke={theme.stroke.medium} strokeWidth={1.5} strokeDasharray="4" />
               <text x={523} y={175} textAnchor="middle" fill={theme.text.low} fontSize={10} fontFamily="'JioType', system-ui, sans-serif">
-                Fallback on Failure
+                Fallback on failure
               </text>
             </FlowCanvas>
           </div>
@@ -699,20 +699,20 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             ================================================================ */}
         <VisualSection
           id="hiw-trust"
-          title="Content Trust Validation"
+          title="Content trust validation"
           tagline="8 AI agents verify every response. The weighted scores produce a trust certificate."
           alt
         >
           {/* 8 agent cards */}
           <div className="grid grid-cols-4 gap-3 mb-6">
             {[
-              { name: 'Gender Neutrality',     weight: '12%', color: '#E0F2FE' },
+              { name: 'Gender neutrality',     weight: '12%', color: '#E0F2FE' },
               { name: 'Inclusivity',            weight: '12%', color: '#F0FDF4' },
-              { name: 'Cultural Sensitivity',   weight: '12%', color: '#FEF3C7' },
+              { name: 'Cultural sensitivity',   weight: '12%', color: '#FEF3C7' },
               { name: 'Accessibility',          weight: '10%', color: '#F3E8FF' },
               { name: 'Compliance',             weight: '14%', color: '#FCE7F3' },
-              { name: 'Style Consistency',      weight: '14%', color: '#FFEDD5' },
-              { name: 'Brand Alignment',        weight: '14%', color: '#E1EFFE' },
+              { name: 'Style consistency',      weight: '14%', color: '#FFEDD5' },
+              { name: 'Brand alignment',        weight: '14%', color: '#E1EFFE' },
               { name: 'Readability',            weight: '12%', color: '#DCFCE7' },
             ].map((agent) => (
               <div
@@ -745,7 +745,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                   </g>
                 );
               })}
-              <FlowNode x={210} y={80} width={180} height={35} label="Trust Score" sublabel="0 -- 100" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
+              <FlowNode x={210} y={80} width={180} height={35} label="Trust score" sublabel="0 -- 100" color={theme.secondary} textColor="#fff" strokeColor={theme.secondary} />
             </FlowCanvas>
           </div>
 
@@ -772,7 +772,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             ================================================================ */}
         <VisualSection
           id="hiw-modes"
-          title="Two Modes"
+          title="Two modes"
           tagline="Type or talk. Both produce brand-certified content."
         >
           <div className="grid grid-cols-2 gap-6">
@@ -782,7 +782,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
             >
               <div className="text-sm font-semibold mb-1" style={{ color: theme.text.high }}>
-                Copy Mode
+                Copy mode
               </div>
               <div className="text-xs mb-4" style={{ color: theme.text.medium }}>
                 Type naturally, get brand-compliant content
@@ -794,11 +794,11 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 <FlowCanvas height={55} viewBox="0 0 500 55" dotColor={theme.stroke.low}>
                   <FlowNode x={0} y={7} width={80} height={40} label="Type" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                   <FlowArrow x1={84} y1={27} x2={98} y2={27} color={theme.accent} />
-                  <FlowNode x={102} y={7} width={80} height={40} label="Context" sublabel="Eco+Channel" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={102} y={7} width={80} height={40} label="Context" sublabel="Eco+channel" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                   <FlowArrow x1={186} y1={27} x2={200} y2={27} color={theme.accent} />
                   <FlowNode x={204} y={7} width={80} height={40} label="Generate" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
                   <FlowArrow x1={288} y1={27} x2={302} y2={27} color={theme.accent} />
-                  <FlowNode x={306} y={7} width={80} height={40} label="Stream" sublabel="Response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={306} y={7} width={80} height={40} label="Stream" sublabel="response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                   <FlowArrow x1={390} y1={27} x2={404} y2={27} color={theme.accent} />
                   <FlowNode x={408} y={7} width={80} height={40} label="Feedback" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 </FlowCanvas>
@@ -811,7 +811,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
             >
               <div className="text-sm font-semibold mb-1" style={{ color: theme.text.high }}>
-                Voice Mode
+                Voice mode
               </div>
               <div className="text-xs mb-4" style={{ color: theme.text.medium }}>
                 Tap the AI Orb, speak naturally, hear the response
@@ -821,15 +821,15 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
                 style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
               >
                 <FlowCanvas height={55} viewBox="0 0 500 55" dotColor={theme.stroke.low}>
-                  <FlowNode x={0} y={7} width={70} height={40} label="Tap Orb" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={0} y={7} width={70} height={40} label="Tap orb" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                   <FlowArrow x1={74} y1={27} x2={88} y2={27} color={theme.accent} />
-                  <FlowNode x={92} y={7} width={70} height={40} label="STT" sublabel="3 Providers" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={92} y={7} width={70} height={40} label="STT" sublabel="3 providers" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                   <FlowArrow x1={166} y1={27} x2={180} y2={27} color={theme.accent} />
-                  <FlowNode x={184} y={7} width={80} height={40} label="AI Process" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+                  <FlowNode x={184} y={7} width={80} height={40} label="AI process" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
                   <FlowArrow x1={268} y1={27} x2={282} y2={27} color={theme.accent} />
-                  <FlowNode x={286} y={7} width={70} height={40} label="TTS" sublabel="3 Providers" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={286} y={7} width={70} height={40} label="TTS" sublabel="3 providers" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                   <FlowArrow x1={360} y1={27} x2={374} y2={27} color={theme.accent} />
-                  <FlowNode x={378} y={7} width={110} height={40} label="Orb Speaks" sublabel="Audio Response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                  <FlowNode x={378} y={7} width={110} height={40} label="Orb speaks" sublabel="Audio response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 </FlowCanvas>
               </div>
 
@@ -848,7 +848,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             ================================================================ */}
         <VisualSection
           id="hiw-learning"
-          title="Learning Loop"
+          title="Learning loop"
           tagline="Every interaction trains the AI to generate better content."
           alt
         >
@@ -859,16 +859,16 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               style={{ backgroundColor: theme.background.ghost, border: `1px solid ${theme.stroke.medium}` }}
             >
               <FlowCanvas height={180} viewBox="0 0 600 180" dotColor={theme.stroke.low}>
-                <FlowNode x={220} y={0} width={160} height={45} label="Generate Content" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+                <FlowNode x={220} y={0} width={160} height={45} label="Generate content" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
                 <CurvedFlowArrow startX={380} startY={22} endX={470} endY={60} color={theme.accent} />
 
-                <FlowNode x={420} y={60} width={160} height={45} label="User Sees Response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={420} y={60} width={160} height={45} label="User sees response" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 <CurvedFlowArrow startX={500} startY={105} endX={420} endY={135} color={theme.accent} />
 
-                <FlowNode x={220} y={130} width={200} height={45} label="5 Feedback Actions" sublabel="Thumbs, Edit, Comment, Save" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={220} y={130} width={200} height={45} label="5 feedback actions" sublabel="Thumbs, edit, comment, save" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 <CurvedFlowArrow startX={220} startY={152} endX={130} endY={105} color={theme.accent} />
 
-                <FlowNode x={20} y={60} width={160} height={45} label="Learning Engine" sublabel="Extract Patterns" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+                <FlowNode x={20} y={60} width={160} height={45} label="Learning engine" sublabel="Extract patterns" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
                 <CurvedFlowArrow startX={100} startY={60} endX={220} endY={22} color={theme.accent} />
               </FlowCanvas>
             </div>
@@ -877,21 +877,21 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
           {/* 5 feedback actions */}
           <div className="grid grid-cols-5 gap-3 mb-8">
             {[
-              { action: 'Thumbs Up',   desc: 'Positive Signal' },
-              { action: 'Thumbs Down', desc: 'Negative Signal' },
-              { action: 'Edit',        desc: 'Correction Pair' },
-              { action: 'Comment',     desc: 'Style Preference' },
-              { action: 'Save',        desc: 'Approved Example' },
+              { action: 'Thumbs up',   desc: 'Positive signal' },
+              { action: 'Thumbs down', desc: 'Negative signal' },
+              { action: 'Edit',        desc: 'Correction pair' },
+              { action: 'Comment',     desc: 'Style preference' },
+              { action: 'Save',        desc: 'Approved example' },
             ].map((f) => (
               <IconCard key={f.action} label={f.action} sublabel={f.desc} />
             ))}
           </div>
 
-          {/* Before/After */}
+          {/* Before/after */}
           <BeforeAfter
-            beforeLabel="Before Learning"
+            beforeLabel="Before learning"
             beforeText="Get excited! This amazing offer is just for you! Don't miss out on this incredible deal!"
-            afterLabel="After User Corrected Tone"
+            afterLabel="After user corrected tone"
             afterText="Here is a thoughtful offer based on your usage. Take a look when you have a moment -- it might be a good fit."
           />
         </VisualSection>
@@ -901,7 +901,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             ================================================================ */}
         <section id="hiw-scale" ref={scaleInView.ref}>
           <VisualSection
-            title="Scale at a Glance"
+            title="Scale at a glance"
             tagline="One interface for all ecosystems, channels, languages, and emotions."
           >
             {/* Stat counters */}
@@ -924,9 +924,9 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               />
             </div>
 
-            {/* 10 Brand Guardrails */}
+            {/* 10 brand guardrails */}
             <div className="text-xs font-medium uppercase tracking-wider mb-3" style={{ color: theme.text.low }}>
-              10 Brand Guardrails
+              10 brand guardrails
             </div>
             <div className="grid grid-cols-5 gap-2 mb-6">
               {[
@@ -963,16 +963,16 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             ================================================================ */}
         <VisualSection
           id="hiw-admin"
-          title="Admin & Governance"
+          title="Admin & governance"
           tagline="No-code governance. Update a rule, enforce it instantly."
           alt
         >
           <div className="grid grid-cols-4 gap-4">
             {[
               { title: 'Dashboard',        desc: 'Real-time KPIs, hourly activity, quality scores, session tracking' },
-              { title: 'Learning Center',   desc: 'Review feedback, approve or reject corrections, track patterns' },
-              { title: 'Knowledge Base',    desc: 'CRUD for avoid-words, vocabulary, auto-fix rules, product definitions' },
-              { title: 'Compliance Tests',  desc: '333 automated tests across 23 groups, downloadable reports' },
+              { title: 'Learning center',   desc: 'Review feedback, approve or reject corrections, track patterns' },
+              { title: 'Knowledge base',    desc: 'CRUD for avoid-words, vocabulary, auto-fix rules, product definitions' },
+              { title: 'Compliance tests',  desc: '333 automated tests across 23 groups, downloadable reports' },
             ].map((card) => (
               <div
                 key={card.title}
@@ -1045,10 +1045,10 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
             <FlowCanvas height={60} viewBox="0 0 700 60" dotColor={theme.stroke.low}>
               <FlowNode x={0} y={5} width={130} height={50} label="Browser" sublabel="React + Zustand" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
               <CurvedFlowArrow startX={135} startY={30} endX={195} endY={30} color={theme.accent} />
-              <FlowNode x={200} y={5} width={130} height={50} label="Vercel Edge" sublabel="Serverless Proxy" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={200} y={5} width={130} height={50} label="Vercel Edge" sublabel="Serverless proxy" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
               <CurvedFlowArrow startX={335} startY={30} endX={395} endY={30} color={theme.accent} />
-              <FlowNode x={400} y={5} width={130} height={50} label="LLM Providers" sublabel="Qwen / OpenAI / Claude" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
-              <FlowNode x={560} y={5} width={130} height={50} label="Convex" sublabel="Real-Time DB" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
+              <FlowNode x={400} y={5} width={130} height={50} label="LLM providers" sublabel="Qwen / OpenAI / Claude" color={theme.accent} textColor="#fff" strokeColor={theme.accent} />
+              <FlowNode x={560} y={5} width={130} height={50} label="Convex" sublabel="Real-time DB" color="#ffffff" textColor={theme.text.high} strokeColor={theme.stroke.medium} />
             </FlowCanvas>
           </div>
 
