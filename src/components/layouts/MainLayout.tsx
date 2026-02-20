@@ -259,8 +259,12 @@ export function MainLayout({
                 isLoading={isChatLoading}
                 mode={chatMode}
                 placeholder={featureFlags.conversationalMode
-                  ? 'Chat about anything, or say "write an SMS for..." to generate content'
-                  : 'Ask or describe what you need...'}
+                  ? [
+                      'ask me anything...',
+                      'create sms, emails, scripts...',
+                      'explore jio products and plans...',
+                    ]
+                  : 'ask or describe what you need...'}
                 showEmptyState={chatMode !== 'voice'}
                 emptyStateMessage={chatMode === 'copy'
                   ? (featureFlags.conversationalMode

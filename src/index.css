@@ -118,6 +118,38 @@ body.dark {
   @apply bg-zinc-500;
 }
 
+/* Rotating placeholder slide-up + fade */
+@keyframes placeholderSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  88% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.rotating-placeholder {
+  animation: placeholderSlideIn 3s ease-in-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rotating-placeholder {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Fade-in animation for smooth transitions */
 @keyframes fadeIn {
   from {

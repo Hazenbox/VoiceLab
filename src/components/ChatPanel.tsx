@@ -28,6 +28,7 @@ import { ActionButton } from './ActionButton';
 import { Button } from '@marcelinodzn/ds-react';
 import { Badge } from './ui/Badge';
 import { DSIcon } from './DSIcon';
+import { useRotatingPlaceholder } from '../hooks/useRotatingPlaceholder';
 
 /** Send button brand purple */
 const SEND_BUTTON_COLOR = '#3900AD';
@@ -272,8 +273,8 @@ interface ChatPanelProps {
   isLoading: boolean;
   /** Current chat mode for styling */
   mode?: ChatMode;
-  /** Placeholder text for input */
-  placeholder?: string;
+  /** Placeholder text for input. Pass an array to enable rotating animation. */
+  placeholder?: string | string[];
   /** Whether to show empty state */
   showEmptyState?: boolean;
   /** Custom empty state message */
@@ -403,6 +404,14 @@ export const ChatPanel = memo(function ChatPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const isRotating = Array.isArray(placeholder);
+  const placeholderArray = isRotating ? placeholder : [placeholder];
+  const { currentText: rotatingText, animKey } = useRotatingPlaceholder({
+    placeholders: placeholderArray,
+    intervalMs: 3000,
+    paused: !isRotating || inputValue.length > 0,
+  });
   
   // User message bubble: Dynamic multi-line detection (ChatGPT approach)
   const userMessageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -742,28 +751,51 @@ export const ChatPanel = memo(function ChatPanel({
           backgroundColor: theme.background.bold,
         }}
       >
-        {/* Multi-line textarea */}
-        <textarea
-          ref={inputRef}
-          data-chat-input
-          value={inputValue}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={inputDisabled}
-          aria-label="Message input"
-          rows={1}
-          className="flex-1 bg-transparent outline-none px-2 resize-none overflow-y-auto"
-          style={{ 
-            color: theme.text.high,
-            minHeight: '28px',
-            maxHeight: '110px', // 5 lines * 22px
-            lineHeight: '22px',
-            paddingTop: '3px',
-            paddingBottom: '3px',
-            fontSize: '15px',
-          }}
-        />
+        <div className="flex-1 relative">
+          <textarea
+            ref={inputRef}
+            data-chat-input
+            value={inputValue}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder={isRotating ? undefined : (placeholder as string)}
+            disabled={inputDisabled}
+            aria-label="Message input"
+            rows={1}
+            className="w-full bg-transparent outline-none px-2 resize-none overflow-y-auto"
+            style={{ 
+              color: theme.text.high,
+              minHeight: '28px',
+              maxHeight: '110px',
+              lineHeight: '22px',
+              paddingTop: '3px',
+              paddingBottom: '3px',
+              fontSize: '15px',
+            }}
+          />
+          {isRotating && inputValue.length === 0 && (
+            <span
+              key={animKey}
+              className="rotating-placeholder"
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                left: '8px',
+                top: '3px',
+                lineHeight: '22px',
+                fontSize: '15px',
+                color: theme.text.low,
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: 'calc(100% - 16px)',
+              }}
+            >
+              {rotatingText}
+            </span>
+          )}
+        </div>
 
         {/* Voice button - uses ActionButton for consistency with chat bubble actions */}
         {onVoiceClick && (
@@ -846,7 +878,7 @@ export const ChatPanel = memo(function ChatPanel({
         </div>
       )}
     </div>
-  ), [theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, inputDisabled, handleSubmit, isLoading, onStopGeneration, contextSelector, channelSelector, platformSelector]);
+  ), [theme, onVoiceClick, voiceSupported, _mode, inputValue, handleInputChange, handleKeyDown, placeholder, isRotating, rotatingText, animKey, inputDisabled, handleSubmit, isLoading, onStopGeneration, contextSelector, channelSelector, platformSelector]);
 
   return (
     <div 
