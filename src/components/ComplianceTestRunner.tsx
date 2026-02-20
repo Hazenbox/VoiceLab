@@ -144,6 +144,7 @@ export function ComplianceTestRunner() {
   const [showReport, setShowReport] = useState(false);
   const [cleanedUp, setCleanedUp] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<string | null>(null);
 
   const createLLMProvider = useCallback((type: 'openai' | 'claude' | 'gemini-text' | 'qwen-text' | 'inworld') => {
     return createLLMProviderFactory(type);
