@@ -257,7 +257,6 @@ function ErrorFallback({ error, severity, onRetry, onReload }: ErrorFallbackProp
   const isFatal = severity === 'fatal';
   
   const errorDetailsBg = theme.isLight ? '#fef2f2' : '#450a0a';
-  const errorDetailsBorder = theme.isLight ? '#fca5a5' : '#b91c1c';
   const errorDetailsText = theme.isLight ? '#991b1b' : '#fca5a5';
   
   return (
@@ -269,38 +268,32 @@ function ErrorFallback({ error, severity, onRetry, onReload }: ErrorFallbackProp
         justifyContent: 'center',
         minHeight: '100vh',
         padding: '24px',
-        backgroundColor: theme.background.subtle,
+        backgroundColor: theme.background.ghost,
       }}
     >
       <div
         style={{
-          maxWidth: '480px',
-          textAlign: 'center',
-          backgroundColor: theme.background.ghost,
-          borderRadius: '12px',
+          maxWidth: '1000px',
+          width: '100%',
+          textAlign: 'left',
           padding: '32px',
-          boxShadow: theme.isLight 
-            ? '0 2px 8px rgba(0,0,0,0.1)'
-            : '0 2px 8px rgba(0,0,0,0.3)',
         }}
       >
-        <div style={{ marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
           <DSIcon 
             name="IcWarning" 
-            size="XL" 
+            size="M" 
             appearance="negative"
           />
+          <Title 
+            size="L" 
+            as="h1" 
+            weight="high" 
+            color="high"
+          >
+            Something went wrong
+          </Title>
         </div>
-        
-        <Title 
-          size="M" 
-          as="h1" 
-          weight="high" 
-          color="high"
-          style={{ marginBottom: '8px' }}
-        >
-          something went wrong
-        </Title>
         
         <Text 
           size="S" 
@@ -308,26 +301,23 @@ function ErrorFallback({ error, severity, onRetry, onReload }: ErrorFallbackProp
           style={{ marginBottom: '24px', lineHeight: 1.5 }}
         >
           {isFatal 
-            ? 'a critical error occurred. please reload the page to continue.'
-            : 'we\'ve logged this error and will look into it. you can try again or reload the page.'}
+            ? 'A critical error occurred. Please reload the page to continue.'
+            : 'We\'ve logged this error and will look into it. You can try again or reload the page.'}
         </Text>
 
         {error && import.meta.env.DEV && (
-          <details
+          <div
             style={{
               textAlign: 'left',
               marginBottom: '24px',
               padding: '12px',
               backgroundColor: errorDetailsBg,
               borderRadius: '8px',
-              border: `1px solid ${errorDetailsBorder}`,
             }}
           >
-            <summary style={{ cursor: 'pointer' }}>
-              <Label size="S" weight="high" style={{ color: errorDetailsText }}>
-                error details (dev only)
-              </Label>
-            </summary>
+            <Label size="S" weight="high" style={{ color: errorDetailsText, marginBottom: '8px', display: 'block' }}>
+              Error details (dev only)
+            </Label>
             <pre
               style={{
                 marginTop: '8px',
@@ -341,30 +331,29 @@ function ErrorFallback({ error, severity, onRetry, onReload }: ErrorFallbackProp
               {'\n\n'}
               {error.stack}
             </pre>
-          </details>
+          </div>
         )}
 
         <div
           style={{
             display: 'flex',
             gap: '12px',
-            justifyContent: 'center',
           }}
         >
           <Button
             appearance="primary"
-            size="M"
+            size="S"
             onPress={onRetry}
           >
-            try again
+            Try again
           </Button>
           
           <Button
             appearance="ghost"
-            size="M"
+            size="S"
             onPress={onReload}
           >
-            reload page
+            Reload page
           </Button>
         </div>
       </div>
