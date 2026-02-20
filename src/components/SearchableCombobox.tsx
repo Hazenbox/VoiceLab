@@ -70,6 +70,8 @@ export default function SearchableCombobox({
 
   // Close dropdown when clicking outside
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       if (
         dropdownRef.current &&
@@ -80,10 +82,9 @@ export default function SearchableCombobox({
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
+    // Use capture phase to ensure we catch the event before it's stopped
+    document.addEventListener('mousedown', handleClickOutside, true);
+    return () => document.removeEventListener('mousedown', handleClickOutside, true);
   }, [isOpen]);
 
   // Handle keyboard navigation
@@ -176,7 +177,10 @@ export default function SearchableCombobox({
               ? 'rgba(255, 255, 255, 0.01)' 
               : 'rgba(0, 0, 0, 0.01)',
             color: theme.text.high,
-            fontSize: '0.8125rem',
+            fontSize: '14px',
+            lineHeight: 1.3,
+            fontWeight: 400,
+            fontFamily: '"JioType Var", sans-serif',
             outline: 'none',
             boxSizing: 'border-box',
             cursor: 'pointer',
