@@ -9,9 +9,12 @@
  *
  * Reads ecosystem/contentChannel from conversationStore (no props needed for those).
  * Accepts deviceId as prop since userProfile is local state in App.tsx.
+ * 
+ * Supports offline mode: when VITE_OFFLINE_MODE=true, all queries are skipped
+ * and return undefined. The ConvexProvider is still used to satisfy hook requirements.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useQuery, useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -22,47 +25,75 @@ import { setCachedEnforcementRules } from '../services/validation/tokenEnforceme
 import type { TokenEnforcementRule } from '../services/validation/tokenEnforcementAgent';
 import { useConversationStore } from '../stores/conversationStore';
 
+// Check offline mode at module level
+const offlineMode = import.meta.env.VITE_OFFLINE_MODE === 'true';
+
 export function useConvexData(deviceId: string | undefined) {
   const { ecosystem, contentChannel } = useConversationStore(
     useShallow((s) => ({ ecosystem: s.ecosystem, contentChannel: s.contentChannel }))
   );
 
   // ── Convex Queries ──────────────────────────────────────────────────
+  // In offline mode, all queries skip execution by passing 'skip'
 
   const convexKnowledge = useQuery(
     api.knowledge.getKnowledgeForPrompt,
-    featureFlags.knowledgeBase ? { ecosystem, channel: contentChannel } : 'skip'
+    offlineMode 
+      ? 'skip' 
+      : (featureFlags.knowledgeBase ? { ecosystem, channel: contentChannel } : 'skip')
   );
 
   const convexCorrections = useQuery(
     api.corrections.getLearningCorrections,
-    featureFlags.learning ? { ecosystem, channel: contentChannel, limit: 20 } : 'skip'
+    offlineMode 
+      ? 'skip' 
+      : (featureFlags.learning ? { ecosystem, channel: contentChannel, limit: 20 } : 'skip')
   );
 
   const convexUserLearningProfile = useQuery(
     api.userProfiles.getProfileByDeviceId,
-    featureFlags.learning && deviceId ? { deviceId } : 'skip'
+    offlineMode 
+      ? 'skip' 
+      : (featureFlags.learning && deviceId ? { deviceId } : 'skip')
   );
 
   const convexTrainingExamples = useQuery(
     api.seedTrainingExamples.getHighQuality,
-    featureFlags.learning ? { minScore: 4, limit: 5 } : 'skip'
+    offlineMode 
+      ? 'skip' 
+      : (featureFlags.learning ? { minScore: 4, limit: 5 } : 'skip')
   );
 
   const convexDirectiveOverrides = useQuery(
     api.seedDirectiveOverrides.getByContext,
-    featureFlags.constitutionalWrapper ? { ecosystem, channel: contentChannel } : 'skip'
+    offlineMode 
+      ? 'skip' 
+      : (featureFlags.constitutionalWrapper ? { ecosystem, channel: contentChannel } : 'skip')
   );
 
-  // Always fetch -- brand protection is critical
+  // Always fetch (when online) -- brand protection is critical
   const convexTokenEnforcementRules = useQuery(
     api.tokenEnforcement.getActive,
-    {}
+    offlineMode ? 'skip' : {}
   );
 
   // ── Convex Action ───────────────────────────────────────────────────
 
-  const runSemanticSearch = useAction(api.embeddings.semanticSearch);
+  const convexSemanticSearch = useAction(api.embeddings.semanticSearch);
+  
+  // Wrap semantic search to handle offline mode
+  const runSemanticSearch = useCallback(async (...args: Parameters<typeof convexSemanticSearch>) => {
+    if (offlineMode) {
+      console.warn('[useConvexData] Semantic search unavailable in offline mode');
+      return [];
+    }
+    try {
+      return await convexSemanticSearch(...args);
+    } catch (error) {
+      console.warn('[useConvexData] Semantic search failed:', error);
+      return [];
+    }
+  }, [convexSemanticSearch]);
 
   // ── Injection Side-Effects ──────────────────────────────────────────
 
@@ -88,6 +119,13 @@ export function useConvexData(deviceId: string | undefined) {
       setCachedEnforcementRules(convexTokenEnforcementRules as TokenEnforcementRule[]);
     }
   }, [convexTokenEnforcementRules]);
+
+  // Log offline mode status once
+  useEffect(() => {
+    if (offlineMode) {
+      console.info('[useConvexData] Running in offline mode - Convex queries skipped');
+    }
+  }, []);
 
   // ── Return ──────────────────────────────────────────────────────────
 

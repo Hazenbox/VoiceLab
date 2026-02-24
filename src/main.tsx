@@ -122,17 +122,28 @@ function TestRunnerRoute() {
   return <ComplianceTestRunner />;
 }
 
-// ── Convex Client (REQUIRED) ────────────────────────────────────────
-// Convex is required for data sync, analytics, and RAG features.
-// The app will not start without a valid VITE_CONVEX_URL.
+// ── Convex Client (Optional - supports offline mode) ────────────────
+// Convex is used for data sync, analytics, and RAG features.
+// If VITE_CONVEX_URL is not set or VITE_OFFLINE_MODE=true, runs in offline mode.
 const convexUrl = import.meta.env.VITE_CONVEX_URL;
-if (!convexUrl) {
-  throw new Error(
-    'VITE_CONVEX_URL environment variable is required. ' +
-    'Please configure your Convex deployment URL in .env.local or Vercel environment variables.'
-  );
+export const offlineMode = import.meta.env.VITE_OFFLINE_MODE === 'true';
+
+let convex: ConvexReactClient | null = null;
+// In offline mode, still create a client but it won't be used for actual queries
+// This allows ConvexProvider to work and prevents hook errors
+if (convexUrl) {
+  try {
+    convex = new ConvexReactClient(convexUrl);
+  } catch (e) {
+    console.warn('[Convex] Failed to initialize client:', e);
+  }
 }
-const convex = new ConvexReactClient(convexUrl);
+
+if (offlineMode) {
+  console.info('[Voice Lab] Running in offline mode - Convex queries will return undefined');
+} else if (!convex) {
+  console.warn('[Voice Lab] No Convex URL configured - some features may not work');
+}
 
 /**
  * Bridge component that wires up the ConvexSyncService with
@@ -144,10 +155,16 @@ const convex = new ConvexReactClient(convexUrl);
 // so we cast once here to a narrow interface instead of scattering `any`.
 const convexDynamic = convex as unknown as {
   mutation(name: string, args: Record<string, unknown>): Promise<unknown>;
-};
+} | null;
 
 function ConvexSyncBridge({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    // Skip if in offline mode
+    if (offlineMode || !convexDynamic) {
+      console.log('[ConvexSyncBridge] Running in offline mode - skipping mutation injection');
+      return;
+    }
+    
     // Helper to inject mutation function into sync service
     const injectMutationFn = (): boolean => {
       const syncService = getSyncService();
@@ -241,7 +258,18 @@ function Root() {
     </DsProvider>
   );
 
-  // Always wrap with ConvexProvider (Convex is required)
+  // Always wrap with ConvexProvider if we have a client (hooks require it)
+  // In offline mode, queries will skip via the 'skip' parameter
+  if (!convex) {
+    // No client at all - render without ConvexProvider (limited functionality)
+    console.warn('[Voice Lab] No Convex client - rendering without ConvexProvider');
+    return (
+      <ConvexSyncBridge>
+        {appTree}
+      </ConvexSyncBridge>
+    );
+  }
+  
   return (
     <ConvexProvider client={convex}>
       <ConvexSyncBridge>
