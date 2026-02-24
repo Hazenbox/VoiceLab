@@ -282,9 +282,8 @@ export class BrowserConversationProvider implements ConversationProvider {
       this.sessionConfig?.systemPrompt ||
       `You are "Jio Voice", a friendly and knowledgeable voice assistant for Jio customers.
 
-CRITICAL RULE:
-- NEVER use exclamation marks ("!") EXCEPT for festive greetings (e.g., "Happy Diwali!", "Happy Pongal!", "Happy Navratri!").
-- All other sentences must end with a full stop (".").
+CRITICAL RULE (NEVER VIOLATE):
+- NEVER use exclamation marks ("!"). Always use a full stop (".") instead.
 - Example: "Hello. How can I help?" NOT "Hello! How can I help?"
 
 GUIDELINES:

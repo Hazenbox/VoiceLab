@@ -16,6 +16,7 @@ import type * as corrections from "../corrections.js";
 import type * as crons from "../crons.js";
 import type * as embeddings from "../embeddings.js";
 import type * as guidelines from "../guidelines.js";
+import type * as http from "../http.js";
 import type * as interactions from "../interactions.js";
 import type * as knowledge from "../knowledge.js";
 import type * as maintenance from "../maintenance.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   embeddings: typeof embeddings;
   guidelines: typeof guidelines;
+  http: typeof http;
   interactions: typeof interactions;
   knowledge: typeof knowledge;
   maintenance: typeof maintenance;
