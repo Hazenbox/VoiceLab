@@ -1,6 +1,11 @@
 /**
  * Retry Manager with Exponential Backoff
  * Handles transient failures with intelligent retry logic
+ * 
+ * PHASE 4 Enhancements:
+ * - Operation deadline (total timeout across all retries)
+ * - Decorrelated jitter for better distribution
+ * - Budget tracking to prevent retry storms
  */
 
 import { ERROR_CODES, type LLMError } from '../providers/llm/types';
@@ -12,10 +17,26 @@ export interface RetryConfig {
   exponentialBase: number;
   retryableErrors: string[];
   onRetry?: (attempt: number, error: LLMError) => void;
+  /** PHASE 4: Maximum total time for operation including all retries (ms) */
+  operationDeadlineMs?: number;
+  /** PHASE 4: Use decorrelated jitter instead of simple jitter */
+  useDecorrelatedJitter?: boolean;
+}
+
+// PHASE 4: Deadline exceeded error
+export class DeadlineExceededError extends Error {
+  code = 'DEADLINE_EXCEEDED';
+  retryable = false;
+  constructor(message: string, public elapsedMs: number, public deadlineMs: number) {
+    super(message);
+    this.name = 'DeadlineExceededError';
+  }
 }
 
 export class RetryManager {
   private config: RetryConfig;
+  // PHASE 4: Track last delay for decorrelated jitter
+  private lastDelay: number;
 
   constructor(config?: Partial<RetryConfig>) {
     this.config = {
@@ -32,7 +53,11 @@ export class RetryManager {
         ERROR_CODES.OVERLOADED,
       ],
       onRetry: config?.onRetry,
+      // PHASE 4: Default 30 second operation deadline
+      operationDeadlineMs: config?.operationDeadlineMs ?? 30000,
+      useDecorrelatedJitter: config?.useDecorrelatedJitter ?? true,
     };
+    this.lastDelay = this.config.baseDelayMs;
   }
 
   async executeWithRetry<T>(
@@ -40,8 +65,24 @@ export class RetryManager {
     context: string = 'operation'
   ): Promise<T> {
     let lastError: LLMError | undefined;
+    const startTime = Date.now();
+    
+    // PHASE 4: Reset decorrelated jitter state
+    this.lastDelay = this.config.baseDelayMs;
     
     for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
+      // PHASE 4: Check deadline before attempting
+      if (this.config.operationDeadlineMs) {
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= this.config.operationDeadlineMs) {
+          throw new DeadlineExceededError(
+            `Operation deadline exceeded after ${attempt} attempts (${elapsed}ms > ${this.config.operationDeadlineMs}ms)`,
+            elapsed,
+            this.config.operationDeadlineMs
+          );
+        }
+      }
+      
       try {
         return await operation();
       } catch (error) {
@@ -54,6 +95,18 @@ export class RetryManager {
         
         // Calculate delay with exponential backoff + jitter
         const delay = this.calculateDelay(attempt, lastError);
+        
+        // PHASE 4: Check if delay would exceed deadline
+        if (this.config.operationDeadlineMs) {
+          const elapsed = Date.now() - startTime;
+          const remainingTime = this.config.operationDeadlineMs - elapsed;
+          if (delay >= remainingTime) {
+            console.warn(
+              `[RetryManager] ${context}: Skipping retry - delay (${delay}ms) would exceed deadline (${remainingTime}ms remaining)`
+            );
+            throw lastError;
+          }
+        }
         
         // Notify about retry
         this.config.onRetry?.(attempt + 1, lastError);
@@ -80,17 +133,34 @@ export class RetryManager {
     // Check for Retry-After header (rate limits)
     if (error.details?.retryAfter) {
       const retryAfter = error.details.retryAfter as number;
-      return Math.min(retryAfter * 1000, this.config.maxDelayMs);
+      const delay = Math.min(retryAfter * 1000, this.config.maxDelayMs);
+      this.lastDelay = delay;
+      return delay;
     }
     
-    // Exponential backoff: base * (exponentialBase ^ attempt)
-    const exponentialDelay = this.config.baseDelayMs * 
-      Math.pow(this.config.exponentialBase, attempt);
+    let delay: number;
     
-    // Add jitter (±20%) to prevent thundering herd
-    const jitter = exponentialDelay * 0.2 * (Math.random() - 0.5);
+    if (this.config.useDecorrelatedJitter) {
+      // PHASE 4: Decorrelated jitter (AWS recommended approach)
+      // delay = min(maxDelay, random_between(baseDelay, lastDelay * 3))
+      const minDelay = this.config.baseDelayMs;
+      const maxDelay = this.lastDelay * 3;
+      delay = Math.min(
+        this.config.maxDelayMs,
+        minDelay + Math.random() * (maxDelay - minDelay)
+      );
+      this.lastDelay = delay;
+    } else {
+      // Original: Exponential backoff with simple jitter
+      const exponentialDelay = this.config.baseDelayMs * 
+        Math.pow(this.config.exponentialBase, attempt);
+      
+      // Add jitter (±20%) to prevent thundering herd
+      const jitter = exponentialDelay * 0.2 * (Math.random() - 0.5);
+      delay = Math.min(exponentialDelay + jitter, this.config.maxDelayMs);
+    }
     
-    return Math.min(exponentialDelay + jitter, this.config.maxDelayMs);
+    return delay;
   }
 
   private sleep(ms: number): Promise<void> {
