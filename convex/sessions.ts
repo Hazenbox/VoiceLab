@@ -51,9 +51,21 @@ export const updateMetrics = mutation({
     ecosystem: v.optional(v.string()),
     channel: v.optional(v.string()),
     persona: v.optional(v.string()),
+    // PHASE 4: Sync tracking
+    lastSyncedAt: v.optional(v.number()),
+    syncVersion: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { sessionId, ...updates } = args;
+    const { sessionId, syncVersion, ...updates } = args;
+    
+    // PHASE 4: Optional optimistic concurrency check
+    if (syncVersion !== undefined) {
+      const session = await ctx.db.get(sessionId);
+      if (session?.syncVersion && session.syncVersion > syncVersion) {
+        console.warn(`[sessions.updateMetrics] Stale sync version: ${syncVersion} < ${session.syncVersion}`);
+        return; // Don't overwrite newer data
+      }
+    }
     
     // Filter out undefined values
     const filteredUpdates: Record<string, unknown> = {};
@@ -66,6 +78,9 @@ export const updateMetrics = mutation({
     await ctx.db.patch(sessionId, {
       ...filteredUpdates,
       lastActivityAt: Date.now(),
+      // PHASE 4: Track sync time
+      lastSyncedAt: Date.now(),
+      ...(syncVersion !== undefined ? { syncVersion: syncVersion + 1 } : {}),
     });
   },
 });

@@ -122,6 +122,10 @@ export default defineSchema({
 
     // Archival flag for data retention
     isArchived: v.optional(v.boolean()),
+    
+    // PHASE 4: Sync tracking for offline-first reliability
+    lastSyncedAt: v.optional(v.number()), // Last time metrics were synced from client
+    syncVersion: v.optional(v.number()),   // Optimistic concurrency control
   })
     .index("by_userId", ["userId"])
     .index("by_deviceId", ["deviceId"])
