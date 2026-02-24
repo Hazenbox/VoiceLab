@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
+import { useLazyQuery } from '../hooks/useLazyQuery';
+import { AdminRefreshControls } from './components/AdminRefreshControls';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
 import { Title, Text, Label, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
 import { Badge } from '../components/ui/Badge';
@@ -213,11 +215,37 @@ function AdminDashboard() {
   // Time range for analytics - last 24 hours from mount time
   const [since] = useState(() => Date.now() - 24 * 60 * 60 * 1000);
   
-  // Direct Convex queries
-  const dashboardStats = useQuery(api.analytics.dashboardStats, { since });
-  const learningStats = useQuery(api.corrections.getLearningStats, { since });
-  const hourlyBreakdown = useQuery(api.analytics.hourlyBreakdown, { since });
-  const recentSessions = useQuery(api.sessions.getRecent, { limit: 5 });
+  // Lazy queries for admin dashboard - only refresh on demand
+  const { 
+    data: dashboardStats, 
+    isLoading: dashboardLoading, 
+    refresh: refreshDashboard,
+    lastRefreshTime: dashboardRefreshTime,
+    isPaused: dashboardPaused,
+  } = useLazyQuery(api.analytics.dashboardStats, { since });
+  
+  const { 
+    data: learningStats, 
+    refresh: refreshLearning,
+  } = useLazyQuery(api.corrections.getLearningStats, { since });
+  
+  const { 
+    data: hourlyBreakdown,
+    refresh: refreshHourly, 
+  } = useLazyQuery(api.analytics.hourlyBreakdown, { since });
+  
+  const { 
+    data: recentSessions,
+    refresh: refreshSessions, 
+  } = useLazyQuery(api.sessions.getRecent, { limit: 5 });
+  
+  // Combined refresh for all dashboard data
+  const refreshAll = useCallback(() => {
+    refreshDashboard();
+    refreshLearning();
+    refreshHourly();
+    refreshSessions();
+  }, [refreshDashboard, refreshLearning, refreshHourly, refreshSessions]);
   
   // Format hourly data for charts (legacy format)
   const hourlyChartData = useMemo(() => {
@@ -243,7 +271,7 @@ function AdminDashboard() {
   }, [hourlyChartData]);
   
   // Loading state - show skeleton while data is loading
-  if (dashboardStats === undefined || learningStats === undefined) {
+  if (dashboardLoading || (dashboardStats === undefined && learningStats === undefined)) {
     return <AdminLoadingSkeleton />;
   }
   
@@ -278,7 +306,16 @@ function AdminDashboard() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <PageHeader title="Dashboard" description="System health and value delivery — last 24 hours" />
+      <div className="flex justify-between items-center mb-4">
+        <PageHeader title="Dashboard" description="System health and value delivery — last 24 hours" />
+        <AdminRefreshControls
+          lastRefresh={dashboardRefreshTime}
+          isLoading={dashboardLoading}
+          isPaused={dashboardPaused}
+          onRefresh={refreshAll}
+          label="dashboard"
+        />
+      </div>
 
       {/* Overview Section */}
       <div 
@@ -650,16 +687,37 @@ function AdminLearningCenter() {
   // Get user profile for deviceId (needed for admin mutations)
   const userProfile = loadUserProfile();
   
-  // Direct Convex queries — skip when deviceId isn't available yet
-  const corrections = useQuery(
+  // Lazy queries for learning center - only refresh on demand
+  const { 
+    data: corrections, 
+    isLoading: correctionsLoading,
+    refresh: refreshCorrections,
+    lastRefreshTime: correctionsRefreshTime,
+    isPaused: correctionsPaused,
+  } = useLazyQuery(
     api.corrections.listAll,
     userProfile?.deviceId ? { limit: 200, deviceId: userProfile.deviceId } : "skip"
   );
-  const learningStats = useQuery(api.corrections.getLearningStats, {});
-  const feedbackCounts = useQuery(api.corrections.countByFeedbackType, {});
+  
+  const { 
+    data: learningStats,
+    refresh: refreshLearningStats, 
+  } = useLazyQuery(api.corrections.getLearningStats, {});
+  
+  const { 
+    data: feedbackCounts,
+    refresh: refreshFeedbackCounts, 
+  } = useLazyQuery(api.corrections.countByFeedbackType, {});
   
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [feedbackTypeFilter, setFeedbackTypeFilter] = useState<string>('all');
+  
+  // Combined refresh for all learning center data
+  const refreshAll = useCallback(() => {
+    refreshCorrections();
+    refreshLearningStats();
+    refreshFeedbackCounts();
+  }, [refreshCorrections, refreshLearningStats, refreshFeedbackCounts]);
 
   // Debug logging for production troubleshooting
   useEffect(() => {
@@ -671,7 +729,7 @@ function AdminLearningCenter() {
   }, [corrections, learningStats, feedbackCounts]);
 
   // Loading state
-  if (corrections === undefined || learningStats === undefined) {
+  if (correctionsLoading || (corrections === undefined && learningStats === undefined)) {
     return <AdminLoadingSkeleton />;
   }
   
@@ -693,10 +751,19 @@ function AdminLearningCenter() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <PageHeader 
-        title="Learning center" 
-        description="How user feedback improves content generation" 
-      />
+      <div className="flex justify-between items-center mb-4">
+        <PageHeader 
+          title="Learning center" 
+          description="How user feedback improves content generation" 
+        />
+        <AdminRefreshControls
+          lastRefresh={correctionsRefreshTime}
+          isLoading={correctionsLoading}
+          isPaused={correctionsPaused}
+          onRefresh={refreshAll}
+          label="learning data"
+        />
+      </div>
 
       {/* Learning Stats Hero */}
       <div 
@@ -897,10 +964,29 @@ function AdminKnowledge() {
   // Mutations for CRUD
   const softDeleteItem = useMutation(api.knowledge.softDelete);
   
-  // Direct Convex queries - no localStorage fallback
-  const knowledgeCounts = useQuery(api.knowledge.countByType);
-  // Fetch more items when a type is selected (up to 500 for viewing)
-  const knowledgeItems = useQuery(api.knowledge.listAll, selectedType ? { type: selectedType, limit: 500 } : { limit: 50 });
+  // Lazy queries for knowledge - only refresh on demand
+  const { 
+    data: knowledgeCounts,
+    isLoading: countsLoading,
+    refresh: refreshCounts,
+    lastRefreshTime: countsRefreshTime,
+    isPaused: countsPaused,
+  } = useLazyQuery(api.knowledge.countByType, {});
+  
+  const { 
+    data: knowledgeItems,
+    isLoading: itemsLoading,
+    refresh: refreshItems, 
+  } = useLazyQuery(
+    api.knowledge.listAll, 
+    selectedType ? { type: selectedType, limit: 500 } : { limit: 50 }
+  );
+  
+  // Combined refresh for all knowledge data
+  const refreshAll = useCallback(() => {
+    refreshCounts();
+    refreshItems();
+  }, [refreshCounts, refreshItems]);
   
   // Debug logging for production troubleshooting
   useEffect(() => {
@@ -1301,7 +1387,16 @@ function AdminKnowledge() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <PageHeader title="Knowledge base" description="Brand rules, vocabulary, and content guidelines" />
+      <div className="flex justify-between items-center mb-4">
+        <PageHeader title="Knowledge base" description="Brand rules, vocabulary, and content guidelines" />
+        <AdminRefreshControls
+          lastRefresh={countsRefreshTime}
+          isLoading={countsLoading || itemsLoading}
+          isPaused={countsPaused}
+          onRefresh={refreshAll}
+          label="knowledge"
+        />
+      </div>
 
       {/* Total Rules Counter with RAG Status + Add Button */}
       <div 
@@ -1415,12 +1510,28 @@ function AdminUsageAnalytics() {
   const [timeRange, setTimeRange] = useState<TimeRange>('week');
   const since = useMemo(() => getTimestampForRange(timeRange), [timeRange]);
   
-  // Direct Convex queries
-  const contextStats = useQuery(api.analytics.statsByEcosystemChannel, { since });
-  const users = useQuery(
+  // Lazy queries for usage analytics - only refresh on demand
+  const { 
+    data: contextStats,
+    isLoading: contextLoading,
+    refresh: refreshContext,
+    lastRefreshTime: contextRefreshTime,
+    isPaused: contextPaused,
+  } = useLazyQuery(api.analytics.statsByEcosystemChannel, { since });
+  
+  const { 
+    data: users,
+    refresh: refreshUsers, 
+  } = useLazyQuery(
     api.users.listAll,
     userProfile?.deviceId ? { deviceId: userProfile.deviceId } : "skip"
   );
+  
+  // Combined refresh for all usage analytics data
+  const refreshAll = useCallback(() => {
+    refreshContext();
+    refreshUsers();
+  }, [refreshContext, refreshUsers]);
   
   // Debug logging for production troubleshooting
   useEffect(() => {
@@ -1455,7 +1566,7 @@ function AdminUsageAnalytics() {
   }, [contextStats]);
 
   // Loading state
-  if (contextStats === undefined) {
+  if (contextLoading || contextStats === undefined) {
     return <AdminLoadingSkeleton />;
   }
   
@@ -1476,10 +1587,19 @@ function AdminUsageAnalytics() {
       {!isOnline && <OfflineBanner />}
       
       <div className="flex justify-between items-center mb-5">
-        <PageHeader 
-          title="Usage analytics" 
-          description="Adoption across Jio ecosystem and content channels" 
-        />
+        <div className="flex items-center gap-4">
+          <PageHeader 
+            title="Usage analytics" 
+            description="Adoption across Jio ecosystem and content channels" 
+          />
+          <AdminRefreshControls
+            lastRefresh={contextRefreshTime}
+            isLoading={contextLoading}
+            isPaused={contextPaused}
+            onRefresh={refreshAll}
+            label="analytics"
+          />
+        </div>
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
 
@@ -1558,8 +1678,14 @@ function AdminUsers() {
   const userProfile = loadUserProfile();
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Direct Convex query — skip when deviceId isn't available
-  const users = useQuery(
+  // Lazy query for users - only refresh on demand
+  const { 
+    data: users,
+    isLoading: usersLoading,
+    refresh: refreshUsers,
+    lastRefreshTime: usersRefreshTime,
+    isPaused: usersPaused,
+  } = useLazyQuery(
     api.users.listAll,
     userProfile?.deviceId ? { deviceId: userProfile.deviceId } : "skip"
   );
@@ -1572,7 +1698,7 @@ function AdminUsers() {
   }, [users]);
 
   // Loading state
-  if (users === undefined) {
+  if (usersLoading || users === undefined) {
     return <AdminLoadingSkeleton />;
   }
   
@@ -1603,7 +1729,16 @@ function AdminUsers() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <PageHeader title="Users" description="Registered user profiles (device-based)" />
+      <div className="flex justify-between items-center mb-4">
+        <PageHeader title="Users" description="Registered user profiles (device-based)" />
+        <AdminRefreshControls
+          lastRefresh={usersRefreshTime}
+          isLoading={usersLoading}
+          isPaused={usersPaused}
+          onRefresh={refreshUsers}
+          label="users"
+        />
+      </div>
 
       {/* Search */}
       <div className="mb-4">
