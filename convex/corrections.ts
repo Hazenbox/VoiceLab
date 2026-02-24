@@ -117,8 +117,9 @@ export const getByUser = query({
   },
 });
 
-// ── List all corrections (knowledge editors, paginated) ──────────
-// SECURITY: Requires knowledge-editor role (leadership, product, ux_writer)
+// ── List all corrections (authenticated users, paginated) ────────
+// SECURITY: Requires authenticated user (any role can view corrections)
+// Note: Editing corrections requires admin role via updateAdminStatus
 export const listAll = query({
   args: {
     limit: v.optional(v.number()),
@@ -126,7 +127,7 @@ export const listAll = query({
     deviceId: v.optional(v.string()), // For authorization
   },
   handler: async (ctx, args) => {
-    await requireKnowledgeEditor(ctx, args.deviceId);
+    await requireAuthenticated(ctx, args.deviceId);
     
     const limit = args.limit ?? 100;
 
