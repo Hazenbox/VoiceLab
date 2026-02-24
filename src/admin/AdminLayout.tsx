@@ -1500,8 +1500,10 @@ function AdminKnowledge() {
   );
 }
 
-// ── Usage Analytics (simplified from Analytics) ─────────────────────
-// Purpose: Show adoption across Jio ecosystem for POC demo
+// ── ARCHIVED: Usage Analytics ─────────────────────────────────────────
+// Temporarily disabled to reduce query load. Can be restored by uncommenting.
+// This component made 2 expensive queries: analytics.statsByEcosystemChannel + users.listAll
+/*
 function AdminUsageAnalytics() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
@@ -1603,7 +1605,6 @@ function AdminUsageAnalytics() {
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
 
-      {/* User Count */}
       <AdminCard className="p-4 mb-5">
         <div className="flex items-center gap-4">
           <span className="text-3xl font-bold" style={{ color: theme.accent }}>
@@ -1615,7 +1616,6 @@ function AdminUsageAnalytics() {
         </div>
       </AdminCard>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
         <ChartContainer
           title="By ecosystem"
@@ -1636,7 +1636,6 @@ function AdminUsageAnalytics() {
         </ChartContainer>
       </div>
 
-      {/* Context Performance Table */}
       <AdminCard className="p-4">
         <CardLabel>Quality by context</CardLabel>
         <AdminTable
@@ -1670,6 +1669,7 @@ function AdminUsageAnalytics() {
     </>
   );
 }
+*/
 
 // ── Users ────────────────────────────────────────────────────────
 function AdminUsers() {
@@ -1920,7 +1920,8 @@ export default function AdminLayout({ colorMode, onColorModeChange }: AdminLayou
       case 'learning': return <AdminLearningCenter />;
       case 'knowledge': return <AdminKnowledge />;
       case 'tokens': return <TokensDisplay />;
-      case 'usage': return <AdminUsageAnalytics />;
+      // ARCHIVED: Usage analytics temporarily disabled to reduce query load
+      // case 'usage': return <AdminUsageAnalytics />;
       case 'users': return <AdminUsers />;
       case 'config': return <AdminConfig />;
       default: return <AdminDashboard />;

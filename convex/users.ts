@@ -67,15 +67,16 @@ export const heartbeat = mutation({
   },
 });
 
-// ── List all users (knowledge editors) ───────────────────────────
-// SECURITY: Requires knowledge-editor role (leadership, product, ux_writer)
+// ── List all users (authenticated users) ─────────────────────────
+// SECURITY: Requires authenticated user (any role can view users list)
+// Note: User management mutations require admin role
 export const listAll = query({
   args: {
     limit: v.optional(v.number()),
     deviceId: v.optional(v.string()), // For authorization
   },
   handler: async (ctx, args) => {
-    await requireKnowledgeEditor(ctx, args.deviceId);
+    await requireAuthenticated(ctx, args.deviceId);
     
     const limit = args.limit ?? 500; // Default limit for performance
     return await ctx.db

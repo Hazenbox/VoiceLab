@@ -34,7 +34,8 @@ const NAV_ITEMS: { id: AdminSection; label: string; iconName: string }[] = [
   { id: 'learning', label: 'Learning center', iconName: 'IcLightbulb' },
   { id: 'knowledge', label: 'Knowledge base', iconName: 'IcLibrary' },
   { id: 'tokens', label: 'Tokens', iconName: 'IcCode' },
-  { id: 'usage', label: 'Usage analytics', iconName: 'IcAnalytics' },
+  // ARCHIVED: Temporarily disabled to reduce query load - can restore later
+  // { id: 'usage', label: 'Usage analytics', iconName: 'IcAnalytics' },
 ];
 
 // Advanced navigation items - collapsible
