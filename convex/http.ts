@@ -508,7 +508,7 @@ const getDirectiveOverrides = httpAction(async (ctx, request) => {
 const rewriteText = httpAction(async (ctx, request) => {
   try {
     const body = await request.json();
-    const { text, style } = body;
+    const { text, style, prompt } = body;
     
     if (!text || typeof text !== "string") {
       return errorResponse("text is required", 400);
@@ -525,6 +525,7 @@ const rewriteText = httpAction(async (ctx, request) => {
     const result = await ctx.runAction(api.rewrite.rephrase, {
       text,
       style: style || "professional",
+      prompt: prompt || undefined,
     });
     
     return successResponse({ rewritten: result });

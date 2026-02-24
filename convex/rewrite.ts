@@ -2,6 +2,7 @@
  * Text Rewriting Action for Mac ToneStudio
  * 
  * Uses HuggingFace Router (OpenAI-compatible API) to rephrase text.
+ * Supports both predefined styles and custom prompts.
  * 
  * @module convex/rewrite
  */
@@ -13,15 +14,22 @@ export const rephrase = action({
   args: {
     text: v.string(),
     style: v.optional(v.string()),
+    prompt: v.optional(v.string()),
   },
-  handler: async (ctx, { text, style }) => {
+  handler: async (ctx, { text, style, prompt }) => {
     const apiKey = process.env.HUGGINGFACE_API_KEY;
     if (!apiKey) {
       throw new Error("HUGGINGFACE_API_KEY not configured");
     }
 
-    const toneStyle = style || "professional";
-    const systemPrompt = `You are a text rephrasing assistant. Rephrase the user's text in a ${toneStyle} tone. Return ONLY the rephrased text with no explanations, no quotes, no prefixes.`;
+    let systemPrompt: string;
+    
+    if (prompt && prompt.trim().length > 0) {
+      systemPrompt = `You are a text transformation assistant. Transform the user's text according to these instructions: "${prompt}". Return ONLY the transformed text with no explanations, no quotes, no prefixes.`;
+    } else {
+      const toneStyle = style || "professional";
+      systemPrompt = `You are a text rephrasing assistant. Rephrase the user's text in a ${toneStyle} tone. Return ONLY the rephrased text with no explanations, no quotes, no prefixes.`;
+    }
 
     // Using HuggingFace Router with OpenAI-compatible API
     const response = await fetch(
@@ -38,7 +46,7 @@ export const rephrase = action({
             { role: "system", content: systemPrompt },
             { role: "user", content: text },
           ],
-          max_tokens: 500,
+          max_tokens: 1000,
           temperature: 0.7,
         }),
       }
