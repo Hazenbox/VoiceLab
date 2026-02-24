@@ -166,6 +166,16 @@ function setCachedConvexUserId(id: string): void {
 
 // ── Sync Service Class ───────────────────────────────────────────
 
+// PHASE 2: Heartbeat throttling configuration
+const HEARTBEAT_CONFIG = {
+  /** Minimum interval between heartbeats (ms) */
+  minIntervalMs: 30000, // 30 seconds
+  /** Consider user active if activity within this window (ms) */
+  activityWindowMs: 60000, // 1 minute
+  /** Skip heartbeat if user inactive for this long (ms) */
+  inactivityThresholdMs: 5 * 60 * 1000, // 5 minutes
+} as const;
+
 export class ConvexSyncService {
   private mutationFn: MutationFn | null = null;
   private deviceId: string | null = null;
@@ -180,6 +190,11 @@ export class ConvexSyncService {
   // Store bound handlers so we can remove them in destroy()
   private handleOnline: (() => void) | null = null;
   private handleOffline: (() => void) | null = null;
+  
+  // PHASE 2: Heartbeat throttling state
+  private lastHeartbeatTime: number = 0;
+  private lastActivityTime: number = Date.now();
+  private heartbeatSkipCount: number = 0;
   
   // Circuit breaker state (wiring orphaned pattern)
   private circuitBreaker: CircuitBreakerState = {
@@ -414,15 +429,57 @@ export class ConvexSyncService {
   }
 
   // ── Heartbeat ────────────────────────────────────────────────
+  // PHASE 2: Activity-based throttling to reduce unnecessary calls
+
+  /**
+   * Record user activity (called on generation, UI interaction, etc.)
+   * This keeps heartbeat alive for active users
+   */
+  recordActivity(): void {
+    this.lastActivityTime = Date.now();
+  }
+
+  /**
+   * Check if heartbeat should be skipped based on throttling rules
+   */
+  private shouldSkipHeartbeat(): { skip: boolean; reason?: string } {
+    const now = Date.now();
+    
+    // Check minimum interval
+    const timeSinceLastHeartbeat = now - this.lastHeartbeatTime;
+    if (timeSinceLastHeartbeat < HEARTBEAT_CONFIG.minIntervalMs) {
+      return { skip: true, reason: `throttled (${Math.round(timeSinceLastHeartbeat / 1000)}s < ${HEARTBEAT_CONFIG.minIntervalMs / 1000}s)` };
+    }
+    
+    // Check user activity
+    const timeSinceLastActivity = now - this.lastActivityTime;
+    if (timeSinceLastActivity > HEARTBEAT_CONFIG.inactivityThresholdMs) {
+      return { skip: true, reason: `inactive (${Math.round(timeSinceLastActivity / 1000 / 60)}min)` };
+    }
+    
+    return { skip: false };
+  }
 
   async heartbeat(): Promise<void> {
     if (!this.isAvailable || !this.deviceId) return;
+
+    // PHASE 2: Check throttling rules
+    const skipCheck = this.shouldSkipHeartbeat();
+    if (skipCheck.skip) {
+      this.heartbeatSkipCount++;
+      if (this.heartbeatSkipCount % 10 === 0) {
+        log.debug(`Heartbeat skipped (${skipCheck.reason}), total skips: ${this.heartbeatSkipCount}`);
+      }
+      return;
+    }
 
     const result = await this.safeMutation('users:heartbeat', {
       deviceId: this.deviceId,
     });
 
-    if (!result.ok && this.deviceId) {
+    if (result.ok) {
+      this.lastHeartbeatTime = Date.now();
+    } else if (this.deviceId) {
       queueStorage.addToQueue({
         type: 'heartbeat',
         data: { deviceId: this.deviceId },
@@ -430,10 +487,24 @@ export class ConvexSyncService {
       });
     }
   }
+  
+  /**
+   * Get heartbeat statistics for diagnostics
+   */
+  getHeartbeatStats(): { lastHeartbeat: number; lastActivity: number; skipCount: number } {
+    return {
+      lastHeartbeat: this.lastHeartbeatTime,
+      lastActivity: this.lastActivityTime,
+      skipCount: this.heartbeatSkipCount,
+    };
+  }
 
   // ── Log Analytics Event ──────────────────────────────────────
 
   logAnalyticsEvent(event: AnalyticsEvent): void {
+    // PHASE 2: Record activity on analytics events
+    this.recordActivity();
+    
     if (!this.convexUserId || !this.deviceId) {
       queueStorage.addToQueue({
         type: 'analytics',
@@ -799,27 +870,52 @@ export class ConvexSyncService {
     }
 
     // Only process events requiring convexUserId if we have one
-    if (this.convexUserId) {
-      // Batch analytics events
+    // PHASE 2: Also process with deviceId-only if userId unavailable (partial data better than none)
+    const userId = this.convexUserId;
+    const deviceId = this.deviceId;
+    
+    if (userId || deviceId) {
+      // PHASE 2: Batch analytics events with chunking (max 100 per API call)
+      const BATCH_CHUNK_SIZE = 100;
+      
       if (analyticsEvents.length > 0) {
-        const result = await this.safeMutation('analytics:batchLogEvents', {
-          events: analyticsEvents.map((e) => ({
-            ...e.data,
-            userId: this.convexUserId,
-            deviceId: this.deviceId!,
-            timestamp: e.data.timestamp || e.timestamp,
-          })),
-        });
-
-        if (result.ok) {
-          // Success - remove all from queue
-          for (const event of analyticsEvents) {
-            if (event.id) await queueStorage.removeFromQueue(event.id);
-          }
+        // Only process if we have userId (Convex schema requires it)
+        if (!userId) {
+          log.warn(`Cannot flush ${analyticsEvents.length} analytics events: no userId`);
         } else {
-          // Failure - increment attempts for all
-          for (const event of analyticsEvents) {
-            if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+          // PHASE 2: Process in chunks to avoid timeout
+          for (let i = 0; i < analyticsEvents.length; i += BATCH_CHUNK_SIZE) {
+            const chunk = analyticsEvents.slice(i, i + BATCH_CHUNK_SIZE);
+            const chunkNumber = Math.floor(i / BATCH_CHUNK_SIZE) + 1;
+            const totalChunks = Math.ceil(analyticsEvents.length / BATCH_CHUNK_SIZE);
+            
+            if (totalChunks > 1) {
+              log.debug(`Processing analytics chunk ${chunkNumber}/${totalChunks} (${chunk.length} events)`);
+            }
+            
+            const result = await this.safeMutation('analytics:batchLogEvents', {
+              events: chunk.map((e) => ({
+                ...e.data,
+                userId,
+                deviceId: deviceId!,
+                timestamp: e.data.timestamp || e.timestamp,
+              })),
+            });
+
+            if (result.ok) {
+              // Success - remove chunk from queue
+              for (const event of chunk) {
+                if (event.id) await queueStorage.removeFromQueue(event.id);
+              }
+            } else {
+              // Failure - increment attempts for chunk
+              for (const event of chunk) {
+                if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+              }
+              // Stop processing more chunks on failure
+              log.warn(`Analytics chunk ${chunkNumber} failed, stopping batch processing`);
+              break;
+            }
           }
         }
       }
@@ -884,31 +980,45 @@ export class ConvexSyncService {
         }
       }
 
-      // v2: Batch interaction events
-      if (interactionEvents.length > 0) {
-        const result = await this.safeMutation('interactions:batchLog', {
-          events: interactionEvents.map((e) => {
-            // Remove sessionId if null/undefined - Convex expects either valid ID or omission
-            const { sessionId, ...restData } = e.data as { sessionId?: string | null; [key: string]: unknown };
-            return {
-              userId: this.convexUserId,
-              deviceId: this.deviceId!,
-              ...restData,
-              ...(sessionId ? { sessionId } : {}),
-              timestamp: e.data.timestamp || e.timestamp,
-            };
-          }),
-        });
-
-        if (result.ok) {
-          for (const event of interactionEvents) {
-            if (event.id) await queueStorage.removeFromQueue(event.id);
+      // v2: Batch interaction events with PHASE 2 chunking
+      if (interactionEvents.length > 0 && userId) {
+        for (let i = 0; i < interactionEvents.length; i += BATCH_CHUNK_SIZE) {
+          const chunk = interactionEvents.slice(i, i + BATCH_CHUNK_SIZE);
+          const chunkNumber = Math.floor(i / BATCH_CHUNK_SIZE) + 1;
+          const totalChunks = Math.ceil(interactionEvents.length / BATCH_CHUNK_SIZE);
+          
+          if (totalChunks > 1) {
+            log.debug(`Processing interactions chunk ${chunkNumber}/${totalChunks} (${chunk.length} events)`);
           }
-        } else {
-          for (const event of interactionEvents) {
-            if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+          
+          const result = await this.safeMutation('interactions:batchLog', {
+            events: chunk.map((e) => {
+              // Remove sessionId if null/undefined - Convex expects either valid ID or omission
+              const { sessionId, ...restData } = e.data as { sessionId?: string | null; [key: string]: unknown };
+              return {
+                userId,
+                deviceId: deviceId!,
+                ...restData,
+                ...(sessionId ? { sessionId } : {}),
+                timestamp: e.data.timestamp || e.timestamp,
+              };
+            }),
+          });
+
+          if (result.ok) {
+            for (const event of chunk) {
+              if (event.id) await queueStorage.removeFromQueue(event.id);
+            }
+          } else {
+            for (const event of chunk) {
+              if (event.id) await queueStorage.updateAttempts(event.id, (event.attempts ?? 0) + 1);
+            }
+            log.warn(`Interactions chunk ${chunkNumber} failed, stopping batch processing`);
+            break;
           }
         }
+      } else if (interactionEvents.length > 0) {
+        log.warn(`Cannot flush ${interactionEvents.length} interaction events: no userId`);
       }
     }
 

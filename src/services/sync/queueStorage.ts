@@ -15,6 +15,8 @@ const DB_VERSION = 1;
 const FALLBACK_STORAGE_KEY = 'voicelab_sync_queue_fallback';
 const MAX_RETRY_ATTEMPTS = 5;
 const EVENT_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // P1-FIX: 7 days expiry
+const MAX_QUEUE_SIZE = 5000; // PHASE 2: Maximum queue size before eviction
+const EVICTION_BATCH_SIZE = 500; // PHASE 2: Number of events to evict when limit reached
 
 export interface QueuedEvent {
   id?: number;  // auto-increment key from IndexedDB
@@ -104,8 +106,42 @@ export async function hasIdempotencyKey(key: string): Promise<boolean> {
 }
 
 /**
+ * PHASE 2: Evict oldest events when queue exceeds max size
+ * Uses oldest-first eviction strategy
+ */
+async function enforceQueueSizeLimit(): Promise<number> {
+  const queue = await getQueue();
+  
+  if (queue.length < MAX_QUEUE_SIZE) {
+    return 0;
+  }
+  
+  // Sort by timestamp (oldest first) and get events to evict
+  const sortedQueue = [...queue].sort((a, b) => a.timestamp - b.timestamp);
+  const evictCount = Math.min(EVICTION_BATCH_SIZE, queue.length - MAX_QUEUE_SIZE + EVICTION_BATCH_SIZE);
+  const toEvict = sortedQueue.slice(0, evictCount);
+  
+  log.warn(`Queue size (${queue.length}) exceeds limit (${MAX_QUEUE_SIZE}), evicting ${evictCount} oldest events`, {
+    queueSize: queue.length,
+    limit: MAX_QUEUE_SIZE,
+    evicting: evictCount,
+    oldestEventAge: Date.now() - toEvict[0]?.timestamp,
+  });
+  
+  // Remove events
+  for (const event of toEvict) {
+    if (event.id) {
+      await removeFromQueue(event.id);
+    }
+  }
+  
+  return evictCount;
+}
+
+/**
  * Add event to queue
  * P0-FIX: Now includes idempotency key generation and duplicate detection
+ * PHASE 2: Enforces queue size limit with oldest-first eviction
  */
 export async function addToQueue(event: Omit<QueuedEvent, 'id'>): Promise<void> {
   // P0-FIX: Generate idempotency key if not provided
@@ -115,6 +151,12 @@ export async function addToQueue(event: Omit<QueuedEvent, 'id'>): Promise<void> 
   if (await hasIdempotencyKey(idempotencyKey)) {
     log.debug('Duplicate event detected, skipping', { idempotencyKey });
     return;
+  }
+  
+  // PHASE 2: Enforce queue size limit before adding
+  const evicted = await enforceQueueSizeLimit();
+  if (evicted > 0) {
+    log.info(`Evicted ${evicted} events to maintain queue size limit`);
   }
   
   // Initialize attempts counter and add idempotency key
