@@ -22,6 +22,7 @@ import type * as knowledge from "../knowledge.js";
 import type * as maintenance from "../maintenance.js";
 import type * as migrations from "../migrations.js";
 import type * as pipelineMetrics from "../pipelineMetrics.js";
+import type * as rewrite from "../rewrite.js";
 import type * as seed from "../seed.js";
 import type * as seedDirectiveOverrides from "../seedDirectiveOverrides.js";
 import type * as seedTrainingExamples from "../seedTrainingExamples.js";
@@ -51,6 +52,7 @@ declare const fullApi: ApiFromModules<{
   maintenance: typeof maintenance;
   migrations: typeof migrations;
   pipelineMetrics: typeof pipelineMetrics;
+  rewrite: typeof rewrite;
   seed: typeof seed;
   seedDirectiveOverrides: typeof seedDirectiveOverrides;
   seedTrainingExamples: typeof seedTrainingExamples;

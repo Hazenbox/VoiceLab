@@ -490,6 +490,52 @@ const getDirectiveOverrides = httpAction(async (ctx, request) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// TEXT REWRITE ENDPOINT (Mac ToneStudio)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * POST /api/rewrite
+ * 
+ * Rephrase text using AI (HuggingFace).
+ * Used by Mac ToneStudio app.
+ * 
+ * Request body:
+ * {
+ *   text: string,
+ *   style?: string (default: "professional")
+ * }
+ */
+const rewriteText = httpAction(async (ctx, request) => {
+  try {
+    const body = await request.json();
+    const { text, style } = body;
+    
+    if (!text || typeof text !== "string") {
+      return errorResponse("text is required", 400);
+    }
+    
+    if (text.length < 3) {
+      return errorResponse("text must be at least 3 characters", 400);
+    }
+    
+    if (text.length > 50000) {
+      return errorResponse("text must be less than 50000 characters", 400);
+    }
+    
+    const result = await ctx.runAction(api.rewrite.rephrase, {
+      text,
+      style: style || "professional",
+    });
+    
+    return successResponse({ rewritten: result });
+  } catch (error) {
+    console.error("[HTTP] rewriteText error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return errorResponse(`Failed to rewrite text: ${message}`, 500);
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // HEALTH CHECK ENDPOINT
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -515,6 +561,7 @@ const healthCheck = httpAction(async (ctx, request) => {
       "POST /api/feedback",
       "GET /api/corrections/learning",
       "GET /api/directives",
+      "POST /api/rewrite",
     ],
   });
 });
@@ -621,6 +668,13 @@ http.route({
   path: "/api/directives",
   method: "GET",
   handler: getDirectiveOverrides,
+});
+
+// Text rewrite (Mac ToneStudio)
+http.route({
+  path: "/api/rewrite",
+  method: "POST",
+  handler: rewriteText,
 });
 
 export default http;
