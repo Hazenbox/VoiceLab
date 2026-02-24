@@ -15,6 +15,7 @@
 
 import * as queueStorage from './queueStorage';
 import { withRetry, type RetryOptions } from '../reliability';
+import { getCircuitBreakerManager, type CircuitDomain } from '../reliability/circuitBreaker';
 import { getSyncStatusManager } from './syncStatus';
 import { createLogger } from '../../utils/logger';
 
@@ -37,18 +38,21 @@ const RETRY_CONFIG: RetryOptions = {
   },
 };
 
-// ── Circuit Breaker Configuration ─────────────────────────────────
-// Prevents repeated failures from overwhelming the system
-const CIRCUIT_BREAKER_CONFIG = {
-  /** Number of failures before opening the circuit */
-  failureThreshold: 5,
-  /** Time to wait before attempting to close the circuit (ms) */
-  resetTimeoutMs: 60000, // 1 minute cooldown
-  /** Number of successes needed to fully close the circuit */
-  successThreshold: 2,
-} as const;
+// ── Circuit Breaker ───────────────────────────────────────────────
+// Uses per-domain CircuitBreakerManager for granular failure tracking
+// Domain mapping from mutation name to circuit domain
+function getDomainFromMutationName(name: string): CircuitDomain {
+  if (name.startsWith('analytics:')) return 'analytics';
+  if (name.startsWith('sessions:')) return 'sync';
+  if (name.startsWith('knowledge:')) return 'knowledge';
+  if (name.startsWith('embeddings:')) return 'embeddings';
+  if (name.startsWith('users:')) return 'sync';
+  if (name.startsWith('corrections:')) return 'sync';
+  if (name.startsWith('interactions:')) return 'analytics';
+  return 'default';
+}
 
-/** Circuit breaker state */
+/** Legacy circuit breaker state interface (kept for backward compatibility) */
 interface CircuitBreakerState {
   state: 'closed' | 'open' | 'half-open';
   failureCount: number;
@@ -209,14 +213,8 @@ export class ConvexSyncService {
   private sessionMetricsFlushTimer: ReturnType<typeof setTimeout> | null = null;
   private isFlushingSessionMetrics = false;
   
-  // Circuit breaker state (wiring orphaned pattern)
-  private circuitBreaker: CircuitBreakerState = {
-    state: 'closed',
-    failureCount: 0,
-    successCount: 0,
-    lastFailureTime: null,
-    openedAt: null,
-  };
+  // Circuit breaker manager reference (per-domain circuit breakers)
+  private circuitBreakerManager = getCircuitBreakerManager();
 
   constructor() {
     this.convexUserId = getCachedConvexUserId();
@@ -252,153 +250,122 @@ export class ConvexSyncService {
   }
 
   private get isAvailable(): boolean {
-    return this.mutationFn !== null && this.isOnline && !this.isCircuitOpen();
+    // Check if any critical domain is fully open (sync domain)
+    return this.mutationFn !== null && this.isOnline && this.circuitBreakerManager.isAvailable('sync');
   }
 
-  // ── Circuit Breaker Methods ─────────────────────────────────────
+  // ── Circuit Breaker Methods (using per-domain manager) ─────────────────
   
   /**
-   * Check if circuit breaker is open (blocking requests)
+   * Check if a specific domain's circuit is available
    */
-  private isCircuitOpen(): boolean {
-    const cb = this.circuitBreaker;
-    
-    if (cb.state === 'closed') return false;
-    
-    if (cb.state === 'open') {
-      // Check if enough time has passed to try half-open
-      const now = Date.now();
-      if (cb.openedAt && now - cb.openedAt >= CIRCUIT_BREAKER_CONFIG.resetTimeoutMs) {
-        // Transition to half-open: allow a single request through
-        this.circuitBreaker.state = 'half-open';
-        this.circuitBreaker.successCount = 0;
-        log.info('Circuit breaker transitioning to half-open');
-        return false;
-      }
-      return true; // Still in cooldown
-    }
-    
-    // half-open: allow requests through (single test)
-    return false;
-  }
-  
-  /**
-   * Record a successful operation (may close the circuit)
-   */
-  private recordSuccess(): void {
-    const cb = this.circuitBreaker;
-    
-    if (cb.state === 'half-open') {
-      cb.successCount++;
-      if (cb.successCount >= CIRCUIT_BREAKER_CONFIG.successThreshold) {
-        // Fully close the circuit
-        cb.state = 'closed';
-        cb.failureCount = 0;
-        cb.successCount = 0;
-        cb.lastFailureTime = null;
-        cb.openedAt = null;
-        log.info('Circuit breaker closed after successful requests');
-      }
-    } else if (cb.state === 'closed') {
-      // Reset failure count on success (sliding window approach)
-      cb.failureCount = Math.max(0, cb.failureCount - 1);
-    }
-  }
-  
-  /**
-   * Record a failed operation (may open the circuit)
-   */
-  private recordFailure(): void {
-    const cb = this.circuitBreaker;
-    const now = Date.now();
-    
-    cb.failureCount++;
-    cb.lastFailureTime = now;
-    
-    if (cb.state === 'half-open') {
-      // Immediately re-open on any failure in half-open state
-      cb.state = 'open';
-      cb.openedAt = now;
-      log.warn('Circuit breaker re-opened after half-open failure');
-    } else if (cb.state === 'closed' && cb.failureCount >= CIRCUIT_BREAKER_CONFIG.failureThreshold) {
-      // Open the circuit
-      cb.state = 'open';
-      cb.openedAt = now;
-      log.warn('Circuit breaker opened', { failures: cb.failureCount, cooldownMs: CIRCUIT_BREAKER_CONFIG.resetTimeoutMs });
-    }
+  private isDomainAvailable(domain: CircuitDomain): boolean {
+    return this.circuitBreakerManager.isAvailable(domain);
   }
   
   /**
    * Get circuit breaker status (for monitoring/debugging)
+   * Returns aggregated status from all domains
    */
-  getCircuitBreakerStatus(): CircuitBreakerState & { timeUntilRetry?: number } {
-    const cb = this.circuitBreaker;
-    const result = { ...cb };
+  getCircuitBreakerStatus(): CircuitBreakerState & { 
+    timeUntilRetry?: number;
+    openDomains?: string[];
+  } {
+    const allStats = this.circuitBreakerManager.getAllStats();
+    const openDomains = this.circuitBreakerManager.getOpenDomains();
     
-    if (cb.state === 'open' && cb.openedAt) {
-      const timeUntilRetry = Math.max(0, CIRCUIT_BREAKER_CONFIG.resetTimeoutMs - (Date.now() - cb.openedAt));
-      return { ...result, timeUntilRetry };
+    // Find the most restrictive state across all domains
+    let worstState: 'closed' | 'open' | 'half-open' = 'closed';
+    let totalFailures = 0;
+    let totalSuccesses = 0;
+    let earliestOpenedAt: number | null = null;
+    
+    for (const stats of Object.values(allStats)) {
+      totalFailures += stats.failures;
+      totalSuccesses += stats.consecutiveSuccesses;
+      
+      if (stats.state === 'OPEN') {
+        worstState = 'open';
+        if (stats.openedAt && (!earliestOpenedAt || stats.openedAt < earliestOpenedAt)) {
+          earliestOpenedAt = stats.openedAt;
+        }
+      } else if (stats.state === 'HALF_OPEN' && worstState !== 'open') {
+        worstState = 'half-open';
+      }
     }
     
-    return result;
+    return {
+      state: worstState,
+      failureCount: totalFailures,
+      successCount: totalSuccesses,
+      lastFailureTime: null, // Aggregated, not tracked
+      openedAt: earliestOpenedAt,
+      openDomains: openDomains.length > 0 ? openDomains : undefined,
+    };
   }
 
   // ── Safe mutation call with retry ────────────────────────────
 
   // Returns { ok: true, value } on success, { ok: false } on failure.
   // Uses exponential backoff for transient failures.
-  // Now integrates with circuit breaker.
+  // PHASE 4: Now integrates with per-domain circuit breakers.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async safeMutation(name: string, args: Record<string, any>): Promise<{ ok: true; value: any } | { ok: false }> {
     if (!this.mutationFn) return { ok: false };
     
-    // Check circuit breaker before attempting
-    if (this.isCircuitOpen()) {
-      const status = this.getCircuitBreakerStatus();
-      log.debug(`Circuit open, skipping ${name}`, { retryIn: status.timeUntilRetry });
+    // Determine the domain for this mutation
+    const domain = getDomainFromMutationName(name);
+    
+    // Check domain-specific circuit breaker before attempting
+    if (!this.isDomainAvailable(domain)) {
+      log.debug(`Circuit open for domain ${domain}, skipping ${name}`);
       return { ok: false };
     }
     
     try {
-      const result = await withRetry(
-        () => this.mutationFn!(name, args),
-        {
-          ...RETRY_CONFIG,
-          onRetry: (attempt, error, delay) => {
-            log.debug(`Retry ${attempt} for ${name}`, { delay, error: error.message });
-          },
-        }
-      );
+      // Execute through circuit breaker manager
+      const result = await this.circuitBreakerManager.execute(domain, async () => {
+        return await withRetry(
+          () => this.mutationFn!(name, args),
+          {
+            ...RETRY_CONFIG,
+            onRetry: (attempt, error, delay) => {
+              log.debug(`Retry ${attempt} for ${name}`, { delay, error: error.message });
+            },
+          }
+        );
+      });
       
-      // Success - record for circuit breaker
-      this.recordSuccess();
       return { ok: true, value: result };
     } catch (error) {
-      // Failure - record for circuit breaker
-      this.recordFailure();
-      log.warn('Mutation failed after retries', { mutation: name, error: String(error) });
+      log.warn('Mutation failed', { mutation: name, domain, error: String(error) });
       return { ok: false };
     }
   }
   
   // For operations that should not retry (e.g., idempotent operations or quick fails)
+  // PHASE 4: Uses per-domain circuit breakers
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async safeMutationNoRetry(name: string, args: Record<string, any>): Promise<{ ok: true; value: any } | { ok: false }> {
     if (!this.mutationFn) return { ok: false };
     
-    // Check circuit breaker before attempting
-    if (this.isCircuitOpen()) {
-      log.debug(`Circuit open, skipping ${name}`);
+    // Determine the domain for this mutation
+    const domain = getDomainFromMutationName(name);
+    
+    // Check domain-specific circuit breaker before attempting
+    if (!this.isDomainAvailable(domain)) {
+      log.debug(`Circuit open for domain ${domain}, skipping ${name}`);
       return { ok: false };
     }
     
     try {
-      const result = await this.mutationFn(name, args);
-      this.recordSuccess();
+      // Execute through circuit breaker manager (no internal retries)
+      const result = await this.circuitBreakerManager.execute(domain, () => 
+        this.mutationFn!(name, args)
+      );
       return { ok: true, value: result };
     } catch (error) {
-      this.recordFailure();
-      log.warn('Mutation failed', { mutation: name, error: String(error) });
+      log.warn('Mutation failed', { mutation: name, domain, error: String(error) });
       return { ok: false };
     }
   }
