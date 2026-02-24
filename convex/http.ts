@@ -278,7 +278,7 @@ const getKnowledge = httpAction(async (ctx, request) => {
  */
 const getKnowledgeCounts = httpAction(async (ctx, request) => {
   try {
-    const counts = await ctx.runQuery(api.knowledge.countByType);
+    const counts = await ctx.runQuery(api.knowledge.countByType, {});
     return successResponse(counts);
   } catch (error) {
     console.error("[HTTP] getKnowledgeCounts error:", error);
@@ -323,15 +323,14 @@ const getEnforcementRules = httpAction(async (ctx, request) => {
 const getTrainingExamples = httpAction(async (ctx, request) => {
   try {
     const url = new URL(request.url);
-    const ecosystem = url.searchParams.get("ecosystem") || undefined;
-    const channel = url.searchParams.get("channel") || undefined;
     const limitStr = url.searchParams.get("limit");
     const limit = limitStr ? parseInt(limitStr, 10) : 20;
+    const minScoreStr = url.searchParams.get("minScore");
+    const minScore = minScoreStr ? parseInt(minScoreStr, 10) : undefined;
     
     const examples = await ctx.runQuery(api.seedTrainingExamples.getHighQuality, {
-      ecosystem,
-      channel,
       limit,
+      minScore,
     });
     
     return successResponse(examples);
@@ -391,7 +390,14 @@ const submitFeedback = httpAction(async (ctx, request) => {
       return errorResponse(`Invalid feedbackType. Must be one of: ${validTypes.join(", ")}`, 400);
     }
     
-    await ctx.runMutation(api.corrections.submit, {
+    // First, lookup the user by deviceId
+    const user = await ctx.runQuery(api.users.getByDeviceId, { deviceId });
+    if (!user) {
+      return errorResponse("User not found. Please authenticate first.", 404);
+    }
+    
+    await ctx.runMutation(api.corrections.create, {
+      userId: user._id,
       deviceId,
       feedbackType,
       messageContent,

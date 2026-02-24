@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 
 // ── Log a single analytics event ─────────────────────────────────
 // PHASE 0: userId is now optional to allow deviceId-only logging
@@ -94,7 +95,7 @@ export const batchLogEvents = mutation({
         const resolvedUserId = event.userId || userIdByDeviceId[event.deviceId];
         return ctx.db.insert("analyticsEvents", {
           ...event,
-          userId: resolvedUserId, // May still be undefined if user not found
+          userId: resolvedUserId as Id<"users"> | undefined, // May still be undefined if user not found
         });
       })
     );
