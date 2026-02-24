@@ -2,9 +2,10 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 // ── Log a single analytics event ─────────────────────────────────
+// PHASE 0: userId is now optional to allow deviceId-only logging
 export const logEvent = mutation({
   args: {
-    userId: v.id("users"),
+    userId: v.optional(v.id("users")), // PHASE 0: Optional - deviceId can be used alone
     deviceId: v.string(),
     eventType: v.string(),
     ecosystem: v.string(),
@@ -18,8 +19,21 @@ export const logEvent = mutation({
     llmProvider: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // PHASE 0: Try to resolve userId from deviceId if not provided
+    let resolvedUserId = args.userId;
+    if (!resolvedUserId && args.deviceId) {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_deviceId", (q) => q.eq("deviceId", args.deviceId))
+        .first();
+      if (user) {
+        resolvedUserId = user._id;
+      }
+    }
+    
     return await ctx.db.insert("analyticsEvents", {
       ...args,
+      userId: resolvedUserId, // May still be undefined if user not found
       timestamp: Date.now(),
     });
   },
@@ -27,11 +41,12 @@ export const logEvent = mutation({
 
 // ── Batch log events (for flushing sync queue) ───────────────────
 // Parallelized with Promise.all for better performance
+// PHASE 0: userId is now optional to allow deviceId-only logging
 export const batchLogEvents = mutation({
   args: {
     events: v.array(
       v.object({
-        userId: v.id("users"),
+        userId: v.optional(v.id("users")), // PHASE 0: Optional - deviceId can be used alone
         deviceId: v.string(),
         eventType: v.string(),
         ecosystem: v.string(),
@@ -55,9 +70,33 @@ export const batchLogEvents = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    // PHASE 0: Build a deviceId -> userId lookup for events without userId
+    const deviceIdsNeedingLookup = new Set<string>();
+    for (const event of args.events) {
+      if (!event.userId && event.deviceId) {
+        deviceIdsNeedingLookup.add(event.deviceId);
+      }
+    }
+    
+    const userIdByDeviceId: Record<string, string | undefined> = {};
+    for (const deviceId of deviceIdsNeedingLookup) {
+      const user = await ctx.db
+        .query("users")
+        .withIndex("by_deviceId", (q) => q.eq("deviceId", deviceId))
+        .first();
+      userIdByDeviceId[deviceId] = user?._id;
+    }
+    
     // Parallelize inserts for better throughput
     await Promise.all(
-      args.events.map(event => ctx.db.insert("analyticsEvents", event))
+      args.events.map(event => {
+        // PHASE 0: Resolve userId from deviceId if not provided
+        const resolvedUserId = event.userId || userIdByDeviceId[event.deviceId];
+        return ctx.db.insert("analyticsEvents", {
+          ...event,
+          userId: resolvedUserId, // May still be undefined if user not found
+        });
+      })
     );
   },
 });

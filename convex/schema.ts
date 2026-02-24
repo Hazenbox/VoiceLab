@@ -48,8 +48,9 @@ export default defineSchema({
 
   // ── Analytics Events ───────────────────────────────────────────
   // One event per content generation, session start, or feedback action.
+  // PHASE 0: userId is now optional to allow deviceId-only logging when user is unavailable
   analyticsEvents: defineTable({
-    userId: v.id("users"),
+    userId: v.optional(v.id("users")), // PHASE 0: Optional - allows logging before user is created
     deviceId: v.string(),
     eventType: v.string(), // generation | feedback | session_start
     ecosystem: v.string(),

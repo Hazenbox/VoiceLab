@@ -505,7 +505,10 @@ export class ConvexSyncService {
     // PHASE 2: Record activity on analytics events
     this.recordActivity();
     
-    if (!this.convexUserId || !this.deviceId) {
+    // PHASE 0: deviceId is required, but userId is now optional
+    // Events will be logged with deviceId-only; Convex will try to resolve userId
+    if (!this.deviceId) {
+      console.warn('[ConvexSync] logAnalyticsEvent: no deviceId, queueing event');
       queueStorage.addToQueue({
         type: 'analytics',
         data: { ...event },
@@ -534,7 +537,9 @@ export class ConvexSyncService {
     
     if (this.eventBuffer.length === 0) return;
     
-    if (!this.isAvailable || !this.convexUserId || !this.deviceId) {
+    // PHASE 0: deviceId is required but userId is optional
+    // We can now send events even without userId - Convex will resolve it
+    if (!this.isAvailable || !this.deviceId) {
       // Move to persistent queue when can't sync
       const eventsToQueue = [...this.eventBuffer];
       this.eventBuffer = [];
@@ -553,10 +558,12 @@ export class ConvexSyncService {
     this.eventBuffer = [];
 
     try {
+      // PHASE 0: userId is optional, deviceId is required
+      // Convex will attempt to resolve userId from deviceId if not provided
       const result = await this.safeMutation('analytics:batchLogEvents', {
         events: events.map((e) => ({
           ...e,
-          userId: this.convexUserId,
+          userId: this.convexUserId, // May be undefined - that's OK now
           deviceId: this.deviceId!,
         })),
       });
