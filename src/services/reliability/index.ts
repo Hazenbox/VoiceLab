@@ -304,3 +304,15 @@ export {
   type StorageChangeListener,
   type IdempotencyEntry,
 };
+
+// PHASE 4: Re-export circuit breaker utilities
+export {
+  CircuitBreaker,
+  CircuitBreakerManager,
+  getCircuitBreakerManager,
+  executeWithCircuitBreaker,
+  DOMAIN_CONFIGS,
+  type CircuitState,
+  type CircuitDomain,
+  type CircuitBreakerConfig,
+} from './circuitBreaker';
