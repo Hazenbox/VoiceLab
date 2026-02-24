@@ -21,13 +21,40 @@ import {
   createTokenEnforcementAgent,
   type TokenEnforcementContext,
 } from '../../validation/tokenEnforcementAgent';
-import { getCachedEnforcementRules } from '../../validation/tokenEnforcementCache';
+import { 
+  getEnforcementRulesWithFallback, 
+  getEnforcementStatus,
+  isEnforcementAvailable,
+} from '../../validation/tokenEnforcementCache';
 import {
   validateConstitutionalResponse,
   convertToViolations,
   type ConstitutionalContext,
 } from '../../generation/constitutionalWrapper';
 import type { PipelineInput, ValidateResult, AssembleResult } from '../types';
+
+/**
+ * PHASE 0: Check if restrictive mode should block generation
+ * Returns true if generation should be blocked due to missing safety rules
+ */
+function shouldBlockForSafety(): { block: boolean; reason?: string } {
+  // Allow unsafe generation in development if explicitly enabled
+  const allowUnsafe = import.meta.env.VITE_ALLOW_UNSAFE_GENERATION === 'true';
+  if (allowUnsafe) {
+    console.warn('[Pipeline:Validate] VITE_ALLOW_UNSAFE_GENERATION enabled - skipping safety check');
+    return { block: false };
+  }
+  
+  // Check if we have any enforcement rules available
+  if (!isEnforcementAvailable()) {
+    return { 
+      block: true, 
+      reason: 'No token enforcement rules available. Content generation blocked for brand safety.' 
+    };
+  }
+  
+  return { block: false };
+}
 
 export async function validate(
   input: PipelineInput,
@@ -36,10 +63,36 @@ export async function validate(
 ): Promise<ValidateResult> {
   let processedContent = content;
 
-  // 1. Token enforcement (Convex brand protection rules)
-  const cachedRules = getCachedEnforcementRules();
-  if (cachedRules.length > 0) {
-    processedContent = await applyTokenEnforcement(processedContent, input, assembled, cachedRules);
+  // PHASE 0: Check restrictive mode
+  const safetyCheck = shouldBlockForSafety();
+  if (safetyCheck.block) {
+    console.error('[Pipeline:Validate] RESTRICTIVE MODE: ' + safetyCheck.reason);
+    return {
+      passed: false,
+      content: processedContent,
+      validation: null,
+      trustScore: null,
+      autoFixPreview: null,
+      validationSummary: {
+        passedCount: 0,
+        warningCount: 0,
+        errorCount: 1,
+        autoFixesApplied: 0,
+      },
+      restrictiveModeBlocked: true,
+      restrictiveModeReason: safetyCheck.reason,
+    };
+  }
+
+  // 1. Token enforcement (Convex brand protection rules + fallback rules)
+  // PHASE 0: Now uses fallback-aware function that merges cached + hardcoded rules
+  const enforcementRules = getEnforcementRulesWithFallback();
+  const enforcementStatus = getEnforcementStatus();
+  
+  console.log(`[Pipeline:Validate] Using ${enforcementRules.length} enforcement rules (source: ${enforcementStatus.source})`);
+  
+  if (enforcementRules.length > 0) {
+    processedContent = await applyTokenEnforcement(processedContent, input, assembled, enforcementRules);
   }
 
   // 2. Run validation pipeline

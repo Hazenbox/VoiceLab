@@ -668,12 +668,22 @@ export class ConvexSyncService {
       return;
     }
 
+    // PHASE 0 FIX: Capture values after null check for TypeScript narrowing
+    const userId = this.convexUserId;
+    const deviceId = this.deviceId;
+    
+    // Double-check (TypeScript flow analysis may not catch the early return)
+    if (!userId || !deviceId) {
+      console.warn('[ConvexSync] batchLogInteractions: userId/deviceId became null after check');
+      return;
+    }
+    
     const formattedEvents = events.map(e => {
       // Remove sessionId if null/undefined - Convex expects either valid ID or omission
       const { sessionId, ...rest } = e;
       return {
-        userId: this.convexUserId!,
-        deviceId: this.deviceId!,
+        userId,
+        deviceId,
         ...rest,
         ...(sessionId ? { sessionId } : {}),
         timestamp: Date.now(),
@@ -762,10 +772,16 @@ export class ConvexSyncService {
       }
     }
 
+    // PHASE 0: Log queue health before processing
+    try {
+      const { logQueueHealth } = await import('./queueStorage');
+      await logQueueHealth();
+    } catch { /* ignore */ }
+
     // NOW check for convexUserId before processing events that require it
+    // PHASE 0: We'll still try to process analytics with deviceId-only fallback
     if (!this.convexUserId) {
-      log.warn('Cannot flush analytics/corrections: no convexUserId established');
-      // Still continue with heartbeats which don't require convexUserId
+      log.warn('convexUserId not established - analytics events will use deviceId-only mode');
     }
 
     // Replay heartbeat events

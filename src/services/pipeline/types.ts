@@ -284,6 +284,10 @@ export interface ValidateResult {
     applied: Array<{ from: string; to: string }>;
     totalCount: number;
   };
+  /** PHASE 0: Restrictive mode blocked generation due to missing safety rules */
+  restrictiveModeBlocked?: boolean;
+  /** PHASE 0: Reason for restrictive mode block */
+  restrictiveModeReason?: string;
 }
 
 export interface FinalizeResult {

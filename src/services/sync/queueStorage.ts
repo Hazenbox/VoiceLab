@@ -382,3 +382,97 @@ export function isEventExpired(event: QueuedEvent): boolean {
   const now = Date.now();
   return event.timestamp < (now - EVENT_EXPIRY_MS);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PHASE 0: QUEUE HEALTH MONITORING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const QUEUE_HEALTH_WARN_SIZE = 1000;
+const QUEUE_HEALTH_WARN_AGE_MS = 5 * 24 * 60 * 60 * 1000; // 5 days
+
+export interface QueueHealth {
+  depth: number;
+  oldestEventAge: number | null;
+  oldestEventTimestamp: number | null;
+  isHealthy: boolean;
+  warnings: string[];
+}
+
+/**
+ * PHASE 0: Get queue health status
+ * Returns health metrics and warnings for monitoring
+ */
+export async function getQueueHealth(): Promise<QueueHealth> {
+  const queue = await getQueue();
+  const now = Date.now();
+  const warnings: string[] = [];
+  
+  // Find oldest event
+  let oldestTimestamp: number | null = null;
+  if (queue.length > 0) {
+    oldestTimestamp = queue.reduce(
+      (oldest, e) => (e.timestamp < oldest ? e.timestamp : oldest),
+      queue[0].timestamp
+    );
+  }
+  
+  const oldestAge = oldestTimestamp ? now - oldestTimestamp : null;
+  
+  // Check for warnings
+  if (queue.length >= QUEUE_HEALTH_WARN_SIZE) {
+    warnings.push(`Queue depth (${queue.length}) exceeds warning threshold (${QUEUE_HEALTH_WARN_SIZE})`);
+  }
+  
+  if (oldestAge && oldestAge >= QUEUE_HEALTH_WARN_AGE_MS) {
+    const ageDays = Math.round(oldestAge / (24 * 60 * 60 * 1000) * 10) / 10;
+    warnings.push(`Oldest event is ${ageDays} days old (warning threshold: 5 days)`);
+  }
+  
+  const isHealthy = warnings.length === 0;
+  
+  // Log warnings if unhealthy
+  if (!isHealthy) {
+    log.warn('Queue health check failed', { 
+      depth: queue.length, 
+      oldestAgeDays: oldestAge ? Math.round(oldestAge / (24 * 60 * 60 * 1000) * 10) / 10 : null,
+      warnings 
+    });
+  }
+  
+  return {
+    depth: queue.length,
+    oldestEventAge: oldestAge,
+    oldestEventTimestamp: oldestTimestamp,
+    isHealthy,
+    warnings,
+  };
+}
+
+/**
+ * PHASE 0: Log queue health status
+ * Should be called periodically (e.g., on flush attempts)
+ */
+export async function logQueueHealth(): Promise<void> {
+  const health = await getQueueHealth();
+  
+  if (!health.isHealthy) {
+    console.warn(`[QueueStorage] QUEUE HEALTH WARNING:`, health.warnings.join('; '));
+    console.warn(`[QueueStorage] Queue stats: ${health.depth} events, oldest: ${
+      health.oldestEventAge ? Math.round(health.oldestEventAge / 1000 / 60) + 'min' : 'N/A'
+    }`);
+  }
+}
+
+/**
+ * PHASE 0: Get queue statistics by event type
+ */
+export async function getQueueStats(): Promise<Record<string, number>> {
+  const queue = await getQueue();
+  const stats: Record<string, number> = {};
+  
+  for (const event of queue) {
+    stats[event.type] = (stats[event.type] || 0) + 1;
+  }
+  
+  return stats;
+}
