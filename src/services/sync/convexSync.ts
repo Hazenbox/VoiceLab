@@ -176,6 +176,14 @@ const HEARTBEAT_CONFIG = {
   inactivityThresholdMs: 5 * 60 * 1000, // 5 minutes
 } as const;
 
+// PHASE 2: Session metric buffering configuration
+const SESSION_METRICS_BUFFER_CONFIG = {
+  /** Buffer flush interval (ms) */
+  flushIntervalMs: 30000, // 30 seconds
+  /** Max updates per session before immediate flush */
+  maxUpdatesPerSession: 10,
+} as const;
+
 export class ConvexSyncService {
   private mutationFn: MutationFn | null = null;
   private deviceId: string | null = null;
@@ -195,6 +203,11 @@ export class ConvexSyncService {
   private lastHeartbeatTime: number = 0;
   private lastActivityTime: number = Date.now();
   private heartbeatSkipCount: number = 0;
+  
+  // PHASE 2: Session metrics buffering
+  private sessionMetricsBuffer: Map<string, SessionUpdateParams & { updateCount: number }> = new Map();
+  private sessionMetricsFlushTimer: ReturnType<typeof setTimeout> | null = null;
+  private isFlushingSessionMetrics = false;
   
   // Circuit breaker state (wiring orphaned pattern)
   private circuitBreaker: CircuitBreakerState = {
@@ -648,7 +661,10 @@ export class ConvexSyncService {
   }
 
   /**
-   * Update session metrics
+   * Update session metrics - PHASE 2: Uses buffering to reduce call volume
+   * 
+   * Metrics are buffered and merged for 30 seconds before being sent as a batch.
+   * This reduces the number of Convex mutations from per-message to every 30 seconds.
    */
   async updateSession(params: SessionUpdateParams): Promise<void> {
     if (!this.isAvailable) {
@@ -660,14 +676,111 @@ export class ConvexSyncService {
       return;
     }
 
-    const result = await this.safeMutation('sessions:updateMetrics', params);
-
-    if (!result.ok) {
-      queueStorage.addToQueue({
-        type: 'session_update',
-        data: { ...params },
-        timestamp: Date.now(),
+    // PHASE 2: Buffer and merge session metrics
+    const existing = this.sessionMetricsBuffer.get(params.sessionId);
+    
+    if (existing) {
+      // Merge with existing buffered metrics - take the latest non-undefined values
+      const merged: SessionUpdateParams & { updateCount: number } = {
+        ...existing,
+        ...Object.fromEntries(
+          Object.entries(params).filter(([, v]) => v !== undefined)
+        ),
+        updateCount: existing.updateCount + 1,
+      };
+      this.sessionMetricsBuffer.set(params.sessionId, merged);
+      
+      // Immediate flush if too many updates
+      if (merged.updateCount >= SESSION_METRICS_BUFFER_CONFIG.maxUpdatesPerSession) {
+        log.debug(`[PHASE 2] Session ${params.sessionId} reached max updates, flushing immediately`);
+        await this.flushSessionMetricsBuffer();
+        return;
+      }
+    } else {
+      // New session in buffer
+      this.sessionMetricsBuffer.set(params.sessionId, {
+        ...params,
+        updateCount: 1,
       });
+    }
+    
+    // Schedule buffer flush
+    this.scheduleSessionMetricsFlush();
+  }
+  
+  /**
+   * PHASE 2: Schedule a flush of the session metrics buffer
+   */
+  private scheduleSessionMetricsFlush(): void {
+    if (this.sessionMetricsFlushTimer) return;
+    
+    this.sessionMetricsFlushTimer = setTimeout(() => {
+      this.flushSessionMetricsBuffer();
+      this.sessionMetricsFlushTimer = null;
+    }, SESSION_METRICS_BUFFER_CONFIG.flushIntervalMs);
+  }
+  
+  /**
+   * PHASE 2: Flush all buffered session metrics
+   */
+  private async flushSessionMetricsBuffer(): Promise<void> {
+    if (this.isFlushingSessionMetrics) return;
+    if (this.sessionMetricsBuffer.size === 0) return;
+    
+    this.isFlushingSessionMetrics = true;
+    
+    // Take snapshot and clear buffer
+    const updates = Array.from(this.sessionMetricsBuffer.values()).map(
+      ({ updateCount, ...params }) => params // Remove updateCount before sending
+    );
+    this.sessionMetricsBuffer.clear();
+    
+    // Clear timer if it exists
+    if (this.sessionMetricsFlushTimer) {
+      clearTimeout(this.sessionMetricsFlushTimer);
+      this.sessionMetricsFlushTimer = null;
+    }
+    
+    try {
+      if (!this.isAvailable) {
+        // Queue for later
+        for (const update of updates) {
+          queueStorage.addToQueue({
+            type: 'session_update',
+            data: update,
+            timestamp: Date.now(),
+          });
+        }
+        return;
+      }
+      
+      if (updates.length === 1) {
+        // Single update - use regular mutation
+        const result = await this.safeMutation('sessions:updateMetrics', updates[0]);
+        if (!result.ok) {
+          queueStorage.addToQueue({
+            type: 'session_update',
+            data: updates[0],
+            timestamp: Date.now(),
+          });
+        }
+      } else {
+        // Multiple updates - use batch mutation
+        log.debug(`[PHASE 2] Flushing ${updates.length} session metric updates as batch`);
+        const result = await this.safeMutation('sessions:batchUpdateMetrics', { updates });
+        if (!result.ok) {
+          // Queue all failed updates
+          for (const update of updates) {
+            queueStorage.addToQueue({
+              type: 'session_update',
+              data: update,
+              timestamp: Date.now(),
+            });
+          }
+        }
+      }
+    } finally {
+      this.isFlushingSessionMetrics = false;
     }
   }
 
@@ -1053,6 +1166,10 @@ export class ConvexSyncService {
     if (this.flushTimer) {
       clearTimeout(this.flushTimer);
     }
+    // PHASE 2: Clear session metrics flush timer
+    if (this.sessionMetricsFlushTimer) {
+      clearTimeout(this.sessionMetricsFlushTimer);
+    }
     // Remove event listeners to prevent leaks
     if (typeof window !== 'undefined') {
       if (this.handleOnline) window.removeEventListener('online', this.handleOnline);
@@ -1063,6 +1180,13 @@ export class ConvexSyncService {
       queueStorage.addToQueue({ type: 'analytics', data: { ...event }, timestamp: event.timestamp });
     }
     this.eventBuffer = [];
+    
+    // PHASE 2: Flush remaining session metrics to queue
+    for (const [, update] of this.sessionMetricsBuffer) {
+      const { updateCount, ...params } = update;
+      queueStorage.addToQueue({ type: 'session_update', data: params, timestamp: Date.now() });
+    }
+    this.sessionMetricsBuffer.clear();
   }
 }
 

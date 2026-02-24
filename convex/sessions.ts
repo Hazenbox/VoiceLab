@@ -85,6 +85,88 @@ export const updateMetrics = mutation({
   },
 });
 
+// ══════════════════════════════════════════════════════════════════════════════
+// PHASE 2: BATCH UPDATE METRICS
+// Allows updating multiple session metrics in a single mutation to reduce call volume
+// ══════════════════════════════════════════════════════════════════════════════
+
+export const batchUpdateMetrics = mutation({
+  args: {
+    updates: v.array(
+      v.object({
+        sessionId: v.id("conversationSessions"),
+        messageCount: v.optional(v.number()),
+        userMessageCount: v.optional(v.number()),
+        assistantMessageCount: v.optional(v.number()),
+        averageResponseTimeMs: v.optional(v.number()),
+        contextSwitches: v.optional(v.number()),
+        regenerationCount: v.optional(v.number()),
+        copyActionCount: v.optional(v.number()),
+        voiceMessageCount: v.optional(v.number()),
+        textMessageCount: v.optional(v.number()),
+        ecosystem: v.optional(v.string()),
+        channel: v.optional(v.string()),
+        persona: v.optional(v.string()),
+        lastSyncedAt: v.optional(v.number()),
+        syncVersion: v.optional(v.number()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const results: { sessionId: string; success: boolean; error?: string }[] = [];
+    
+    for (const update of args.updates) {
+      const { sessionId, syncVersion, ...updates } = update;
+      
+      try {
+        // PHASE 4: Optional optimistic concurrency check
+        if (syncVersion !== undefined) {
+          const session = await ctx.db.get(sessionId);
+          if (session?.syncVersion && session.syncVersion > syncVersion) {
+            results.push({
+              sessionId,
+              success: false,
+              error: `Stale sync version: ${syncVersion} < ${session.syncVersion}`,
+            });
+            continue;
+          }
+        }
+        
+        // Filter out undefined values
+        const filteredUpdates: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(updates)) {
+          if (value !== undefined) {
+            filteredUpdates[key] = value;
+          }
+        }
+        
+        await ctx.db.patch(sessionId, {
+          ...filteredUpdates,
+          lastActivityAt: now,
+          lastSyncedAt: now,
+          ...(syncVersion !== undefined ? { syncVersion: syncVersion + 1 } : {}),
+        });
+        
+        results.push({ sessionId, success: true });
+      } catch (error) {
+        results.push({
+          sessionId,
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+    
+    return {
+      totalUpdates: args.updates.length,
+      successCount: results.filter(r => r.success).length,
+      failureCount: results.filter(r => !r.success).length,
+      results,
+    };
+  },
+});
+
 // ── End a session ──────────────────────────────────────────────────
 export const end = mutation({
   args: {
