@@ -502,21 +502,26 @@ const getDirectiveOverrides = httpAction(async (ctx, request) => {
  * The text is transformed using comprehensive Jio brand guidelines:
  * - 10 Brand Guardrails (Direct, Focused, Caring, etc.)
  * - Style Rules (sentence case, active voice, British spellings)
- * - Vocabulary Rules (simple alternatives, gender-neutral language)
- * - Hard Limits (emotion-first, "we" language, no corporate filler)
+ * - Vocabulary Rules (simple alternatives, gender-neutral language, 8 avoid categories)
+ * - Hard Limits (emotion-first, "we" language, no corporate filler, scope boundary, escalation, crisis)
+ * - Ecosystem Awareness (15 ecosystems with tone adjustments)
+ * - Emotion Detection (9 Navarasa emotions with response strategies)
+ * - Jio Product Glossary (correct terminology)
+ * - Post-processing (currency format, brand names, exclamation marks)
  * 
  * Request body:
  * {
  *   text: string,
  *   style?: string (deprecated, kept for backward compatibility)
  *   prompt?: string (custom transformation instructions)
- *   channel?: string (context: "editor", "chat", "sms", etc.)
+ *   channel?: string (context: "editor", "chat", "sms", "email", etc.)
+ *   ecosystem?: string (context: "connectivity", "home", "entertainment", etc.)
  * }
  */
 const rewriteText = httpAction(async (ctx, request) => {
   try {
     const body = await request.json();
-    const { text, style, prompt, channel } = body;
+    const { text, style, prompt, channel, ecosystem } = body;
     
     if (!text || typeof text !== "string") {
       return errorResponse("text is required", 400);
@@ -535,6 +540,7 @@ const rewriteText = httpAction(async (ctx, request) => {
       style: style || "professional",
       prompt: prompt || undefined,
       channel: channel || "general",
+      ecosystem: ecosystem || undefined,
     });
     
     return successResponse({ rewritten: result });

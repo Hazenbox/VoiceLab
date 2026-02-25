@@ -18,6 +18,7 @@ import type * as embeddings from "../embeddings.js";
 import type * as guidelines from "../guidelines.js";
 import type * as http from "../http.js";
 import type * as interactions from "../interactions.js";
+import type * as jioVoicePrompt from "../jioVoicePrompt.js";
 import type * as knowledge from "../knowledge.js";
 import type * as maintenance from "../maintenance.js";
 import type * as migrations from "../migrations.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   guidelines: typeof guidelines;
   http: typeof http;
   interactions: typeof interactions;
+  jioVoicePrompt: typeof jioVoicePrompt;
   knowledge: typeof knowledge;
   maintenance: typeof maintenance;
   migrations: typeof migrations;
