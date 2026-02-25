@@ -496,19 +496,27 @@ const getDirectiveOverrides = httpAction(async (ctx, request) => {
 /**
  * POST /api/rewrite
  * 
- * Rephrase text using AI (HuggingFace).
+ * Transform text into Jio's voice using AI (HuggingFace).
  * Used by Mac ToneStudio app.
+ * 
+ * The text is transformed using comprehensive Jio brand guidelines:
+ * - 10 Brand Guardrails (Direct, Focused, Caring, etc.)
+ * - Style Rules (sentence case, active voice, British spellings)
+ * - Vocabulary Rules (simple alternatives, gender-neutral language)
+ * - Hard Limits (emotion-first, "we" language, no corporate filler)
  * 
  * Request body:
  * {
  *   text: string,
- *   style?: string (default: "professional")
+ *   style?: string (deprecated, kept for backward compatibility)
+ *   prompt?: string (custom transformation instructions)
+ *   channel?: string (context: "editor", "chat", "sms", etc.)
  * }
  */
 const rewriteText = httpAction(async (ctx, request) => {
   try {
     const body = await request.json();
-    const { text, style, prompt } = body;
+    const { text, style, prompt, channel } = body;
     
     if (!text || typeof text !== "string") {
       return errorResponse("text is required", 400);
@@ -526,6 +534,7 @@ const rewriteText = httpAction(async (ctx, request) => {
       text,
       style: style || "professional",
       prompt: prompt || undefined,
+      channel: channel || "general",
     });
     
     return successResponse({ rewritten: result });
