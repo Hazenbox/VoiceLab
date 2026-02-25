@@ -34,6 +34,17 @@ export const rephrase = action({
       channel: channel || "general",
     });
 
+    // Detect if this is an email request to adjust parameters
+    const isEmailRequest =
+      text.toLowerCase().includes("email") ||
+      text.toLowerCase().includes("mail") ||
+      (prompt && prompt.toLowerCase().includes("email"));
+
+    // Use a larger model for emails to get better structured output
+    const modelName = isEmailRequest
+      ? "Qwen/Qwen2.5-72B-Instruct"
+      : "Qwen/Qwen2.5-7B-Instruct";
+
     // Using HuggingFace Router with OpenAI-compatible API
     const response = await fetch(
       "https://router.huggingface.co/v1/chat/completions",
@@ -44,13 +55,13 @@ export const rephrase = action({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "Qwen/Qwen2.5-7B-Instruct",
+          model: modelName,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: text },
           ],
-          max_tokens: 1000,
-          temperature: 0.7,
+          max_tokens: isEmailRequest ? 2000 : 1000,
+          temperature: isEmailRequest ? 0.5 : 0.7,
         }),
       }
     );

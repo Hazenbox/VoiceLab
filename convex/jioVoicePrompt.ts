@@ -149,6 +149,232 @@ export const GENDER_NEUTRAL_ALTERNATIVES: Record<string, string> = {
 };
 
 // =============================================================================
+// CHANNEL DETECTION
+// =============================================================================
+
+type ContentChannel = "email" | "sms" | "push" | "whatsapp" | "social" | "chat" | "general";
+
+/**
+ * Detect the content channel from user text and custom prompt
+ * This allows automatic formatting based on what the user is asking for
+ */
+function detectContentChannel(userText: string, customPrompt?: string): ContentChannel {
+  const combined = `${userText} ${customPrompt || ""}`.toLowerCase();
+
+  // Email detection
+  if (
+    combined.includes("email") ||
+    combined.includes("mail") ||
+    combined.includes("newsletter")
+  ) {
+    return "email";
+  }
+
+  // SMS detection
+  if (
+    combined.includes("sms") ||
+    combined.includes("text message") ||
+    combined.includes("160 char")
+  ) {
+    return "sms";
+  }
+
+  // Push notification detection
+  if (
+    combined.includes("push notification") ||
+    combined.includes("notification") ||
+    combined.includes("app alert")
+  ) {
+    return "push";
+  }
+
+  // WhatsApp detection
+  if (combined.includes("whatsapp") || combined.includes("wa message")) {
+    return "whatsapp";
+  }
+
+  // Social media detection
+  if (
+    combined.includes("social media") ||
+    combined.includes("twitter") ||
+    combined.includes("instagram") ||
+    combined.includes("facebook") ||
+    combined.includes("linkedin") ||
+    combined.includes("post")
+  ) {
+    return "social";
+  }
+
+  // Chat/support detection
+  if (
+    combined.includes("chat") ||
+    combined.includes("support") ||
+    combined.includes("customer care")
+  ) {
+    return "chat";
+  }
+
+  return "general";
+}
+
+// =============================================================================
+// CHANNEL-SPECIFIC FORMATTING
+// =============================================================================
+
+/**
+ * Build channel-specific formatting instructions
+ * These ensure the LLM generates appropriately structured content
+ */
+function buildChannelFormattingSection(channel: ContentChannel): string {
+  switch (channel) {
+    case "email":
+      return `## EMAIL FORMAT - FOLLOW THIS EXACTLY
+
+⚠️ **CRITICAL**: You MUST generate a COMPLETE email with ALL sections below. DO NOT skip any section.
+
+**YOUR OUTPUT MUST START WITH "Subject:" AND INCLUDE ALL 6 SECTIONS:**
+
+---
+**Subject:** [Write a clear, benefit-focused subject line here, 40-60 characters]
+
+Hi there,
+
+[Opening: 1-2 sentences stating the value/benefit]
+
+[Body: 3-5 sentences with details - amounts, dates, codes, benefits. Make it warm and personal.]
+
+[Call-to-Action button text in square brackets like this: [Button text here]]
+
+Thanks for being part of the Jio family.
+
+---
+
+### EXAMPLE OF CORRECT OUTPUT:
+
+Subject: Save 50% on your next Jio recharge
+
+Hi there,
+
+We've got something special for you. As a valued Jio customer, you can enjoy 50% off on your next recharge of ₹299 or more.
+
+This offer is available until 28 February 2026. Use code JIO50 at checkout, or tap the button below to apply it automatically. Whether you're topping up for yourself or a family member, this is a great time to save on your mobile plan.
+
+[Get your discount now]
+
+Thanks for being part of the Jio family.
+
+---
+
+### WHAT NOT TO DO (TOO SHORT):
+
+❌ "Hello, We have an offer for you. Get 50% off. Thank you, Jio"
+
+This is WRONG because it's missing: Subject line, proper greeting, detailed body, CTA button, warm sign-off.
+
+**MINIMUM LENGTH: 80 words. Short emails will be rejected.**`;
+
+    case "sms":
+      return `## SMS FORMAT (MANDATORY)
+
+**CRITICAL**: You are generating an SMS. Keep it under 160 characters.
+
+### SMS Structure
+- Start with brand context (Jio:)
+- Key message in fewest words
+- Clear action or link at end
+- No greetings or sign-offs
+
+### Example
+> Jio: Your 50% recharge discount is ready. Use code JIO50 before 28 Feb. Recharge now: jio.com/r
+
+**Character limit**: 160 characters maximum.`;
+
+    case "push":
+      return `## PUSH NOTIFICATION FORMAT (MANDATORY)
+
+**CRITICAL**: You are generating a push notification. Keep it brief and actionable.
+
+### Push Notification Structure
+- **Title**: 5-8 words, action-oriented (max 50 chars)
+- **Body**: 1-2 sentences, clear benefit (max 100 chars)
+
+### Example
+> **Title**: Your 50% discount is waiting
+> **Body**: Tap to recharge and save ₹150 on your next plan.
+
+**Keep it short**: Users glance at notifications, they don't read them.`;
+
+    case "whatsapp":
+      return `## WHATSAPP MESSAGE FORMAT (MANDATORY)
+
+**CRITICAL**: You are generating a WhatsApp message. Keep it conversational.
+
+### WhatsApp Structure
+- Warm greeting (Hi/Hello)
+- Clear message (2-3 sentences)
+- Action with link if needed
+- Friendly close
+
+### Example
+> Hi there. 👋
+>
+> Great news - you've got 50% off your next recharge. Just use code JIO50 when you top up.
+>
+> Tap here to recharge: jio.com/recharge
+>
+> Happy saving.
+
+**Note**: Emojis are okay but use sparingly (1-2 max).`;
+
+    case "social":
+      return `## SOCIAL MEDIA POST FORMAT (MANDATORY)
+
+**CRITICAL**: You are generating a social media post.
+
+### Social Post Structure
+- Hook in first line (grab attention)
+- Key message (1-2 sentences)
+- Call-to-action
+- Relevant hashtags (2-3 max)
+
+### Example
+> Save 50% on your next recharge. 
+>
+> Use code JIO50 and enjoy more data, more talktime, more value. Valid until 28 Feb.
+>
+> Recharge now 👉 link in bio
+>
+> #JioOffers #SaveMore
+
+**Character limit**: Keep under 280 characters for Twitter compatibility.`;
+
+    case "chat":
+      return `## CHAT/SUPPORT RESPONSE FORMAT (MANDATORY)
+
+**CRITICAL**: You are generating a customer support response.
+
+### Chat Response Structure
+1. Acknowledge the customer warmly
+2. Address their concern directly
+3. Provide clear solution/steps
+4. Offer additional help
+5. Close warmly
+
+### Example
+> Hi there. Thanks for reaching out.
+>
+> I can see your recharge didn't go through. Let me help fix that right away.
+>
+> Could you try once more? If it still doesn't work, I'll process it manually for you.
+>
+> Is there anything else I can help with?`;
+
+    default:
+      return "";
+  }
+}
+
+// =============================================================================
 // PROMPT BUILDER
 // =============================================================================
 
@@ -300,13 +526,47 @@ export interface JioVoicePromptOptions {
  * - Direct without being cold
  * - Action-oriented without being pushy
  * - British English with Indian context
+ *
+ * Automatically detects content channel (email, SMS, etc.) from user text
+ * and applies appropriate formatting rules.
  */
 export function buildJioVoicePrompt(options: JioVoicePromptOptions): string {
-  const { customPrompt, channel } = options;
+  const { userText, customPrompt, channel } = options;
+
+  // Auto-detect channel from user text if not explicitly provided
+  const detectedChannel: ContentChannel =
+    (channel as ContentChannel) || detectContentChannel(userText, customPrompt);
+
+  // Build channel-specific formatting section
+  const channelFormatting = buildChannelFormattingSection(detectedChannel);
 
   let taskInstruction: string;
 
-  if (customPrompt && customPrompt.trim().length > 0) {
+  // For email channel, override the task instruction to be very explicit
+  if (detectedChannel === "email") {
+    const customNote = customPrompt ? ` Custom instructions: "${customPrompt}"` : "";
+    taskInstruction = `## Your Task - WRITE A MARKETING EMAIL
+
+Write a complete marketing email based on the user's content. Your response must follow this exact format:
+
+Subject: [Write a benefit-focused subject line here]
+
+Hi there,
+
+[Write an opening paragraph about the offer - 2-3 sentences]
+
+[Write a details paragraph explaining the offer - 2-3 sentences with specific details like amounts, dates, or codes]
+
+[Write a closing paragraph encouraging action - 1-2 sentences]
+
+[Write a CTA button text in brackets like: Recharge now]
+
+Thanks for being part of the Jio family.
+
+---
+
+IMPORTANT: Write at least 5 paragraphs. Do not write a short response.${customNote}`;
+  } else if (customPrompt && customPrompt.trim().length > 0) {
     taskInstruction = `## Your Task
 
 Transform the user's text according to these specific instructions: "${customPrompt}"
@@ -320,18 +580,19 @@ Transform the user's text into Jio's voice. Make it sound like it came from Jio 
 Return ONLY the transformed text with no explanations, no quotes, no prefixes.`;
   }
 
-  const channelNote =
-    channel && channel !== "general"
-      ? `\n\n**Channel Context**: ${channel} - Adjust formality and length appropriately.`
+  // Add channel context if detected (but not for email since we already handled it above)
+  const channelContext =
+    detectedChannel !== "general" && detectedChannel !== "email"
+      ? `\n\n**Detected Content Type**: ${detectedChannel.toUpperCase()} - Follow the channel-specific formatting rules below.`
       : "";
 
   return `# Jio Voice Transformation System
 
 You are transforming content into Jio's signature voice. Jio is India's largest digital services company, known for warmth, accessibility, and trust.
 
-${taskInstruction}${channelNote}
+${taskInstruction}${channelContext}
 
-${buildGuardrailsSection()}
+${channelFormatting ? `${channelFormatting}\n\n` : ""}${buildGuardrailsSection()}
 
 ${buildStyleRulesSection()}
 
