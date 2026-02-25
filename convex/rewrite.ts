@@ -100,19 +100,23 @@ export const rephrase = action({
     prompt: v.optional(v.string()),
     channel: v.optional(v.string()),
     ecosystem: v.optional(v.string()),
+    isChat: v.optional(v.boolean()), // Whether this is from chat interface (enables intent detection)
   },
-  handler: async (ctx, { text, style, prompt, channel, ecosystem }) => {
+  handler: async (ctx, { text, style, prompt, channel, ecosystem, isChat }) => {
     const apiKey = process.env.HUGGINGFACE_API_KEY;
     if (!apiKey) {
       throw new Error("HUGGINGFACE_API_KEY not configured");
     }
 
     // Build comprehensive Jio voice system prompt with all detections
+    // When isChat is true, the prompt builder will detect user intent
+    // (crisis, conversation, or transform) and respond appropriately
     const systemPrompt = buildJioVoicePrompt({
       userText: text,
       customPrompt: prompt,
       channel: channel || "general",
       ecosystem: ecosystem,
+      isChat: isChat ?? (prompt !== undefined && prompt.length > 0), // Default to true if there's a prompt
     });
 
     // Detect if this is an email request for max_tokens adjustment

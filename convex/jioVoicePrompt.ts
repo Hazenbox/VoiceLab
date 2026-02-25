@@ -511,6 +511,94 @@ This is CRITICAL. Your response MUST follow this emotional strategy.`;
 }
 
 // =============================================================================
+// USER INTENT DETECTION (For Chat Messages)
+// =============================================================================
+
+type UserIntent = "crisis" | "transform" | "conversation";
+
+/**
+ * Detect user intent from their chat message
+ * This determines whether to:
+ * - Provide crisis support (ignore selected text)
+ * - Transform the selected text
+ * - Respond conversationally
+ */
+function detectUserIntent(userMessage: string): UserIntent {
+  const msg = userMessage.toLowerCase();
+  
+  // Crisis signals - HIGHEST PRIORITY
+  // These need immediate empathetic response, not text transformation
+  const crisisSignals = [
+    "feeling low", "feeling down", "feeling sad", "feeling hopeless",
+    "depressed", "depression", "hopeless", "no hope",
+    "suicide", "suicidal", "kill myself", "end my life", "want to die",
+    "self-harm", "self harm", "hurt myself", "cutting",
+    "no point", "pointless", "give up", "giving up",
+    "can't take it", "cant take it", "can't cope", "cant cope",
+    "struggling", "overwhelmed", "anxious", "anxiety attack",
+    "panic", "scared", "terrified", "alone", "lonely",
+    "nobody cares", "no one cares", "don't matter", "worthless",
+    "crisis", "emergency", "help me", "need help",
+    "difficult time", "hard time", "tough time", "bad day",
+    "really low", "really down", "really sad", "really upset",
+  ];
+  
+  if (crisisSignals.some(signal => msg.includes(signal))) {
+    return "crisis";
+  }
+  
+  // Transformation commands - user wants to modify the selected text
+  const transformSignals = [
+    "rephrase", "rewrite", "reword", "revise",
+    "make it", "change it", "convert it", "turn it",
+    "more formal", "more casual", "more friendly", "more professional",
+    "shorter", "longer", "simpler", "clearer",
+    "simplify", "expand", "summarize", "summarise",
+    "translate", "fix", "improve", "enhance", "polish",
+    "jio voice", "jio tone", "brand voice",
+    "write an email", "write a message", "create an email", "draft",
+    "for sms", "for push", "for whatsapp",
+  ];
+  
+  if (transformSignals.some(signal => msg.includes(signal))) {
+    return "transform";
+  }
+  
+  // Question patterns - conversational
+  const questionPatterns = [
+    "what is", "what's", "what does", "what do",
+    "how do", "how does", "how can", "how to",
+    "why is", "why does", "why do",
+    "can you", "could you", "would you",
+    "tell me", "explain", "help me understand",
+    "?", // Any question
+  ];
+  
+  if (questionPatterns.some(pattern => msg.includes(pattern))) {
+    return "conversation";
+  }
+  
+  // Short greetings or acknowledgments - conversational
+  const conversationalSignals = [
+    "hi", "hello", "hey", "thanks", "thank you", "okay", "ok", "yes", "no",
+    "got it", "understood", "i see", "nice", "great", "good", "cool",
+  ];
+  
+  // Only match if the message is short (likely a greeting/acknowledgment)
+  if (msg.length < 20 && conversationalSignals.some(signal => msg.includes(signal))) {
+    return "conversation";
+  }
+  
+  // Default: if message is short and doesn't match transform signals, treat as conversation
+  // If message is longer, assume it's a transformation instruction
+  if (msg.length < 30) {
+    return "conversation";
+  }
+  
+  return "transform";
+}
+
+// =============================================================================
 // JIO GLOSSARY SECTION BUILDER
 // =============================================================================
 
@@ -986,6 +1074,7 @@ export interface JioVoicePromptOptions {
   customPrompt?: string;
   channel?: string;
   ecosystem?: string;
+  isChat?: boolean; // Whether this is from chat interface (enables intent detection)
 }
 
 /**
@@ -998,13 +1087,94 @@ export interface JioVoicePromptOptions {
  * - British English with Indian context
  *
  * Automatically detects:
+ * - User intent (crisis, transform, conversation) from chat messages
  * - Content channel (email, SMS, etc.) from user text
  * - Ecosystem (connectivity, home, entertainment, etc.) for tone adjustment
  * - User emotion (Navarasa framework) for appropriate response style
  */
 export function buildJioVoicePrompt(options: JioVoicePromptOptions): string {
-  const { userText, customPrompt, channel, ecosystem } = options;
+  const { userText, customPrompt, channel, ecosystem, isChat } = options;
 
+  // CRITICAL: Detect user intent from chat message FIRST
+  // This determines whether we should transform text or respond conversationally
+  const userIntent: UserIntent = customPrompt && isChat 
+    ? detectUserIntent(customPrompt) 
+    : "transform";
+
+  // CRISIS INTENT - Immediate empathetic response, ignore selected text
+  if (userIntent === "crisis") {
+    return `# Jio Voice - Crisis Support Response
+
+You are Jio's caring voice. The user has expressed emotional distress.
+
+## Your Task - CRISIS SUPPORT (CRITICAL - HIGHEST PRIORITY)
+
+The user said: "${customPrompt}"
+
+This is a CRISIS situation. You MUST:
+1. Respond with genuine empathy and warmth
+2. Provide crisis helpline numbers
+3. NOT promote any Jio products or services
+4. NOT redirect to Jio services
+5. NOT transform any text
+
+Your response MUST include these helplines:
+- AASRA: 9820466726 (24/7 crisis helpline)
+- iCall: 9152987821 (mental health support)
+- Vandrevala Foundation: 1860-2662-345 (24/7)
+- Emergency: 112
+
+Example response:
+"i hear you, and what you're feeling matters. please know you're not alone.
+
+if you need someone to talk to right now:
+- AASRA: 9820466726 (available 24/7)
+- iCall: 9152987821
+- emergency: 112
+
+it's okay to reach out for support. we care about you."
+
+Respond with empathy. Be warm. Be human. This is about the person, not about Jio.`;
+  }
+
+  // CONVERSATION INTENT - Respond to user's message, use selected text as context only
+  if (userIntent === "conversation") {
+    const contextNote = userText && userText.trim().length > 0
+      ? `\n\nContext (the user has this text selected, but may not be asking about it):\n"${userText.substring(0, 300)}${userText.length > 300 ? '...' : ''}"`
+      : "";
+
+    return `# Jio Voice - Conversational Response
+
+You are Jio's friendly AI assistant. The user is having a conversation with you.
+
+## Your Task - CONVERSATIONAL RESPONSE
+
+The user said: "${customPrompt}"
+${contextNote}
+
+Respond naturally as Jio's voice - warm, helpful, and direct. 
+
+If the user's message relates to the selected text, help them with it.
+If the user's message is a greeting, respond warmly.
+If the user's message is a question, answer it helpfully.
+If the user's message expresses emotion, acknowledge it first.
+
+DO NOT just transform the selected text unless the user explicitly asks for that.
+
+Style rules:
+- Use sentence case only (not Title Case)
+- Use British spellings (colour, favourite)
+- No exclamation marks - use periods
+- Be warm but not overly enthusiastic
+- Keep responses concise and helpful
+
+Example responses:
+- User: "hi" → "hello. how can i help you today?"
+- User: "thanks" → "you're welcome. anything else i can help with?"
+- User: "what does this mean?" → [explain the selected text clearly]`;
+  }
+
+  // TRANSFORM INTENT - Original behavior: transform the selected text
   // Auto-detect channel from user text if not explicitly provided
   const detectedChannel: ContentChannel =
     (channel as ContentChannel) || detectContentChannel(userText, customPrompt);
