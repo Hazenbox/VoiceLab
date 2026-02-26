@@ -1285,16 +1285,11 @@ function AdminKnowledge() {
                 </AdminTableCell>
                 <AdminTableCell>
                   <div className="flex flex-wrap gap-1">
-                    {keywords.slice(0, 5).map((kw, ki) => (
+                    {keywords.map((kw, ki) => (
                       <Badge key={ki} variant="neutral">
                         {kw}
                       </Badge>
                     ))}
-                    {keywords.length > 5 && (
-                      <Badge variant="neutral">
-                        +{keywords.length - 5}
-                      </Badge>
-                    )}
                   </div>
                 </AdminTableCell>
               </AdminTableRow>
