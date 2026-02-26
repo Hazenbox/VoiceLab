@@ -1,5 +1,4 @@
-import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
-import { Label } from '@marcelinodzn/ds-react';
+import { useThemeColors } from '../../theme/useColors';
 import { Badge } from '../../components/ui/Badge';
 import type { Id } from '../../../convex/_generated/dataModel';
 
@@ -11,13 +10,6 @@ const TYPE_TO_BADGE_VARIANT: Record<string, 'positive' | 'negative' | 'warning' 
   approved_example: 'informative',
   product_definition: 'neutral',
   festival: 'warning',
-};
-
-/** Color palette for severity badges */
-const SEVERITY_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  error:   { bg: `${SEMANTIC_COLORS.negative}26`, text: SEMANTIC_COLORS.negative, label: 'Error' },
-  warning: { bg: `${SEMANTIC_COLORS.warning}26`, text: SEMANTIC_COLORS.warning, label: 'Warning' },
-  info:    { bg: `${SEMANTIC_COLORS.informative}26`, text: SEMANTIC_COLORS.informative, label: 'Info' },
 };
 
 // ── Types ────────────────────────────────────────────────────────
@@ -46,36 +38,6 @@ interface CategorySectionProps {
   searchQuery?: string;
 }
 
-// ── Severity Badge Component ─────────────────────────────────────
-function SeverityBadge({ severity, count }: { severity: string; count: number }) {
-  const theme = useThemeColors();
-  const style = SEVERITY_COLORS[severity] || SEVERITY_COLORS.warning;
-  
-  const bgColorMap: Record<string, string> = {
-    error:   theme.isLight ? '#FEE2E2' : 'rgba(239, 68, 68, 0.2)',
-    warning: theme.isLight ? '#FEF3C7' : 'rgba(234, 179, 8, 0.2)',
-    info:    theme.isLight ? '#DBEAFE' : 'rgba(59, 130, 246, 0.2)',
-  };
-  
-  return (
-    <span
-      className="inline-flex items-center gap-1"
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        backgroundColor: bgColorMap[severity] || bgColorMap.warning,
-        borderRadius: '4px',
-        padding: '1px 6px',
-        height: '22px',
-      }}
-    >
-      <Label size="XS" weight="medium" attention="high" as="span">
-        {count} {style.label}
-      </Label>
-    </span>
-  );
-}
-
 // ── Category Section Component ───────────────────────────────────
 // Always expanded - no accordion behavior
 export function CategorySection({ 
@@ -97,15 +59,6 @@ export function CategorySection({
   // Don't render if no items match
   if (filteredItems.length === 0) return null;
   
-  // Calculate severity counts for avoid_word type
-  const severityCounts = type === 'avoid_word'
-    ? filteredItems.reduce((acc, item) => {
-        const sev = item.metadata?.severity || 'warning';
-        acc[sev] = (acc[sev] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>)
-    : null;
-
   const badgeVariant = TYPE_TO_BADGE_VARIANT[type] || 'neutral';
   const formattedCategory = category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
@@ -134,14 +87,6 @@ export function CategorySection({
           </span>
         </div>
         
-        {/* Severity badges for avoid words */}
-        {severityCounts && (
-          <div className="flex items-center gap-2">
-            {severityCounts.error && <SeverityBadge severity="error" count={severityCounts.error} />}
-            {severityCounts.warning && <SeverityBadge severity="warning" count={severityCounts.warning} />}
-            {severityCounts.info && <SeverityBadge severity="info" count={severityCounts.info} />}
-          </div>
-        )}
       </div>
       
       {/* Content - Always visible */}
