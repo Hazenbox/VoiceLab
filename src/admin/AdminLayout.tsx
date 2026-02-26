@@ -1302,45 +1302,35 @@ function AdminKnowledge() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <div className="flex justify-between items-center mb-4">
-        <PageHeader title="Knowledge Base" description="Brand rules, vocabulary, and content guidelines" />
-        <AdminRefreshControls
-          lastRefresh={countsRefreshTime}
-          isLoading={countsLoading || itemsLoading}
-          isPaused={countsPaused}
-          onRefresh={refreshAll}
-          label="Knowledge"
-        />
-      </div>
+      <PageHeader title="Knowledge Base" description="Brand rules, vocabulary, and content guidelines" />
 
-      {/* Total Rules Counter with RAG Status */}
+      {/* Total Rules Counter - Compact inline */}
       <div 
-        className="rounded-xl mb-5"
+        className="flex items-center justify-between mb-4 px-3 py-2 rounded-lg"
         style={{ 
-          border: `1px solid ${theme.stroke.medium}`,
-          padding: '16px',
+          backgroundColor: theme.background.ghost,
+          border: `1px solid ${theme.stroke.low}`,
         }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <DataCard 
-              title="Active Rules"
-              fillEmphasis="Ghost"
-              width="auto"
-              dataHead={{
-                leadValue: String(totalActiveRules),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
-            <span style={{ color: theme.text.low, fontSize: '12px' }}>
-              Enforcing Jio brand guidelines
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Label size="XS" attention="low">Vector index active</Label>
-          </div>
+        <div className="flex items-center gap-2">
+          <span style={{ 
+            fontSize: '18px', 
+            fontWeight: 700, 
+            color: theme.text.high,
+            fontFamily: 'JioType Var',
+          }}>
+            {totalActiveRules}
+          </span>
+          <span style={{ color: theme.text.medium, fontSize: '12px' }}>
+            active rules enforcing Jio brand guidelines
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span 
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: SEMANTIC_COLORS.positive }}
+          />
+          <Label size="XS" attention="low">Vector index active</Label>
         </div>
       </div>
 

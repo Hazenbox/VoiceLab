@@ -61,10 +61,12 @@ function SeverityBadge({ severity, count }: { severity: string; count: number })
     <span
       className="inline-flex items-center gap-1"
       style={{
-        display: 'inline-block',
+        display: 'inline-flex',
+        alignItems: 'center',
         backgroundColor: bgColorMap[severity] || bgColorMap.warning,
         borderRadius: '4px',
-        padding: '2px 6px',
+        padding: '1px 6px',
+        height: '22px',
       }}
     >
       <Label size="XS" weight="medium" attention="high" as="span">
