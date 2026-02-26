@@ -90,15 +90,17 @@ export const AdminTableRow = memo(function AdminTableRow({
 export const AdminTableCell = memo(function AdminTableCell({
   children,
   className = '',
+  style = {},
 }: {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const theme = useThemeColors();
   return (
     <td
       className={`py-1.5 px-3 ${className}`}
-      style={{ color: theme.text.high, fontSize: '13px' }}
+      style={{ color: theme.text.high, fontSize: '13px', ...style }}
     >
       {children}
     </td>

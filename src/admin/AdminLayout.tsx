@@ -1147,6 +1147,81 @@ function AdminKnowledge() {
     );
   };
 
+  // Render vocabulary (avoid_word, preferred_word) as table with category column
+  const renderVocabTableContent = (type: string) => {
+    const categories = getCategoriesForType(type);
+    const grouped = groupedByType[type] || {};
+
+    // Get badge variant based on type
+    const badgeVariant = type === 'avoid_word' ? 'negative' : 'positive';
+
+    // Format category for display
+    const formatCategory = (cat: string) => 
+      cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+    // Calculate filtered count
+    const filteredCount = categories.reduce((sum, cat) => {
+      return sum + filterItems(grouped[cat] || []).length;
+    }, 0);
+
+    if (filteredCount === 0) {
+      return (
+        <div className="text-center py-12" style={{ color: theme.text.low }}>
+          {searchQuery 
+            ? 'No items match your search.'
+            : `No ${KNOWLEDGE_TYPE_CONFIG[type].label} configured yet.`}
+        </div>
+      );
+    }
+
+    // Filter categories that have items after search filter
+    const filteredCategories = categories.filter(cat => 
+      filterItems(grouped[cat] || []).length > 0
+    );
+
+    return (
+      <div 
+        className="rounded-lg border overflow-hidden"
+        style={{ borderColor: theme.stroke.low }}
+      >
+        <AdminTable
+          columns={[
+            { key: 'category', label: 'Category' },
+            { key: 'words', label: 'Words' },
+          ]}
+          isEmpty={filteredCategories.length === 0}
+          emptyMessage={`No ${KNOWLEDGE_TYPE_CONFIG[type].label} configured.`}
+        >
+          {filteredCategories.map(category => {
+            const items = filterItems(grouped[category] || []);
+            return (
+              <AdminTableRow key={category}>
+                <AdminTableCell style={{ width: '160px', verticalAlign: 'top' }}>
+                  <span className="font-medium" style={{ color: theme.text.high }}>
+                    {formatCategory(category)}
+                  </span>
+                </AdminTableCell>
+                <AdminTableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {items.map((item) => (
+                      <Badge 
+                        key={item._id} 
+                        variant={badgeVariant}
+                        title={item.metadata?.suggestion ? `Suggestion: ${item.metadata.suggestion}` : undefined}
+                      >
+                        {item.content}
+                      </Badge>
+                    ))}
+                  </div>
+                </AdminTableCell>
+              </AdminTableRow>
+            );
+          })}
+        </AdminTable>
+      </div>
+    );
+  };
+
   // Render product definitions table content
   const renderProductDefinitionsContent = () => {
     const allItems = getItemsForType('product_definition');
@@ -1432,6 +1507,9 @@ function AdminKnowledge() {
         return renderFestivalsContent();
       case 'approved_example':
         return renderApprovedExamplesContent();
+      case 'avoid_word':
+      case 'preferred_word':
+        return renderVocabTableContent(type);
       default:
         return renderGroupedContent(type);
     }
