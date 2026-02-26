@@ -1304,33 +1304,42 @@ function AdminKnowledge() {
       {!isOnline && <OfflineBanner />}
       <PageHeader title="Knowledge Base" description="Brand rules, vocabulary, and content guidelines" />
 
-      {/* Total Rules Counter - Compact inline */}
+      {/* Summary Bar with Stats and Search */}
       <div 
-        className="flex items-center justify-between mb-4 px-3 py-2 rounded-lg"
-        style={{ 
-          backgroundColor: theme.background.ghost,
-          border: `1px solid ${theme.stroke.low}`,
-        }}
+        className="flex items-center justify-between mb-4"
+        style={{ backgroundColor: 'transparent' }}
       >
-        <div className="flex items-center gap-2">
-          <span style={{ 
-            fontSize: '18px', 
-            fontWeight: 700, 
-            color: theme.text.high,
-            fontFamily: 'JioType Var',
-          }}>
-            {totalActiveRules}
-          </span>
-          <span style={{ color: theme.text.medium, fontSize: '12px' }}>
-            active rules enforcing Jio brand guidelines
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span 
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: SEMANTIC_COLORS.positive }}
+        {/* Left: Stats Card */}
+        <div className="flex items-center gap-4">
+          <DataCard 
+            title="active rules"
+            fillEmphasis="Ghost"
+            width="auto"
+            dataHead={{
+              leadValue: String(totalActiveRules),
+              showDataSupporting: false,
+              showSupportingLabel: false,
+            }}
+            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
-          <Label size="XS" attention="low">Vector index active</Label>
+          <div className="flex items-center gap-1.5">
+            <span 
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: SEMANTIC_COLORS.positive }}
+            />
+            <Label size="XS" attention="low">Vector index active</Label>
+          </div>
+        </div>
+
+        {/* Right: Search */}
+        <div style={{ width: '280px' }}>
+          <SearchField
+            size="S"
+            placeholder={`Search ${currentConfig.label}...`}
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+          />
         </div>
       </div>
 
@@ -1350,17 +1359,6 @@ function AdminKnowledge() {
             </SegmentedControlItem>
           ))}
         </SegmentedControl>
-      </div>
-
-      {/* Global Search */}
-      <div className="mb-4 max-w-md">
-        <SearchField
-          size="S"
-          placeholder={`Search ${currentConfig.label}...`}
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onClear={() => setSearchQuery('')}
-        />
       </div>
 
       {/* Type Description */}
