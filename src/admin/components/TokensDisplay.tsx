@@ -8,7 +8,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react';
 import { useThemeColors } from '../../theme/useColors';
 import { DSIcon } from '../../components/DSIcon';
-import { Title, Text, Chip, SearchField, Tabs, TabList, Tab } from '@marcelinodzn/ds-react';
+import { Title, Text, SearchField, Tabs, TabList, Tab } from '@marcelinodzn/ds-react';
 import { Badge } from '../../components/ui/Badge';
 import { 
   TOKEN_GROUPS, 
@@ -1000,21 +1000,15 @@ export const TokensDisplay = memo(function TokensDisplay() {
         </p>
       </div>
 
-      {/* Summary stats + search in one row */}
-      <div className="flex items-center gap-2 mb-5">
-        <Chip size="S" appearance="neutral" content={`${TOTAL_TOKEN_COUNT} tokens`} />
-        <Chip size="S" appearance="neutral" content={`${groupNames.length} categories`} />
-        <Chip size="S" appearance="neutral" content={`${totalValues} values`} />
-        <Chip size="S" appearance="neutral" content={`${totalRules} rules`} />
-        <div className="flex-1 ml-2">
-          <SearchField
-            size="S"
-            placeholder="search tokens, values, or descriptions..."
-            value={searchQuery}
-            onChange={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-          />
-        </div>
+      {/* Search */}
+      <div className="mb-5">
+        <SearchField
+          size="S"
+          placeholder="search tokens, values, or descriptions..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onClear={() => setSearchQuery('')}
+        />
       </div>
 
       {/* Content + TOC */}
