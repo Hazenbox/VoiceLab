@@ -1396,7 +1396,7 @@ function AdminKnowledge() {
               </Badge>
             </AdminTableCell>
             <AdminTableCell>
-              <span className="text-xs" style={{ color: theme.text.low }}>
+              <span className="text-xs" style={{ color: theme.text.medium }}>
                 {extractTone(item.tags || [])}
               </span>
             </AdminTableCell>
