@@ -111,7 +111,7 @@ export const AdminSidebar = memo(function AdminSidebar({
       </div>
 
       {/* Section Label */}
-      <div className="px-2 py-1.5">
+      <div className="px-4 py-1.5">
         <Label size="XS" weight="medium" attention="low" as="span">Admin panel</Label>
       </div>
 
