@@ -1196,10 +1196,21 @@ function AdminKnowledge() {
             const items = filterItems(grouped[category] || []);
             return (
               <AdminTableRow key={category}>
-                <AdminTableCell style={{ width: '160px', verticalAlign: 'top' }}>
-                  <span className="font-medium" style={{ color: theme.text.high }}>
-                    {formatCategory(category)}
-                  </span>
+                <AdminTableCell style={{ width: '180px', verticalAlign: 'top' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium" style={{ color: theme.text.high }}>
+                      {formatCategory(category)}
+                    </span>
+                    <span 
+                      className="text-xs px-1.5 py-0.5 rounded-full"
+                      style={{ 
+                        backgroundColor: theme.surface.secondary, 
+                        color: theme.text.medium 
+                      }}
+                    >
+                      {items.length}
+                    </span>
+                  </div>
                 </AdminTableCell>
                 <AdminTableCell>
                   <div className="flex flex-wrap gap-1">
