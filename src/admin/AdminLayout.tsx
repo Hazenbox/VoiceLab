@@ -1517,29 +1517,28 @@ function AdminKnowledge() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
-      <PageHeader title="Knowledge Base" description="Brand rules, vocabulary, and content guidelines" />
-
-      {/* Summary Bar with Stats and Search */}
-      <div 
-        className="flex items-center justify-between mb-4"
-        style={{ backgroundColor: 'transparent' }}
-      >
-        {/* Left: Stats Card */}
-        <div className="flex items-center gap-4">
-          <DataCard 
-            title="active rules"
-            fillEmphasis="Ghost"
-            width="auto"
-            dataHead={{
-              leadValue: String(totalActiveRules),
-              showDataSupporting: false,
-              showSupportingLabel: false,
+      
+      {/* Header row with title and search */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <Title size="L" as="h1" weight="high" color="high">
+            Knowledge base
+          </Title>
+          <p
+            style={{
+              fontFamily: '"JioType Var"',
+              fontWeight: 400,
+              fontSize: '12px',
+              lineHeight: 1.3,
+              fontVariationSettings: '"opsz" 24',
+              color: theme.text.low,
+              margin: 0,
+              marginTop: '6px',
             }}
-            modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-          />
+          >
+            {totalActiveRules} rules — brand rules, vocabulary, and content guidelines
+          </p>
         </div>
-
-        {/* Right: Search */}
         <div style={{ width: '280px' }}>
           <SearchField
             size="S"

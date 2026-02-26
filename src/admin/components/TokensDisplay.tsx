@@ -997,36 +997,36 @@ export const TokensDisplay = memo(function TokensDisplay() {
 
   return (
     <div>
-      {/* Page header — matches dashboard PageHeader pattern */}
-      <div className="mb-6">
-        <Title size="L" as="h1" weight="high" color="high">
-          Tokens specification
-        </Title>
-        <p
-          style={{
-            fontFamily: '"JioType Var"',
-            fontWeight: 400,
-            fontSize: '12px',
-            lineHeight: 1.3,
-            fontVariationSettings: '"opsz" 24',
-            color: theme.text.low,
-            margin: 0,
-            marginTop: '6px',
-          }}
-        >
-          {TOTAL_TOKEN_COUNT} tokens across {groupNames.length} categories — controls LLM behavior, routing, safety, emotion, identity
-        </p>
-      </div>
-
-      {/* Search */}
-      <div className="mb-5" style={{ maxWidth: '320px' }}>
-        <SearchField
-          size="S"
-          placeholder="search tokens, values, or descriptions..."
-          value={searchQuery}
-          onChange={setSearchQuery}
-          onClear={() => setSearchQuery('')}
-        />
+      {/* Header row with title and search */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <Title size="L" as="h1" weight="high" color="high">
+            Tokens specification
+          </Title>
+          <p
+            style={{
+              fontFamily: '"JioType Var"',
+              fontWeight: 400,
+              fontSize: '12px',
+              lineHeight: 1.3,
+              fontVariationSettings: '"opsz" 24',
+              color: theme.text.low,
+              margin: 0,
+              marginTop: '6px',
+            }}
+          >
+            {TOTAL_TOKEN_COUNT} tokens across {groupNames.length} categories — controls LLM behavior, routing, safety, emotion, identity
+          </p>
+        </div>
+        <div style={{ width: '280px' }}>
+          <SearchField
+            size="S"
+            placeholder="search tokens, values, or descriptions..."
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+          />
+        </div>
       </div>
 
       {/* Content + TOC */}
