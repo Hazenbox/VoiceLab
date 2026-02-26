@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useLazyQuery } from '../hooks/useLazyQuery';
 import { AdminRefreshControls } from './components/AdminRefreshControls';
@@ -22,11 +21,9 @@ import { DataCard, VerticalBarChart } from '@jio/datavis-components';
 import { DelayedTooltip } from '../components/DelayedTooltip';
 import { KPI_DESCRIPTIONS } from './constants/kpiDescriptions';
 import { formatDuration, formatRelativeTime } from './utils/formatters';
-import { KnowledgeItemEditor, DeleteConfirmModal } from './components/KnowledgeCRUD';
 import { CorrectionApprovalList } from './components/CorrectionApproval';
-import { CategorySection, SearchFilterBar, type KnowledgeItem } from './components/CategorySection';
+import { CategorySection, SearchFilterBar } from './components/CategorySection';
 import { TokensDisplay } from './components/TokensDisplay';
-import type { Id } from '../../convex/_generated/dataModel';
 
 // ── Utility: Feedback badge ──────────────────────────────────────
 function FeedbackBadge({ type }: { type: string }) {
@@ -955,15 +952,6 @@ function AdminKnowledge() {
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   
-  // CRUD state
-  const [showEditor, setShowEditor] = useState(false);
-  const [editingItem, setEditingItem] = useState<{ _id: Id<"knowledgeItems">; type: string; category: string; content: string; metadata: Record<string, string | undefined>; tags: string[]; isActive: boolean } | undefined>(undefined);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: Id<"knowledgeItems">; content: string } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  
-  // Mutations for CRUD
-  const softDeleteItem = useMutation(api.knowledge.softDelete);
-  
   // Lazy queries for knowledge - only refresh on demand
   const { 
     data: knowledgeCounts,
@@ -979,7 +967,7 @@ function AdminKnowledge() {
     refresh: refreshItems, 
   } = useLazyQuery(
     api.knowledge.listAll, 
-    selectedType ? { type: selectedType, limit: 500 } : { limit: 50 }
+    { limit: 500 }  // Always fetch all items for read-only display
   );
   
   // Combined refresh for all knowledge data
@@ -987,6 +975,14 @@ function AdminKnowledge() {
     refreshCounts();
     refreshItems();
   }, [refreshCounts, refreshItems]);
+  
+  // Auto-select first type when data loads to show content immediately
+  useEffect(() => {
+    if (knowledgeCounts && !selectedType) {
+      // Auto-select 'avoid_word' as the first type (highest priority)
+      setSelectedType('avoid_word');
+    }
+  }, [knowledgeCounts, selectedType]);
   
   // Debug logging for production troubleshooting
   useEffect(() => {
@@ -1079,43 +1075,10 @@ function AdminKnowledge() {
     setCollapsedCategories(new Set());
   };
   
-  // CRUD handlers
-  const handleAddNew = () => {
-    setEditingItem(undefined);
-    setShowEditor(true);
-  };
-  
-  const handleEdit = (item: typeof editingItem) => {
-    setEditingItem(item);
-    setShowEditor(true);
-  };
-  
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setIsDeleting(true);
-    try {
-      await softDeleteItem({ id: deleteTarget.id });
-      setDeleteTarget(null);
-    } catch (err) {
-      console.error('Failed to delete:', err);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
   
   // Get total count for selected type from knowledgeCounts
   const getTotalCount = (type: string): number => {
     return knowledgeCounts?.[type]?.active || 0;
-  };
-
-  // Get items for selected type from Convex (with full data for CRUD)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getFullItemsForType = (type: string): any[] => {
-    if (knowledgeItems && knowledgeItems.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return knowledgeItems.filter((item: any) => item.type === type && item.isActive);
-    }
-    return [];
   };
 
   // Get items for selected type from Convex
@@ -1168,23 +1131,6 @@ function AdminKnowledge() {
     return count;
   };
 
-  // Handle edit from CategorySection
-  const handleCategoryEdit = (item: KnowledgeItem) => {
-    handleEdit({
-      _id: item._id,
-      type: item.type,
-      category: item.category,
-      content: item.content,
-      metadata: item.metadata || {},
-      tags: item.tags,
-      isActive: item.isActive,
-    });
-  };
-
-  // Handle delete from CategorySection
-  const handleCategoryDelete = (target: { id: Id<"knowledgeItems">; content: string }) => {
-    setDeleteTarget(target);
-  };
 
   const renderDetailPanel = () => {
     if (!selectedType) return null;
@@ -1248,8 +1194,6 @@ function AdminKnowledge() {
                   category={category}
                   items={groupedByCategory[category] || []}
                   type={selectedType}
-                  onEdit={handleCategoryEdit}
-                  onDelete={handleCategoryDelete}
                   searchQuery={searchQuery}
                   isExpanded={!collapsedCategories.has(category)}
                   onToggleExpand={() => toggleCategoryExpand(category)}
@@ -1425,11 +1369,6 @@ function AdminKnowledge() {
           </div>
           <div className="flex items-center gap-3">
             <Label size="XS" attention="low">Vector index active</Label>
-            {selectedType && (
-              <Button appearance="primary" size="S" onPress={handleAddNew}>
-                + add {selectedType.replace('_', ' ')}
-              </Button>
-            )}
           </div>
         </div>
       </div>
@@ -1468,34 +1407,16 @@ function AdminKnowledge() {
       {!selectedType && (
         <AdminCard className="p-4 mb-5">
           <span className="block font-medium mb-2" style={{ color: theme.text.high, fontSize: '13px' }}>
-            How to manage knowledge
+            Knowledge base overview
           </span>
           <ul className="space-y-1 pl-4" style={{ fontSize: '12px', color: theme.text.medium, listStyleType: 'disc' }}>
-            <li><strong>Add items:</strong> select a category above, then click "+ add" to create new rules</li>
-            <li><strong>Seed data:</strong> run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run seed:seedAll</code></li>
-            <li><strong>Embeddings:</strong> run <code className="px-1 py-0.5 rounded" style={{ backgroundColor: theme.stroke.low, fontSize: '11px' }}>npx convex run embeddings:backfillEmbeddings</code></li>
-            <li><strong>Vocab rules</strong> are managed here -- no code deploy needed</li>
+            <li><strong>Browse:</strong> click any category above to explore the knowledge items</li>
+            <li><strong>Search:</strong> use the search bar to find specific terms within a category</li>
+            <li><strong>Purpose:</strong> these rules enforce Jio brand guidelines in content generation</li>
           </ul>
         </AdminCard>
       )}
 
-      {/* CRUD Modals */}
-      {showEditor && selectedType && (
-        <KnowledgeItemEditor
-          selectedType={selectedType}
-          onClose={() => { setShowEditor(false); setEditingItem(undefined); }}
-          existingItem={editingItem}
-        />
-      )}
-      
-      {deleteTarget && (
-        <DeleteConfirmModal
-          itemContent={deleteTarget.content}
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteTarget(null)}
-          isDeleting={isDeleting}
-        />
-      )}
     </>
   );
 }

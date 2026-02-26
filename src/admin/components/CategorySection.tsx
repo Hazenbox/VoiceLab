@@ -43,8 +43,6 @@ interface CategorySectionProps {
   category: string;
   items: KnowledgeItem[];
   type: string;
-  onEdit: (item: KnowledgeItem) => void;
-  onDelete: (item: { id: Id<"knowledgeItems">; content: string }) => void;
   searchQuery?: string;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
@@ -83,8 +81,6 @@ export function CategorySection({
   category, 
   items, 
   type,
-  onEdit, 
-  onDelete,
   searchQuery = '',
   isExpanded = true,
   onToggleExpand,
@@ -175,16 +171,13 @@ export function CategorySection({
           {filteredItems.map((item) => (
             <div
               key={item._id}
-              className="group relative inline-flex items-center rounded-md px-2 py-1 cursor-pointer transition-all hover:ring-2 hover:ring-offset-1"
+              className="inline-flex items-center rounded-md px-2 py-1"
               style={{
                 fontSize: '12px',
                 backgroundColor: itemColor.bg,
                 color: itemColor.text,
-                // @ts-expect-error CSS variable for ring color
-                '--tw-ring-color': itemColor.text,
               }}
-              onClick={() => onEdit(item)}
-              title={item.metadata?.suggestion ? `Suggestion: ${item.metadata.suggestion}` : 'Click to edit'}
+              title={item.metadata?.suggestion ? `Suggestion: ${item.metadata.suggestion}` : undefined}
             >
               <span>{item.content}</span>
               
@@ -192,20 +185,6 @@ export function CategorySection({
               {type === 'avoid_word' && item.metadata?.severity === 'error' && (
                 <span className="ml-1 w-1.5 h-1.5 rounded-full bg-red-500" title="High severity" />
               )}
-              
-              {/* Delete button - shows on hover */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete({ id: item._id, content: item.content });
-                }}
-                className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-white/20"
-                title="Delete"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
           ))}
         </div>
