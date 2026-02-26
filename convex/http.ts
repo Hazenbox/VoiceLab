@@ -522,7 +522,7 @@ const getDirectiveOverrides = httpAction(async (ctx, request) => {
 const rewriteText = httpAction(async (ctx, request) => {
   try {
     const body = await request.json();
-    const { text, style, prompt, channel, ecosystem, isChat } = body;
+    const { text, style, prompt, channel, ecosystem, isChat, conversationHistory } = body;
     
     if (!text || typeof text !== "string") {
       return errorResponse("text is required", 400);
@@ -542,7 +542,8 @@ const rewriteText = httpAction(async (ctx, request) => {
       prompt: prompt || undefined,
       channel: channel || "general",
       ecosystem: ecosystem || undefined,
-      isChat: isChat ?? true, // Default to true for intent detection
+      isChat: isChat ?? true,
+      conversationHistory: Array.isArray(conversationHistory) ? conversationHistory : undefined,
     });
     
     return successResponse({ rewritten: result });

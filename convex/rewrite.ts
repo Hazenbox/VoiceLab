@@ -100,9 +100,13 @@ export const rephrase = action({
     prompt: v.optional(v.string()),
     channel: v.optional(v.string()),
     ecosystem: v.optional(v.string()),
-    isChat: v.optional(v.boolean()), // Whether this is from chat interface (enables intent detection)
+    isChat: v.optional(v.boolean()),
+    conversationHistory: v.optional(v.array(v.object({
+      role: v.string(),
+      content: v.string(),
+    }))),
   },
-  handler: async (ctx, { text, style, prompt, channel, ecosystem, isChat }) => {
+  handler: async (ctx, { text, style, prompt, channel, ecosystem, isChat, conversationHistory }) => {
     const apiKey = process.env.HUGGINGFACE_API_KEY;
     if (!apiKey) {
       throw new Error("HUGGINGFACE_API_KEY not configured");
@@ -136,6 +140,10 @@ export const rephrase = action({
     // Adjust max_tokens based on content type
     const maxTokens = isEmailRequest ? 2000 : 1500;
 
+    const historyMsgs = (conversationHistory || [])
+      .slice(-10)
+      .map(m => ({ role: m.role as "user" | "assistant", content: m.content }));
+
     // Using HuggingFace Router with OpenAI-compatible API
     const response = await fetch(
       "https://router.huggingface.co/v1/chat/completions",
@@ -149,6 +157,7 @@ export const rephrase = action({
           model: modelName,
           messages: [
             { role: "system", content: systemPrompt },
+            ...historyMsgs,
             { role: "user", content: text },
           ],
           max_tokens: maxTokens,
