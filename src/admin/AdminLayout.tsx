@@ -870,11 +870,11 @@ function AdminLearningCenter() {
             emphasis="low"
             className="segmented-no-gap"
           >
-            <SegmentedControlItem value="all">all</SegmentedControlItem>
-            <SegmentedControlItem value="thumbs_up">thumbs up</SegmentedControlItem>
-            <SegmentedControlItem value="thumbs_down">thumbs down</SegmentedControlItem>
-            <SegmentedControlItem value="edit">edit</SegmentedControlItem>
-            <SegmentedControlItem value="comment">comment</SegmentedControlItem>
+            <SegmentedControlItem value="all">All</SegmentedControlItem>
+            <SegmentedControlItem value="thumbs_up">Thumbs up</SegmentedControlItem>
+            <SegmentedControlItem value="thumbs_down">Thumbs down</SegmentedControlItem>
+            <SegmentedControlItem value="edit">Edit</SegmentedControlItem>
+            <SegmentedControlItem value="comment">Comment</SegmentedControlItem>
           </SegmentedControl>
         </div>
 

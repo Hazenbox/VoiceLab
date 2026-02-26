@@ -324,12 +324,15 @@ export function CorrectionApprovalList({ deviceId, feedbackCounts }: CorrectionA
           emphasis="low"
           className="segmented-no-gap"
         >
-          <SegmentedControlItem value="all">all</SegmentedControlItem>
-          {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => (
-            <SegmentedControlItem key={type} value={type}>
-              {feedbackCounts?.[type] ?? 0} {type.replace('_', ' ')}
-            </SegmentedControlItem>
-          ))}
+          <SegmentedControlItem value="all">All</SegmentedControlItem>
+          {['thumbs_up', 'thumbs_down', 'edit', 'comment'].map(type => {
+            const label = type.replace('_', ' ').replace(/^\w/, c => c.toUpperCase());
+            return (
+              <SegmentedControlItem key={type} value={type}>
+                {feedbackCounts?.[type] ?? 0} {label}
+              </SegmentedControlItem>
+            );
+          })}
         </SegmentedControl>
       </div>
 
