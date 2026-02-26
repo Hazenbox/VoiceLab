@@ -16,27 +16,27 @@ export const JOY_TEMPLATES: Record<JoyType, {
 }> = {
   celebratory: {
     generic: [
-      "congrats on getting this sorted!",
-      "great job - you did it!",
-      "that's a win!",
-      "look at you, crushing it!",
+      "congrats on getting this sorted.",
+      "great job - you did it.",
+      "that's a win.",
+      "look at you, crushing it.",
     ],
     byDomain: {
       recharge: [
-        "you're all charged up and ready to roll!",
-        "your account is topped up and glowing!",
+        "you're all charged up and ready to roll.",
+        "your account is topped up and glowing.",
       ],
       activation: [
-        "welcome to the Jio family!",
-        "your journey with Jio begins now!",
+        "welcome to the Jio family.",
+        "your journey with Jio begins now.",
       ],
       upgrade: [
-        "welcome to the premium experience!",
-        "you've unlocked a whole new level!",
+        "welcome to the premium experience.",
+        "you've unlocked a whole new level.",
       ],
       porting: [
-        "welcome aboard - great choice!",
-        "smart move, joining the Jio family!",
+        "welcome aboard - great choice.",
+        "smart move, joining the Jio family.",
       ],
     },
   },
@@ -97,19 +97,19 @@ export const JOY_TEMPLATES: Record<JoyType, {
   },
   playful: {
     generic: [
-      "easy peasy!",
-      "piece of cake!",
-      "done and dusted!",
-      "simpler than ordering chai!",
+      "easy peasy.",
+      "piece of cake.",
+      "done and dusted.",
+      "simpler than ordering chai.",
     ],
     byDomain: {
       streaming: [
-        "now you're ready for your binge session!",
-        "grab the popcorn, you're all set!",
+        "now you're ready for your binge session.",
+        "grab the popcorn, you're all set.",
       ],
       data: [
-        "stream away!",
-        "data party incoming!",
+        "stream away.",
+        "data party incoming.",
       ],
     },
   },
@@ -140,19 +140,19 @@ export const JOY_TEMPLATES: Record<JoyType, {
 
 export const MILESTONE_TEMPLATES: Record<string, string[]> = {
   first_recharge: [
-    "your first recharge with us - welcome!",
-    "first of many - welcome to the family!",
+    "your first recharge with us - welcome.",
+    "first of many - welcome to the family.",
   ],
   anniversary: [
-    "happy anniversary with Jio!",
-    "thanks for being with us this year!",
+    "happy anniversary with Jio.",
+    "thanks for being with us this year.",
   ],
   loyal_customer: [
-    "thanks for being such a valued customer!",
-    "we appreciate your loyalty!",
+    "thanks for being such a valued customer.",
+    "we appreciate your loyalty.",
   ],
   issue_resolved: [
-    "glad we could sort this out!",
-    "happy to have helped!",
+    "glad we could sort this out.",
+    "happy to have helped.",
   ],
 };

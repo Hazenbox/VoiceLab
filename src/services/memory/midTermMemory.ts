@@ -455,7 +455,7 @@ export function getContinuationGreeting(context: MemoryContext): string | null {
   }
   
   if (context.shouldAcknowledgeReturn) {
-    return 'welcome back!';
+    return 'welcome back.';
   }
   
   return null;

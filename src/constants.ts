@@ -36,7 +36,7 @@ export const DEFAULT_CONFIG: ConversationConfig = {
     vibe: 'warm',
     language: 'english',
   },
-  greeting: "Namaste! I'm your Jio Voice assistant. How can I help you today?",
+  greeting: "Namaste. I'm your Jio Voice assistant. How can I help you today?",
   maxResponseLength: 'short',
 };
 
