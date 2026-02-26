@@ -516,6 +516,12 @@ export const ChatPanel = memo(function ChatPanel({
     // Shift+Enter allows new lines, so we don't prevent default
   }, [handleSubmit]);
 
+  // Reset textarea height when input is cleared
+  useEffect(() => {
+    if (inputRef.current && inputValue === '') {
+      inputRef.current.style.height = 'auto';
+    }
+  }, [inputValue]);
 
   // Render individual message
   const renderMessage = useCallback((message: ChatMessage) => {
