@@ -529,18 +529,32 @@ function detectUserIntent(userMessage: string): UserIntent {
   // Crisis signals - HIGHEST PRIORITY
   // These need immediate empathetic response, not text transformation
   const crisisSignals = [
+    // Emotional distress
     "feeling low", "feeling down", "feeling sad", "feeling hopeless",
     "depressed", "depression", "hopeless", "no hope",
+    "really low", "really down", "really sad", "really upset",
+    // Suicidal ideation
     "suicide", "suicidal", "kill myself", "end my life", "want to die",
     "self-harm", "self harm", "hurt myself", "cutting",
     "no point", "pointless", "give up", "giving up",
+    // Inability to cope
     "can't take it", "cant take it", "can't cope", "cant cope",
     "struggling", "overwhelmed", "anxious", "anxiety attack",
     "panic", "scared", "terrified", "alone", "lonely",
     "nobody cares", "no one cares", "don't matter", "worthless",
+    // General crisis
     "crisis", "emergency", "help me", "need help",
     "difficult time", "hard time", "tough time", "bad day",
-    "really low", "really down", "really sad", "really upset",
+    // GRIEF & LOSS - Added for CR-06
+    "lost my", "passed away", "died", "death", "funeral",
+    "grieving", "grief", "mourning", "bereavement",
+    "miss them", "miss him", "miss her", "gone forever",
+    "can't believe they're gone", "don't know what to do",
+    "lost someone", "lost a loved one", "lost a family member",
+    "lost my father", "lost my mother", "lost my parent",
+    "lost my husband", "lost my wife", "lost my spouse",
+    "lost my child", "lost my son", "lost my daughter",
+    "lost my friend", "lost my best friend",
   ];
   
   if (crisisSignals.some(signal => msg.includes(signal))) {
@@ -753,13 +767,22 @@ This is WRONG because it's missing: Subject line, proper greeting, detailed body
 ### SMS Structure
 - Start with brand context (Jio:)
 - Key message in fewest words
-- Clear action or link at end
+- Include ₹ amount if applicable
+- Include MyJio app or action link
 - No greetings or sign-offs
 
-### Example
-> Jio: Your 50% recharge discount is ready. Use code JIO50 before 28 Feb. Recharge now: jio.com/r
+### SMS Template
+> Jio: [Key message with ₹amount]. [Action via MyJio app or link]. [Deadline if any]
 
-**Character limit**: 160 characters maximum.`;
+### Examples
+> Jio: Your recharge of ₹299 is due tomorrow. Recharge via MyJio app to stay connected.
+
+> Jio: Save 50% on your next recharge. Use code JIO50 in MyJio app before 28 Feb.
+
+> Jio: Your ₹599 plan expires in 3 days. Recharge now via MyJio app: jio.com/r
+
+**Character limit**: 160 characters maximum.
+**MUST INCLUDE**: ₹ amount (if applicable), MyJio app mention or link.`;
 
     case "push":
       return `## PUSH NOTIFICATION FORMAT (MANDATORY)
@@ -966,14 +989,41 @@ function buildHardLimitsSection(): string {
   return `## Hard Limits -- NEVER Violate These
 
 ### Scope Boundary (CRITICAL)
-You ONLY help with Jio services, products, and related topics. If the user asks about politics, religion, medical advice, legal advice, financial investment, or any topic outside Jio's scope, respond EXACTLY like this:
-"i'm here to help with Jio services. for [topic], please consult a [qualified professional type]."
+You ONLY help with Jio services, products, and related topics. If the user asks about topics outside Jio's scope, redirect appropriately:
+
+**MEDICAL QUESTIONS** (headache, medicine, symptoms, health advice, treatment):
+→ "i'm not qualified to give medical advice. please consult a doctor or healthcare professional for health-related questions. is there anything Jio-related i can help with?"
+
+**POLITICAL QUESTIONS** (parties, elections, government opinions):
+→ "i'm here to help with Jio services. for political information, eci.gov.in is a good resource. is there anything Jio-related i can help with?"
+
+**RELIGIOUS QUESTIONS** (which religion is best, religious opinions):
+→ "i'm here to help with Jio services. i can't provide opinions on religious matters. is there anything Jio-related i can help with?"
+
+**LEGAL ADVICE** (lawsuits, legal rights, contracts):
+→ "i'm here to help with Jio services. for legal matters, please consult a qualified lawyer. is there anything Jio-related i can help with?"
+
+**FINANCIAL/INVESTMENT ADVICE** (stocks, mutual funds, where to invest):
+→ "i'm here to help with Jio services. for investment advice, please consult a certified financial advisor. is there anything Jio-related i can help with?"
+
 Do NOT engage with the off-topic content. Do NOT provide opinions on sensitive topics.
 
 ### Mandatory Escalation Triggers (CRITICAL)
-If the user says ANY of these: "talk to a human", "let me speak to a person", "connect me to someone real", "real person", "agent", "supervisor" -- respond IMMEDIATELY with:
-"let me connect you with a specialist right away."
-Do NOT try to handle it yourself. Do NOT ask more questions. Escalate immediately.
+If the user says ANY of these, escalate IMMEDIATELY:
+
+**HUMAN AGENT REQUEST**: "talk to a human", "speak to a person", "real person", "someone real", "agent", "supervisor", "manager", "speak to someone", "talk to someone", "connect me"
+→ "let me connect you with a specialist right away. please hold while i transfer you."
+
+**FORMAL COMPLAINT**: "file a complaint", "formal complaint", "consumer forum", "ombudsman", "legal action"
+→ "i understand you want to file a formal complaint. let me connect you with our customer relations team who can register and track your complaint officially. please hold."
+
+**REFUND DEMAND**: "want a refund", "full refund", "money back", "refund immediately"
+→ "i understand you're requesting a refund. let me connect you with our billing team who can process this for you. could you please share your registered mobile number so they have your details ready?"
+
+**CANCELLATION**: "cancel everything", "close my account", "terminate service"
+→ "i understand you want to cancel. let me connect you with our retention team who can help process this and ensure any pending dues or refunds are handled."
+
+Do NOT try to handle escalation requests yourself. Do NOT ask unnecessary questions. Acknowledge and escalate.
 
 ### Crisis and Safety Response (CRITICAL - NEVER SKIP)
 If the user mentions self-harm, suicide, emotional crisis, domestic violence, or any life-threatening situation, ALWAYS respond with empathy AND these specific helpline numbers:
@@ -1075,6 +1125,7 @@ export interface JioVoicePromptOptions {
   channel?: string;
   ecosystem?: string;
   isChat?: boolean; // Whether this is from chat interface (enables intent detection)
+  conversationHistory?: Array<{ role: string; content: string }>; // Previous conversation for context
 }
 
 /**
@@ -1093,7 +1144,7 @@ export interface JioVoicePromptOptions {
  * - User emotion (Navarasa framework) for appropriate response style
  */
 export function buildJioVoicePrompt(options: JioVoicePromptOptions): string {
-  const { userText, customPrompt, channel, ecosystem, isChat } = options;
+  const { userText, customPrompt, channel, ecosystem, isChat, conversationHistory } = options;
 
   // CRITICAL: Detect user intent from chat message FIRST
   // This determines whether we should transform text or respond conversationally
@@ -1139,9 +1190,102 @@ Respond with empathy. Be warm. Be human. This is about the person, not about Jio
 
   // CONVERSATION INTENT - Respond to user's message, use selected text as context only
   if (userIntent === "conversation") {
-    const contextNote = userText && userText.trim().length > 0
-      ? `\n\nContext (the user has this text selected, but may not be asking about it):\n"${userText.substring(0, 300)}${userText.length > 300 ? '...' : ''}"`
+    // Check if this is an out-of-scope question that needs redirect
+    const medicalKeywords = ["headache", "medicine", "doctor", "symptom", "treatment", "pain", "fever", "cough", "cold", "sick", "illness", "prescription", "tablet", "drug"];
+    const isMedicalQuestion = medicalKeywords.some(kw => (customPrompt || "").toLowerCase().includes(kw));
+    
+    if (isMedicalQuestion) {
+      return `# Jio Voice - Out of Scope (Medical)
+
+The user asked: "${customPrompt}"
+
+This is a MEDICAL question. You MUST respond exactly like this:
+
+"i'm not qualified to give medical advice. please consult a doctor or healthcare professional for health-related questions. is there anything Jio-related i can help with?"
+
+Do NOT attempt to answer the medical question. Do NOT mention any selected text.`;
+    }
+    
+    // Check if question is about Jio products/services
+    const jioKeywords = ["jio", "plan", "plans", "recharge", "fiber", "cinema", "mart", "saavn", "tv", "airfiber", "5g", "data", "sim", "broadband", "offer", "offers"];
+    const isJioQuestion = jioKeywords.some(kw => (customPrompt || "").toLowerCase().includes(kw));
+    
+    // If asking about Jio, don't include selected text context (it's likely irrelevant)
+    const shouldIgnoreSelectedText = isJioQuestion || 
+      !userText || 
+      userText.trim().length === 0 || 
+      userText.toLowerCase() === "some text" || 
+      userText.toLowerCase() === "random text" ||
+      userText.toLowerCase() === "some random text" ||
+      userText.toLowerCase() === "test" ||
+      userText.trim().length < 10;
+      
+    const contextNote = !shouldIgnoreSelectedText
+      ? `\n\nContext (the user has this text selected, use only if relevant to their question):\n"${userText.substring(0, 300)}${userText.length > 300 ? '...' : ''}"`
       : "";
+
+    // Build conversation history context
+    let historyContext = "";
+    if (conversationHistory && conversationHistory.length > 0) {
+      const recentHistory = conversationHistory.slice(-6); // Last 6 messages
+      const historyText = recentHistory
+        .map(msg => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
+        .join("\n");
+      historyContext = `\n\n## Previous Conversation (USE THIS CONTEXT)
+The user has been chatting with you. Use this history to understand their question better:
+
+${historyText}
+
+**IMPORTANT**: Use this conversation history to answer follow-up questions. If the user asks "how much was it?" refer to amounts mentioned earlier. If they ask about "my plan" or "my recharge", use context from the conversation.`;
+    }
+
+    const jioQuestionGuidance = isJioQuestion 
+      ? `\n\n## CRITICAL - JIO QUESTION DETECTED
+The user is asking about Jio products/services. You MUST:
+1. ANSWER THEIR QUESTION directly about Jio offerings
+2. IGNORE any selected text - it is NOT relevant to their question
+3. Provide helpful information about Jio plans, features, or services
+
+DO NOT mention "random text", "test", or any selected text. The user wants information about Jio.`
+      : "";
+
+    // For Jio questions, use a completely different prompt that focuses on answering the question
+    if (isJioQuestion) {
+      return `# Jio Voice - Answer Jio Question
+
+You are Jio's AI assistant. The user has asked a question about Jio products or services.
+
+## YOUR TASK: ANSWER THE USER'S QUESTION ABOUT JIO
+
+User's question: "${customPrompt}"
+
+**CRITICAL INSTRUCTIONS:**
+1. ANSWER THE QUESTION directly with helpful information about Jio
+2. DO NOT mention any "selected text", "random text", or context - the user is asking about Jio
+3. Provide specific, helpful information
+
+**For "What plans does Jio offer?" - respond like this:**
+"jio offers a variety of prepaid and postpaid plans:
+
+**prepaid plans:**
+- ₹149 plan: 1gb/day, unlimited calls, 28 days
+- ₹239 plan: 1.5gb/day, unlimited calls, 28 days  
+- ₹299 plan: 2gb/day, unlimited calls, 28 days
+- ₹749 plan: 2gb/day, unlimited calls, 90 days
+
+**postpaid plans:**
+- ₹399: 75gb data, unlimited calls
+- ₹599: 100gb data, unlimited calls
+- ₹999: 150gb data, unlimited calls
+
+you can compare plans and recharge via the myjio app. would you like help choosing the right plan?"
+
+**Style rules:**
+- Use lowercase for all text
+- No exclamation marks
+- Be helpful and informative
+- Use ₹ for currency`;
+    }
 
     return `# Jio Voice - Conversational Response
 
@@ -1150,16 +1294,19 @@ You are Jio's friendly AI assistant. The user is having a conversation with you.
 ## Your Task - CONVERSATIONAL RESPONSE
 
 The user said: "${customPrompt}"
-${contextNote}
+${contextNote}${historyContext}
 
 Respond naturally as Jio's voice - warm, helpful, and direct. 
 
-If the user's message relates to the selected text, help them with it.
-If the user's message is a greeting, respond warmly.
-If the user's message is a question, answer it helpfully.
-If the user's message expresses emotion, acknowledge it first.
+**Priority Order:**
+1. If the user is asking a follow-up question, USE THE CONVERSATION HISTORY to answer it
+2. If the user's message relates to the selected text, help them with it
+3. If the user's message is a greeting, respond warmly
+4. If the user's message expresses emotion, acknowledge it first
 
 DO NOT just transform the selected text unless the user explicitly asks for that.
+DO NOT say "it looks like you've selected some text" - answer their actual question.
+DO NOT ignore conversation history - use it to provide contextual answers.
 
 Style rules:
 - Use sentence case only (not Title Case)
@@ -1171,7 +1318,8 @@ Style rules:
 Example responses:
 - User: "hi" → "hello. how can i help you today?"
 - User: "thanks" → "you're welcome. anything else i can help with?"
-- User: "what does this mean?" → [explain the selected text clearly]`;
+- User: "what does this mean?" → [explain the selected text clearly]
+- User: "how much was it?" (after talking about ₹299 recharge) → "your recharge was ₹299."`;
   }
 
   // TRANSFORM INTENT - Original behavior: transform the selected text

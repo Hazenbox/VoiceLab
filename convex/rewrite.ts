@@ -121,6 +121,7 @@ export const rephrase = action({
       channel: channel || "general",
       ecosystem: ecosystem,
       isChat: isChat ?? (prompt !== undefined && prompt.length > 0), // Default to true if there's a prompt
+      conversationHistory: conversationHistory, // Pass conversation history for context
     });
 
     // Detect if this is an email request for max_tokens adjustment
