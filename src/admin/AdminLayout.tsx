@@ -1204,7 +1204,7 @@ function AdminKnowledge() {
                     <span 
                       className="text-xs px-1.5 py-0.5 rounded-full"
                       style={{ 
-                        backgroundColor: theme.surface.secondary, 
+                        backgroundColor: theme.background.subtle, 
                         color: theme.text.medium 
                       }}
                     >
