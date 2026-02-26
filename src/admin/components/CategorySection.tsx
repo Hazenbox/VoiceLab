@@ -1,7 +1,8 @@
-import { useState } from 'react';
 import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import { Label } from '@marcelinodzn/ds-react';
 import type { Id } from '../../../convex/_generated/dataModel';
+import { SearchableDropdown, type SearchableDropdownOption } from '../../components/SearchableDropdown';
+import { DSIcon } from '../../components/DSIcon';
 
 /** Color palette for knowledge item categories */
 const CATEGORY_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
@@ -44,8 +45,6 @@ interface CategorySectionProps {
   items: KnowledgeItem[];
   type: string;
   searchQuery?: string;
-  isExpanded?: boolean;
-  onToggleExpand?: () => void;
 }
 
 // ── Severity Badge Component ─────────────────────────────────────
@@ -77,20 +76,14 @@ function SeverityBadge({ severity, count }: { severity: string; count: number })
 }
 
 // ── Category Section Component ───────────────────────────────────
+// Always expanded - no accordion behavior
 export function CategorySection({ 
   category, 
   items, 
   type,
   searchQuery = '',
-  isExpanded = true,
-  onToggleExpand,
 }: CategorySectionProps) {
   const theme = useThemeColors();
-  const [localExpanded, setLocalExpanded] = useState(true);
-  
-  // Use controlled or uncontrolled expansion
-  const expanded = onToggleExpand ? isExpanded : localExpanded;
-  const toggleExpand = onToggleExpand || (() => setLocalExpanded(prev => !prev));
   
   // Filter items by search query
   const filteredItems = searchQuery
@@ -120,26 +113,14 @@ export function CategorySection({
       className="rounded-lg border overflow-hidden mb-3"
       style={{ borderColor: theme.stroke.low }}
     >
-      {/* Header */}
-      <button
-        onClick={toggleExpand}
-        className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:opacity-80"
+      {/* Header - Static, no collapse */}
+      <div
+        className="w-full flex items-center justify-between px-4 py-2.5"
         style={{ backgroundColor: theme.surface }}
       >
         <div className="flex items-center gap-3">
-          {/* Expand/Collapse Icon */}
-          <svg
-            className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            style={{ color: theme.text.medium }}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          
           {/* Category Name */}
-          <span className="font-medium" style={{ color: theme.text.high }}>
+          <span className="font-medium text-sm" style={{ color: theme.text.high }}>
             {formattedCategory}
           </span>
           
@@ -160,35 +141,33 @@ export function CategorySection({
             {severityCounts.info && <SeverityBadge severity="info" count={severityCounts.info} />}
           </div>
         )}
-      </button>
+      </div>
       
-      {/* Content */}
-      {expanded && (
-        <div 
-          className="px-4 py-3 flex flex-wrap gap-2"
-          style={{ borderTop: `1px solid ${theme.stroke.low}` }}
-        >
-          {filteredItems.map((item) => (
-            <div
-              key={item._id}
-              className="inline-flex items-center rounded-md px-2 py-1"
-              style={{
-                fontSize: '12px',
-                backgroundColor: itemColor.bg,
-                color: itemColor.text,
-              }}
-              title={item.metadata?.suggestion ? `Suggestion: ${item.metadata.suggestion}` : undefined}
-            >
-              <span>{item.content}</span>
-              
-              {/* Severity indicator for avoid words */}
-              {type === 'avoid_word' && item.metadata?.severity === 'error' && (
-                <span className="ml-1 w-1.5 h-1.5 rounded-full bg-red-500" title="High severity" />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Content - Always visible */}
+      <div 
+        className="px-4 py-3 flex flex-wrap gap-2"
+        style={{ borderTop: `1px solid ${theme.stroke.low}` }}
+      >
+        {filteredItems.map((item) => (
+          <div
+            key={item._id}
+            className="inline-flex items-center rounded-md px-2 py-1"
+            style={{
+              fontSize: '12px',
+              backgroundColor: itemColor.bg,
+              color: itemColor.text,
+            }}
+            title={item.metadata?.suggestion ? `Suggestion: ${item.metadata.suggestion}` : undefined}
+          >
+            <span>{item.content}</span>
+            
+            {/* Severity indicator for avoid words */}
+            {type === 'avoid_word' && item.metadata?.severity === 'error' && (
+              <span className="ml-1 w-1.5 h-1.5 rounded-full bg-red-500" title="High severity" />
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -218,70 +197,69 @@ export function SearchFilterBar({
   const theme = useThemeColors();
   const typeLabel = selectedType.replace(/_/g, ' ');
 
+  // Convert categories to SearchableDropdown options
+  const categoryOptions: SearchableDropdownOption[] = [
+    { value: '', label: 'all categories' },
+    ...availableCategories.map(cat => ({
+      value: cat,
+      label: cat.replace(/_/g, ' '),
+    }))
+  ];
+
   return (
-    <div className="flex flex-col sm:flex-row gap-3 mb-4">
-      {/* Search input */}
+    <div className="flex flex-col sm:flex-row gap-3 mb-4 items-center">
+      {/* Search input - styled to match DS patterns */}
       <div className="relative flex-1">
-        <svg 
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
+        <span 
+          className="absolute left-3 top-1/2 -translate-y-1/2"
           style={{ color: theme.text.low }}
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+          <DSIcon name="IcSearch" size="S" attention="low" />
+        </span>
         <input
           type="text"
-          placeholder={`Search ${typeLabel}...`}
+          placeholder={`search ${typeLabel}...`}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-colors"
+          className="w-full pl-10 pr-10 rounded-md focus:outline-none transition-colors"
           style={{ 
-            borderColor: theme.stroke.medium,
-            backgroundColor: theme.surface,
+            height: '36px',
+            border: theme.isLight 
+              ? '1.5px solid rgba(36, 38, 43, 0.12)' 
+              : '1.5px solid rgba(255, 255, 255, 0.12)',
+            backgroundColor: theme.isLight 
+              ? 'rgba(255, 255, 255, 0.01)' 
+              : 'rgba(0, 0, 0, 0.01)',
             color: theme.text.high,
-            // @ts-expect-error CSS variable for focus ring
-            '--tw-ring-color': theme.accent,
+            fontSize: '13px',
+            fontFamily: '"JioType Var", sans-serif',
           }}
         />
         {searchQuery && (
           <button
             onClick={() => onSearchChange('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
-            title="Clear search"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full transition-colors"
+            style={{ color: theme.text.low }}
+            title="clear search"
           >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme.text.low }}>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <DSIcon name="IcClose" size="XS" attention="low" />
           </button>
         )}
       </div>
       
-      {/* Category filter dropdown */}
-      <select
+      {/* Category filter dropdown - using DS SearchableDropdown */}
+      <SearchableDropdown
         value={categoryFilter || ''}
-        onChange={(e) => onCategoryFilterChange(e.target.value || null)}
-        className="px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 transition-colors min-w-[160px]"
-        style={{ 
-          borderColor: theme.stroke.medium,
-          backgroundColor: theme.surface,
-          color: theme.text.high,
-          // @ts-expect-error CSS variable for focus ring
-          '--tw-ring-color': theme.accent,
-        }}
-      >
-        <option value="">All categories</option>
-        {availableCategories.map(cat => (
-          <option key={cat} value={cat}>
-            {cat.replace(/_/g, ' ')}
-          </option>
-        ))}
-      </select>
+        onChange={(value) => onCategoryFilterChange(value || null)}
+        options={categoryOptions}
+        placeholder="all categories"
+        title="filter by category"
+        className="min-w-[160px]"
+      />
       
       {/* Results count */}
       <div 
-        className="flex items-center px-3 py-2 rounded-lg text-sm whitespace-nowrap"
+        className="flex items-center px-3 py-1.5 rounded-md text-xs whitespace-nowrap"
         style={{ backgroundColor: theme.stroke.low, color: theme.text.medium }}
       >
         {filteredCount === totalCount 

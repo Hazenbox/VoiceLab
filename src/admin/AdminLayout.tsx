@@ -939,18 +939,64 @@ function AdminLearningCenter() {
   );
 }
 
+// ── Knowledge Type Configuration ─────────────────────────────────
+// Comprehensive type definitions with accurate descriptions and badge variants
+const KNOWLEDGE_TYPE_CONFIG: Record<string, {
+  label: string;
+  description: string;
+  badge: 'positive' | 'negative' | 'warning' | 'informative' | 'neutral';
+  priority: 'high' | 'medium' | 'low';
+}> = {
+  avoid_word: {
+    label: 'avoid words',
+    description: 'Words and phrases that should NOT be used in Jio content. Includes complex jargon, robotic language, fear-based messaging, bureaucratic terms, and shame-inducing phrases.',
+    badge: 'negative',
+    priority: 'high'
+  },
+  auto_fix: {
+    label: 'auto-fix rules',
+    description: 'Automatic text replacements for common issues including gender-neutral alternatives, simplified jargon, British spelling corrections, and format fixes.',
+    badge: 'informative',
+    priority: 'high'
+  },
+  approved_example: {
+    label: 'approved examples',
+    description: 'Curated content examples for reference and few-shot prompting. Used to guide the AI model with style and tone during generation.',
+    badge: 'informative',
+    priority: 'high'
+  },
+  preferred_word: {
+    label: 'preferred vocabulary',
+    description: 'Recommended vocabulary terms organized by intent: care & connection, action & progress, clarity & safety, fixing & resolution, community first, learning & discovery.',
+    badge: 'positive',
+    priority: 'medium'
+  },
+  product_definition: {
+    label: 'product definitions',
+    description: 'Official ecosystem definitions with recommended tone. Each ecosystem (Connectivity, Home, Entertainment, etc.) has a specific voice personality.',
+    badge: 'informative',
+    priority: 'low'
+  },
+  festival: {
+    label: 'festivals',
+    description: 'Festival dates and cultural context for India-specific content. Includes greeting templates and tone guidance for each festival.',
+    badge: 'warning',
+    priority: 'low'
+  }
+};
+
+// Order of types for display
+const KNOWLEDGE_TYPE_ORDER = ['avoid_word', 'auto_fix', 'approved_example', 'preferred_word', 'product_definition', 'festival'];
+
 // ── Knowledge Base ───────────────────────────────────────────────
-// Updated for POC: High-priority rules first, total counter, RAG status, CRUD UI
+// Redesigned: All sections expanded, proper badges and descriptions
 function AdminKnowledge() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [displayLimit, setDisplayLimit] = useState(30);
   
-  // Search and filter state for enhanced knowledge display
+  // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   
   // Lazy queries for knowledge - only refresh on demand
   const { 
@@ -967,7 +1013,7 @@ function AdminKnowledge() {
     refresh: refreshItems, 
   } = useLazyQuery(
     api.knowledge.listAll, 
-    { limit: 500 }  // Always fetch all items for read-only display
+    { limit: 500 }
   );
   
   // Combined refresh for all knowledge data
@@ -976,24 +1022,15 @@ function AdminKnowledge() {
     refreshItems();
   }, [refreshCounts, refreshItems]);
   
-  // Auto-select first type when data loads to show content immediately
-  useEffect(() => {
-    if (knowledgeCounts && !selectedType) {
-      // Auto-select 'avoid_word' as the first type (highest priority)
-      setSelectedType('avoid_word');
-    }
-  }, [knowledgeCounts, selectedType]);
-  
   // Debug logging for production troubleshooting
   useEffect(() => {
     console.log('[AdminKnowledge] Query states:', {
       knowledgeCounts: knowledgeCounts === undefined ? 'loading' : knowledgeCounts === null ? 'null' : 'loaded',
       knowledgeItems: knowledgeItems === undefined ? 'loading' : knowledgeItems === null ? 'null' : `loaded (${knowledgeItems?.length ?? 0})`,
-      selectedType,
     });
-  }, [knowledgeCounts, knowledgeItems, selectedType]);
+  }, [knowledgeCounts, knowledgeItems]);
   
-  // Calculate total active rules - moved BEFORE early return to avoid conditional hook
+  // Calculate total active rules
   const totalActiveRules = useMemo(() => {
     if (!knowledgeCounts) return 0;
     return Object.values(knowledgeCounts).reduce(
@@ -1001,55 +1038,51 @@ function AdminKnowledge() {
     );
   }, [knowledgeCounts]);
 
-  // Group items by category for enhanced display
-  const groupedByCategory = useMemo(() => {
-    if (!selectedType || !knowledgeItems) return {};
+  // Group ALL items by type, then by category
+  const groupedByType = useMemo(() => {
+    if (!knowledgeItems) return {};
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const filtered = knowledgeItems.filter((item: any) => item.type === selectedType && item.isActive);
-    const grouped: Record<string, typeof filtered> = {};
+    const result: Record<string, Record<string, typeof knowledgeItems>> = {};
     
-    for (const item of filtered) {
-      const cat = item.category || 'uncategorized';
-      if (!grouped[cat]) grouped[cat] = [];
-      grouped[cat].push(item);
+    for (const type of KNOWLEDGE_TYPE_ORDER) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const filtered = knowledgeItems.filter((item: any) => item.type === type && item.isActive);
+      const grouped: Record<string, typeof filtered> = {};
+      
+      for (const item of filtered) {
+        const cat = item.category || 'uncategorized';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(item);
+      }
+      result[type] = grouped;
     }
-    return grouped;
-  }, [selectedType, knowledgeItems]);
+    return result;
+  }, [knowledgeItems]);
 
-  // Get available categories for the filter dropdown
-  const availableCategories = useMemo(() => {
-    return Object.keys(groupedByCategory).sort((a, b) => {
-      // Put 'uncategorized' last
+  // Get items for a specific type
+  const getItemsForType = (type: string) => {
+    if (!knowledgeItems) return [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return knowledgeItems.filter((item: any) => item.type === type && item.isActive);
+  };
+
+  // Get count for type
+  const getTypeCount = (type: string): number => {
+    return knowledgeCounts?.[type]?.active || 0;
+  };
+
+  // Get available categories for a specific type
+  const getCategoriesForType = (type: string): string[] => {
+    const grouped = groupedByType[type] || {};
+    return Object.keys(grouped).sort((a, b) => {
       if (a === 'uncategorized') return 1;
       if (b === 'uncategorized') return -1;
-      // Sort by count (descending) then alphabetically
-      const countDiff = (groupedByCategory[b]?.length || 0) - (groupedByCategory[a]?.length || 0);
+      const countDiff = (grouped[b]?.length || 0) - (grouped[a]?.length || 0);
       return countDiff !== 0 ? countDiff : a.localeCompare(b);
     });
-  }, [groupedByCategory]);
+  };
 
-  // Reordered knowledge types - high priority first for POC demo
-  const knowledgeTypes = useMemo(() => {
-    const getCount = (type: string): string => {
-      if (knowledgeCounts?.[type]) {
-        return `${knowledgeCounts[type].active}/${knowledgeCounts[type].total}`;
-      }
-      return '—';
-    };
-    
-    // Reordered: high-priority types first (avoid, auto-fix, examples)
-    return [
-      { type: 'avoid_word', label: 'Avoid words', count: getCount('avoid_word'), colorClass: 'text-red-500', priority: 'high' },
-      { type: 'auto_fix', label: 'Auto-fix rules', count: getCount('auto_fix'), colorClass: 'text-blue-500', priority: 'high' },
-      { type: 'approved_example', label: 'Approved examples', count: getCount('approved_example'), colorClass: 'text-cyan-500', priority: 'high' },
-      { type: 'preferred_word', label: 'Preferred vocab', count: getCount('preferred_word'), colorClass: 'text-green-500', priority: 'medium' },
-      { type: 'product_definition', label: 'Product defs', count: getCount('product_definition'), colorClass: 'text-purple-500', priority: 'low' },
-      { type: 'festival', label: 'Festivals', count: getCount('festival'), colorClass: 'text-yellow-500', priority: 'low' },
-    ];
-  }, [knowledgeCounts]);
-
-  // Loading state - after all hooks
+  // Loading state
   if (knowledgeCounts === undefined) {
     return <AdminLoadingSkeleton />;
   }
@@ -1066,266 +1099,272 @@ function AdminKnowledge() {
     );
   }
 
-  const handleCardClick = (type: string) => {
-    setSelectedType(prev => prev === type ? null : type);
-    setDisplayLimit(30); // Reset display limit when switching types
-    // Reset search and filter when switching types
-    setSearchQuery('');
-    setCategoryFilter(null);
-    setCollapsedCategories(new Set());
-  };
-  
-  
-  // Get total count for selected type from knowledgeCounts
-  const getTotalCount = (type: string): number => {
-    return knowledgeCounts?.[type]?.active || 0;
-  };
+  // Render a knowledge section for grouped display types
+  const renderGroupedSection = (type: string) => {
+    const config = KNOWLEDGE_TYPE_CONFIG[type];
+    const count = getTypeCount(type);
+    const categories = getCategoriesForType(type);
+    const grouped = groupedByType[type] || {};
 
-  // Get items for selected type from Convex
-  const getItemsForType = (type: string): Array<{ content: string; metadata?: Record<string, unknown> }> => {
-    if (knowledgeItems && knowledgeItems.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const filtered = knowledgeItems.filter((item: any) => item.type === type && item.isActive);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return filtered.map((item: any) => ({
-        content: item.content,
-        metadata: item.metadata as Record<string, unknown>,
-      }));
-    }
-    return [];
-  };
-
-  // Toggle category expansion
-  const toggleCategoryExpand = (category: string) => {
-    setCollapsedCategories(prev => {
-      const next = new Set(prev);
-      if (next.has(category)) {
-        next.delete(category);
-      } else {
-        next.add(category);
-      }
-      return next;
-    });
-  };
-
-  // Calculate filtered count for search/filter bar
-  const getFilteredCount = (): number => {
-    if (!groupedByCategory) return 0;
-    
-    const categories = categoryFilter 
-      ? [categoryFilter] 
-      : Object.keys(groupedByCategory);
-    
-    let count = 0;
-    for (const cat of categories) {
-      const items = groupedByCategory[cat] || [];
-      if (searchQuery) {
-        count += items.filter(item => 
-          item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (item.metadata?.suggestion?.toLowerCase().includes(searchQuery.toLowerCase()))
-        ).length;
-      } else {
-        count += items.length;
-      }
-    }
-    return count;
-  };
-
-
-  const renderDetailPanel = () => {
-    if (!selectedType) return null;
-
-    // Show loading state when items are loading for selected type
-    if (knowledgeItems === undefined) {
-      return (
-        <AdminCard className="p-4 mt-4">
-          <div className="animate-pulse space-y-2">
-            <div className="h-4 rounded w-1/4" style={{ backgroundColor: theme.stroke.low }} />
-            <div className="h-20 rounded" style={{ backgroundColor: theme.stroke.low }} />
-          </div>
-        </AdminCard>
+    // Filter items based on search query
+    const filterItems = (items: typeof knowledgeItems) => {
+      if (!searchQuery) return items;
+      return items.filter(item => 
+        item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.metadata?.suggestion?.toLowerCase().includes(searchQuery.toLowerCase()))
       );
-    }
-
-    const totalCount = getTotalCount(selectedType);
-    const filteredCount = getFilteredCount();
-    const typeLabel = selectedType.replace(/_/g, ' ');
-
-    // Get description for type
-    const typeDescriptions: Record<string, string> = {
-      avoid_word: 'These words trigger warnings in the content editor.',
-      preferred_word: 'These are recommended alternatives suggested by the content editor.',
-      auto_fix: 'These rules automatically correct common typos and formatting issues.',
-      product_definition: 'Official product definitions used for consistent messaging.',
-      festival: 'Festival dates and cultural context for content planning.',
-      approved_example: 'Approved content examples for reference and training.',
     };
 
-    // Check if there are any categories to display
-    const hasCategories = Object.keys(groupedByCategory).length > 0;
+    // Calculate filtered count
+    const filteredCount = categories.reduce((sum, cat) => {
+      if (categoryFilter && cat !== categoryFilter) return sum;
+      return sum + filterItems(grouped[cat] || []).length;
+    }, 0);
 
-    // For types that work better with grouped display (avoid_word, preferred_word, festival)
-    const useGroupedDisplay = ['avoid_word', 'preferred_word', 'festival', 'auto_fix'].includes(selectedType);
+    return (
+      <AdminCard key={type} className="p-4 mb-5">
+        {/* Section Header with Badge */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Badge variant={config.badge} emphasis="low">
+              {config.label}
+            </Badge>
+            <span 
+              className="text-sm"
+              style={{ color: theme.text.medium }}
+            >
+              {count} items
+            </span>
+          </div>
+        </div>
+        
+        {/* Description */}
+        <p 
+          className="mb-4"
+          style={{ 
+            fontSize: '12px', 
+            color: theme.text.low,
+            lineHeight: 1.5,
+          }}
+        >
+          {config.description}
+        </p>
 
-    if (useGroupedDisplay && hasCategories) {
-      return (
-        <AdminCard className="p-4 mt-4">
-          <CardLabel>{typeLabel} ({totalCount} total)</CardLabel>
-          
-          {/* Search and Filter Bar */}
-          <SearchFilterBar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            categoryFilter={categoryFilter}
-            onCategoryFilterChange={setCategoryFilter}
-            availableCategories={availableCategories}
-            selectedType={selectedType}
-            totalCount={totalCount}
-            filteredCount={filteredCount}
-          />
+        {/* Search and Filter Bar for this section */}
+        <SearchFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          categoryFilter={categoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
+          availableCategories={categories}
+          selectedType={type}
+          totalCount={count}
+          filteredCount={filteredCount}
+        />
 
-          {/* Grouped Category Sections */}
-          <div className="space-y-0">
-            {availableCategories
-              .filter(cat => !categoryFilter || cat === categoryFilter)
-              .map(category => (
+        {/* Category Sections - Always expanded */}
+        <div className="space-y-0">
+          {categories
+            .filter(cat => !categoryFilter || cat === categoryFilter)
+            .map(category => {
+              const items = filterItems(grouped[category] || []);
+              if (items.length === 0) return null;
+              return (
                 <CategorySection
                   key={category}
                   category={category}
-                  items={groupedByCategory[category] || []}
-                  type={selectedType}
+                  items={items}
+                  type={type}
                   searchQuery={searchQuery}
-                  isExpanded={!collapsedCategories.has(category)}
-                  onToggleExpand={() => toggleCategoryExpand(category)}
                 />
-              ))}
+              );
+            })}
+        </div>
+
+        {/* Empty state */}
+        {filteredCount === 0 && (
+          <div className="text-center py-8" style={{ color: theme.text.low }}>
+            {searchQuery || categoryFilter 
+              ? 'No items match your search criteria.'
+              : `No ${config.label} configured yet.`}
           </div>
+        )}
+      </AdminCard>
+    );
+  };
 
-          {/* Empty state */}
-          {filteredCount === 0 && (
-            <div className="text-center py-8" style={{ color: theme.text.low }}>
-              {searchQuery || categoryFilter 
-                ? 'No items match your search criteria.'
-                : `No ${typeLabel} configured yet.`}
-            </div>
-          )}
+  // Render product definitions table
+  const renderProductDefinitions = () => {
+    const type = 'product_definition';
+    const config = KNOWLEDGE_TYPE_CONFIG[type];
+    const items = getItemsForType(type);
+    const count = getTypeCount(type);
 
-          {/* Description */}
-          <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
-            {typeDescriptions[selectedType]}
-          </span>
-        </AdminCard>
-      );
-    }
+    // Parse content field which contains "Name: Tone" format
+    const parseContent = (content: string) => {
+      const colonIndex = content.indexOf(':');
+      if (colonIndex === -1) return { name: content, tone: '—' };
+      return {
+        name: content.slice(0, colonIndex).trim(),
+        tone: content.slice(colonIndex + 1).trim()
+      };
+    };
 
-    // Fallback to original display for other types (product_definition, approved_example)
-    const items = getItemsForType(selectedType);
-    const displayedItems = items.slice(0, displayLimit);
-    const hasMore = items.length > displayLimit || totalCount > items.length;
+    // Get keywords from tags (filter out system tags)
+    const getKeywords = (tags: string[]) => {
+      const systemTags = ['product', 'ecosystem', 'tier1'];
+      return tags.filter(tag => !systemTags.includes(tag) && tag !== items.find(i => i.tags.includes(tag))?.category);
+    };
 
-    switch (selectedType) {
-      case 'product_definition': {
-        return (
-          <AdminCard className="p-4 mt-4">
-            <CardLabel>Product definitions ({totalCount} total)</CardLabel>
-            <AdminTable
-              columns={[
-                { key: 'name', label: 'Product' },
-                { key: 'def', label: 'Definition' },
-              ]}
-              isEmpty={items.length === 0}
-              emptyMessage="No product definitions configured."
+    return (
+      <AdminCard key={type} className="p-4 mb-5">
+        {/* Section Header with Badge */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Badge variant={config.badge} emphasis="low">
+              {config.label}
+            </Badge>
+            <span 
+              className="text-sm"
+              style={{ color: theme.text.medium }}
             >
-              {displayedItems.map((item, i) => (
-                <AdminTableRow key={i}>
-                  <AdminTableCell>
-                    <span className="font-semibold" style={{ color: theme.text.high }}>
-                      {item.content}
-                    </span>
-                  </AdminTableCell>
-                  <AdminTableCell>{(item.metadata?.definition as string) || '—'}</AdminTableCell>
-                </AdminTableRow>
-              ))}
-            </AdminTable>
-            {hasMore && (
-              <div className="mt-3 flex items-center gap-3">
-                <span style={{ color: theme.text.low, fontSize: '11px' }}>
-                  showing {displayedItems.length} of {totalCount}
-                </span>
-                {items.length > displayLimit && (
-                  <button
-                    onClick={() => setDisplayLimit(prev => prev + 50)}
-                    className="px-2 py-1 rounded text-xs font-medium transition-colors"
-                    style={{ 
-                      backgroundColor: theme.accent, 
-                      color: '#fff',
-                    }}
-                  >
-                    Load more
-                  </button>
-                )}
-              </div>
-            )}
-            <span className="block mt-3" style={{ color: theme.text.low, fontSize: '11px' }}>
-              {typeDescriptions[selectedType]}
+              {count} items
             </span>
-          </AdminCard>
-        );
-      }
+          </div>
+        </div>
+        
+        {/* Description */}
+        <p 
+          className="mb-4"
+          style={{ 
+            fontSize: '12px', 
+            color: theme.text.low,
+            lineHeight: 1.5,
+          }}
+        >
+          {config.description}
+        </p>
 
-      case 'approved_example': {
-        return (
-          <AdminCard className="p-4 mt-4">
-            <CardLabel>Approved examples ({totalCount} total)</CardLabel>
-            <AdminTable
-              columns={[
-                { key: 'content', label: 'Content' },
-                { key: 'eco', label: 'Ecosystem' },
-                { key: 'ch', label: 'Channel' },
-              ]}
-              isEmpty={items.length === 0}
-              emptyMessage="No examples saved yet. Users can save via the bookmark icon."
+        <AdminTable
+          columns={[
+            { key: 'ecosystem', label: 'ecosystem' },
+            { key: 'tone', label: 'recommended tone' },
+            { key: 'keywords', label: 'keywords' },
+          ]}
+          isEmpty={items.length === 0}
+          emptyMessage="No product definitions configured."
+        >
+          {items.map((item, i) => {
+            const parsed = parseContent(item.content);
+            const keywords = getKeywords(item.tags || []);
+            return (
+              <AdminTableRow key={i}>
+                <AdminTableCell>
+                  <span className="font-semibold" style={{ color: theme.text.high }}>
+                    {parsed.name}
+                  </span>
+                </AdminTableCell>
+                <AdminTableCell>
+                  <span style={{ color: theme.text.medium }}>
+                    {parsed.tone}
+                  </span>
+                </AdminTableCell>
+                <AdminTableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {keywords.slice(0, 5).map((kw, ki) => (
+                      <span 
+                        key={ki}
+                        className="px-1.5 py-0.5 rounded text-xs"
+                        style={{ 
+                          backgroundColor: theme.stroke.low,
+                          color: theme.text.low,
+                        }}
+                      >
+                        {kw}
+                      </span>
+                    ))}
+                    {keywords.length > 5 && (
+                      <span style={{ color: theme.text.low, fontSize: '11px' }}>
+                        +{keywords.length - 5}
+                      </span>
+                    )}
+                  </div>
+                </AdminTableCell>
+              </AdminTableRow>
+            );
+          })}
+        </AdminTable>
+      </AdminCard>
+    );
+  };
+
+  // Render approved examples table
+  const renderApprovedExamples = () => {
+    const type = 'approved_example';
+    const config = KNOWLEDGE_TYPE_CONFIG[type];
+    const items = getItemsForType(type);
+    const count = getTypeCount(type);
+
+    return (
+      <AdminCard key={type} className="p-4 mb-5">
+        {/* Section Header with Badge */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Badge variant={config.badge} emphasis="low">
+              {config.label}
+            </Badge>
+            <span 
+              className="text-sm"
+              style={{ color: theme.text.medium }}
             >
-              {displayedItems.map((ex, i) => (
-                <AdminTableRow key={i}>
-                  <AdminTableCell className="max-w-md truncate">
-                    {ex.content.slice(0, 120)}
-                  </AdminTableCell>
-                  <AdminTableCell>
-                    {(ex.metadata?.ecosystem as string) || '—'}
-                  </AdminTableCell>
-                  <AdminTableCell>
-                    {(ex.metadata?.channel as string) || '—'}
-                  </AdminTableCell>
-                </AdminTableRow>
-              ))}
-            </AdminTable>
-            {hasMore && (
-              <div className="mt-3 flex items-center gap-3">
-                <span style={{ color: theme.text.low, fontSize: '11px' }}>
-                  showing {displayedItems.length} of {totalCount}
-                </span>
-                {items.length > displayLimit && (
-                  <button
-                    onClick={() => setDisplayLimit(prev => prev + 50)}
-                    className="px-2 py-1 rounded text-xs font-medium transition-colors"
-                    style={{ 
-                      backgroundColor: theme.accent, 
-                      color: '#fff',
-                    }}
-                  >
-                    Load more
-                  </button>
-                )}
-              </div>
-            )}
-          </AdminCard>
-        );
-      }
+              {count} items
+            </span>
+          </div>
+        </div>
+        
+        {/* Description */}
+        <p 
+          className="mb-4"
+          style={{ 
+            fontSize: '12px', 
+            color: theme.text.low,
+            lineHeight: 1.5,
+          }}
+        >
+          {config.description}
+        </p>
 
-      default:
-        return null;
-    }
+        <AdminTable
+          columns={[
+            { key: 'content', label: 'content' },
+            { key: 'ecosystem', label: 'ecosystem' },
+            { key: 'channel', label: 'channel' },
+          ]}
+          isEmpty={items.length === 0}
+          emptyMessage="No examples saved yet. Users can save via the bookmark icon."
+        >
+          {items.map((item, i) => (
+            <AdminTableRow key={i}>
+              <AdminTableCell className="max-w-md truncate">
+                {item.content.slice(0, 120)}
+              </AdminTableCell>
+              <AdminTableCell>
+                {(item.metadata?.ecosystem as string) || '—'}
+              </AdminTableCell>
+              <AdminTableCell>
+                {(item.metadata?.channel as string) || '—'}
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+
+        {items.length === 0 && (
+          <div className="text-center py-8" style={{ color: theme.text.low }}>
+            No approved examples yet.
+          </div>
+        )}
+      </AdminCard>
+    );
   };
 
   return (
@@ -1342,7 +1381,7 @@ function AdminKnowledge() {
         />
       </div>
 
-      {/* Total Rules Counter with RAG Status + Add Button */}
+      {/* Total Rules Counter with RAG Status */}
       <div 
         className="rounded-xl mb-5"
         style={{ 
@@ -1368,55 +1407,44 @@ function AdminKnowledge() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Label size="XS" attention="low">Vector index active</Label>
+            <Label size="XS" attention="low">vector index active</Label>
           </div>
         </div>
       </div>
 
-      {/* Type Overview - Reordered with high-priority first */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-5">
-        {knowledgeTypes.map((kt) => (
-          <button
-            key={kt.type}
-            onClick={() => handleCardClick(kt.type)}
-            className="rounded-lg cursor-pointer transition-all hover:shadow-sm text-left"
-            style={{ 
-              border: `1px solid ${selectedType === kt.type ? theme.accent : theme.stroke.low}`,
-              backgroundColor: 'transparent',
-            }}
-          >
-            <DataCard 
-              title={kt.label}
-              fillEmphasis="Ghost"
-              width="100%"
-              dataHead={{
-                leadValue: String(kt.count),
-                showDataSupporting: false,
-                showSupportingLabel: false,
-              }}
-              modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
-            />
-          </button>
-        ))}
-      </div>
-
-      {/* Detail Panel */}
-      {renderDetailPanel()}
-
-      {/* Info - only show when no detail panel is open */}
-      {!selectedType && (
+      {/* Loading state for items */}
+      {knowledgeItems === undefined && (
         <AdminCard className="p-4 mb-5">
-          <span className="block font-medium mb-2" style={{ color: theme.text.high, fontSize: '13px' }}>
-            Knowledge base overview
-          </span>
-          <ul className="space-y-1 pl-4" style={{ fontSize: '12px', color: theme.text.medium, listStyleType: 'disc' }}>
-            <li><strong>Browse:</strong> click any category above to explore the knowledge items</li>
-            <li><strong>Search:</strong> use the search bar to find specific terms within a category</li>
-            <li><strong>Purpose:</strong> these rules enforce Jio brand guidelines in content generation</li>
-          </ul>
+          <div className="animate-pulse space-y-3">
+            <div className="h-5 rounded w-1/4" style={{ backgroundColor: theme.stroke.low }} />
+            <div className="h-4 rounded w-3/4" style={{ backgroundColor: theme.stroke.low }} />
+            <div className="h-20 rounded" style={{ backgroundColor: theme.stroke.low }} />
+          </div>
         </AdminCard>
       )}
 
+      {/* All Knowledge Sections - Displayed sequentially */}
+      {knowledgeItems && (
+        <>
+          {/* Avoid Words */}
+          {renderGroupedSection('avoid_word')}
+          
+          {/* Auto-fix Rules */}
+          {renderGroupedSection('auto_fix')}
+          
+          {/* Approved Examples */}
+          {renderApprovedExamples()}
+          
+          {/* Preferred Vocabulary */}
+          {renderGroupedSection('preferred_word')}
+          
+          {/* Product Definitions */}
+          {renderProductDefinitions()}
+          
+          {/* Festivals */}
+          {renderGroupedSection('festival')}
+        </>
+      )}
     </>
   );
 }
