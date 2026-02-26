@@ -3,7 +3,7 @@ import { api } from '../../convex/_generated/api';
 import { useLazyQuery } from '../hooks/useLazyQuery';
 import { AdminRefreshControls } from './components/AdminRefreshControls';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
-import { Title, Text, Label, Button, SegmentedControl, SegmentedControlItem } from '@marcelinodzn/ds-react';
+import { Title, Text, Label, Button, SegmentedControl, SegmentedControlItem, SearchField } from '@marcelinodzn/ds-react';
 import { Badge } from '../components/ui/Badge';
 import OnboardingModal, { loadUserProfile, type UserProfile } from '../components/OnboardingModal';
 import type { ColorMode } from '../types';
@@ -22,7 +22,7 @@ import { DelayedTooltip } from '../components/DelayedTooltip';
 import { KPI_DESCRIPTIONS } from './constants/kpiDescriptions';
 import { formatDuration, formatRelativeTime } from './utils/formatters';
 import { CorrectionApprovalList } from './components/CorrectionApproval';
-import { CategorySection, SearchFilterBar } from './components/CategorySection';
+import { CategorySection } from './components/CategorySection';
 import { TokensDisplay } from './components/TokensDisplay';
 
 // ── Utility: Feedback badge ──────────────────────────────────────
@@ -989,14 +989,14 @@ const KNOWLEDGE_TYPE_CONFIG: Record<string, {
 const KNOWLEDGE_TYPE_ORDER = ['avoid_word', 'auto_fix', 'approved_example', 'preferred_word', 'product_definition', 'festival'];
 
 // ── Knowledge Base ───────────────────────────────────────────────
-// Redesigned: All sections expanded, proper badges and descriptions
+// Redesigned: SegmentedControl for type navigation, single content view
 function AdminKnowledge() {
   const theme = useThemeColors();
   const { isOnline } = useNetworkStatus();
   
-  // Search and filter state
+  // Type selection and search state
+  const [selectedType, setSelectedType] = useState<string>('avoid_word');
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   
   // Lazy queries for knowledge - only refresh on demand
   const { 
@@ -1099,106 +1099,65 @@ function AdminKnowledge() {
     );
   }
 
-  // Render a knowledge section for grouped display types
-  const renderGroupedSection = (type: string) => {
-    const config = KNOWLEDGE_TYPE_CONFIG[type];
-    const count = getTypeCount(type);
+  // Filter items based on search query
+  const filterItems = useCallback((items: typeof knowledgeItems) => {
+    if (!searchQuery || !items) return items;
+    return items.filter(item => 
+      item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.metadata?.suggestion?.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  }, [searchQuery]);
+
+  // Render grouped content (avoid_word, auto_fix, preferred_word, festival)
+  const renderGroupedContent = (type: string) => {
     const categories = getCategoriesForType(type);
     const grouped = groupedByType[type] || {};
 
-    // Filter items based on search query
-    const filterItems = (items: typeof knowledgeItems) => {
-      if (!searchQuery) return items;
-      return items.filter(item => 
-        item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.metadata?.suggestion?.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    };
-
     // Calculate filtered count
     const filteredCount = categories.reduce((sum, cat) => {
-      if (categoryFilter && cat !== categoryFilter) return sum;
       return sum + filterItems(grouped[cat] || []).length;
     }, 0);
 
+    if (filteredCount === 0) {
+      return (
+        <div className="text-center py-12" style={{ color: theme.text.low }}>
+          {searchQuery 
+            ? 'no items match your search.'
+            : `no ${KNOWLEDGE_TYPE_CONFIG[type].label} configured yet.`}
+        </div>
+      );
+    }
+
     return (
-      <AdminCard key={type} className="p-4 mb-5">
-        {/* Section Header with Badge */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <Badge variant={config.badge} emphasis="low">
-              {config.label}
-            </Badge>
-            <span 
-              className="text-sm"
-              style={{ color: theme.text.medium }}
-            >
-              {count} items
-            </span>
-          </div>
-        </div>
-        
-        {/* Description */}
-        <p 
-          className="mb-4"
-          style={{ 
-            fontSize: '12px', 
-            color: theme.text.low,
-            lineHeight: 1.5,
-          }}
-        >
-          {config.description}
-        </p>
-
-        {/* Search and Filter Bar for this section */}
-        <SearchFilterBar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={setCategoryFilter}
-          availableCategories={categories}
-          selectedType={type}
-          totalCount={count}
-          filteredCount={filteredCount}
-        />
-
-        {/* Category Sections - Always expanded */}
-        <div className="space-y-0">
-          {categories
-            .filter(cat => !categoryFilter || cat === categoryFilter)
-            .map(category => {
-              const items = filterItems(grouped[category] || []);
-              if (items.length === 0) return null;
-              return (
-                <CategorySection
-                  key={category}
-                  category={category}
-                  items={items}
-                  type={type}
-                  searchQuery={searchQuery}
-                />
-              );
-            })}
-        </div>
-
-        {/* Empty state */}
-        {filteredCount === 0 && (
-          <div className="text-center py-8" style={{ color: theme.text.low }}>
-            {searchQuery || categoryFilter 
-              ? 'No items match your search criteria.'
-              : `No ${config.label} configured yet.`}
-          </div>
-        )}
-      </AdminCard>
+      <div className="space-y-0">
+        {categories.map(category => {
+          const items = filterItems(grouped[category] || []);
+          if (!items || items.length === 0) return null;
+          return (
+            <CategorySection
+              key={category}
+              category={category}
+              items={items}
+              type={type}
+              searchQuery={searchQuery}
+            />
+          );
+        })}
+      </div>
     );
   };
 
-  // Render product definitions table
-  const renderProductDefinitions = () => {
-    const type = 'product_definition';
-    const config = KNOWLEDGE_TYPE_CONFIG[type];
-    const items = getItemsForType(type);
-    const count = getTypeCount(type);
+  // Render product definitions table content
+  const renderProductDefinitionsContent = () => {
+    const allItems = getItemsForType('product_definition');
+    
+    // Filter by search query
+    const items = searchQuery 
+      ? allItems.filter(item => 
+          item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+      : allItems;
 
     // Parse content field which contains "Name: Tone" format
     const parseContent = (content: string) => {
@@ -1213,159 +1172,132 @@ function AdminKnowledge() {
     // Get keywords from tags (filter out system tags)
     const getKeywords = (tags: string[]) => {
       const systemTags = ['product', 'ecosystem', 'tier1'];
-      return tags.filter(tag => !systemTags.includes(tag) && tag !== items.find(i => i.tags.includes(tag))?.category);
+      return tags.filter(tag => !systemTags.includes(tag) && tag !== allItems.find(i => i.tags.includes(tag))?.category);
     };
 
-    return (
-      <AdminCard key={type} className="p-4 mb-5">
-        {/* Section Header with Badge */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <Badge variant={config.badge} emphasis="low">
-              {config.label}
-            </Badge>
-            <span 
-              className="text-sm"
-              style={{ color: theme.text.medium }}
-            >
-              {count} items
-            </span>
-          </div>
+    if (items.length === 0) {
+      return (
+        <div className="text-center py-12" style={{ color: theme.text.low }}>
+          {searchQuery ? 'no items match your search.' : 'no product definitions configured yet.'}
         </div>
-        
-        {/* Description */}
-        <p 
-          className="mb-4"
-          style={{ 
-            fontSize: '12px', 
-            color: theme.text.low,
-            lineHeight: 1.5,
-          }}
-        >
-          {config.description}
-        </p>
-
-        <AdminTable
-          columns={[
-            { key: 'ecosystem', label: 'ecosystem' },
-            { key: 'tone', label: 'recommended tone' },
-            { key: 'keywords', label: 'keywords' },
-          ]}
-          isEmpty={items.length === 0}
-          emptyMessage="No product definitions configured."
-        >
-          {items.map((item, i) => {
-            const parsed = parseContent(item.content);
-            const keywords = getKeywords(item.tags || []);
-            return (
-              <AdminTableRow key={i}>
-                <AdminTableCell>
-                  <span className="font-semibold" style={{ color: theme.text.high }}>
-                    {parsed.name}
-                  </span>
-                </AdminTableCell>
-                <AdminTableCell>
-                  <span style={{ color: theme.text.medium }}>
-                    {parsed.tone}
-                  </span>
-                </AdminTableCell>
-                <AdminTableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {keywords.slice(0, 5).map((kw, ki) => (
-                      <span 
-                        key={ki}
-                        className="px-1.5 py-0.5 rounded text-xs"
-                        style={{ 
-                          backgroundColor: theme.stroke.low,
-                          color: theme.text.low,
-                        }}
-                      >
-                        {kw}
-                      </span>
-                    ))}
-                    {keywords.length > 5 && (
-                      <span style={{ color: theme.text.low, fontSize: '11px' }}>
-                        +{keywords.length - 5}
-                      </span>
-                    )}
-                  </div>
-                </AdminTableCell>
-              </AdminTableRow>
-            );
-          })}
-        </AdminTable>
-      </AdminCard>
-    );
-  };
-
-  // Render approved examples table
-  const renderApprovedExamples = () => {
-    const type = 'approved_example';
-    const config = KNOWLEDGE_TYPE_CONFIG[type];
-    const items = getItemsForType(type);
-    const count = getTypeCount(type);
+      );
+    }
 
     return (
-      <AdminCard key={type} className="p-4 mb-5">
-        {/* Section Header with Badge */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <Badge variant={config.badge} emphasis="low">
-              {config.label}
-            </Badge>
-            <span 
-              className="text-sm"
-              style={{ color: theme.text.medium }}
-            >
-              {count} items
-            </span>
-          </div>
-        </div>
-        
-        {/* Description */}
-        <p 
-          className="mb-4"
-          style={{ 
-            fontSize: '12px', 
-            color: theme.text.low,
-            lineHeight: 1.5,
-          }}
-        >
-          {config.description}
-        </p>
-
-        <AdminTable
-          columns={[
-            { key: 'content', label: 'content' },
-            { key: 'ecosystem', label: 'ecosystem' },
-            { key: 'channel', label: 'channel' },
-          ]}
-          isEmpty={items.length === 0}
-          emptyMessage="No examples saved yet. Users can save via the bookmark icon."
-        >
-          {items.map((item, i) => (
+      <AdminTable
+        columns={[
+          { key: 'ecosystem', label: 'ecosystem' },
+          { key: 'tone', label: 'recommended tone' },
+          { key: 'keywords', label: 'keywords' },
+        ]}
+        isEmpty={items.length === 0}
+        emptyMessage="no product definitions configured."
+      >
+        {items.map((item, i) => {
+          const parsed = parseContent(item.content);
+          const keywords = getKeywords(item.tags || []);
+          return (
             <AdminTableRow key={i}>
-              <AdminTableCell className="max-w-md truncate">
-                {item.content.slice(0, 120)}
+              <AdminTableCell>
+                <span className="font-semibold" style={{ color: theme.text.high }}>
+                  {parsed.name}
+                </span>
               </AdminTableCell>
               <AdminTableCell>
-                {(item.metadata?.ecosystem as string) || '—'}
+                <span style={{ color: theme.text.medium }}>
+                  {parsed.tone}
+                </span>
               </AdminTableCell>
               <AdminTableCell>
-                {(item.metadata?.channel as string) || '—'}
+                <div className="flex flex-wrap gap-1">
+                  {keywords.slice(0, 5).map((kw, ki) => (
+                    <span 
+                      key={ki}
+                      className="px-1.5 py-0.5 rounded text-xs"
+                      style={{ 
+                        backgroundColor: theme.stroke.low,
+                        color: theme.text.low,
+                      }}
+                    >
+                      {kw}
+                    </span>
+                  ))}
+                  {keywords.length > 5 && (
+                    <span style={{ color: theme.text.low, fontSize: '11px' }}>
+                      +{keywords.length - 5}
+                    </span>
+                  )}
+                </div>
               </AdminTableCell>
             </AdminTableRow>
-          ))}
-        </AdminTable>
-
-        {items.length === 0 && (
-          <div className="text-center py-8" style={{ color: theme.text.low }}>
-            No approved examples yet.
-          </div>
-        )}
-      </AdminCard>
+          );
+        })}
+      </AdminTable>
     );
   };
+
+  // Render approved examples table content
+  const renderApprovedExamplesContent = () => {
+    const allItems = getItemsForType('approved_example');
+    
+    // Filter by search query
+    const items = searchQuery 
+      ? allItems.filter(item => 
+          item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (item.metadata?.ecosystem as string)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (item.metadata?.channel as string)?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : allItems;
+
+    if (items.length === 0) {
+      return (
+        <div className="text-center py-12" style={{ color: theme.text.low }}>
+          {searchQuery ? 'no items match your search.' : 'no approved examples yet.'}
+        </div>
+      );
+    }
+
+    return (
+      <AdminTable
+        columns={[
+          { key: 'content', label: 'content' },
+          { key: 'ecosystem', label: 'ecosystem' },
+          { key: 'channel', label: 'channel' },
+        ]}
+        isEmpty={items.length === 0}
+        emptyMessage="no examples saved yet."
+      >
+        {items.map((item, i) => (
+          <AdminTableRow key={i}>
+            <AdminTableCell className="max-w-md truncate">
+              {item.content.slice(0, 120)}
+            </AdminTableCell>
+            <AdminTableCell>
+              {(item.metadata?.ecosystem as string) || '—'}
+            </AdminTableCell>
+            <AdminTableCell>
+              {(item.metadata?.channel as string) || '—'}
+            </AdminTableCell>
+          </AdminTableRow>
+        ))}
+      </AdminTable>
+    );
+  };
+
+  // Unified content renderer based on selected type
+  const renderTypeContent = (type: string) => {
+    switch (type) {
+      case 'product_definition':
+        return renderProductDefinitionsContent();
+      case 'approved_example':
+        return renderApprovedExamplesContent();
+      default:
+        return renderGroupedContent(type);
+    }
+  };
+
+  // Get current type config for description
+  const currentConfig = KNOWLEDGE_TYPE_CONFIG[selectedType];
 
   return (
     <>
@@ -1412,6 +1344,47 @@ function AdminKnowledge() {
         </div>
       </div>
 
+      {/* Type Navigation - SegmentedControl */}
+      <div className="mb-4">
+        <SegmentedControl
+          value={selectedType}
+          onChange={setSelectedType}
+          aria-label="knowledge type"
+          size="S"
+          emphasis="low"
+          className="segmented-no-gap"
+        >
+          {KNOWLEDGE_TYPE_ORDER.map(type => (
+            <SegmentedControlItem key={type} value={type}>
+              {KNOWLEDGE_TYPE_CONFIG[type].label} ({getTypeCount(type)})
+            </SegmentedControlItem>
+          ))}
+        </SegmentedControl>
+      </div>
+
+      {/* Global Search */}
+      <div className="mb-4 max-w-md">
+        <SearchField
+          size="S"
+          placeholder={`search ${currentConfig.label}...`}
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onClear={() => setSearchQuery('')}
+        />
+      </div>
+
+      {/* Type Description */}
+      <p 
+        className="mb-4"
+        style={{ 
+          fontSize: '12px', 
+          color: theme.text.low,
+          lineHeight: 1.5,
+        }}
+      >
+        {currentConfig.description}
+      </p>
+
       {/* Loading state for items */}
       {knowledgeItems === undefined && (
         <AdminCard className="p-4 mb-5">
@@ -1423,27 +1396,11 @@ function AdminKnowledge() {
         </AdminCard>
       )}
 
-      {/* All Knowledge Sections - Displayed sequentially */}
+      {/* Single Type Content */}
       {knowledgeItems && (
-        <>
-          {/* Avoid Words */}
-          {renderGroupedSection('avoid_word')}
-          
-          {/* Auto-fix Rules */}
-          {renderGroupedSection('auto_fix')}
-          
-          {/* Approved Examples */}
-          {renderApprovedExamples()}
-          
-          {/* Preferred Vocabulary */}
-          {renderGroupedSection('preferred_word')}
-          
-          {/* Product Definitions */}
-          {renderProductDefinitions()}
-          
-          {/* Festivals */}
-          {renderGroupedSection('festival')}
-        </>
+        <AdminCard className="p-4">
+          {renderTypeContent(selectedType)}
+        </AdminCard>
       )}
     </>
   );
