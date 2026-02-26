@@ -1284,11 +1284,144 @@ function AdminKnowledge() {
     );
   };
 
+  // Render auto-fix rules as table showing from -> to replacements
+  const renderAutoFixContent = () => {
+    const allItems = getItemsForType('auto_fix');
+    
+    // Filter by search query - check from (content), to (suggestion), and category
+    const items = searchQuery 
+      ? allItems.filter(item => 
+          item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (item.metadata?.suggestion as string)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.category?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : allItems;
+
+    if (items.length === 0) {
+      return (
+        <div className="text-center py-12" style={{ color: theme.text.low }}>
+          {searchQuery ? 'No items match your search.' : 'No Auto-Fix Rules configured yet.'}
+        </div>
+      );
+    }
+
+    // Format category for display
+    const formatCategory = (cat: string) => 
+      cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+    return (
+      <AdminTable
+        columns={[
+          { key: 'from', label: 'From' },
+          { key: 'to', label: 'To' },
+          { key: 'category', label: 'Category' },
+        ]}
+        isEmpty={items.length === 0}
+        emptyMessage="No Auto-Fix Rules configured."
+      >
+        {items.map((item, i) => (
+          <AdminTableRow key={i}>
+            <AdminTableCell>
+              <span className="font-mono" style={{ color: '#dc2626', textDecoration: 'line-through', opacity: 0.8 }}>
+                {item.content}
+              </span>
+            </AdminTableCell>
+            <AdminTableCell>
+              <span className="font-mono" style={{ color: '#16a34a' }}>
+                {(item.metadata?.suggestion as string) || '—'}
+              </span>
+            </AdminTableCell>
+            <AdminTableCell>
+              <span style={{ color: theme.text.medium }}>
+                {formatCategory(item.category || 'uncategorized')}
+              </span>
+            </AdminTableCell>
+          </AdminTableRow>
+        ))}
+      </AdminTable>
+    );
+  };
+
+  // Render festivals as table with name, greeting, category, and tone
+  const renderFestivalsContent = () => {
+    const allItems = getItemsForType('festival');
+    
+    // Filter by search query
+    const items = searchQuery 
+      ? allItems.filter(item => 
+          item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (item.metadata?.suggestion as string)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+      : allItems;
+
+    if (items.length === 0) {
+      return (
+        <div className="text-center py-12" style={{ color: theme.text.low }}>
+          {searchQuery ? 'No items match your search.' : 'No Festivals configured yet.'}
+        </div>
+      );
+    }
+
+    // Extract tone from tags (filter out system tags)
+    const extractTone = (tags: string[]) => {
+      const systemTags = ['festival', 'pan_india', 'regional', 'tier1'];
+      const toneTags = tags.filter(tag => !systemTags.includes(tag));
+      return toneTags.join(', ') || '—';
+    };
+
+    // Format category for display
+    const formatCategory = (cat: string) => 
+      cat === 'pan_india' ? 'Pan India' : cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+    return (
+      <AdminTable
+        columns={[
+          { key: 'festival', label: 'Festival' },
+          { key: 'greeting', label: 'Greeting' },
+          { key: 'category', label: 'Category' },
+          { key: 'tone', label: 'Tone' },
+        ]}
+        isEmpty={items.length === 0}
+        emptyMessage="No Festivals configured."
+      >
+        {items.map((item, i) => (
+          <AdminTableRow key={i}>
+            <AdminTableCell>
+              <span className="font-semibold" style={{ color: theme.text.high }}>
+                {item.content}
+              </span>
+            </AdminTableCell>
+            <AdminTableCell>
+              <span style={{ color: theme.text.medium }}>
+                {(item.metadata?.suggestion as string) || '—'}
+              </span>
+            </AdminTableCell>
+            <AdminTableCell>
+              <Badge variant={item.category === 'pan_india' ? 'informative' : 'neutral'}>
+                {formatCategory(item.category || 'uncategorized')}
+              </Badge>
+            </AdminTableCell>
+            <AdminTableCell>
+              <span className="text-xs" style={{ color: theme.text.low }}>
+                {extractTone(item.tags || [])}
+              </span>
+            </AdminTableCell>
+          </AdminTableRow>
+        ))}
+      </AdminTable>
+    );
+  };
+
   // Unified content renderer based on selected type
   const renderTypeContent = (type: string) => {
     switch (type) {
       case 'product_definition':
         return renderProductDefinitionsContent();
+      case 'auto_fix':
+        return renderAutoFixContent();
+      case 'festival':
+        return renderFestivalsContent();
       case 'approved_example':
         return renderApprovedExamplesContent();
       default:
@@ -1322,13 +1455,6 @@ function AdminKnowledge() {
             }}
             modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
           />
-          <div className="flex items-center gap-1.5">
-            <span 
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: SEMANTIC_COLORS.positive }}
-            />
-            <Label size="XS" attention="low">Vector index active</Label>
-          </div>
         </div>
 
         {/* Right: Search */}
