@@ -51,7 +51,7 @@ export const ActionButton = memo(function ActionButton({
         onClick={onClick}
         disabled={disabled}
         aria-label={label}
-        className={`rounded-full flex items-center justify-center
+        className={`rounded-full flex items-center justify-center cursor-pointer
           hover:bg-black/5 dark:hover:bg-white/10 
           disabled:opacity-40 disabled:cursor-not-allowed
           focus:outline-none

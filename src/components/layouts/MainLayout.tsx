@@ -258,13 +258,13 @@ export function MainLayout({
                 onSendMessage={onSendMessage}
                 isLoading={isChatLoading}
                 mode={chatMode}
-                placeholder={featureFlags.conversationalMode
+                placeholder={featureFlags.conversationalMode && filteredMessages.length === 0
                   ? [
                       'Ask me anything...',
                       'Create sms, emails, scripts...',
-                      'Explore jio products and plans...',
+                      'Explore Jio products and plans...',
                     ]
-                  : 'Ask or describe what you need...'}
+                  : 'Ask anything...'}
                 showEmptyState={chatMode !== 'voice'}
                 emptyStateMessage={chatMode === 'copy'
                   ? (featureFlags.conversationalMode
