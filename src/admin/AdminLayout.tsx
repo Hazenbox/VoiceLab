@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { api } from '../../convex/_generated/api';
 import { useLazyQuery } from '../hooks/useLazyQuery';
-import { AdminRefreshControls } from './components/AdminRefreshControls';
 import { useThemeColors, SEMANTIC_COLORS } from '../theme/useColors';
 import { Title, Text, Label, Button, SegmentedControl, SegmentedControlItem, SearchField } from '@marcelinodzn/ds-react';
 import { Badge } from '../components/ui/Badge';
@@ -305,13 +304,6 @@ function AdminDashboard() {
       {!isOnline && <OfflineBanner />}
       <div className="flex justify-between items-center mb-4">
         <PageHeader title="Dashboard" description="System health and value delivery — last 24 hours" />
-        <AdminRefreshControls
-          lastRefresh={dashboardRefreshTime}
-          isLoading={dashboardLoading}
-          isPaused={dashboardPaused}
-          onRefresh={refreshAll}
-          label="dashboard"
-        />
       </div>
 
       {/* Overview Section */}
@@ -752,13 +744,6 @@ function AdminLearningCenter() {
         <PageHeader 
           title="Learning center" 
           description="How user feedback improves content generation" 
-        />
-        <AdminRefreshControls
-          lastRefresh={correctionsRefreshTime}
-          isLoading={correctionsLoading}
-          isPaused={correctionsPaused}
-          onRefresh={refreshAll}
-          label="learning data"
         />
       </div>
 
@@ -1706,19 +1691,10 @@ function AdminUsageAnalytics() {
       {!isOnline && <OfflineBanner />}
       
       <div className="flex justify-between items-center mb-5">
-        <div className="flex items-center gap-4">
-          <PageHeader 
-            title="Usage analytics" 
-            description="Adoption across Jio ecosystem and content channels" 
-          />
-          <AdminRefreshControls
-            lastRefresh={contextRefreshTime}
-            isLoading={contextLoading}
-            isPaused={contextPaused}
-            onRefresh={refreshAll}
-            label="analytics"
-          />
-        </div>
+        <PageHeader 
+          title="Usage analytics" 
+          description="Adoption across Jio ecosystem and content channels" 
+        />
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
 
@@ -1848,13 +1824,6 @@ function AdminUsers() {
       {!isOnline && <OfflineBanner />}
       <div className="flex justify-between items-center mb-4">
         <PageHeader title="Users" description="Registered user profiles (device-based)" />
-        <AdminRefreshControls
-          lastRefresh={usersRefreshTime}
-          isLoading={usersLoading}
-          isPaused={usersPaused}
-          onRefresh={refreshUsers}
-          label="users"
-        />
       </div>
 
       {/* Search */}
