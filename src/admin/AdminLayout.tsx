@@ -1211,21 +1211,14 @@ function AdminKnowledge() {
               <AdminTableCell>
                 <div className="flex flex-wrap gap-1">
                   {keywords.slice(0, 5).map((kw, ki) => (
-                    <span 
-                      key={ki}
-                      className="px-1.5 py-0.5 rounded text-xs"
-                      style={{ 
-                        backgroundColor: theme.stroke.low,
-                        color: theme.text.low,
-                      }}
-                    >
+                    <Badge key={ki} variant="neutral">
                       {kw}
-                    </span>
+                    </Badge>
                   ))}
                   {keywords.length > 5 && (
-                    <span style={{ color: theme.text.low, fontSize: '11px' }}>
+                    <Badge variant="neutral">
                       +{keywords.length - 5}
-                    </span>
+                    </Badge>
                   )}
                 </div>
               </AdminTableCell>
