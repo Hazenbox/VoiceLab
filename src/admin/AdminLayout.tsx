@@ -1184,48 +1184,53 @@ function AdminKnowledge() {
     }
 
     return (
-      <AdminTable
-        columns={[
-          { key: 'ecosystem', label: 'Ecosystem' },
-          { key: 'tone', label: 'Recommended Tone' },
-          { key: 'keywords', label: 'Keywords' },
-        ]}
-        isEmpty={items.length === 0}
-        emptyMessage="No Product Definitions configured."
+      <div 
+        className="rounded-lg border overflow-hidden"
+        style={{ borderColor: theme.stroke.low }}
       >
-        {items.map((item, i) => {
-          const parsed = parseContent(item.content);
-          const keywords = getKeywords(item.tags || []);
-          return (
-            <AdminTableRow key={i}>
-              <AdminTableCell>
-                <span className="font-semibold" style={{ color: theme.text.high }}>
-                  {parsed.name}
-                </span>
-              </AdminTableCell>
-              <AdminTableCell>
-                <span style={{ color: theme.text.medium }}>
-                  {parsed.tone}
-                </span>
-              </AdminTableCell>
-              <AdminTableCell>
-                <div className="flex flex-wrap gap-1">
-                  {keywords.slice(0, 5).map((kw, ki) => (
-                    <Badge key={ki} variant="neutral">
-                      {kw}
-                    </Badge>
-                  ))}
-                  {keywords.length > 5 && (
-                    <Badge variant="neutral">
-                      +{keywords.length - 5}
-                    </Badge>
-                  )}
-                </div>
-              </AdminTableCell>
-            </AdminTableRow>
-          );
-        })}
-      </AdminTable>
+        <AdminTable
+          columns={[
+            { key: 'ecosystem', label: 'Ecosystem' },
+            { key: 'tone', label: 'Recommended Tone' },
+            { key: 'keywords', label: 'Keywords' },
+          ]}
+          isEmpty={items.length === 0}
+          emptyMessage="No Product Definitions configured."
+        >
+          {items.map((item, i) => {
+            const parsed = parseContent(item.content);
+            const keywords = getKeywords(item.tags || []);
+            return (
+              <AdminTableRow key={i}>
+                <AdminTableCell>
+                  <span className="font-semibold" style={{ color: theme.text.high }}>
+                    {parsed.name}
+                  </span>
+                </AdminTableCell>
+                <AdminTableCell>
+                  <span style={{ color: theme.text.medium }}>
+                    {parsed.tone}
+                  </span>
+                </AdminTableCell>
+                <AdminTableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {keywords.slice(0, 5).map((kw, ki) => (
+                      <Badge key={ki} variant="neutral">
+                        {kw}
+                      </Badge>
+                    ))}
+                    {keywords.length > 5 && (
+                      <Badge variant="neutral">
+                        +{keywords.length - 5}
+                      </Badge>
+                    )}
+                  </div>
+                </AdminTableCell>
+              </AdminTableRow>
+            );
+          })}
+        </AdminTable>
+      </div>
     );
   };
 
@@ -1303,35 +1308,40 @@ function AdminKnowledge() {
       cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
     return (
-      <AdminTable
-        columns={[
-          { key: 'from', label: 'From' },
-          { key: 'to', label: 'To' },
-          { key: 'category', label: 'Category' },
-        ]}
-        isEmpty={items.length === 0}
-        emptyMessage="No Auto-Fix Rules configured."
+      <div 
+        className="rounded-lg border overflow-hidden"
+        style={{ borderColor: theme.stroke.low }}
       >
-        {items.map((item, i) => (
-          <AdminTableRow key={i}>
-            <AdminTableCell>
-              <span className="font-mono" style={{ color: theme.text.medium, fontWeight: 400 }}>
-                {item.content}
-              </span>
-            </AdminTableCell>
-            <AdminTableCell>
-              <span className="font-mono" style={{ color: theme.text.medium, fontWeight: 600 }}>
-                {(item.metadata?.suggestion as string) || '—'}
-              </span>
-            </AdminTableCell>
-            <AdminTableCell>
-              <span style={{ color: theme.text.medium }}>
-                {formatCategory(item.category || 'uncategorized')}
-              </span>
-            </AdminTableCell>
-          </AdminTableRow>
-        ))}
-      </AdminTable>
+        <AdminTable
+          columns={[
+            { key: 'from', label: 'From' },
+            { key: 'to', label: 'To' },
+            { key: 'category', label: 'Category' },
+          ]}
+          isEmpty={items.length === 0}
+          emptyMessage="No Auto-Fix Rules configured."
+        >
+          {items.map((item, i) => (
+            <AdminTableRow key={i}>
+              <AdminTableCell>
+                <span className="font-mono" style={{ color: theme.text.medium, fontWeight: 400 }}>
+                  {item.content}
+                </span>
+              </AdminTableCell>
+              <AdminTableCell>
+                <span className="font-mono" style={{ color: theme.text.medium, fontWeight: 600 }}>
+                  {(item.metadata?.suggestion as string) || '—'}
+                </span>
+              </AdminTableCell>
+              <AdminTableCell>
+                <span style={{ color: theme.text.medium }}>
+                  {formatCategory(item.category || 'uncategorized')}
+                </span>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+      </div>
     );
   };
 
@@ -1368,41 +1378,46 @@ function AdminKnowledge() {
       cat === 'pan_india' ? 'Pan India' : cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
     return (
-      <AdminTable
-        columns={[
-          { key: 'festival', label: 'Festival' },
-          { key: 'greeting', label: 'Greeting' },
-          { key: 'category', label: 'Category' },
-          { key: 'tone', label: 'Tone' },
-        ]}
-        isEmpty={items.length === 0}
-        emptyMessage="No Festivals configured."
+      <div 
+        className="rounded-lg border overflow-hidden"
+        style={{ borderColor: theme.stroke.low }}
       >
-        {items.map((item, i) => (
-          <AdminTableRow key={i}>
-            <AdminTableCell>
-              <span className="font-semibold" style={{ color: theme.text.high }}>
-                {item.content}
-              </span>
-            </AdminTableCell>
-            <AdminTableCell>
-              <span style={{ color: theme.text.medium }}>
-                {(item.metadata?.suggestion as string) || '—'}
-              </span>
-            </AdminTableCell>
-            <AdminTableCell>
-              <Badge variant={item.category === 'pan_india' ? 'informative' : 'neutral'}>
-                {formatCategory(item.category || 'uncategorized')}
-              </Badge>
-            </AdminTableCell>
-            <AdminTableCell>
-              <span className="text-xs" style={{ color: theme.text.medium }}>
-                {extractTone(item.tags || [])}
-              </span>
-            </AdminTableCell>
-          </AdminTableRow>
-        ))}
-      </AdminTable>
+        <AdminTable
+          columns={[
+            { key: 'festival', label: 'Festival' },
+            { key: 'greeting', label: 'Greeting' },
+            { key: 'category', label: 'Category' },
+            { key: 'tone', label: 'Tone' },
+          ]}
+          isEmpty={items.length === 0}
+          emptyMessage="No Festivals configured."
+        >
+          {items.map((item, i) => (
+            <AdminTableRow key={i}>
+              <AdminTableCell>
+                <span className="font-semibold" style={{ color: theme.text.high }}>
+                  {item.content}
+                </span>
+              </AdminTableCell>
+              <AdminTableCell>
+                <span style={{ color: theme.text.medium }}>
+                  {(item.metadata?.suggestion as string) || '—'}
+                </span>
+              </AdminTableCell>
+              <AdminTableCell>
+                <Badge variant={item.category === 'pan_india' ? 'informative' : 'neutral'}>
+                  {formatCategory(item.category || 'uncategorized')}
+                </Badge>
+              </AdminTableCell>
+              <AdminTableCell>
+                <span className="text-xs" style={{ color: theme.text.medium }}>
+                  {extractTone(item.tags || [])}
+                </span>
+              </AdminTableCell>
+            </AdminTableRow>
+          ))}
+        </AdminTable>
+      </div>
     );
   };
 
