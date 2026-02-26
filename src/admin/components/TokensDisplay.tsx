@@ -822,55 +822,73 @@ const TokenCard = memo(function TokenCard({ tokenKey, doc, rules }: TokenCardPro
       {isExpanded && (
         <div className="mt-4 space-y-4" onClick={(e) => e.stopPropagation()}>
           <div
-            className="rounded-lg overflow-hidden"
-            style={{ backgroundColor: theme.background.bold }}
+            className="rounded-lg border overflow-hidden"
+            style={{ borderColor: theme.stroke.low }}
           >
-            <table className="w-full text-xs" style={{ borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${theme.stroke.low}` }}>
-                  <th
-                    className="text-left py-2 px-3 font-medium"
-                    style={{ color: theme.text.low, width: '140px' }}
-                  >
-                    value
-                  </th>
-                  <th
-                    className="text-left py-2 px-3 font-medium"
-                    style={{ color: theme.text.low }}
-                  >
-                    description
-                  </th>
-                  {hasRules && (
+            <div className="overflow-x-auto">
+              <table className="w-full" style={{ fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${theme.stroke.low}` }}>
                     <th
-                      className="text-left py-2 px-3 font-medium"
-                      style={{ color: theme.text.low }}
+                      className="text-left py-1.5 px-3"
+                      style={{ 
+                        color: theme.text.high, 
+                        fontSize: '12px',
+                        fontWeight: 400,
+                        lineHeight: 1.3,
+                        width: '140px'
+                      }}
                     >
-                      llm rule
+                      value
                     </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {doc.values.map((v, i) => (
-                  <tr
-                    key={v.value}
-                    style={i < doc.values.length - 1 ? { borderBottom: `1px solid ${theme.stroke.low}` } : undefined}
-                  >
-                    <td className="py-1.5 px-3 font-mono" style={{ color: theme.text.high, fontWeight: 600 }}>
-                      {v.value}
-                    </td>
-                    <td className="py-1.5 px-3" style={{ color: theme.text.medium }}>
-                      {v.description}
-                    </td>
+                    <th
+                      className="text-left py-1.5 px-3"
+                      style={{ 
+                        color: theme.text.high, 
+                        fontSize: '12px',
+                        fontWeight: 400,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      description
+                    </th>
                     {hasRules && (
-                      <td className="py-1.5 px-3" style={{ color: theme.text.medium }}>
-                        {rules![v.value] || '—'}
-                      </td>
+                      <th
+                        className="text-left py-1.5 px-3"
+                        style={{ 
+                          color: theme.text.high, 
+                          fontSize: '12px',
+                          fontWeight: 400,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        llm rule
+                      </th>
                     )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {doc.values.map((v) => (
+                    <tr
+                      key={v.value}
+                      style={{ borderBottom: `1px solid ${theme.stroke.low}` }}
+                    >
+                      <td className="py-1.5 px-3 font-mono" style={{ color: theme.text.high, fontSize: '13px', fontWeight: 600 }}>
+                        {v.value}
+                      </td>
+                      <td className="py-1.5 px-3" style={{ color: theme.text.high, fontSize: '13px' }}>
+                        {v.description}
+                      </td>
+                      {hasRules && (
+                        <td className="py-1.5 px-3" style={{ color: theme.text.high, fontSize: '13px' }}>
+                          {rules![v.value] || '—'}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {doc.example && (
@@ -1001,7 +1019,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
       </div>
 
       {/* Search */}
-      <div className="mb-5">
+      <div className="mb-5" style={{ maxWidth: '320px' }}>
         <SearchField
           size="S"
           placeholder="search tokens, values, or descriptions..."
