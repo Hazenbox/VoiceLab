@@ -5,7 +5,7 @@
  * Jio Voice Prompt system. Applies all brand guardrails, vocabulary rules,
  * style guidelines, and hard limits.
  *
- * Uses HuggingFace Router (OpenAI-compatible API) for LLM inference.
+ * Uses Alibaba DashScope (OpenAI-compatible API) for LLM inference with Qwen models.
  *
  * @module convex/rewrite
  */
@@ -107,9 +107,9 @@ export const rephrase = action({
     }))),
   },
   handler: async (ctx, { text, style, prompt, channel, ecosystem, isChat, conversationHistory }) => {
-    const apiKey = process.env.HUGGINGFACE_API_KEY;
+    const apiKey = process.env.DASHSCOPE_API_KEY;
     if (!apiKey) {
-      throw new Error("HUGGINGFACE_API_KEY not configured");
+      throw new Error("DASHSCOPE_API_KEY not configured");
     }
 
     // Build comprehensive Jio voice system prompt with all detections
@@ -129,9 +129,9 @@ export const rephrase = action({
       text.toLowerCase().includes("mail") ||
       (prompt && prompt.toLowerCase().includes("email"));
 
-    // Use larger model (72B) for ALL requests for better brand compliance
-    // Previously we only used 72B for emails, but consistent voice requires it everywhere
-    const modelName = "Qwen/Qwen2.5-72B-Instruct";
+    // Use qwen-plus for best balance of quality and cost
+    // Commercial model with better reliability than open-source variants
+    const modelName = "qwen-plus";
 
     // Lower temperature (0.5) for more consistent brand compliance
     // Higher temperatures lead to creative deviations from guidelines
@@ -144,9 +144,9 @@ export const rephrase = action({
       .slice(-10)
       .map(m => ({ role: m.role as "user" | "assistant", content: m.content }));
 
-    // Using HuggingFace Router with OpenAI-compatible API
+    // Using Alibaba DashScope with OpenAI-compatible API (Singapore endpoint)
     const response = await fetch(
-      "https://router.huggingface.co/v1/chat/completions",
+      "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
       {
         method: "POST",
         headers: {
@@ -169,11 +169,11 @@ export const rephrase = action({
     if (!response.ok) {
       const errorText = await response.text();
       console.error(
-        "[rewrite] HuggingFace Router error:",
+        "[rewrite] DashScope API error:",
         response.status,
         errorText
       );
-      throw new Error(`HuggingFace API error: ${response.status}`);
+      throw new Error(`DashScope API error: ${response.status}`);
     }
 
     const data = await response.json();
