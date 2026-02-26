@@ -1,15 +1,16 @@
 import { useThemeColors, SEMANTIC_COLORS } from '../../theme/useColors';
 import { Label } from '@marcelinodzn/ds-react';
+import { Badge } from '../../components/ui/Badge';
 import type { Id } from '../../../convex/_generated/dataModel';
 
-/** Color palette for knowledge item categories */
-const CATEGORY_TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  avoid_word:          { bg: `${SEMANTIC_COLORS.negative}1F`, text: SEMANTIC_COLORS.negative },
-  preferred_word:      { bg: `${SEMANTIC_COLORS.positive}1F`, text: SEMANTIC_COLORS.positive },
-  auto_fix:            { bg: `${SEMANTIC_COLORS.informative}1F`, text: SEMANTIC_COLORS.informative },
-  approved_example:    { bg: 'rgba(6, 182, 212, 0.12)', text: '#06b6d4' },
-  product_definition:  { bg: 'rgba(168, 85, 247, 0.12)', text: '#a855f7' },
-  festival:            { bg: `${SEMANTIC_COLORS.warning}1F`, text: SEMANTIC_COLORS.warning },
+/** Map knowledge types to Badge variants */
+const TYPE_TO_BADGE_VARIANT: Record<string, 'positive' | 'negative' | 'warning' | 'informative' | 'neutral'> = {
+  avoid_word: 'negative',
+  preferred_word: 'positive',
+  auto_fix: 'informative',
+  approved_example: 'informative',
+  product_definition: 'neutral',
+  festival: 'warning',
 };
 
 /** Color palette for severity badges */
@@ -103,7 +104,7 @@ export function CategorySection({
       }, {} as Record<string, number>)
     : null;
 
-  const itemColor = CATEGORY_TYPE_COLORS[type] || { bg: theme.stroke.low, text: theme.text.high };
+  const badgeVariant = TYPE_TO_BADGE_VARIANT[type] || 'neutral';
   const formattedCategory = category.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
   return (
@@ -147,23 +148,17 @@ export function CategorySection({
         style={{ borderTop: `1px solid ${theme.stroke.low}` }}
       >
         {filteredItems.map((item) => (
-          <div
-            key={item._id}
-            className="inline-flex items-center rounded-md px-2 py-1"
-            style={{
-              fontSize: '12px',
-              backgroundColor: itemColor.bg,
-              color: itemColor.text,
-            }}
+          <Badge 
+            key={item._id} 
+            variant={badgeVariant}
             title={item.metadata?.suggestion ? `Suggestion: ${item.metadata.suggestion}` : undefined}
           >
-            <span>{item.content}</span>
-            
+            {item.content}
             {/* Severity indicator for avoid words */}
             {type === 'avoid_word' && item.metadata?.severity === 'error' && (
               <span className="ml-1 w-1.5 h-1.5 rounded-full bg-red-500" title="High severity" />
             )}
-          </div>
+          </Badge>
         ))}
       </div>
     </div>

@@ -14,9 +14,11 @@ export interface BadgeProps {
   variant?: 'positive' | 'negative' | 'warning' | 'informative' | 'neutral';
   /** Emphasis level: 'low' for subtle bg, 'high' for solid bg with white text */
   emphasis?: 'low' | 'high';
+  /** Optional tooltip text */
+  title?: string;
 }
 
-export const Badge = memo(function Badge({ children, variant = 'neutral', emphasis = 'low' }: BadgeProps) {
+export const Badge = memo(function Badge({ children, variant = 'neutral', emphasis = 'low', title }: BadgeProps) {
   const theme = useThemeColors();
   
   // Low emphasis: subtle background colors
@@ -42,14 +44,17 @@ export const Badge = memo(function Badge({ children, variant = 'neutral', emphas
   const textColor = isHighEmphasis ? '#ffffff' : undefined;
 
   return (
-    <span style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      backgroundColor,
-      borderRadius: isHighEmphasis ? '9999px' : '4px',
-      padding: '0 6px',
-      height: '20px',
-    }}>
+    <span 
+      title={title}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        backgroundColor,
+        borderRadius: isHighEmphasis ? '9999px' : '4px',
+        padding: '0 6px',
+        height: '20px',
+      }}
+    >
       <Label 
         size="XS" 
         weight="medium" 

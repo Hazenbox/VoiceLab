@@ -948,37 +948,37 @@ const KNOWLEDGE_TYPE_CONFIG: Record<string, {
   priority: 'high' | 'medium' | 'low';
 }> = {
   avoid_word: {
-    label: 'avoid words',
+    label: 'Avoid Words',
     description: 'Words and phrases that should NOT be used in Jio content. Includes complex jargon, robotic language, fear-based messaging, bureaucratic terms, and shame-inducing phrases.',
     badge: 'negative',
     priority: 'high'
   },
   auto_fix: {
-    label: 'auto-fix rules',
+    label: 'Auto-Fix Rules',
     description: 'Automatic text replacements for common issues including gender-neutral alternatives, simplified jargon, British spelling corrections, and format fixes.',
     badge: 'informative',
     priority: 'high'
   },
   approved_example: {
-    label: 'approved examples',
+    label: 'Approved Examples',
     description: 'Curated content examples for reference and few-shot prompting. Used to guide the AI model with style and tone during generation.',
     badge: 'informative',
     priority: 'high'
   },
   preferred_word: {
-    label: 'preferred vocabulary',
+    label: 'Preferred Vocabulary',
     description: 'Recommended vocabulary terms organized by intent: care & connection, action & progress, clarity & safety, fixing & resolution, community first, learning & discovery.',
     badge: 'positive',
     priority: 'medium'
   },
   product_definition: {
-    label: 'product definitions',
+    label: 'Product Definitions',
     description: 'Official ecosystem definitions with recommended tone. Each ecosystem (Connectivity, Home, Entertainment, etc.) has a specific voice personality.',
     badge: 'informative',
     priority: 'low'
   },
   festival: {
-    label: 'festivals',
+    label: 'Festivals',
     description: 'Festival dates and cultural context for India-specific content. Includes greeting templates and tone guidance for each festival.',
     badge: 'warning',
     priority: 'low'
@@ -986,7 +986,7 @@ const KNOWLEDGE_TYPE_CONFIG: Record<string, {
 };
 
 // Order of types for display
-const KNOWLEDGE_TYPE_ORDER = ['avoid_word', 'auto_fix', 'approved_example', 'preferred_word', 'product_definition', 'festival'];
+const KNOWLEDGE_TYPE_ORDER = ['avoid_word', 'auto_fix', 'preferred_word', 'product_definition', 'festival'];
 
 // ── Knowledge Base ───────────────────────────────────────────────
 // Redesigned: SegmentedControl for type navigation, single content view
@@ -1122,8 +1122,8 @@ function AdminKnowledge() {
       return (
         <div className="text-center py-12" style={{ color: theme.text.low }}>
           {searchQuery 
-            ? 'no items match your search.'
-            : `no ${KNOWLEDGE_TYPE_CONFIG[type].label} configured yet.`}
+            ? 'No items match your search.'
+            : `No ${KNOWLEDGE_TYPE_CONFIG[type].label} configured yet.`}
         </div>
       );
     }
@@ -1178,7 +1178,7 @@ function AdminKnowledge() {
     if (items.length === 0) {
       return (
         <div className="text-center py-12" style={{ color: theme.text.low }}>
-          {searchQuery ? 'no items match your search.' : 'no product definitions configured yet.'}
+          {searchQuery ? 'No items match your search.' : 'No Product Definitions configured yet.'}
         </div>
       );
     }
@@ -1186,12 +1186,12 @@ function AdminKnowledge() {
     return (
       <AdminTable
         columns={[
-          { key: 'ecosystem', label: 'ecosystem' },
-          { key: 'tone', label: 'recommended tone' },
-          { key: 'keywords', label: 'keywords' },
+          { key: 'ecosystem', label: 'Ecosystem' },
+          { key: 'tone', label: 'Recommended Tone' },
+          { key: 'keywords', label: 'Keywords' },
         ]}
         isEmpty={items.length === 0}
-        emptyMessage="no product definitions configured."
+        emptyMessage="No Product Definitions configured."
       >
         {items.map((item, i) => {
           const parsed = parseContent(item.content);
@@ -1252,7 +1252,7 @@ function AdminKnowledge() {
     if (items.length === 0) {
       return (
         <div className="text-center py-12" style={{ color: theme.text.low }}>
-          {searchQuery ? 'no items match your search.' : 'no approved examples yet.'}
+          {searchQuery ? 'No items match your search.' : 'No Approved Examples yet.'}
         </div>
       );
     }
@@ -1260,12 +1260,12 @@ function AdminKnowledge() {
     return (
       <AdminTable
         columns={[
-          { key: 'content', label: 'content' },
-          { key: 'ecosystem', label: 'ecosystem' },
-          { key: 'channel', label: 'channel' },
+          { key: 'content', label: 'Content' },
+          { key: 'ecosystem', label: 'Ecosystem' },
+          { key: 'channel', label: 'Channel' },
         ]}
         isEmpty={items.length === 0}
-        emptyMessage="no examples saved yet."
+        emptyMessage="No examples saved yet."
       >
         {items.map((item, i) => (
           <AdminTableRow key={i}>
@@ -1303,13 +1303,13 @@ function AdminKnowledge() {
     <>
       {!isOnline && <OfflineBanner />}
       <div className="flex justify-between items-center mb-4">
-        <PageHeader title="Knowledge base" description="Brand rules, vocabulary, and content guidelines" />
+        <PageHeader title="Knowledge Base" description="Brand rules, vocabulary, and content guidelines" />
         <AdminRefreshControls
           lastRefresh={countsRefreshTime}
           isLoading={countsLoading || itemsLoading}
           isPaused={countsPaused}
           onRefresh={refreshAll}
-          label="knowledge"
+          label="Knowledge"
         />
       </div>
 
@@ -1324,7 +1324,7 @@ function AdminKnowledge() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <DataCard 
-              title="active rules"
+              title="Active Rules"
               fillEmphasis="Ghost"
               width="auto"
               dataHead={{
@@ -1335,11 +1335,11 @@ function AdminKnowledge() {
               modes={{ colourMode: theme.colorMode, colourTheme: 'MyJio' }}
             />
             <span style={{ color: theme.text.low, fontSize: '12px' }}>
-              enforcing Jio brand guidelines
+              Enforcing Jio brand guidelines
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Label size="XS" attention="low">vector index active</Label>
+            <Label size="XS" attention="low">Vector index active</Label>
           </div>
         </div>
       </div>
@@ -1349,7 +1349,7 @@ function AdminKnowledge() {
         <SegmentedControl
           value={selectedType}
           onChange={setSelectedType}
-          aria-label="knowledge type"
+          aria-label="Knowledge type"
           size="S"
           emphasis="low"
           className="segmented-no-gap"
@@ -1366,7 +1366,7 @@ function AdminKnowledge() {
       <div className="mb-4 max-w-md">
         <SearchField
           size="S"
-          placeholder={`search ${currentConfig.label}...`}
+          placeholder={`Search ${currentConfig.label}...`}
           value={searchQuery}
           onChange={setSearchQuery}
           onClear={() => setSearchQuery('')}
@@ -1378,7 +1378,7 @@ function AdminKnowledge() {
         className="mb-4"
         style={{ 
           fontSize: '12px', 
-          color: theme.text.low,
+          color: theme.text.medium,
           lineHeight: 1.5,
         }}
       >
@@ -1398,9 +1398,9 @@ function AdminKnowledge() {
 
       {/* Single Type Content */}
       {knowledgeItems && (
-        <AdminCard className="p-4">
+        <div className="p-0">
           {renderTypeContent(selectedType)}
-        </AdminCard>
+        </div>
       )}
     </>
   );

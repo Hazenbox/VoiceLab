@@ -7,6 +7,7 @@
 
 import { useThemeColors } from '../../theme/useColors';
 import { Button, Text } from '@marcelinodzn/ds-react';
+import { DSIcon } from '../../components/DSIcon';
 
 interface AdminRefreshControlsProps {
   /** Last refresh timestamp */
@@ -26,14 +27,14 @@ export function AdminRefreshControls({
   isLoading = false,
   isPaused = false,
   onRefresh,
-  label = 'data',
+  label = 'Data',
 }: AdminRefreshControlsProps) {
   const theme = useThemeColors();
 
   const getLastRefreshText = (): string => {
-    if (!lastRefresh) return 'never';
+    if (!lastRefresh) return 'Never';
     const elapsed = Date.now() - lastRefresh;
-    if (elapsed < 10000) return 'just now';
+    if (elapsed < 10000) return 'Just now';
     if (elapsed < 60000) return `${Math.floor(elapsed / 1000)}s ago`;
     if (elapsed < 3600000) return `${Math.floor(elapsed / 60000)}m ago`;
     return `${Math.floor(elapsed / 3600000)}h ago`;
@@ -59,7 +60,7 @@ export function AdminRefreshControls({
             color: theme.accent,
           }}
         >
-          paused
+          Paused
         </span>
       )}
       
@@ -68,8 +69,15 @@ export function AdminRefreshControls({
         size="XS"
         onPress={onRefresh}
         isDisabled={isLoading}
+        aria-label="Refresh"
       >
-        {isLoading ? 'refreshing...' : 'refresh'}
+        <DSIcon 
+          name="IcRefresh" 
+          size="XS" 
+          style={{ 
+            animation: isLoading ? 'spin 1s linear infinite' : 'none',
+          }} 
+        />
       </Button>
     </div>
   );
