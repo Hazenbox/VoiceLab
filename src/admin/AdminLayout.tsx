@@ -986,7 +986,7 @@ const KNOWLEDGE_TYPE_CONFIG: Record<string, {
 };
 
 // Order of types for display
-const KNOWLEDGE_TYPE_ORDER = ['avoid_word', 'auto_fix', 'preferred_word', 'product_definition', 'festival'];
+const KNOWLEDGE_TYPE_ORDER = ['avoid_word', 'preferred_word', 'auto_fix', 'product_definition', 'festival'];
 
 // ── Knowledge Base ───────────────────────────────────────────────
 // Redesigned: SegmentedControl for type navigation, single content view
