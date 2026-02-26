@@ -1082,6 +1082,15 @@ function AdminKnowledge() {
     });
   };
 
+  // Filter items based on search query (must be before early returns)
+  const filterItems = useCallback((items: typeof knowledgeItems) => {
+    if (!searchQuery || !items) return items;
+    return items.filter(item => 
+      item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.metadata?.suggestion?.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  }, [searchQuery]);
+
   // Loading state
   if (knowledgeCounts === undefined) {
     return <AdminLoadingSkeleton />;
@@ -1098,15 +1107,6 @@ function AdminKnowledge() {
       />
     );
   }
-
-  // Filter items based on search query
-  const filterItems = useCallback((items: typeof knowledgeItems) => {
-    if (!searchQuery || !items) return items;
-    return items.filter(item => 
-      item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.metadata?.suggestion?.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
-  }, [searchQuery]);
 
   // Render grouped content (avoid_word, auto_fix, preferred_word, festival)
   const renderGroupedContent = (type: string) => {
