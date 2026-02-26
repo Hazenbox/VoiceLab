@@ -1013,7 +1013,7 @@ function AdminKnowledge() {
     refresh: refreshItems, 
   } = useLazyQuery(
     api.knowledge.listAll, 
-    { limit: 500 }
+    { limit: 1000 }  // Increased to accommodate all knowledge items (299 avoid + 241 pref + others)
   );
   
   // Combined refresh for all knowledge data
