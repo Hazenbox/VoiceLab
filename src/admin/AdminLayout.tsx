@@ -1586,7 +1586,7 @@ function AdminKnowledge() {
 
       {/* Type Description */}
       <p 
-        className="mb-4"
+        className="mb-4 px-3"
         style={{ 
           fontSize: '12px', 
           color: theme.text.medium,
