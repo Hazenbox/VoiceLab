@@ -1315,12 +1315,12 @@ function AdminKnowledge() {
         {items.map((item, i) => (
           <AdminTableRow key={i}>
             <AdminTableCell>
-              <span className="font-mono" style={{ color: '#dc2626', textDecoration: 'line-through', opacity: 0.8 }}>
+              <span className="font-mono" style={{ color: theme.text.low, fontWeight: 400 }}>
                 {item.content}
               </span>
             </AdminTableCell>
             <AdminTableCell>
-              <span className="font-mono" style={{ color: '#16a34a' }}>
+              <span className="font-mono" style={{ color: theme.text.high, fontWeight: 600 }}>
                 {(item.metadata?.suggestion as string) || '—'}
               </span>
             </AdminTableCell>
