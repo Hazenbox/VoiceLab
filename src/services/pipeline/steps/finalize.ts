@@ -38,11 +38,6 @@ function applySafetyPostProcess(content: string, userMessage: string): string {
     result += '\n\nif you or someone you know is in crisis, please reach out:\n- AASRA: 9820466726 (24/7)\n- iCall: 9152987821\n- emergency: 112';
   }
 
-  const competitorBrands = /\b(Airtel|Vodafone|Vi|BSNL|MTNL|ACT\s+Fibernet|Hathway)\b/gi;
-  result = result.replace(competitorBrands, (matched, _group, offset) => {
-    const isStartOfSentence = offset === 0 || /[.!?]\s*$/.test(result.slice(0, offset));
-    return isStartOfSentence ? 'Other providers' : 'other providers';
-  });
 
   const aiProviderLeak = /\b(OpenAI|GPT-?\d*|ChatGPT|Claude|Anthropic|Google\s+AI|Gemini|Llama|Mistral)\b/gi;
   result = result.replace(aiProviderLeak, '');

@@ -122,16 +122,10 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
   ],
   competitor: [
     {
-      pattern: /\b(Airtel|Vodafone|Vi|Idea|BSNL|MTNL|ACT Fibernet|Hathway|Tata Sky)\b/gi,
-      severity: 'error',
-      replacement: 'another provider',
-      description: 'mentioning competitor brand',
-    },
-    {
-      pattern: /\b(better than|worse than|compared to) (other|competitor)\b/gi,
+      pattern: /\b(worse than|inferior to) (Airtel|Vodafone|Vi|Idea|BSNL|MTNL|ACT Fibernet|Hathway|Tata Sky)\b/gi,
       severity: 'warning',
       replacement: '',
-      description: 'competitive comparison',
+      description: 'negative competitor comparison - maintain neutral tone',
     },
   ],
   overpromise: [

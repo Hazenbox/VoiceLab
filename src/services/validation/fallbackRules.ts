@@ -24,31 +24,6 @@ import type { TokenEnforcementRule } from './tokenEnforcementAgent';
  * These are the minimum required rules to prevent brand damage
  */
 export const FALLBACK_ENFORCEMENT_RULES: TokenEnforcementRule[] = [
-  // ── BRAND PROTECTION ──────────────────────────────────────────────────────────
-  {
-    _id: 'fallback_brand_competitors',
-    tokenKey: 'ecosystem',
-    tokenValue: '*',
-    ruleType: 'must_not_contain',
-    patterns: [
-      'airtel',
-      'vodafone',
-      'vi ',
-      'bsnl',
-      'idea',
-      'mtnl',
-      'act fibernet',
-      'hathway',
-      'tata sky',
-    ],
-    autoFixAction: 'replace',
-    autoFixValue: 'another provider',
-    severity: 'error',
-    errorMessage: 'Content mentions competitor brand - auto-removed for brand safety',
-    category: 'brand',
-    priority: 100,
-  },
-
   // ── SAFETY CRITICAL ───────────────────────────────────────────────────────────
   {
     _id: 'fallback_safety_emergency',

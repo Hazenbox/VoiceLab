@@ -95,18 +95,6 @@ const CHECKS: Check[] = [
     fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), ''),
   },
   {
-    id: 'c-03',
-    category: 'constitutional',
-    severity: 'error',
-    description: 'competitor brand mentioned',
-    test: (c) => match(c, /\b(Airtel|Vodafone|Vi|BSNL|MTNL|ACT Fibernet|Hathway)\b/i),
-    autoFixable: true,
-    fix: (c, m) => c.replace(new RegExp(escapeRe(m), 'gi'), (matched, offset) => {
-      const isStartOfSentence = offset === 0 || /[.!?]\s*$/.test(c.slice(0, offset));
-      return isStartOfSentence ? 'Other providers' : 'other providers';
-    }),
-  },
-  {
     id: 'c-04',
     category: 'constitutional',
     severity: 'error',
