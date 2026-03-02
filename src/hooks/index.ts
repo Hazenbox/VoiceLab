@@ -54,3 +54,6 @@ export { useContentGeneration, type ContentGenerationDeps } from './useContentGe
 // Extracted from App.tsx (Phase 3B)
 export { useConvexData } from './useConvexData';
 export { useProfileSync } from './useProfileSync';
+
+// JioSaavn Integration
+export { useJioSaavnSearch, type UseJioSaavnSearchOptions, type UseJioSaavnSearchReturn } from './useJioSaavnSearch';

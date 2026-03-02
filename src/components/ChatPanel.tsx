@@ -29,6 +29,7 @@ import { Button } from '@marcelinodzn/ds-react';
 import { Badge } from './ui/Badge';
 import { DSIcon } from './DSIcon';
 import { useRotatingPlaceholder } from '../hooks/useRotatingPlaceholder';
+import { JioSaavnExploration } from './JioSaavnExploration';
 
 /** Send button brand purple */
 const SEND_BUTTON_COLOR = '#3900AD';
@@ -418,11 +419,13 @@ export const ChatPanel = memo(function ChatPanel({
   const [multiLineMessages, setMultiLineMessages] = useState<Set<string>>(new Set());
   
   // Highlight state from trust panel interactions
-  const { highlightedText, highlightedMessageId, clearHighlight } = useUIStore(
+  const { highlightedText, highlightedMessageId, clearHighlight, dismissedExplorations, dismissExploration } = useUIStore(
     useShallow((s) => ({
       highlightedText: s.highlightedText,
       highlightedMessageId: s.highlightedMessageId,
       clearHighlight: s.clearHighlight,
+      dismissedExplorations: s.dismissedExplorations,
+      dismissExploration: s.dismissExploration,
     }))
   );
   
@@ -727,6 +730,14 @@ export const ChatPanel = memo(function ChatPanel({
               <Badge variant="positive">auto-fixed</Badge>
             )}
           </div>
+          
+          {/* JioSaavn Exploration - shows when music topics are detected */}
+          <JioSaavnExploration
+            messageId={message.id}
+            messageContent={assistantContent}
+            isDismissed={dismissedExplorations.has(message.id)}
+            onDismiss={dismissExploration}
+          />
         </div>
       </div>
     );
@@ -746,6 +757,8 @@ export const ChatPanel = memo(function ChatPanel({
     onVersionChange,
     highlightedText,
     highlightedMessageId,
+    dismissedExplorations,
+    dismissExploration,
   ]);
 
   // Render input area (reusable for both layouts)

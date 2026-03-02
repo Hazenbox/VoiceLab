@@ -17,6 +17,8 @@ try { localStorage.removeItem('tone-studio-chat-mode'); } catch { /* noop */ }
 
 // Matches the key App.tsx has always used
 const CHAT_MODE_STORAGE_KEY = 'voiceDesigner_chatMode';
+const DISMISSED_EXPLORATIONS_KEY = 'voiceDesigner_dismissedExplorations';
+const MAX_DISMISSED_EXPLORATIONS = 100;
 
 interface UIState {
   // navigation
@@ -41,6 +43,9 @@ interface UIState {
   // highlight state for trust panel interactions
   highlightedText: string | null;
   highlightedMessageId: string | null;
+
+  // JioSaavn exploration dismissed state
+  dismissedExplorations: Set<string>;
 }
 
 interface UIActions {
@@ -58,6 +63,9 @@ interface UIActions {
   clearError: () => void;
   setHighlightedText: (text: string | null, messageId: string | null) => void;
   clearHighlight: () => void;
+  // JioSaavn exploration actions
+  dismissExploration: (messageId: string) => void;
+  isExplorationDismissed: (messageId: string) => boolean;
 }
 
 export const useUIStore = create<UIState & UIActions>()((set) => ({
@@ -82,6 +90,18 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   error: null,
   highlightedText: null,
   highlightedMessageId: null,
+  dismissedExplorations: (() => {
+    try {
+      const stored = localStorage.getItem(DISMISSED_EXPLORATIONS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return new Set<string>(parsed.slice(-MAX_DISMISSED_EXPLORATIONS));
+        }
+      }
+    } catch { /* noop */ }
+    return new Set<string>();
+  })(),
 
   // actions
   setActiveView: (view) => set({ activeView: view }),
@@ -101,4 +121,20 @@ export const useUIStore = create<UIState & UIActions>()((set) => ({
   clearError: () => set({ error: null }),
   setHighlightedText: (text, messageId) => set({ highlightedText: text, highlightedMessageId: messageId }),
   clearHighlight: () => set({ highlightedText: null, highlightedMessageId: null }),
+  dismissExploration: (messageId) => set((state) => {
+    const newDismissed = new Set(state.dismissedExplorations);
+    newDismissed.add(messageId);
+    // Limit size to prevent unbounded growth
+    const limitedArray = Array.from(newDismissed).slice(-MAX_DISMISSED_EXPLORATIONS);
+    const limitedSet = new Set(limitedArray);
+    // Persist to localStorage
+    try {
+      localStorage.setItem(DISMISSED_EXPLORATIONS_KEY, JSON.stringify(limitedArray));
+    } catch { /* noop */ }
+    return { dismissedExplorations: limitedSet };
+  }),
+  isExplorationDismissed: (messageId) => {
+    // This is a selector, not an action - access via useUIStore.getState()
+    return false; // Placeholder - actual check done via state access
+  },
 }));
