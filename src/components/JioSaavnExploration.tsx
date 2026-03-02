@@ -406,7 +406,7 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
       <div
         className="mt-4 rounded-2xl overflow-hidden"
         style={{
-          backgroundColor: theme.surface.low,
+          backgroundColor: theme.background.subtle,
           padding: '16px',
         }}
       >
@@ -415,7 +415,7 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
             className="w-5 h-5 rounded-full animate-spin"
             style={{
               border: `2px solid ${theme.stroke.low}`,
-              borderTopColor: theme.accent.default,
+              borderTopColor: theme.accent?.default || theme.stroke.high,
             }}
           />
           <span style={{ color: theme.text.medium, fontSize: '14px' }}>
