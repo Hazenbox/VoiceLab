@@ -265,12 +265,11 @@ export function usePlaylistSearch(
   }, [limit]);
   
   useEffect(() => {
-    if (detectionTimerRef.current) {
-      clearTimeout(detectionTimerRef.current);
-      detectionTimerRef.current = null;
-    }
-    
     if (!enabled || !content || content.trim().length < 20) {
+      if (detectionTimerRef.current) {
+        clearTimeout(detectionTimerRef.current);
+        detectionTimerRef.current = null;
+      }
       setMusicTopic(null);
       setData(null);
       setError(null);
@@ -281,6 +280,10 @@ export function usePlaylistSearch(
     
     if (content === lastContentRef.current) {
       return;
+    }
+    
+    if (detectionTimerRef.current) {
+      clearTimeout(detectionTimerRef.current);
     }
     
     detectionTimerRef.current = setTimeout(async () => {
