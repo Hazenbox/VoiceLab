@@ -382,6 +382,12 @@ function buildEmailOverrideSection(channelId: ContentChannelType): string {
 
 **CRITICAL**: When the channel is set to "${isMarketing ? 'Marketing Email' : 'Transactional Email'}", you MUST generate a **complete email** regardless of how brief the user's request is.
 
+**OUTPUT RULE**: Output ONLY the email content (Subject line + body + sign-off). Do NOT add:
+- Conversational text like "Here's the email..." or "I've drafted..."
+- Offers like "I can help you personalize this..." or "Would you like me to..."
+- Questions about what to do next
+- Any text that is not part of the actual email
+
 ### Required Email Structure (DO NOT SKIP ANY SECTION)
 
 ${isMarketing ? `1. **Subject Line**: Compelling, benefit-focused (40-60 characters)

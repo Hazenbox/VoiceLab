@@ -718,6 +718,8 @@ function buildChannelFormattingSection(channel: ContentChannel): string {
 
 ⚠️ **CRITICAL**: You MUST generate a COMPLETE email with ALL sections below. DO NOT skip any section.
 
+**OUTPUT RULE**: Output ONLY the email content. Do NOT add conversational text like "Here's the email...", "I can help you personalize this...", or any questions about what to do next.
+
 **YOUR OUTPUT MUST START WITH "Subject:" AND INCLUDE ALL 6 SECTIONS:**
 
 ---

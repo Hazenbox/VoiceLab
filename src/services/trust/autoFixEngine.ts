@@ -913,6 +913,10 @@ export function applyFormatFixes(content: string): string {
   // Capitalise first letter of sentences/bullets that start lowercase
   fixed = capitaliseSentenceStarts(fixed);
 
+  // Email subject line: capitalize first letter after "Subject:" 
+  // e.g., "Subject: happy diwali" -> "Subject: Happy diwali"
+  fixed = fixed.replace(/^(Subject:\s*)([a-z])/im, (_m, prefix, letter) => `${prefix}${letter.toUpperCase()}`);
+
   // Ensure space after sentence-ending punctuation followed by uppercase letter
   // Pattern: [lowercase letter][.!?][uppercase letter] -> add space before uppercase
   // This avoids breaking URLs (jio.com), abbreviations (U.S.A), decimals (3.5x)
