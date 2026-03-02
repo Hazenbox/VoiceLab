@@ -243,8 +243,14 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
     {
       pattern: /\bas a gesture of (goodwill|appreciation|thanks)\b/gi,
       severity: 'warning',
+      replacement: 'after',
+      description: 'hedging - state the reason directly (e.g., "after the outage" not "as a gesture of goodwill")',
+    },
+    {
+      pattern: /\bdue to circumstances beyond our control\b/gi,
+      severity: 'warning',
       replacement: '',
-      description: 'hedging - state the reason directly',
+      description: 'hedging - be specific about the cause',
     },
     // KB/09: Exaggerated apology - empty ritual without action
     {
@@ -278,6 +284,56 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
       severity: 'warning',
       replacement: '',
       description: 'filler opener - lead with benefit instead',
+    },
+    // KB/09: Passive voice - hides the actor, sounds evasive
+    {
+      pattern: /\b(\d+\s*GB\s+)?data has been credited\b/gi,
+      severity: 'warning',
+      replacement: "we've added $1data",
+      replaceFn: (match: string) => {
+        const gbMatch = match.match(/(\d+\s*GB)/i);
+        return gbMatch ? `we've added ${gbMatch[1]}` : "we've added data";
+      },
+      description: 'passive voice - use active: "we\'ve added"',
+    },
+    {
+      pattern: /\bhas been credited to your account\b/gi,
+      severity: 'warning',
+      replacement: "we've added to your account",
+      description: 'passive voice - use active: "we\'ve added"',
+    },
+    {
+      pattern: /\byour (request|issue|complaint|query) has been (logged|received|noted|recorded)\b/gi,
+      severity: 'warning',
+      replacement: "we've received your $1",
+      replaceFn: (match: string) => {
+        const typeMatch = match.match(/your (request|issue|complaint|query)/i);
+        return typeMatch ? `we've received your ${typeMatch[1]}` : "we've received your request";
+      },
+      description: 'passive voice - use active: "we\'ve received"',
+    },
+    {
+      pattern: /\bhas been (processed|completed|resolved|fixed)\b/gi,
+      severity: 'warning',
+      replaceFn: (match: string) => {
+        const verbMatch = match.match(/has been (processed|completed|resolved|fixed)/i);
+        if (!verbMatch) return "we've completed this";
+        const verb = verbMatch[1].toLowerCase();
+        const activeVerbs: Record<string, string> = {
+          processed: "we've processed",
+          completed: "we've completed",
+          resolved: "we've resolved",
+          fixed: "we've fixed",
+        };
+        return activeVerbs[verb] || "we've completed";
+      },
+      description: 'passive voice - use active form',
+    },
+    {
+      pattern: /\bno action (is )?(needed|required)\b/gi,
+      severity: 'warning',
+      replacement: "you're all set",
+      description: 'passive/formal - use friendly confirmation',
     },
   ],
   sensitivity: [
