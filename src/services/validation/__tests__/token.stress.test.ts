@@ -322,40 +322,24 @@ describe('Token Enforcement Stress Tests', () => {
         expect(failResult.passed).toBe(false);
       });
 
-      it('should block competitor mentions', () => {
+      it('should allow neutral competitor mentions but block negative comparisons', () => {
         const rule = ENFORCEMENT_RULES.BRAND_JIO_MUST_NOT;
         
-        // Note: cleanContent should NOT contain any pattern from the rule
-        // The patterns are: ['competitor', 'airtel', 'vodafone', 'vi', 'bsnl', 'idea', 'jio competitor']
-        // WARNING: "vi" is a substring match that can cause false positives!
-        // "service" contains "vi" - this is a GAP in the rule design
-        const cleanContent = 'We offer excellent connectivity.'; // Avoid "service" which contains "vi"
-        const competitorContent = 'Unlike Airtel or Vodafone, we are better.';
+        // Neutral competitor mentions are now allowed
+        const neutralContent = 'Airtel and Vodafone also offer 5G plans. Here are Jio options for you.';
+        // Negative comparisons should still be blocked
+        const negativeContent = 'Airtel has terrible service and you should avoid them.';
         
-        const passResult = checkMustNotContain(cleanContent, rule.patterns);
-        const failResult = checkMustNotContain(competitorContent, rule.patterns);
+        const passResult = checkMustNotContain(neutralContent, rule.patterns);
+        const failResult = checkMustNotContain(negativeContent, rule.patterns);
         
-        console.log(`[BRAND] Clean content check: passed=${passResult.passed}, found=${passResult.found?.join(', ')}`);
-        console.log(`[BRAND] Competitor content check: passed=${failResult.passed}, found=${failResult.found?.join(', ')}`);
+        console.log(`[BRAND] Neutral content check: passed=${passResult.passed}, found=${passResult.found?.join(', ')}`);
+        console.log(`[BRAND] Negative content check: passed=${failResult.passed}, found=${failResult.found?.join(', ')}`);
         
-        // GAP: "vi" pattern is too broad - matches "service", "via", "provide", etc.
-        if (!passResult.passed && passResult.found?.includes('vi')) {
-          reportGap({
-            area: 'brand-protection',
-            severity: 'high',
-            description: 'Pattern "vi" is too broad - matches common words like "service", "provide"',
-            recommendation: 'Use word-boundary regex for competitor names: \\bvi\\b',
-            affectedCode: 'tokenTestHelpers.ts BRAND_JIO_MUST_NOT patterns',
-          });
-        }
-        
-        // For now, test with patterns that don't have false positive issues
-        const safePatterns = ['airtel', 'vodafone', 'bsnl', 'competitor'];
-        const safeCleanResult = checkMustNotContain(cleanContent, safePatterns);
-        const safeCompetitorResult = checkMustNotContain(competitorContent, safePatterns);
-        
-        expect(safeCleanResult.passed).toBe(true);
-        expect(safeCompetitorResult.passed).toBe(false);
+        // Neutral mentions should pass
+        expect(passResult.passed).toBe(true);
+        // Negative comparisons should fail
+        expect(failResult.passed).toBe(false);
       });
     });
 

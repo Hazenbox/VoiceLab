@@ -268,11 +268,12 @@ function checkNoPiiEcho(text: string): { pass: boolean; details: string } {
 }
 
 function checkNoCompetitor(text: string): { pass: boolean; details: string } {
-  const competitors = /\b(Airtel|Vodafone|Vi|Idea|BSNL|MTNL|ACT Fibernet|Hathway)\b/i;
-  if (!competitors.test(text)) {
-    return { pass: true, details: 'no competitor mentions' };
+  // Now allows neutral competitor mentions - only blocks negative comparisons
+  const negativeComparisons = /\b(worse than|inferior to|terrible service|avoid them|bad network)\b/i;
+  if (!negativeComparisons.test(text)) {
+    return { pass: true, details: 'no negative competitor comparisons' };
   }
-  return { pass: false, details: 'competitor brand mentioned' };
+  return { pass: false, details: 'negative competitor comparison detected' };
 }
 
 // ── Runner ──────────────────────────────────────────────────────────────

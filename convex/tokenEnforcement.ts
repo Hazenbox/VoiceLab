@@ -437,16 +437,17 @@ const DEFAULT_RULES: TokenEnforcementRuleSeed[] = [
   },
   
   // ══════════════════════════════════════════════════════════════════════════
-  // BRAND RULES
+  // BRAND RULES - Neutral competitor handling
   // ══════════════════════════════════════════════════════════════════════════
   {
     tokenKey: "ecosystem",
     tokenValue: "*",  // Apply to ALL ecosystems (Jio is always the brand)
     ruleType: "must_not_contain",
-    patterns: ["competitor", "airtel", "vodafone", "vi", "bsnl", "idea", "jio competitor"],
+    // Only block negative comparisons - neutral competitor mentions are allowed
+    patterns: ["worse than", "inferior to", "terrible service", "avoid them", "bad network"],
     autoFixAction: "remove",
-    severity: "error",  // Elevated to error - brand protection is critical
-    errorMessage: "Never mention competitor brands - focus on Jio's value proposition",
+    severity: "warning",  // Warning level - guide towards positive tone
+    errorMessage: "Avoid negative competitor comparisons - maintain neutral, objective tone",
     category: "brand",
     isActive: true,
     priority: 95,  // High priority - brand protection is critical

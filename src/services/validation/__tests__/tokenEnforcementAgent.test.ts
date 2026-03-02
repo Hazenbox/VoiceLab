@@ -389,7 +389,7 @@ describe('Token Enforcement Agent', () => {
     });
   });
 
-  describe('C12: Jio Brand - No Competitor Mentions', () => {
+  describe('C12: Jio Brand - Neutral Competitor Handling', () => {
     const rule = ENFORCEMENT_RULES.BRAND_JIO_MUST_NOT;
 
     it('should PASS when response focuses on Jio', () => {
@@ -398,38 +398,32 @@ describe('Token Enforcement Agent', () => {
       expect(result.passed).toBe(true);
     });
 
-    it('should FAIL when response mentions "Airtel"', () => {
-      const response = 'Compared to Airtel, Jio has better coverage.';
+    it('should PASS when response mentions competitors neutrally', () => {
+      const response = 'Airtel, Vi, and BSNL also offer 5G plans. Here are Jio options that might work for you.';
+      const result = validateAgainstRule(response, rule);
+      expect(result.passed).toBe(true);
+    });
+
+    it('should PASS when response provides factual competitor info', () => {
+      const response = 'Vodafone Idea (Vi) has plans starting at similar price points. Let me show you what Jio offers.';
+      const result = validateAgainstRule(response, rule);
+      expect(result.passed).toBe(true);
+    });
+
+    it('should PASS when response acknowledges user considering competitors', () => {
+      const response = 'I understand you are considering Airtel. Let me highlight what makes Jio a great choice for your needs.';
+      const result = validateAgainstRule(response, rule);
+      expect(result.passed).toBe(true);
+    });
+
+    it('should FAIL when response negatively compares to competitors', () => {
+      const response = 'Airtel is worse than Jio in every way.';
       const result = validateAgainstRule(response, rule);
       expect(result.passed).toBe(false);
     });
 
-    it('should FAIL when response mentions "Vodafone"', () => {
-      const response = 'Unlike Vodafone, we offer true unlimited calls.';
-      const result = validateAgainstRule(response, rule);
-      expect(result.passed).toBe(false);
-    });
-
-    it('should FAIL when response mentions "Vi"', () => {
-      const response = 'Jio is better than Vi for data plans.';
-      const result = validateAgainstRule(response, rule);
-      expect(result.passed).toBe(false);
-    });
-
-    it('should FAIL when response mentions "BSNL"', () => {
-      const response = 'We have better rural coverage than BSNL.';
-      const result = validateAgainstRule(response, rule);
-      expect(result.passed).toBe(false);
-    });
-
-    it('should FAIL when response mentions "Idea"', () => {
-      const response = 'Unlike Idea cellular, Jio has nationwide 5G.';
-      const result = validateAgainstRule(response, rule);
-      expect(result.passed).toBe(false);
-    });
-
-    it('should FAIL when response promotes competitor switching', () => {
-      const response = 'You could consider switching to Airtel for better service.';
+    it('should FAIL when response disparages competitors', () => {
+      const response = 'BSNL has terrible service and you should avoid them.';
       const result = validateAgainstRule(response, rule);
       expect(result.passed).toBe(false);
     });

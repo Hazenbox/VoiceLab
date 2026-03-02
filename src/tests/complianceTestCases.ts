@@ -217,9 +217,9 @@ const B_COMPLIANCE_VERIFIER: ComplianceTestCase[] = [
   t('B1-02', 'B', 'B', 'c-02: AI provider leak auto-fix', 'checker',
     '', any, [], ['OpenAI', 'GPT', 'ChatGPT'],
     'c-02', "powered by OpenAI's latest model"),
-  t('B1-03', 'B', 'B', 'c-03: competitor mention auto-fix', 'checker',
-    '', any, ['another provider'], ['Airtel'],
-    'c-03', 'unlike Airtel, our network is better'),
+  t('B1-03', 'B', 'B', 'neutral competitor mention allowed', 'checker',
+    '', any, ['Airtel'], [],
+    'c-03', 'Airtel also offers 5G plans. here are Jio options that might work for you'),
   t('B1-04', 'B', 'B', 'c-04: user blame auto-fix', 'checker',
     '', any, ['let me look into this'], ["it's your fault"],
     'c-04', "it's your fault the payment failed"),
@@ -350,9 +350,9 @@ const C_FORBIDDEN: ComplianceTestCase[] = [
   t('C1-06', 'C', 'C', 'AI provider leak', 'checker', '', any, [], ['ChatGPT', 'OpenAI'], 'ai_identity', 'powered by ChatGPT technology for better results'),
   t('C1-07', 'C', 'C', 'training data reference', 'checker', '', any, [], ['my training data'], 'ai_identity', 'my training data suggests this is the best approach'),
   t('C1-08', 'C', 'C', 'chatbot self-ref', 'checker', '', any, ["jio's AI assistant"], ['i am a chatbot'], 'ai_identity', 'i am a chatbot designed to help you'),
-  // Competitor
-  t('C2-01', 'C', 'C', 'competitor brand', 'checker', '', any, ['another provider'], ['Airtel'], 'competitor', 'switch from Airtel to Jio for better speeds'),
-  t('C2-02', 'C', 'C', 'competitive comparison', 'checker', '', any, [], ['better than.*competitor'], 'competitor', 'we are better than competitor networks in every way'),
+  // Competitor - now allows neutral mentions, blocks negative comparisons
+  t('C2-01', 'C', 'C', 'neutral competitor mention allowed', 'checker', '', any, ['Airtel', 'Jio'], [], 'competitor', 'you can compare Airtel and Jio plans to find what works best'),
+  t('C2-02', 'C', 'C', 'negative competitor comparison blocked', 'checker', '', any, [], ['worse than.*Airtel'], 'competitor', 'Jio is worse than Airtel in rural areas'),
   // Overpromise
   t('C3-01', 'C', 'C', 'absolute guarantee', 'checker', '', any, [], ['guarantee.*definitely'], 'overpromise', 'i guarantee that it will definitely work after this fix'),
   t('C3-02', 'C', 'C', 'false certainty', 'checker', '', any, [], ['100% guaranteed'], 'overpromise', 'this is a 100% guaranteed fix for your issue'),
@@ -733,7 +733,7 @@ const OP_TRIMMER_RETRY: ComplianceTestCase[] = [
   // Retry mechanism
   t('P-01', 'O-P', 'O-P', 'auto-fix only (no retry needed)', 'generation', 'tell me about Jio Fiber plans starting from Rs. 299', any, ['JioFiber|jiofiber|fibre|fiber', '₹|plan|299'], ['Rs\\.'], 'retry:autofix_only'),
   t('P-02', 'O-P', 'O-P', 'retry: blame should not reach user', 'generation', 'why did my payment fail?', any, ['check', 'help', 'payment'], ["your fault", "you did.*wrong"], 'retry:blame'),
-  t('P-03', 'O-P', 'O-P', 'mixed violations cleaned', 'generation', 'compare Jio plans with Airtel', any, ['plan', 'compare'], ['Airtel'], 'retry:mixed'),
+  t('P-03', 'O-P', 'O-P', 'neutral comparison allowed', 'generation', 'compare Jio plans with Airtel', any, ['plan', 'compare', 'Jio'], [], 'retry:mixed'),
   t('P-04', 'O-P', 'O-P', 'user never sees raw errors', 'generation', 'my account was charged wrongly and i want answers NOW', { isComplaint: true, emotion: 'raudra' }, ['understand', 'check', 'billing', 'help'], ["your fault", "not our problem", "calm down"], 'retry:no_errors'),
 ];
 
@@ -755,7 +755,7 @@ const QRS_EDGE: ComplianceTestCase[] = [
   t('Q-10', 'Q', 'Q-S', 'correct: patient, non-pressuring', 'checker', '', any, ['take your time'], [], 'false_positive', "take your time. i'm here whenever you're ready."),
   // R: Multi-violation
   t('R-01', 'R', 'Q-S', '6 violations: salutation+should+utilize+brand+currency+exclamation', 'checker', '', any, ['hi there|you can|use|JioFiber|₹'], ['Dear Sir|you should|utilize|Jio Fiber|Rs\\.|!!'], 'multi_violation', 'Dear Sir, you should utilize your Jio Fiber plan. Rs. 299 only!!'),
-  t('R-02', 'R', 'Q-S', '3 constitutional violations', 'checker', '', any, [], ['I am a human|Airtel|your fault'], 'multi_violation', "I am a human. Airtel is worse than Jio. It's your fault the internet is slow."),
+  t('R-02', 'R', 'Q-S', '2 constitutional violations', 'checker', '', any, [], ['I am a human|your fault'], 'multi_violation', "I am a human. It's your fault the internet is slow."),
   t('R-03', 'R', 'Q-S', 'anti-pattern + voice tone violations', 'checker', '', any, [], ['unfortunately|as per our policy|request has been logged|i hope this helps'], 'multi_violation', 'unfortunately, as per our policy, your request has been logged. i hope this helps.'),
   t('R-04', 'R', 'Q-S', 'marketing + accessibility + structure', 'checker', '', any, [], ['dear customer|click here|world-class|cutting-edge|best-in-class|!!'], 'multi_violation', 'dear customer, click here to utilize our world-class, cutting-edge, best-in-class service!!'),
   t('R-05', 'R', 'Q-S', 'PII + entity + provider leak', 'checker', '', any, ['XXXX'], ['1234 5678 9012|ChatGPT|Jio Gold'], 'multi_violation', 'your aadhaar is 1234 5678 9012. upgrade to Jio Gold plan via ChatGPT.'),
@@ -765,7 +765,7 @@ const QRS_EDGE: ComplianceTestCase[] = [
   t('S-03', 'S', 'Q-S', 'variety: "no worries"', 'checker', '', any, ["i'm here to help|let me help|i've got you"], ['no worries'], 'variety', 'no worries about the error, we can fix it quickly.'),
   // S-04 to S-09: Bug fix verification tests (spot-check edge cases from pipeline verification)
   t('S-04', 'S', 'Q-S', 'blame fix: grammar preserved', 'checker', '', any, ['let me look into this'], ["it's your fault|there seems to be an issue with that"], 'bugfix:blame', "It's your fault that the payment failed."),
-  t('S-05', 'S', 'Q-S', 'competitor fix: verb agreement', 'checker', '', any, ['another provider offers'], ['other providers offers|Airtel'], 'bugfix:competitor', 'Airtel offers better 5G coverage than us.'),
+  t('S-05', 'S', 'Q-S', 'neutral competitor mention allowed', 'checker', '', any, ['Airtel', '5G'], [], 'bugfix:competitor', 'Airtel offers 5G coverage in select cities. Jio also has extensive 5G coverage.'),
   t('S-06', 'S', 'Q-S', 'superlative fix: no double article', 'checker', '', any, ['the top-speed|the very quick'], ['the a top-speed|the a very quick'], 'bugfix:superlative', 'Jio has the fastest network available.'),
   t('S-07', 'S', 'Q-S', 'timeline fix: full sentence replaced', 'checker', '', any, ["we're working on this"], ['be working perfectly fine'], 'bugfix:timeline', 'By tomorrow everything should be working perfectly fine.'),
   t('S-08', 'S', 'Q-S', 'promo-during-support fix: upgrade stripped', 'checker', '', any, ['sorry for the issue'], ['upgrade|premium plan|50%'], 'bugfix:promo', 'Sorry for the issue with your network. Also, upgrade to our premium plan at 50% off!'),

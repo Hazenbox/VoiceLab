@@ -316,12 +316,11 @@ export const ENFORCEMENT_RULES = {
     tokenKey: 'ecosystem',
     tokenValue: '*',  // Apply to all ecosystems - Jio is always the brand
     ruleType: 'must_not_contain',
-    // Use word boundaries for short patterns to avoid false positives
-    // e.g., "vi" should not match "service", "provide", "activity"
-    patterns: ['competitor', 'airtel', 'vodafone', '\\bvi\\b', 'bsnl', '\\bidea\\b', 'jio competitor'],
+    // Only block negative comparisons - neutral competitor mentions are allowed
+    patterns: ['worse than', 'inferior to', 'terrible service', 'avoid them', 'bad network'],
     autoFixAction: 'remove',
-    severity: 'error',
-    errorMessage: 'Never mention competitor brands - focus on Jio value proposition',
+    severity: 'warning',
+    errorMessage: 'Avoid negative competitor comparisons - maintain neutral, objective tone',
     category: 'brand',
     priority: 95,
   }),
