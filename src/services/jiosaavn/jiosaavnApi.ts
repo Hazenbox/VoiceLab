@@ -73,6 +73,25 @@ function getBestImageUrl(images: { quality: string; url: string }[]): string {
   return images[images.length - 1].url;
 }
 
+/**
+ * Get best audio URL from downloadUrl array
+ * Prefers higher quality (320kbps > 160kbps > 96kbps)
+ */
+function getBestAudioUrl(downloadUrls: { quality: string; url: string }[]): string {
+  if (!downloadUrls || downloadUrls.length === 0) {
+    return '';
+  }
+  
+  const preferredQualities = ['320kbps', '160kbps', '96kbps', '48kbps', '12kbps'];
+  
+  for (const quality of preferredQualities) {
+    const match = downloadUrls.find(dl => dl.quality === quality);
+    if (match) return match.url;
+  }
+  
+  return downloadUrls[downloadUrls.length - 1].url;
+}
+
 function formatArtistNames(artists: JioSaavnArtist[]): string {
   if (!artists || artists.length === 0) return '';
   
@@ -91,6 +110,8 @@ function transformSongToItem(song: JioSaavnSong): ExplorationItem {
     subtitle: formatArtistNames(song.artists?.primary || []),
     imageUrl: getBestImageUrl(song.image),
     jiosaavnUrl: song.url,
+    audioUrl: getBestAudioUrl(song.downloadUrl || []),
+    duration: song.duration || undefined,
   };
 }
 
@@ -103,6 +124,7 @@ function transformPlaylistToItem(playlist: JioSaavnPlaylist): ExplorationItem {
     subtitle: songCount,
     imageUrl: getBestImageUrl(playlist.image),
     jiosaavnUrl: playlist.url,
+    songCount: playlist.songCount || undefined,
   };
 }
 
@@ -119,14 +141,14 @@ function transformArtistToItem(artist: JioSaavnArtist): ExplorationItem {
 
 function transformAlbumToItem(album: JioSaavnAlbum): ExplorationItem {
   const artistNames = formatArtistNames(album.artists?.primary || []);
-  const year = album.year ? ` (${album.year})` : '';
   return {
     id: album.id,
     type: 'album',
     name: album.name,
-    subtitle: `${artistNames}${year}`,
+    subtitle: artistNames,
     imageUrl: getBestImageUrl(album.image),
     jiosaavnUrl: album.url,
+    year: album.year || undefined,
   };
 }
 
@@ -269,7 +291,100 @@ function transformResponse(
   };
 }
 
+/**
+ * Search specifically for songs with streaming URLs
+ * Uses /api/jiosaavn/songs endpoint which returns downloadUrl
+ */
+export async function searchSongsWithAudio(
+  query: string,
+  options: SearchOptions = {}
+): Promise<SearchResult> {
+  const { limit = DEFAULT_LIMIT, signal } = options;
+  
+  if (!query || query.trim().length === 0) {
+    return {
+      success: false,
+      data: null,
+      error: 'Empty search query',
+      errorCode: 'EMPTY_QUERY',
+    };
+  }
+  
+  const trimmedQuery = query.trim();
+  
+  try {
+    const url = new URL(`${API_ENDPOINT}/songs`, window.location.origin);
+    url.searchParams.set('query', trimmedQuery);
+    url.searchParams.set('limit', limit.toString());
+    
+    console.log(`[JioSaavn] Fetching songs with audio: "${trimmedQuery}"`);
+    
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      signal,
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`[JioSaavn] Songs API error: ${response.status}`, errorData);
+      return {
+        success: false,
+        data: null,
+        error: errorData.error || `HTTP ${response.status}`,
+        errorCode: errorData.code || 'HTTP_ERROR',
+      };
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success || !data.data?.results) {
+      return {
+        success: false,
+        data: null,
+        error: 'Invalid response structure',
+        errorCode: 'INVALID_RESPONSE',
+      };
+    }
+    
+    const items: ExplorationItem[] = data.data.results.map((song: JioSaavnSong) => 
+      transformSongToItem(song)
+    );
+    
+    return {
+      success: true,
+      data: {
+        query: trimmedQuery,
+        items,
+        timestamp: Date.now(),
+      },
+    };
+    
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        success: false,
+        data: null,
+        error: 'Request cancelled',
+        errorCode: 'ABORTED',
+      };
+    }
+    
+    console.error('[JioSaavn] Songs fetch error:', error);
+    
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      errorCode: 'FETCH_ERROR',
+    };
+  }
+}
+
 export const jiosaavnApi = {
   search: searchJioSaavn,
+  searchSongs: searchSongsWithAudio,
   clearCache: clearSearchCache,
 };

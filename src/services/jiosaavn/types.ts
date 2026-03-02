@@ -156,6 +156,14 @@ export interface ExplorationItem {
   subtitle: string;
   imageUrl: string;
   jiosaavnUrl: string;
+  /** Streaming URL for songs (from downloadUrl) */
+  audioUrl?: string;
+  /** Duration in seconds (for songs) */
+  duration?: number;
+  /** Song count (for playlists/albums) */
+  songCount?: number;
+  /** Year of release (for albums) */
+  year?: string;
 }
 
 /**

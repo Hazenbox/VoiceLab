@@ -685,6 +685,106 @@ async function handleJioSaavnProxy(req, res) {
   }
 }
 
+/**
+ * HTTP Proxy Handler for JioSaavn Songs Search
+ * Returns songs with downloadUrl for streaming
+ */
+async function handleJioSaavnSongsProxy(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+  
+  if (req.method !== 'GET') {
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' }));
+    return;
+  }
+  
+  const parsedUrl = new URL(req.url, `http://localhost:${PROXY_PORT}`);
+  const query = parsedUrl.searchParams.get('query');
+  const limitParam = parsedUrl.searchParams.get('limit');
+  
+  if (!query || query.trim().length === 0) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Missing or invalid query parameter', code: 'INVALID_QUERY' }));
+    return;
+  }
+  
+  const searchQuery = query.trim();
+  
+  let limit = JIOSAAVN_DEFAULT_LIMIT;
+  if (limitParam) {
+    const parsedLimit = parseInt(limitParam, 10);
+    if (!isNaN(parsedLimit) && parsedLimit > 0) {
+      limit = Math.min(parsedLimit, JIOSAAVN_MAX_LIMIT);
+    }
+  }
+  
+  console.log(`[Proxy] JioSaavn songs search: "${searchQuery}" (limit: ${limit})`);
+  
+  const apiUrl = new URL(`${JIOSAAVN_API_BASE}/search/songs`);
+  apiUrl.searchParams.set('query', searchQuery);
+  apiUrl.searchParams.set('limit', limit.toString());
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), JIOSAAVN_TIMEOUT_MS);
+  
+  try {
+    const response = await fetch(apiUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'VoiceLab/1.0',
+      },
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      console.error(`[Proxy] JioSaavn songs upstream error: ${response.status}`);
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Failed to fetch songs', code: 'UPSTREAM_ERROR' }));
+      return;
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success || !data.data) {
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Invalid response from JioSaavn', code: 'INVALID_UPSTREAM_RESPONSE' }));
+      return;
+    }
+    
+    console.log(`[Proxy] JioSaavn songs success: ${data.data.results?.length || 0} songs`);
+    
+    res.writeHead(200, { 
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=300',
+    });
+    res.end(JSON.stringify(data));
+    
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      res.writeHead(504, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Request timeout', code: 'TIMEOUT' }));
+      return;
+    }
+    
+    console.error('[Proxy] JioSaavn songs error:', error);
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Internal server error', code: 'INTERNAL_ERROR' }));
+  }
+}
+
 // Create HTTP server
 const server = http.createServer((req, res) => {
   // Parse URL for routing (handles query strings)
@@ -722,7 +822,13 @@ const server = http.createServer((req, res) => {
     return;
   }
   
-  // JioSaavn proxy endpoint
+  // JioSaavn songs proxy endpoint (with streaming URLs)
+  if (pathname === '/api/jiosaavn/songs') {
+    handleJioSaavnSongsProxy(req, res);
+    return;
+  }
+  
+  // JioSaavn global search proxy endpoint
   if (pathname === '/api/jiosaavn') {
     handleJioSaavnProxy(req, res);
     return;

@@ -6,12 +6,13 @@
  * - Debounced API calls
  * - Request cancellation on unmount
  * - Loading and error states
+ * - Songs with streaming URLs for in-browser playback
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { jiosaavnApi, type SearchResult } from '../services/jiosaavn/jiosaavnApi';
+import { jiosaavnApi } from '../services/jiosaavn/jiosaavnApi';
 import { detectMusicTopic } from '../services/jiosaavn/musicTopicDetector';
-import type { ExplorationData, MusicTopicResult } from '../services/jiosaavn/types';
+import type { ExplorationData, MusicTopicResult, ExplorationItem } from '../services/jiosaavn/types';
 
 const DEBOUNCE_MS = 300;
 
@@ -58,16 +59,61 @@ export function useJioSaavnSearch(
     setError(null);
     
     try {
-      const result = await jiosaavnApi.search(query, {
-        limit,
-        signal: abortControllerRef.current.signal,
-      });
+      // Fetch both global search (for playlists, artists, albums) and songs (for streaming URLs)
+      const [globalResult, songsResult] = await Promise.all([
+        jiosaavnApi.search(query, {
+          limit,
+          signal: abortControllerRef.current.signal,
+        }),
+        jiosaavnApi.searchSongs(query, {
+          limit,
+          signal: abortControllerRef.current.signal,
+        }),
+      ]);
       
-      if (result.success && result.data) {
-        setData(result.data);
+      if (globalResult.success && globalResult.data) {
+        // Merge songs with audio URLs into the global results
+        const mergedItems: ExplorationItem[] = [];
+        const songsWithAudio = songsResult.success && songsResult.data 
+          ? songsResult.data.items 
+          : [];
+        
+        // Create a map of songs with audio URLs by ID
+        const songsMap = new Map<string, ExplorationItem>();
+        for (const song of songsWithAudio) {
+          songsMap.set(song.id, song);
+        }
+        
+        // Process global results, replacing songs with versions that have audio URLs
+        for (const item of globalResult.data.items) {
+          if (item.type === 'song' && songsMap.has(item.id)) {
+            mergedItems.push(songsMap.get(item.id)!);
+          } else if (item.type === 'song') {
+            // If song not in songsMap, try to find a matching one by name
+            const matchingSong = songsWithAudio.find(s => 
+              s.name.toLowerCase() === item.name.toLowerCase()
+            );
+            mergedItems.push(matchingSong || item);
+          } else {
+            mergedItems.push(item);
+          }
+        }
+        
+        // Add any songs with audio that weren't in global results
+        for (const song of songsWithAudio) {
+          if (!mergedItems.some(i => i.id === song.id)) {
+            mergedItems.push(song);
+          }
+        }
+        
+        setData({
+          query: globalResult.data.query,
+          items: mergedItems.slice(0, limit * 4), // Limit total items
+          timestamp: Date.now(),
+        });
         setError(null);
-      } else if (result.errorCode !== 'ABORTED') {
-        setError(result.error || 'Failed to fetch');
+      } else if (globalResult.errorCode !== 'ABORTED') {
+        setError(globalResult.error || 'Failed to fetch');
         setData(null);
       }
     } catch (err) {
