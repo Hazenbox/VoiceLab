@@ -548,10 +548,17 @@ export function generateAutoFixes(
       } else if (violation.suggestion.length < 100) {
         // Check if suggestion is instructional (not a literal replacement)
         // These are guidance for humans, not actual replacement values
-        const isInstructional = /^(Add|Use|Consider|Avoid|Remove|Describe|Rephrase|Break|Simplify|Put|State|Lowercase|Uppercase|Capitalize|Substantiate|Rewrite|Check|Ensure|Fix|Convert|Replace|Here's)/i.test(violation.suggestion);
+        const isInstructional = /^(Add|Use|Consider|Avoid|Remove|Describe|Rephrase|Break|Simplify|Put|State|Lowercase|Uppercase|Capitalize|Substantiate|Rewrite|Check|Ensure|Fix|Convert|Replace|Here's|Provide|Focus|Make)/i.test(violation.suggestion);
         const isTooLong = violation.suggestion.split(/\s+/).length > (violation.text.split(/\s+/).length * 3);
+        // Detect comma-separated alternatives (e.g., "please, we recommend" or "firefighter, police officer")
+        // These are lists of options for humans to choose from, not literal replacements
+        const isAlternativesList = violation.suggestion.includes(',');
+        // Detect "or" separated alternatives (e.g., "Hello, Welcome, or Namaste")
+        const hasOrSeparator = /\bor\b/i.test(violation.suggestion);
+        // Detect placeholder patterns like "[area]" or "₹X"
+        const hasPlaceholder = /\[[^\]]+\]|₹X/i.test(violation.suggestion);
         
-        if (!isInstructional && !isTooLong) {
+        if (!isInstructional && !isTooLong && !isAlternativesList && !hasOrSeparator && !hasPlaceholder) {
           // Fallback to raw suggestion - only use short, non-instructional suggestions
           fixes.push({
             original: violation.text,
@@ -561,7 +568,7 @@ export function generateAutoFixes(
             violation,
           });
         }
-        // Skip instructional suggestions - they're guidance, not replacements
+        // Skip instructional suggestions, comma-separated alternatives, and placeholders
       } else {
         // For very long suggestions, try to remove the violating text
         // This is a last resort - remove content rather than leave violations

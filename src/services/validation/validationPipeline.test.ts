@@ -206,7 +206,7 @@ describe('validationPipeline', () => {
       const benefitViolation = violations.find(v => v.rule.includes('benefit'));
       
       expect(benefitViolation).toBeDefined();
-      expect(benefitViolation?.suggestion).toContain('50% off');
+      expect(benefitViolation?.suggestion).toContain('discount/benefit first');
     });
 
     it('should allow benefit-first headlines with event names', () => {
