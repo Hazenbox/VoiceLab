@@ -201,6 +201,7 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
     },
   ],
   corporate_speak: [
+    // Corporate jargon
     {
       pattern: /\b(synergy|leverage|paradigm shift|best.?in.?class|world.?class)\b/gi,
       severity: 'warning',
@@ -224,6 +225,59 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
       severity: 'warning',
       replacement: 'based on',
       description: 'legal jargon',
+    },
+    // KB/09: Filler openers - delay the benefit, waste attention
+    {
+      pattern: /\bwe would like to (inform|notify|advise|let) you that\b/gi,
+      severity: 'warning',
+      replacement: '',
+      description: 'filler opener - lead with benefit instead',
+    },
+    {
+      pattern: /\bkindly note that\b/gi,
+      severity: 'warning',
+      replacement: '',
+      description: 'formal opener - state the point directly',
+    },
+    // KB/09: Hedging phrases - sound defensive, imply reluctance
+    {
+      pattern: /\bas a gesture of (goodwill|appreciation|thanks)\b/gi,
+      severity: 'warning',
+      replacement: '',
+      description: 'hedging - state the reason directly',
+    },
+    // KB/09: Exaggerated apology - empty ritual without action
+    {
+      pattern: /\bwe (regret|apologise for) (any |the )?(inconvenience|trouble)( (this )?(may have |might have )?caused)?\b/gi,
+      severity: 'warning',
+      replacement: 'thanks for your patience',
+      description: 'exaggerated apology - acknowledge simply or take action',
+    },
+    // KB/09: Formal sign-offs - create hierarchy, sound cold
+    {
+      pattern: /\b(best regards|yours (sincerely|faithfully)|warm regards),?\s*(jio|the jio team|team jio)?\s*$/gim,
+      severity: 'warning',
+      replacement: 'with love from jio',
+      description: 'formal sign-off - use brand signature',
+    },
+    // KB/09: Indian corporate phrases
+    {
+      pattern: /\byou will be intimated\b/gi,
+      severity: 'warning',
+      replacement: "you'll hear from us",
+      description: 'formal indian english - use conversational phrasing',
+    },
+    {
+      pattern: /\bdear valued (customer|user|member)\b/gi,
+      severity: 'warning',
+      replacement: 'hi',
+      description: 'formal greeting - use warm casual greeting',
+    },
+    {
+      pattern: /\bwe wish to inform you that\b/gi,
+      severity: 'warning',
+      replacement: '',
+      description: 'filler opener - lead with benefit instead',
     },
   ],
   sensitivity: [
