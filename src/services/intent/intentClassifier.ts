@@ -120,7 +120,7 @@ const SUPPORT_SERVICE_KEYWORDS = /\b(service|internet|wifi|wi-fi|broadband|fiber
 /**
  * Issue/complaint indicators that suggest a support request
  */
-const ISSUE_INDICATORS = /\b(slow|not working|doesn'?t work|won'?t work|problem|issue|error|fail|down|disconnected|buffering|lag|dropping|unstable|poor|bad|trouble|help|fix|broken)\b/i;
+const ISSUE_INDICATORS = /\b(slow|not working|doesn'?t work|won'?t work|problem|issue|error|fail(?:ed|ing|s)?|down|disconnected|buffering|lag|dropping|unstable|poor|bad|trouble|help|fix|broken)\b/i;
 
 /**
  * Billing/recharge keywords - also indicate Jio service inquiry
