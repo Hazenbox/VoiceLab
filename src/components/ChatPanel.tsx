@@ -781,7 +781,7 @@ export const ChatPanel = memo(function ChatPanel({
             disabled={inputDisabled}
             aria-label="Message input"
             rows={1}
-            className="w-full bg-transparent outline-none px-2 resize-none overflow-y-auto"
+            className="w-full bg-transparent outline-none resize-none overflow-y-auto"
             style={{ 
               color: theme.text.high,
               minHeight: '28px',
@@ -789,6 +789,8 @@ export const ChatPanel = memo(function ChatPanel({
               lineHeight: '22px',
               paddingTop: '3px',
               paddingBottom: '3px',
+              paddingLeft: '8px',
+              paddingRight: '8px',
               fontSize: '15px',
             }}
           />
@@ -851,7 +853,10 @@ export const ChatPanel = memo(function ChatPanel({
                 width: '36px', 
                 height: '36px', 
                 minHeight: '36px',
-                padding: '0',
+                paddingTop: '0',
+                paddingBottom: '0',
+                paddingLeft: '0',
+                paddingRight: '0',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
@@ -872,7 +877,10 @@ export const ChatPanel = memo(function ChatPanel({
                 width: '36px', 
                 height: '36px', 
                 minHeight: '36px',
-                padding: '0',
+                paddingTop: '0',
+                paddingBottom: '0',
+                paddingLeft: '0',
+                paddingRight: '0',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',

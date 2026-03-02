@@ -531,36 +531,200 @@ async function handleTTSProxy(req, res) {
   });
 }
 
+// JioSaavn API configuration
+const JIOSAAVN_API_BASE = 'https://saavn.sumit.co/api';
+const JIOSAAVN_DEFAULT_LIMIT = 5;
+const JIOSAAVN_MAX_LIMIT = 10;
+const JIOSAAVN_TIMEOUT_MS = 10000;
+
+/**
+ * HTTP Proxy Handler for JioSaavn API requests
+ * Proxies search requests to the unofficial JioSaavn API
+ */
+async function handleJioSaavnProxy(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+  
+  if (req.method !== 'GET') {
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' }));
+    return;
+  }
+  
+  // Parse URL and query parameters
+  const parsedUrl = new URL(req.url, `http://localhost:${PROXY_PORT}`);
+  const query = parsedUrl.searchParams.get('query');
+  const limitParam = parsedUrl.searchParams.get('limit');
+  
+  // Validate query
+  if (!query || query.trim().length === 0) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Missing or invalid query parameter', code: 'INVALID_QUERY' }));
+    return;
+  }
+  
+  const searchQuery = query.trim();
+  
+  if (searchQuery.length > 200) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Query too long (max 200 characters)', code: 'QUERY_TOO_LONG' }));
+    return;
+  }
+  
+  // Parse limit
+  let limit = JIOSAAVN_DEFAULT_LIMIT;
+  if (limitParam) {
+    const parsedLimit = parseInt(limitParam, 10);
+    if (!isNaN(parsedLimit) && parsedLimit > 0) {
+      limit = Math.min(parsedLimit, JIOSAAVN_MAX_LIMIT);
+    }
+  }
+  
+  console.log(`[Proxy] JioSaavn search: "${searchQuery}" (limit: ${limit})`);
+  
+  // Build upstream URL
+  const apiUrl = new URL(`${JIOSAAVN_API_BASE}/search`);
+  apiUrl.searchParams.set('query', searchQuery);
+  
+  // Create abort controller for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), JIOSAAVN_TIMEOUT_MS);
+  
+  try {
+    const response = await fetch(apiUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'VoiceLab/1.0',
+      },
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      console.error(`[Proxy] JioSaavn upstream error: ${response.status} ${response.statusText}`);
+      
+      if (response.status === 429) {
+        res.writeHead(429, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'JioSaavn API rate limit exceeded', code: 'UPSTREAM_RATE_LIMIT', retryAfter: 60 }));
+        return;
+      }
+      
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Failed to fetch from JioSaavn API', code: 'UPSTREAM_ERROR', upstreamStatus: response.status }));
+      return;
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success || !data.data) {
+      console.warn('[Proxy] JioSaavn invalid response structure');
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Invalid response from JioSaavn API', code: 'INVALID_UPSTREAM_RESPONSE' }));
+      return;
+    }
+    
+    // Limit results per category
+    const limitedData = {
+      success: true,
+      data: {
+        songs: {
+          results: (data.data.songs?.results || []).slice(0, limit),
+          position: data.data.songs?.position || 0,
+        },
+        playlists: {
+          results: (data.data.playlists?.results || []).slice(0, limit),
+          position: data.data.playlists?.position || 0,
+        },
+        artists: {
+          results: (data.data.artists?.results || []).slice(0, limit),
+          position: data.data.artists?.position || 0,
+        },
+        albums: {
+          results: (data.data.albums?.results || []).slice(0, limit),
+          position: data.data.albums?.position || 0,
+        },
+        topQuery: {
+          results: (data.data.topQuery?.results || []).slice(0, limit),
+          position: data.data.topQuery?.position || 0,
+        },
+      },
+    };
+    
+    console.log(`[Proxy] JioSaavn success: ${limitedData.data.songs.results.length} songs, ${limitedData.data.playlists.results.length} playlists`);
+    
+    res.writeHead(200, { 
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=300',
+    });
+    res.end(JSON.stringify(limitedData));
+    
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      console.error('[Proxy] JioSaavn request timeout');
+      res.writeHead(504, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Request to JioSaavn API timed out', code: 'TIMEOUT' }));
+      return;
+    }
+    
+    console.error('[Proxy] JioSaavn unexpected error:', error);
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Internal server error', code: 'INTERNAL_ERROR' }));
+  }
+}
+
 // Create HTTP server
 const server = http.createServer((req, res) => {
+  // Parse URL for routing (handles query strings)
+  const parsedUrl = new URL(req.url, `http://localhost:${PROXY_PORT}`);
+  const pathname = parsedUrl.pathname;
+  
   // Health check endpoint
-  if (req.url === '/health') {
+  if (pathname === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok', service: 'ws-proxy' }));
     return;
   }
   
   // TTS proxy endpoint
-  if (req.url === '/api/tts') {
+  if (pathname === '/api/tts') {
     handleTTSProxy(req, res);
     return;
   }
   
   // LLM proxy endpoint
-  if (req.url === '/api/llm') {
+  if (pathname === '/api/llm') {
     handleLLMProxy(req, res);
     return;
   }
   
   // Inworld proxy endpoint
-  if (req.url === '/api/inworld/simpleSendText') {
+  if (pathname === '/api/inworld/simpleSendText') {
     handleInworldProxy(req, res);
     return;
   }
   
   // HuggingFace proxy endpoint
-  if (req.url === '/api/huggingface') {
+  if (pathname === '/api/huggingface') {
     handleHuggingFaceProxy(req, res);
+    return;
+  }
+  
+  // JioSaavn proxy endpoint
+  if (pathname === '/api/jiosaavn') {
+    handleJioSaavnProxy(req, res);
     return;
   }
   
@@ -744,7 +908,9 @@ async function startServer() {
 ║    Inworld:        http://localhost:${PROXY_PORT}/api/inworld/...         ║
 ║    HuggingFace:    http://localhost:${PROXY_PORT}/api/huggingface         ║
 ║  ─────────────────────────────────────────────────────────────────║
-║  Health Check:  http://localhost:${PROXY_PORT}/health                     ║
+║  Music Search:   http://localhost:${PROXY_PORT}/api/jiosaavn             ║
+║  ─────────────────────────────────────────────────────────────────║
+║  Health Check:   http://localhost:${PROXY_PORT}/health                    ║
 ╠═══════════════════════════════════════════════════════════════════╣
 ║  API Keys: DashScope=${DASHSCOPE_API_KEY ? '✓' : '✗'} HF=${HUGGINGFACE_API_KEY ? '✓' : '✗'} Gemini=${GEMINI_API_KEY ? '✓' : '✗'} ElevenLabs=${ELEVENLABS_API_KEY ? '✓' : '✗'}  ║
 ╚═══════════════════════════════════════════════════════════════════╝
