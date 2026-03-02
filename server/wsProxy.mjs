@@ -658,9 +658,76 @@ wss.on('connection', (clientWs, req) => {
   });
 });
 
-// Start server
-server.listen(PROXY_PORT, () => {
-  console.log(`
+/**
+ * Check if a proxy is already running on the target port.
+ * If so, exit gracefully instead of crashing.
+ */
+async function checkExistingProxy(port) {
+  return new Promise((resolve) => {
+    const req = http.request(
+      { hostname: 'localhost', port, path: '/health', method: 'GET', timeout: 2000 },
+      (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data);
+            if (json.status === 'ok' && json.service === 'ws-proxy') {
+              resolve(true);
+            } else {
+              resolve(false);
+            }
+          } catch {
+            resolve(false);
+          }
+        });
+      }
+    );
+    req.on('error', () => resolve(false));
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+    req.end();
+  });
+}
+
+// Start server with graceful port handling
+async function startServer() {
+  const existingProxy = await checkExistingProxy(PROXY_PORT);
+  
+  if (existingProxy) {
+    console.log(`
+╔═══════════════════════════════════════════════════════════════════╗
+║        Multi-LLM WebSocket & HTTP Proxy Server                    ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  Status: Already running on port ${PROXY_PORT}                            ║
+║  Action: Using existing proxy instance                            ║
+╚═══════════════════════════════════════════════════════════════════╝
+    `);
+    process.exit(0);
+  }
+  
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`
+╔═══════════════════════════════════════════════════════════════════╗
+║        Multi-LLM WebSocket & HTTP Proxy Server                    ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  ERROR: Port ${PROXY_PORT} is already in use                              ║
+║  Action: Kill the process using port ${PROXY_PORT} and try again          ║
+║  Command: lsof -ti :${PROXY_PORT} | xargs kill -9                         ║
+╚═══════════════════════════════════════════════════════════════════╝
+      `);
+      process.exit(1);
+    } else {
+      console.error('[Proxy] Server error:', err);
+      process.exit(1);
+    }
+  });
+  
+  server.listen(PROXY_PORT, () => {
+    console.log(`
 ╔═══════════════════════════════════════════════════════════════════╗
 ║        Multi-LLM WebSocket & HTTP Proxy Server                    ║
 ╠═══════════════════════════════════════════════════════════════════╣
@@ -681,8 +748,9 @@ server.listen(PROXY_PORT, () => {
 ╠═══════════════════════════════════════════════════════════════════╣
 ║  API Keys: DashScope=${DASHSCOPE_API_KEY ? '✓' : '✗'} HF=${HUGGINGFACE_API_KEY ? '✓' : '✗'} Gemini=${GEMINI_API_KEY ? '✓' : '✗'} ElevenLabs=${ELEVENLABS_API_KEY ? '✓' : '✗'}  ║
 ╚═══════════════════════════════════════════════════════════════════╝
-  `);
-});
+    `);
+  });
+}
 
 // Graceful shutdown
 process.on('SIGINT', () => {
@@ -693,3 +761,6 @@ process.on('SIGINT', () => {
     });
   });
 });
+
+// Start the server
+startServer();
