@@ -400,9 +400,51 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
     };
   }, []);
   
-  if (isDetecting) {
-    console.log('[JioSaavnExploration] Still detecting music topic...');
-    return null;
+  if (isDetecting || (musicTopic?.detected && isLoading)) {
+    console.log('[JioSaavnExploration] Loading...', { isDetecting, isLoading });
+    return (
+      <div
+        className="mt-4 rounded-2xl overflow-hidden"
+        style={{
+          backgroundColor: theme.surface.low,
+          padding: '16px',
+        }}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <div
+            className="w-5 h-5 rounded-full animate-spin"
+            style={{
+              border: `2px solid ${theme.stroke.low}`,
+              borderTopColor: theme.accent.default,
+            }}
+          />
+          <span style={{ color: theme.text.medium, fontSize: '14px' }}>
+            {isDetecting ? 'Analyzing music content...' : 'Loading playlists...'}
+          </span>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-3">
+              <div
+                className="w-32 h-20 rounded-lg animate-pulse"
+                style={{ backgroundColor: theme.stroke.low }}
+              />
+              <div className="flex-1 space-y-2">
+                <div
+                  className="h-4 w-3/4 rounded animate-pulse"
+                  style={{ backgroundColor: theme.stroke.low }}
+                />
+                <div
+                  className="h-3 w-1/2 rounded animate-pulse"
+                  style={{ backgroundColor: theme.stroke.low }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
   
   if (!musicTopic?.detected) {
