@@ -115,7 +115,7 @@ const QUESTION_PATTERNS = /\b(what|how|tell\s+me|explain|when|where|which|is|doe
  * These keywords, when combined with issue indicators, should be classified as jio_inquiry
  * since they likely relate to Jio services (JioFiber, Jio mobile, etc.)
  */
-const SUPPORT_SERVICE_KEYWORDS = /\b(internet|wifi|wi-fi|broadband|fiber|fibre|connection|network|router|speed|data|signal|ott|streaming|tv|mobile|sim|phone)\b/i;
+const SUPPORT_SERVICE_KEYWORDS = /\b(service|internet|wifi|wi-fi|broadband|fiber|fibre|connection|network|router|speed|data|signal|ott|streaming|tv|mobile|sim|phone)\b/i;
 
 /**
  * Issue/complaint indicators that suggest a support request
@@ -126,6 +126,13 @@ const ISSUE_INDICATORS = /\b(slow|not working|doesn'?t work|won'?t work|problem|
  * Billing/recharge keywords - also indicate Jio service inquiry
  */
 const BILLING_KEYWORDS = /\b(recharge|bill|billing|payment|plan|balance|outage|expire|expiry|renew|subscription|pack|validity)\b/i;
+
+/**
+ * Complaint/frustration indicators that signal a support complaint
+ * even without explicit technical keywords like "internet" or "wifi".
+ * e.g., "This is the third time your service has failed"
+ */
+const COMPLAINT_INDICATORS = /\b(third time|multiple times|again and again|repeatedly|keeps? happening|still not|fed up|tired of this|unacceptable|worst|terrible|awful|disgusted|complaint|escalate|cancel|refund|second time|nth time)\b/i;
 
 /**
  * Combined: question + Jio product mention
@@ -165,6 +172,18 @@ function isJioInquiry(text: string): { match: boolean; signals: string[] } {
     return { 
       match: true, 
       signals: [`billing inquiry: ${billingMatch?.[0]}`] 
+    };
+  }
+  
+  // Complaint detection: frustration signals + issue indicators
+  // e.g., "This is the third time your service has failed", "I'm tired of this, it keeps failing"
+  const hasComplaintIndicator = COMPLAINT_INDICATORS.test(text);
+  if (hasComplaintIndicator && hasIssueIndicator) {
+    const complaintMatch = text.match(COMPLAINT_INDICATORS);
+    const issueMatch = text.match(ISSUE_INDICATORS);
+    return { 
+      match: true, 
+      signals: [`complaint: ${complaintMatch?.[0]} + ${issueMatch?.[0]}`] 
     };
   }
   
