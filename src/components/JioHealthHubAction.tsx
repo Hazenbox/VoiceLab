@@ -13,6 +13,7 @@
  */
 
 import { memo, useCallback, useMemo } from 'react';
+import { Button } from '@marcelinodzn/ds-react';
 import { useThemeColors } from '../theme';
 import { detectHealthTopic, getHealthcareMessage } from '../services/healthcare/healthTopicDetector';
 
@@ -22,8 +23,6 @@ interface JioHealthHubActionProps {
   safetyDomain?: string;
   ecosystem?: string;
 }
-
-const PRIMARY_INDIGO = '#6366f1';
 
 const JIOHEALTHHUB_URL = 'https://www.jio.com/jcms/jiohealthhub/';
 
@@ -113,7 +112,7 @@ export const JioHealthHubAction = memo(function JioHealthHubAction({
         </div>
       )}
       
-      {/* Action button */}
+      {/* Action button - DS Button primary with high attention, hug style */}
       <div
         style={{
           paddingLeft: '16px',
@@ -121,22 +120,14 @@ export const JioHealthHubAction = memo(function JioHealthHubAction({
           paddingBottom: '12px',
         }}
       >
-        <button
-          onClick={handleFindDoctors}
-          className="w-full py-2.5 px-4 rounded-full text-sm font-medium transition-colors duration-150"
-          style={{
-            backgroundColor: PRIMARY_INDIGO,
-            color: 'white',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = '0.9';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = '1';
-          }}
+        <Button
+          appearance="primary"
+          attention="high"
+          size="S"
+          onPress={handleFindDoctors}
         >
           Find doctors nearby
-        </button>
+        </Button>
       </div>
       
       {/* Emergency disclaimer */}
