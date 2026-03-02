@@ -914,8 +914,9 @@ export function applyFormatFixes(content: string): string {
   fixed = capitaliseSentenceStarts(fixed);
 
   // Email subject line: capitalize first letter after "Subject:" 
-  // e.g., "Subject: happy diwali" -> "Subject: Happy diwali"
-  fixed = fixed.replace(/^(Subject:\s*)([a-z])/im, (_m, prefix, letter) => `${prefix}${letter.toUpperCase()}`);
+  // Handles both plain "Subject:" and bold "**Subject**:" markdown formatting
+  // e.g., "**Subject**: happy diwali" -> "**Subject**: Happy diwali"
+  fixed = fixed.replace(/^(\*{0,2}Subject\*{0,2}:\s*)([a-z])/im, (_m, prefix, letter) => `${prefix}${letter.toUpperCase()}`);
 
   // Ensure space after sentence-ending punctuation followed by uppercase letter
   // Pattern: [lowercase letter][.!?][uppercase letter] -> add space before uppercase
