@@ -40,14 +40,12 @@ function formatDuration(seconds: number): string {
 
 const SongRow = memo(function SongRow({
   song,
-  index,
   theme,
   audioState,
   onPlay,
   onPause,
 }: {
   song: ExplorationItem;
-  index: number;
   theme: ReturnType<typeof useThemeColors>;
   audioState: AudioPlayerState;
   onPlay: (song: ExplorationItem) => void;
@@ -89,17 +87,6 @@ const SongRow = memo(function SongRow({
         }
       }}
     >
-      {/* Index number */}
-      <span
-        className="w-5 text-center flex-shrink-0"
-        style={{
-          color: theme.text.low,
-          fontSize: '13px',
-        }}
-      >
-        {index + 1}
-      </span>
-      
       {/* Song thumbnail */}
       {song.imageUrl ? (
         <img
@@ -149,7 +136,7 @@ const SongRow = memo(function SongRow({
             e.stopPropagation();
             handlePlayClick();
           }}
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-150"
+          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-150"
           style={{
             backgroundColor: isPlaying ? JIOSAAVN_GREEN : theme.stroke.low,
           }}
@@ -166,14 +153,9 @@ const SongRow = memo(function SongRow({
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
-              <rect x="6" y="4" width="4" height="16" rx="1" />
-              <rect x="14" y="4" width="4" height="16" rx="1" />
-            </svg>
+            <DSIcon name="IcPause" size="M" style={{ color: 'white' }} />
           ) : (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill={theme.text.high}>
-              <path d="M8 5v14l11-7z" />
-            </svg>
+            <DSIcon name="IcPlay" size="M" style={{ color: theme.text.high }} />
           )}
         </button>
       )}
@@ -209,7 +191,7 @@ const PlaylistCard = memo(function PlaylistCard({
       }}
     >
       {/* Playlist cover image */}
-      <div className="relative w-full aspect-[4/3] overflow-hidden">
+      <div className="relative w-full aspect-[16/9] overflow-hidden">
         {playlist.imageUrl ? (
           <img
             src={playlist.imageUrl}
@@ -229,11 +211,10 @@ const PlaylistCard = memo(function PlaylistCard({
       
       {/* Songs list */}
       <div className="py-2">
-        {playlist.songs.slice(0, 3).map((song, index) => (
+        {playlist.songs.slice(0, 3).map((song) => (
           <SongRow
             key={song.id}
             song={song}
-            index={index}
             theme={theme}
             audioState={audioState}
             onPlay={onPlay}
@@ -283,17 +264,13 @@ const LoadingSkeleton = memo(function LoadingSkeleton({
         >
           {/* Cover skeleton */}
           <div
-            className="w-full aspect-[4/3]"
+            className="w-full aspect-[16/9]"
             style={{ backgroundColor: theme.stroke.low }}
           />
           {/* Song rows skeleton */}
           <div className="py-2 px-3">
             {[1, 2, 3].map((j) => (
               <div key={j} className="flex items-center gap-3 py-2">
-                <div
-                  className="w-5 h-4 rounded"
-                  style={{ backgroundColor: theme.stroke.low }}
-                />
                 <div
                   className="w-10 h-10 rounded"
                   style={{ backgroundColor: theme.stroke.low }}
@@ -309,7 +286,7 @@ const LoadingSkeleton = memo(function LoadingSkeleton({
                   />
                 </div>
                 <div
-                  className="w-8 h-8 rounded-full"
+                  className="w-10 h-10 rounded-full"
                   style={{ backgroundColor: theme.stroke.low }}
                 />
               </div>
