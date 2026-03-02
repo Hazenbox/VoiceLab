@@ -2,11 +2,35 @@
  * ComplianceTestRunner
  *
  * In-app test runner that:
- * 1. Creates 23 chat projects (one per test group) in localStorage
- * 2. Runs all 333 tests sequentially through the pipeline / checker
+ * 1. Creates 28 chat projects (one per test group) in localStorage
+ * 2. Runs all 411 tests sequentially through the pipeline / checker
  * 3. Stores prompts & responses as real ChatMessages (reviewable in sidebar)
  * 4. Shows a real-time dashboard with scores, progress, pass/fail
  * 5. Generates a downloadable markdown report
+ * 
+ * Test coverage includes:
+ * - Constitutional rules (A1-A3)
+ * - Compliance verifier (B)
+ * - Forbidden phrases (C)
+ * - Anti-patterns (D)
+ * - LLM Judge (E)
+ * - Four Intents (FI)
+ * - Entity normalizer (F)
+ * - PII detector (G)
+ * - Auto-fix engine (H)
+ * - Validation agents (I1-I10)
+ * - End-to-end scenarios (J1-J4)
+ * - Safety classifier (K)
+ * - Token system (L)
+ * - Conversation architecture (M)
+ * - Joy + signatures (N)
+ * - Trimmer + retry (O-P)
+ * - Edge cases (Q-S)
+ * - Regression tests (T-W)
+ * - Music topic detection (X1) - NEW
+ * - Health topic detection (X2) - NEW
+ * - Token gate system (Y) - NEW
+ * - Safety gate enhancements (Z) - NEW
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';

@@ -16,6 +16,10 @@ import { checkForbiddenPhrases } from '../services/validation/agents/forbiddenPh
 import { runComplianceVerifier } from '../services/postprocess/complianceVerifier';
 import { generateAutoFixes, applyAutoFixes, applyFormatFixes, applyDirectReplacements } from '../services/trust/autoFixEngine';
 import { runQuickValidation } from '../services/validation/validationPipeline';
+import { detectMusicTopic } from '../services/jiosaavn/musicTopicDetector';
+import { detectHealthTopic } from '../services/healthcare/healthTopicDetector';
+import { checkTokenGate, type GateDecision } from '../services/tokens/tokenGate';
+import type { ActiveTokens } from '../services/tokens/tokenTypes';
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -116,9 +120,98 @@ function buildPipelineInput(test: ComplianceTestCase, createLLMProvider: Pipelin
 // CHECKER MODE: RUN DETERMINISTIC TOOLS ON testContent
 // ═══════════════════════════════════════════════════════════════════════════════
 
+/**
+ * Run music topic detection checker
+ * Returns a structured result string for pattern matching
+ */
+function runMusicDetectionChecker(content: string): string {
+  const result = detectMusicTopic(content);
+  const lines = [
+    `detected=${result.detected}`,
+    `confidence=${result.confidence.toFixed(2)}`,
+    `searchQuery=${result.searchQuery}`,
+    `matchedKeywords=${result.matchedKeywords.join(',')}`,
+  ];
+  return lines.join('\n');
+}
+
+/**
+ * Run health topic detection checker
+ * Returns a structured result string for pattern matching
+ */
+function runHealthDetectionChecker(content: string, safetyDomain?: string, ecosystem?: string): string {
+  const result = detectHealthTopic(content, safetyDomain, ecosystem);
+  const lines = [
+    `detected=${result.detected}`,
+    `category=${result.category}`,
+    `confidence=${result.confidence.toFixed(2)}`,
+    `matchedKeywords=${result.matchedKeywords.join(',')}`,
+  ];
+  return lines.join('\n');
+}
+
+/**
+ * Run token gate checker
+ * Parses token:key=value format from testContent and runs checkTokenGate
+ */
+function runTokenGateChecker(tokenString: string): string {
+  const tokens: Partial<ActiveTokens> = {};
+  
+  // Parse token:key=value format
+  const tokenMatch = tokenString.match(/token:([^=]+)=(.+)/);
+  if (tokenMatch) {
+    const [, key, value] = tokenMatch;
+    // Handle nested keys like safety.domain, emotion.rasa.user
+    const keys = key.split('.');
+    let current: any = tokens;
+    for (let i = 0; i < keys.length - 1; i++) {
+      current[keys[i]] = current[keys[i]] || {};
+      current = current[keys[i]];
+    }
+    current[keys[keys.length - 1]] = value;
+  }
+  
+  const decision: GateDecision = checkTokenGate(tokens);
+  
+  const lines = [
+    `shouldProceed=${decision.shouldProceed}`,
+    `reason=${decision.reason}`,
+    `priority=${decision.priority}`,
+    `triggeringTokens=${decision.triggeringTokens.join(',')}`,
+  ];
+  
+  if (decision.prebuiltResponse) {
+    lines.push(`prebuiltResponse=${decision.prebuiltResponse.substring(0, 100)}...`);
+  }
+  if (decision.promptInjection) {
+    lines.push(`promptInjection=${decision.promptInjection.substring(0, 200)}...`);
+  }
+  
+  return lines.join('\n');
+}
+
 function runCheckerMode(test: ComplianceTestCase): string {
   const raw = test.testContent ?? '';
   if (!raw) return '';
+
+  // Handle special checker modes based on section/ruleRef
+  const section = test.section;
+  const ruleRef = test.ruleRef;
+  
+  // X1: Music detection tests
+  if (section === 'X1' || ruleRef.startsWith('music:')) {
+    return runMusicDetectionChecker(raw);
+  }
+  
+  // X2: Health detection tests
+  if (section === 'X2' || ruleRef.startsWith('health:')) {
+    return runHealthDetectionChecker(raw, test.context.ecosystem, test.context.ecosystem);
+  }
+  
+  // Y: Token gate tests
+  if (section === 'Y' || ruleRef.startsWith('tokengate:')) {
+    return runTokenGateChecker(raw);
+  }
 
   let content = raw;
 
