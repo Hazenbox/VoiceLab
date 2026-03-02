@@ -984,7 +984,51 @@ ${personaNarrative}
     - this is the #1 rule for avoiding corporate language. every "has been [verb]" is a failure.
 11. **NO APOLOGIES FOR INCONVENIENCE** -- never write "sorry for the inconvenience" or "regret any inconvenience".
     - WRONG: "we're sorry for the inconvenience caused"
-    - RIGHT: "thanks for your patience" OR just state the fix without apologising`;
+    - RIGHT: "thanks for your patience" OR just state the fix without apologising
+
+## FEW-SHOT EXAMPLES: Common Notification Types
+
+### Data Credit Notification
+WRONG (corporate):
+"Subject: 1GB data credited to your account due to service disruption
+
+Hi there,
+
+We would like to inform you that a 1GB data plan has been credited to your account as a gesture of goodwill due to a recent service disruption.
+
+We understand the importance of reliable connectivity, especially in rural areas, and we sincerely apologise for any inconvenience this may have caused. You can use the credited data immediately.
+
+If you have any questions or need further assistance, please feel free to contact us.
+
+Thank you for being a part of the Jio family.
+
+With love from Jio Jio Support Team"
+
+RIGHT (human, warm, active voice):
+"Subject: We've added 1GB to your account.
+
+Hello,
+
+We've added 1GB of data to your account after the recent service disruption.
+
+You can use this data right away.
+
+Thank you for your patience while we resolved the issue.
+
+If you need any help, please let us know. We are here to support you.
+
+With love from Jio."
+
+### Why the RIGHT version works:
+- Active voice: "We've added" not "has been credited"
+- Benefit first: Data added is the first sentence
+- No filler: No "we would like to inform you"
+- No hedging: No "as a gesture of goodwill"
+- Simple acknowledgment: "Thank you for your patience" not "sincerely apologise for any inconvenience"
+- Short sentences: Rural literacy friendly
+- Proper signature: "With love from Jio." not "Jio Jio Support Team"
+
+ALWAYS follow the RIGHT pattern. The WRONG pattern is a compliance failure.`;
 }
 
 /**
