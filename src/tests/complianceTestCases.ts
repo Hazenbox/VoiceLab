@@ -1,8 +1,8 @@
 /**
  * Compliance Test Cases
  *
- * 362 test cases covering every enforcement rule in the Voice Designer system.
- * Organized into 23 test groups (each becomes a chat project in the UI).
+ * 382 test cases covering every enforcement rule in the Voice Designer system.
+ * Organized into 29 test groups (each becomes a chat project in the UI).
  */
 
 import type { EcosystemType, ContentChannelType } from '../types';
@@ -1084,6 +1084,115 @@ const Y_TOKEN_GATE: ComplianceTestCase[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// SECTION CL: CORPORATE LANGUAGE AVOIDANCE (Guardrail #11)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const CL_CORPORATE_LANGUAGE: ComplianceTestCase[] = [
+  // Active voice enforcement (most critical rule)
+  t('CL-01', 'CL', 'CL', 'active voice: data credit notification', 'generation',
+    'Write a notification informing the user that 1GB data has been credited to their account due to a recent network outage', any,
+    ["we've added|we added|we have added"],
+    ['has been credited', 'was credited'],
+    'Guardrail #11: Active Voice'),
+  t('CL-02', 'CL', 'CL', 'active voice: request processed', 'generation',
+    'Tell the user their refund request has been processed', any,
+    ["we've processed|we processed|we have processed"],
+    ['has been processed', 'was processed'],
+    'Guardrail #11: Active Voice'),
+  t('CL-03', 'CL', 'CL', 'active voice: account activated', 'generation',
+    'Inform the user their JioFiber account is now active', any,
+    ["we've activated|we activated|your.*is active|is now active"],
+    ['has been activated', 'was activated'],
+    'Guardrail #11: Active Voice'),
+  t('CL-04', 'CL', 'CL', 'active voice: payment received', 'generation',
+    'Confirm that we received the user payment of ₹299', any,
+    ["we've received|we received|we got|payment confirmed"],
+    ['has been received', 'was received'],
+    'Guardrail #11: Active Voice'),
+  
+  // Filler opener elimination
+  t('CL-05', 'CL', 'CL', 'no filler: "we would like to inform you"', 'checker',
+    '', any, [], ['we would like to inform you'],
+    'Guardrail #11: Filler Openers',
+    'We would like to inform you that your plan has been renewed successfully.'),
+  t('CL-06', 'CL', 'CL', 'no filler: "please be advised"', 'checker',
+    '', any, [], ['please be advised'],
+    'Guardrail #11: Filler Openers',
+    'Please be advised that maintenance is scheduled for tomorrow.'),
+  t('CL-07', 'CL', 'CL', 'no filler: "kindly note that"', 'checker',
+    '', any, [], ['kindly note'],
+    'Guardrail #11: Filler Openers',
+    'Kindly note that your plan expires on the 15th of this month.'),
+  
+  // Hedging phrase elimination
+  t('CL-08', 'CL', 'CL', 'no hedging: "as a gesture of goodwill"', 'checker',
+    '', any, [], ['gesture of goodwill'],
+    'Guardrail #11: Hedging Phrases',
+    'As a gesture of goodwill, we have credited 1GB to your account.'),
+  t('CL-09', 'CL', 'CL', 'no hedging: "due to circumstances beyond our control"', 'checker',
+    '', any, [], ['circumstances beyond our control'],
+    'Guardrail #11: Hedging Phrases',
+    'Due to circumstances beyond our control, service was interrupted yesterday.'),
+  
+  // Exaggerated apology elimination
+  t('CL-10', 'CL', 'CL', 'no exaggerated apology: "regret any inconvenience"', 'checker',
+    '', any, [], ['regret.*inconvenience'],
+    'Guardrail #11: Exaggerated Apology',
+    'We regret any inconvenience caused due to the service disruption.'),
+  t('CL-11', 'CL', 'CL', 'no exaggerated apology: "sorry for the inconvenience"', 'checker',
+    '', any, ['thanks for your patience'], ['sorry for the inconvenience'],
+    'Guardrail #11: Exaggerated Apology',
+    "We're sorry for the inconvenience caused by the network outage."),
+  t('CL-12', 'CL', 'CL', 'no exaggerated apology: "apologise for any inconvenience"', 'checker',
+    '', any, [], ['apologise for any inconvenience|apologize for any inconvenience'],
+    'Guardrail #11: Exaggerated Apology',
+    'We apologise for any inconvenience this may have caused.'),
+  
+  // Formal sign-off elimination
+  t('CL-13', 'CL', 'CL', 'no formal sign-off: "best regards"', 'checker',
+    '', any, ['with love from jio'], ['best regards'],
+    'Guardrail #11: Formal Sign-offs',
+    'Your issue has been resolved. Best regards, Jio Team'),
+  t('CL-14', 'CL', 'CL', 'no formal sign-off: "yours sincerely"', 'checker',
+    '', any, [], ['yours sincerely'],
+    'Guardrail #11: Formal Sign-offs',
+    'Thank you for choosing Jio. Yours sincerely, Team Jio'),
+  
+  // Formal greeting elimination
+  t('CL-15', 'CL', 'CL', 'no formal greeting: "dear valued customer"', 'checker',
+    '', any, ['hi|hello'], ['dear valued customer'],
+    'Guardrail #11: Formal Greetings',
+    'Dear valued customer, thank you for reaching out to us.'),
+  
+  // Indian corporate phrases
+  t('CL-16', 'CL', 'CL', 'no indian corporate: "you will be intimated"', 'checker',
+    '', any, ["you'll hear from us|we'll let you know|we'll update you"], ['you will be intimated'],
+    'Guardrail #11: Indian Corporate Phrases',
+    'Your request is being processed and you will be intimated shortly.'),
+  t('CL-17', 'CL', 'CL', 'no indian corporate: "do the needful"', 'checker',
+    '', any, [], ['do the needful'],
+    'Guardrail #11: Indian Corporate Phrases',
+    'Please do the needful and revert back to us.'),
+  
+  // Generation tests for full messages
+  t('CL-18', 'CL', 'CL', 'generation: service disruption notification', 'generation',
+    'Write a notification about a service disruption that affected users yesterday and we are giving them 1GB compensation', any,
+    ["we've added|we added", 'thanks for your patience|thank you for your patience'],
+    ['has been credited', 'regret.*inconvenience', 'gesture of goodwill', 'we would like to inform'],
+    'Guardrail #11: Full Message Test'),
+  t('CL-19', 'CL', 'CL', 'generation: plan expiry reminder', 'generation',
+    'Write a reminder that the user plan expires in 2 days', any,
+    ['expires|expiring', 'renew|recharge'],
+    ['please be advised', 'kindly note', 'we would like to inform'],
+    'Guardrail #11: Full Message Test'),
+  t('CL-20', 'CL', 'CL', 'generation: welcome message', 'generation',
+    'Write a welcome message for a new JioFiber user', any,
+    ['welcome|hi|hello', 'JioFiber'],
+    ['dear valued customer', 'best regards', 'yours sincerely'],
+    'Guardrail #11: Full Message Test'),
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // SECTION Z: SAFETY GATE ENHANCEMENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1147,6 +1256,7 @@ export const TEST_GROUPS: TestGroup[] = [
   { id: 'A3', name: 'test: A3 authority order', description: 'priority-based conflict resolution (5 tests)', tests: A3_AUTHORITY },
   { id: 'B', name: 'test: B compliance verifier', description: '39 deterministic compliance checks', tests: B_COMPLIANCE_VERIFIER },
   { id: 'C', name: 'test: C forbidden phrases', description: '35 forbidden phrase rules across 9 categories', tests: C_FORBIDDEN },
+  { id: 'CL', name: 'test: CL corporate language avoidance', description: '20 corporate language tests (active voice, filler openers, hedging, apologies)', tests: CL_CORPORATE_LANGUAGE },
   { id: 'D', name: 'test: D anti-patterns', description: '15 anti-pattern detection rules', tests: D_ANTI_PATTERNS },
   { id: 'E', name: 'test: E LLM judge', description: '12 subjective compliance checks', tests: E_JUDGE },
   { id: 'FI', name: 'test: FI four intents', description: '20 Four Intents compliance checks (situational empathy, location, momentum, proactive service)', tests: FI_FOUR_INTENTS },
