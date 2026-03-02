@@ -41,7 +41,33 @@ const CONFIDENCE_WEIGHTS = {
   low: 0.3,
 };
 
-const MIN_CONFIDENCE_THRESHOLD = 0.4;
+const MIN_CONFIDENCE_THRESHOLD = 0.25;
+
+const FAMOUS_ARTISTS = [
+  // International
+  'coldplay', 'beatles', 'queen', 'pink floyd', 'led zeppelin', 'rolling stones',
+  'michael jackson', 'madonna', 'elvis presley', 'bob dylan', 'david bowie',
+  'nirvana', 'radiohead', 'u2', 'metallica', 'ac/dc', 'guns n roses',
+  'taylor swift', 'beyonce', 'adele', 'ed sheeran', 'drake', 'kanye west',
+  'eminem', 'jay-z', 'rihanna', 'ariana grande', 'billie eilish', 'the weeknd',
+  'bruno mars', 'justin bieber', 'lady gaga', 'katy perry', 'maroon 5',
+  
+  // Bollywood & Indian
+  'arijit singh', 'shreya ghoshal', 'sonu nigam', 'lata mangeshkar', 'kishore kumar',
+  'mohammed rafi', 'asha bhosle', 'kumar sanu', 'alka yagnik', 'udit narayan',
+  'sunidhi chauhan', 'neha kakkar', 'armaan malik', 'atif aslam', 'rahat fateh ali khan',
+  'a.r. rahman', 'ar rahman', 'vishal-shekhar', 'pritam', 'shankar-ehsaan-loy',
+  'badshah', 'yo yo honey singh', 'diljit dosanjh', 'guru randhawa', 'jubin nautiyal',
+  
+  // South Indian
+  'sid sriram', 'anirudh ravichander', 'devi sri prasad', 'yuvan shankar raja',
+  's.p. balasubrahmanyam', 'spb', 'k.s. chithra', 'p. susheela', 'yesudas',
+  'chiranjeevi', 'rajinikanth', 'kamal haasan', 'vijay', 'suriya',
+  
+  // Classical & Traditional
+  'zakir hussain', 'pandit ravi shankar', 'ustad bismillah khan', 'hariprasad chaurasia',
+  'l. subramaniam', 'shivkumar sharma', 'amjad ali khan', 'bhimsen joshi',
+];
 
 const GENRE_PATTERNS = [
   /\b(indian|hindi|tamil|telugu|punjabi|bengali|marathi|gujarati|kannada|malayalam)\s+(music|songs?|jazz|rock|pop|classical|folk)\b/gi,
@@ -68,12 +94,26 @@ function normalizeText(text: string): string {
 function findMatchedKeywords(text: string): {
   matched: string[];
   confidence: number;
+  foundArtist?: string;
 } {
   const normalizedText = normalizeText(text);
   const words = new Set(normalizedText.split(/\s+/));
   const matched: string[] = [];
   let totalWeight = 0;
   let matchCount = 0;
+  let foundArtist: string | undefined;
+  
+  // Check for famous artists first
+  for (const artist of FAMOUS_ARTISTS) {
+    if (normalizedText.includes(artist)) {
+      foundArtist = artist;
+      // Add high weight for artist match
+      totalWeight += 0.9;
+      matchCount++;
+      matched.push(artist);
+      break;
+    }
+  }
   
   for (const [level, keywords] of Object.entries(MUSIC_KEYWORDS)) {
     const weight = CONFIDENCE_WEIGHTS[level as keyof typeof CONFIDENCE_WEIGHTS];
@@ -101,7 +141,7 @@ function findMatchedKeywords(text: string): {
     ? Math.min(1, totalWeight / Math.max(1, matchCount * 0.5))
     : 0;
   
-  return { matched, confidence };
+  return { matched, confidence, foundArtist };
 }
 
 function extractGenrePhrase(text: string): string | null {
@@ -179,20 +219,33 @@ export function detectMusicTopic(content: string): MusicTopicResult {
     };
   }
   
-  const { matched, confidence } = findMatchedKeywords(content);
+  const { matched, confidence, foundArtist } = findMatchedKeywords(content);
   
   const hasGenrePattern = GENRE_PATTERNS.some(pattern => {
     pattern.lastIndex = 0;
     return pattern.test(content);
   });
   
-  const adjustedConfidence = hasGenrePattern 
+  let adjustedConfidence = hasGenrePattern 
     ? Math.min(1, confidence + 0.2)
     : confidence;
   
-  const detected = adjustedConfidence >= MIN_CONFIDENCE_THRESHOLD && matched.length >= 2;
+  // Boost confidence if a famous artist is mentioned
+  if (foundArtist) {
+    adjustedConfidence = Math.min(1, adjustedConfidence + 0.3);
+  }
   
-  const searchQuery = detected ? extractSearchQuery(content, matched) : '';
+  const detected = adjustedConfidence >= MIN_CONFIDENCE_THRESHOLD && matched.length >= 1;
+  
+  // Prioritize artist name in search query if found
+  let searchQuery = '';
+  if (detected) {
+    if (foundArtist) {
+      searchQuery = foundArtist;
+    } else {
+      searchQuery = extractSearchQuery(content, matched);
+    }
+  }
   
   return {
     detected,
