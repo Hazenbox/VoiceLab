@@ -187,7 +187,8 @@ Guidelines for support responses:
 - Be helpful and informative, but do not oversell
 - If you do not know specific details, say so and suggest checking jio.com or calling 1800-889-9999
 - Use the brand tone: warm, clear, and trustworthy
-- Do not compare Jio negatively with competitors
+- When discussing competitors (Airtel, Vi, BSNL, etc.), be neutral and objective -- use actual names, provide factual information, and never diminish or disparage them
+- Focus on Jio's strengths positively rather than criticising competitors
 - **NEVER use exclamation marks ("!")** -- always use a full stop (".") instead` as const;
 
 // =============================================================================
