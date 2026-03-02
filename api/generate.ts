@@ -13,14 +13,14 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleCors } from './_cors';
-import { handleRateLimit, RATE_LIMITS } from './_rateLimit';
-import { handleApiAuth } from './_auth';
-import { validateGenerateRequest, sendValidationError } from './_validation';
-import { sendPipelineError, sendSSEError, getErrorCode, isRetryableError } from './_errors';
-import { fetchAllPipelineData, createSemanticSearchFunction } from './_convex';
-import { runPipelineServer } from '../src/services/pipeline/shared/serverRunner';
-import type { ServerPipelineInput, SSEEvent } from '../src/services/pipeline/shared/types';
+import { handleCors } from './_cors.js';
+import { handleRateLimit, RATE_LIMITS } from './_rateLimit.js';
+import { handleApiAuth } from './_auth.js';
+import { validateGenerateRequest, sendValidationError } from './_validation.js';
+import { sendPipelineError, sendSSEError, getErrorCode, isRetryableError } from './_errors.js';
+import { fetchAllPipelineData, createSemanticSearchFunction } from './_convex.js';
+import { runPipelineServer } from '../src/services/pipeline/shared/serverRunner.js';
+import type { ServerPipelineInput, SSEEvent } from '../src/services/pipeline/shared/types.js';
 
 // Pipeline-specific rate limit (stricter than LLM-only)
 const PIPELINE_RATE_LIMIT = { windowMs: 60 * 1000, maxRequests: 15 }; // 15 requests/minute

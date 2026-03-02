@@ -8,8 +8,8 @@
  */
 
 import { ConvexHttpClient } from 'convex/browser';
-import { api } from '../convex/_generated/api';
-import type { ServerExternalData } from '../src/services/pipeline/shared/types';
+import { api } from '../convex/_generated/api.js';
+import type { ServerExternalData } from '../src/services/pipeline/shared/types.js';
 
 // Initialize Convex HTTP client
 let convexClient: ConvexHttpClient | null = null;

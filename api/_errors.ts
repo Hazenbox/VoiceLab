@@ -8,7 +8,7 @@
  */
 
 import type { VercelResponse } from '@vercel/node';
-import { ERROR_CODES } from '../src/services/providers/llm/types';
+import { ERROR_CODES } from '../src/services/providers/llm/types.js';
 
 /**
  * Map LLMError codes to HTTP status codes.

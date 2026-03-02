@@ -14,8 +14,8 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleCors } from './_cors';
-import { handleRateLimit, RATE_LIMITS } from './_rateLimit';
+import { handleCors } from './_cors.js';
+import { handleRateLimit, RATE_LIMITS } from './_rateLimit.js';
 
 const JIOSAAVN_API_BASE = 'https://saavn.sumit.co/api';
 const DEFAULT_LIMIT = 5;
