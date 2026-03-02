@@ -141,7 +141,8 @@ export function useJioSaavnSearch(
     
     const query = musicTopic.searchQuery;
     
-    if (query === lastQueryRef.current && data) {
+    // Skip if we already fetched this query
+    if (query === lastQueryRef.current) {
       return;
     }
     
@@ -156,7 +157,7 @@ export function useJioSaavnSearch(
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [enabled, musicTopic, fetchData, data]);
+  }, [enabled, musicTopic, fetchData]);
   
   useEffect(() => {
     return () => {
@@ -263,7 +264,8 @@ export function usePlaylistSearch(
     
     const query = musicTopic.searchQuery;
     
-    if (query === lastQueryRef.current && data) {
+    // Skip if we already fetched this query
+    if (query === lastQueryRef.current) {
       return;
     }
     
@@ -278,7 +280,7 @@ export function usePlaylistSearch(
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [enabled, musicTopic, fetchData, data]);
+  }, [enabled, musicTopic, fetchData]);
   
   useEffect(() => {
     return () => {
