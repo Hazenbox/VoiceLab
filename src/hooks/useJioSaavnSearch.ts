@@ -283,9 +283,8 @@ export function usePlaylistSearch(
       return;
     }
     
-    lastContentRef.current = content;
-    
     detectionTimerRef.current = setTimeout(async () => {
+      lastContentRef.current = content;
       setIsDetecting(true);
       
       try {
