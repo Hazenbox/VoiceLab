@@ -48,6 +48,11 @@ interface JudgeCheckResult {
   emotionalCorrectness: boolean;
   serviceFirst: boolean;
   inclusivity: boolean;
+  // Four Intents checks (13-16)
+  situationalEmpathy: boolean;
+  locationIntelligence: boolean;
+  singleActionMomentum: boolean;
+  proactiveService: boolean;
 }
 
 // ── Judge Prompt ─────────────────────────────────────────────────────────
@@ -68,6 +73,16 @@ function buildJudgePrompt(content: string, userMessage: string): string {
 11. SERVICE FIRST: Is the response focused on helping the user, not selling or promoting? (Suggestions OK, but help comes first)
 12. INCLUSIVITY: Is the language gender-neutral, accessible, and free from assumptions about the user's background?
 
+--- FOUR INTENTS CHECKS (Critical) ---
+
+13. SITUATIONAL EMPATHY: If the user mentioned a SPECIFIC duration (e.g., "2 days", "since yesterday", "for a week") or dependency (e.g., "work from home", "can't afford disruption"), does the response acknowledge that SPECIFIC context? Generic empathy like "we understand how important..." without referencing their specific situation is a FAIL. (If no duration/dependency mentioned, answer YES)
+
+14. LOCATION INTELLIGENCE: If the user mentioned a location (city, area, region like "Patna", "Mumbai", "my area"), does the response acknowledge it AND offer location-specific help (e.g., "I can check for outages in your area")? Ignoring a mentioned location is a FAIL. (If no location mentioned, answer YES)
+
+15. SINGLE ACTION MOMENTUM: Does the response provide ONE clear next action (not a numbered checklist of 3+ steps)? Does it end with a diagnostic question or specific action that maintains dialogue? Dumping multiple troubleshooting steps like "1. Restart 2. Check 3. Try 4. Test 5. Contact" is a FAIL.
+
+16. PROACTIVE SERVICE: Does the response offer to DO something for the user ("I can check", "I can book", "let me connect you") rather than instructing them to do it themselves ("contact support", "you can check", "call 1800...")? Ending with "contact support" without offering to help is a FAIL.
+
 Format your answer EXACTLY like this (no extra text):
 1. YES/NO
 2. YES/NO
@@ -81,8 +96,12 @@ Format your answer EXACTLY like this (no extra text):
 10. YES/NO
 11. YES/NO
 12. YES/NO
+13. YES/NO
+14. YES/NO
+15. YES/NO
+16. YES/NO
 
-If ANY answer is NO, add a section starting with "REWRITE:" and provide the corrected response fixing ONLY the failed checks. Keep everything else identical. If all YES, just output the 12 answers.
+If ANY answer is NO, add a section starting with "REWRITE:" and provide the corrected response fixing ONLY the failed checks. Keep everything else identical. If all YES, just output the 16 answers.
 
 User message: "${userMessage}"
 
@@ -107,12 +126,19 @@ function parseJudgeResponse(response: string): { checks: JudgeCheckResult; rewri
     emotionalCorrectness: true,
     serviceFirst: true,
     inclusivity: true,
+    // Four Intents (default to true, will be set by parser)
+    situationalEmpathy: true,
+    locationIntelligence: true,
+    singleActionMomentum: true,
+    proactiveService: true,
   };
 
   const checkKeys: (keyof JudgeCheckResult)[] = [
     'empathy', 'turnDiscipline', 'structure', 'warmth', 'responsibility',
     'naturalness', 'simplicity', 'forwardMomentum', 'brandAlignment',
     'emotionalCorrectness', 'serviceFirst', 'inclusivity',
+    // Four Intents checks (13-16)
+    'situationalEmpathy', 'locationIntelligence', 'singleActionMomentum', 'proactiveService',
   ];
 
   let lineIdx = 0;
@@ -188,6 +214,11 @@ export async function runComplianceJudge(
       emotionalCorrectness: 'emotional_correctness',
       serviceFirst: 'service_first',
       inclusivity: 'inclusivity',
+      // Four Intents checks
+      situationalEmpathy: 'situational_empathy',
+      locationIntelligence: 'location_intelligence',
+      singleActionMomentum: 'single_action_momentum',
+      proactiveService: 'proactive_service',
     };
     for (const [key, label] of Object.entries(checkNameMap)) {
       if (!parsed.checks[key as keyof JudgeCheckResult]) {
@@ -203,7 +234,7 @@ export async function runComplianceJudge(
     if (!allPassed) {
       console.log(`[ComplianceJudge] Failed checks: ${failedChecks.join(', ')}. ${parsed.rewrite ? 'Rewrite applied.' : 'No rewrite provided.'}`);
     } else {
-      console.log('[ComplianceJudge] All 12 checks passed.');
+      console.log('[ComplianceJudge] All 16 checks passed.');
     }
 
     return {
