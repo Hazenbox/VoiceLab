@@ -2,7 +2,7 @@
  * useJioSaavnSearch Hook
  * 
  * React hook for fetching JioSaavn search results with:
- * - Automatic music topic detection
+ * - Automatic music topic detection (LLM-based with keyword fallback)
  * - Debounced API calls
  * - Request cancellation on unmount
  * - Loading and error states
@@ -12,6 +12,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { jiosaavnApi } from '../services/jiosaavn/jiosaavnApi';
 import { detectMusicTopic } from '../services/jiosaavn/musicTopicDetector';
+import { classifyMusicContent } from '../services/jiosaavn/llmMusicDetector';
 import type { ExplorationData, MusicTopicResult, ExplorationItem, PlaylistExplorationData } from '../services/jiosaavn/types';
 
 const DEBOUNCE_MS = 300;
@@ -187,10 +188,17 @@ export function useJioSaavnSearch(
 /**
  * Hook for fetching playlists with embedded songs
  * Used by the new playlist-focused UI
+ * 
+ * Uses LLM-based music detection with keyword fallback for scalability
  */
+export interface UsePlaylistSearchOptions extends UseJioSaavnSearchOptions {
+  useLLMDetection?: boolean;
+}
+
 export interface UsePlaylistSearchReturn {
   data: PlaylistExplorationData | null;
   isLoading: boolean;
+  isDetecting: boolean;
   error: string | null;
   musicTopic: MusicTopicResult | null;
   refetch: () => void;
@@ -198,34 +206,24 @@ export interface UsePlaylistSearchReturn {
 
 export function usePlaylistSearch(
   content: string,
-  options: UseJioSaavnSearchOptions = {}
+  options: UsePlaylistSearchOptions = {}
 ): UsePlaylistSearchReturn {
-  const { enabled = true, limit = 5 } = options;
+  const { enabled = true, limit = 5, useLLMDetection = true } = options;
   
   const [data, setData] = useState<PlaylistExplorationData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDetecting, setIsDetecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [musicTopic, setMusicTopic] = useState<MusicTopicResult | null>(null);
   
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const detectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastContentRef = useRef<string>('');
   const lastQueryRef = useRef<string>('');
   
-  const musicTopic = useMemo(() => {
-    if (!content || !enabled) return null;
-    return detectMusicTopic(content);
-  }, [content, enabled]);
-  
-  // Debug: Log when music topic changes
-  useEffect(() => {
-    console.log('[usePlaylistSearch] Music topic changed:', {
-      detected: musicTopic?.detected,
-      query: musicTopic?.searchQuery,
-      confidence: musicTopic?.confidence?.toFixed(2)
-    });
-  }, [musicTopic]);
-  
-  const fetchData = useCallback(async (query: string) => {
-    console.log('[usePlaylistSearch] fetchData called with query:', query);
+  const fetchPlaylists = useCallback(async (query: string) => {
+    console.log('[usePlaylistSearch] fetchPlaylists called with query:', query);
     
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -267,6 +265,68 @@ export function usePlaylistSearch(
   }, [limit]);
   
   useEffect(() => {
+    if (detectionTimerRef.current) {
+      clearTimeout(detectionTimerRef.current);
+      detectionTimerRef.current = null;
+    }
+    
+    if (!enabled || !content || content.trim().length < 20) {
+      setMusicTopic(null);
+      setData(null);
+      setError(null);
+      setIsLoading(false);
+      setIsDetecting(false);
+      return;
+    }
+    
+    if (content === lastContentRef.current) {
+      return;
+    }
+    
+    lastContentRef.current = content;
+    
+    detectionTimerRef.current = setTimeout(async () => {
+      setIsDetecting(true);
+      
+      try {
+        let result: MusicTopicResult;
+        
+        if (useLLMDetection) {
+          console.log('[usePlaylistSearch] Running LLM detection...');
+          result = await classifyMusicContent(content, {
+            signal: abortControllerRef.current?.signal,
+            timeout: 5000,
+          });
+        } else {
+          console.log('[usePlaylistSearch] Running keyword detection...');
+          result = detectMusicTopic(content);
+        }
+        
+        console.log('[usePlaylistSearch] Detection result:', {
+          detected: result.detected,
+          query: result.searchQuery,
+          confidence: result.confidence.toFixed(2),
+          method: useLLMDetection ? 'LLM' : 'keyword'
+        });
+        
+        setMusicTopic(result);
+      } catch (err) {
+        console.warn('[usePlaylistSearch] Detection error, using keyword fallback:', err);
+        const fallbackResult = detectMusicTopic(content);
+        setMusicTopic(fallbackResult);
+      } finally {
+        setIsDetecting(false);
+      }
+    }, 100);
+    
+    return () => {
+      if (detectionTimerRef.current) {
+        clearTimeout(detectionTimerRef.current);
+      }
+    };
+  }, [content, enabled, useLLMDetection]);
+  
+  useEffect(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
@@ -278,15 +338,15 @@ export function usePlaylistSearch(
         detected: musicTopic?.detected,
         hasQuery: !!musicTopic?.searchQuery
       });
-      setData(null);
-      setError(null);
-      setIsLoading(false);
+      if (!musicTopic?.detected) {
+        setData(null);
+        setError(null);
+      }
       return;
     }
     
     const query = musicTopic.searchQuery;
     
-    // Skip if we already fetched this query
     if (query === lastQueryRef.current) {
       console.log('[usePlaylistSearch] Query unchanged, skipping fetch:', query);
       return;
@@ -297,7 +357,7 @@ export function usePlaylistSearch(
     debounceTimerRef.current = setTimeout(() => {
       console.log('[usePlaylistSearch] Executing fetch for:', query);
       lastQueryRef.current = query;
-      fetchData(query);
+      fetchPlaylists(query);
     }, DEBOUNCE_MS);
     
     return () => {
@@ -305,7 +365,7 @@ export function usePlaylistSearch(
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [enabled, musicTopic, fetchData]);
+  }, [enabled, musicTopic, fetchPlaylists]);
   
   useEffect(() => {
     return () => {
@@ -315,18 +375,22 @@ export function usePlaylistSearch(
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
+      if (detectionTimerRef.current) {
+        clearTimeout(detectionTimerRef.current);
+      }
     };
   }, []);
   
   const refetch = useCallback(() => {
     if (musicTopic?.detected && musicTopic.searchQuery) {
-      fetchData(musicTopic.searchQuery);
+      fetchPlaylists(musicTopic.searchQuery);
     }
-  }, [musicTopic, fetchData]);
+  }, [musicTopic, fetchPlaylists]);
   
   return {
     data,
     isLoading,
+    isDetecting,
     error,
     musicTopic,
     refetch,

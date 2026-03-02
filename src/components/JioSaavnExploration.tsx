@@ -321,9 +321,10 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
     duration: 0,
   });
   
-  const { data, isLoading, error, musicTopic } = usePlaylistSearch(messageContent, {
+  const { data, isLoading, isDetecting, error, musicTopic } = usePlaylistSearch(messageContent, {
     enabled: true,
     limit: 5,
+    useLLMDetection: true,
   });
   
   const handlePlay = useCallback((song: ExplorationItem) => {
@@ -398,6 +399,11 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
       }
     };
   }, []);
+  
+  if (isDetecting) {
+    console.log('[JioSaavnExploration] Still detecting music topic...');
+    return null;
+  }
   
   if (!musicTopic?.detected) {
     console.log('[JioSaavnExploration] Not detected, returning null');
