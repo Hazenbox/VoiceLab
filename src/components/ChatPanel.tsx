@@ -30,6 +30,7 @@ import { Badge } from './ui/Badge';
 import { DSIcon } from './DSIcon';
 import { useRotatingPlaceholder } from '../hooks/useRotatingPlaceholder';
 import { JioSaavnExploration } from './JioSaavnExploration';
+import { JioHealthHubAction } from './JioHealthHubAction';
 
 /** Send button brand purple */
 const SEND_BUTTON_COLOR = '#3900AD';
@@ -706,6 +707,14 @@ export const ChatPanel = memo(function ChatPanel({
           <JioSaavnExploration
             messageId={message.id}
             messageContent={assistantContent}
+          />
+          
+          {/* JioHealthHub Action - shows when health topics are detected */}
+          <JioHealthHubAction
+            messageId={message.id}
+            messageContent={assistantContent}
+            safetyDomain={message.generationContext?.safetyDomain}
+            ecosystem={message.generationContext?.ecosystem}
           />
           
           {/* Actions row: Message Actions + Trust Badge + Auto-fixed badge */}

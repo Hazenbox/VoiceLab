@@ -62,7 +62,7 @@ const STYLE_PATTERNS: PatternRule[] = [
   { id: 'st-036', pattern: /(?<!\d[-–])(\d+)-(\d+)(?![-–]\d)/g, severity: 'info', rule: 'Use en-dash for number ranges', suggestion: '$1–$2', category: 'punctuation' },
   
   // Oxford comma
-  { id: 'st-037', pattern: /,\s+and\s+/gi, severity: 'info', rule: 'No Oxford comma in Jio style', suggestion: 'Consider: "A, B and C" format', category: 'punctuation' },
+  { id: 'st-037', pattern: /,\s+(and|or)\s+/gi, severity: 'info', rule: 'No Oxford comma in Jio style', suggestion: 'Consider: "A, B and C" or "A, B or C" format', category: 'punctuation' },
   
   // 24-hour time
   { id: 'st-038', pattern: /\b([01]?\d|2[0-3]):([0-5]\d)\s*(hrs?|hours?)\b/gi, severity: 'warning', rule: 'Use 12-hour time format', suggestion: 'Use AM/PM format (e.g., 3:30 PM)', category: 'time' },

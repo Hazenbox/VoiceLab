@@ -879,7 +879,7 @@ export function applyFormatFixes(content: string): string {
   fixed = fixed.replace(/(\d{1,2}:\d{2})\s*(AM|PM)/g, (_m, time, ampm) => `${time} ${(ampm as string).toLowerCase()}`);
 
   // Oxford comma removal: "a, b, and c" -> "a, b and c" (Indian English)
-  fixed = fixed.replace(/,\s+and\s+/gi, ' and ');
+  fixed = fixed.replace(/,\s+(and|or)\s+/gi, ' $1 ');
 
   // 24hr time -> 12hr time: "14:00 hrs" -> "2:00 pm"
   fixed = fixed.replace(/\b([01]?\d|2[0-3]):([0-5]\d)\s*hrs?\b/gi, (_m, h, min) => {

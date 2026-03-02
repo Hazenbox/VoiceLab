@@ -57,3 +57,4 @@ export { ActionButton } from './ActionButton';
 export { DelayedTooltip } from './DelayedTooltip';
 export { DislikeFeedbackModal } from './DislikeFeedbackModal';
 export type { DislikeFeedbackModalProps } from './DislikeFeedbackModal';
+export { JioHealthHubAction } from './JioHealthHubAction';

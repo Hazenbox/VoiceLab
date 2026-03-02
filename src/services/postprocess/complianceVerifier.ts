@@ -260,9 +260,9 @@ const CHECKS: Check[] = [
     category: 'wording',
     severity: 'warning',
     description: 'Oxford comma detected',
-    test: (c) => match(c, /,\s+and\s+/i),
+    test: (c) => match(c, /,\s+(and|or)\s+/i),
     autoFixable: true,
-    fix: (c) => c.replace(/,\s+and\s+/g, ' and '),
+    fix: (c) => c.replace(/,\s+(and|or)\s+/g, ' $1 '),
   },
   {
     id: 'w-07',
