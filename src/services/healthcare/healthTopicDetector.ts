@@ -201,11 +201,11 @@ export function detectHealthTopic(
 export function getHealthcareMessage(category: HealthCategory): string {
   switch (category) {
     case 'medical_advice':
-      return 'need medical advice?';
+      return 'Need medical advice?';
     case 'appointment':
-      return 'ready to book an appointment?';
+      return 'Ready to book an appointment?';
     case 'wellness':
-      return 'want to learn more about staying healthy?';
+      return 'Want to learn more about staying healthy?';
     case 'emergency':
       return '';
   }

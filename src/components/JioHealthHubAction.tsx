@@ -23,7 +23,7 @@ interface JioHealthHubActionProps {
   ecosystem?: string;
 }
 
-const JIOHEALTHHUB_TEAL = '#00A896';
+const PRIMARY_INDIGO = '#6366f1';
 
 const JIOHEALTHHUB_URL = 'https://www.jio.com/jcms/jiohealthhub/';
 
@@ -79,7 +79,7 @@ export const JioHealthHubAction = memo(function JioHealthHubAction({
         <img
           src="/jiohealthhub-logo.png"
           alt="JioHealthHub"
-          className="w-5 h-5 rounded-md"
+          className="w-5 h-5 rounded-full"
         />
         <span
           style={{
@@ -125,7 +125,7 @@ export const JioHealthHubAction = memo(function JioHealthHubAction({
           onClick={handleFindDoctors}
           className="w-full py-2.5 px-4 rounded-full text-sm font-medium transition-colors duration-150"
           style={{
-            backgroundColor: JIOHEALTHHUB_TEAL,
+            backgroundColor: PRIMARY_INDIGO,
             color: 'white',
           }}
           onMouseEnter={(e) => {
@@ -135,7 +135,7 @@ export const JioHealthHubAction = memo(function JioHealthHubAction({
             e.currentTarget.style.opacity = '1';
           }}
         >
-          find doctors nearby
+          Find doctors nearby
         </button>
       </div>
       
@@ -154,7 +154,7 @@ export const JioHealthHubAction = memo(function JioHealthHubAction({
             lineHeight: '1.4',
           }}
         >
-          if symptoms are severe, call emergency services.
+          If symptoms are severe, call emergency services at 112.
         </p>
       </div>
     </div>
