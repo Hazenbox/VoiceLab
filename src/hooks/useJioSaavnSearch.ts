@@ -146,9 +146,8 @@ export function useJioSaavnSearch(
       return;
     }
     
-    lastQueryRef.current = query;
-    
     debounceTimerRef.current = setTimeout(() => {
+      lastQueryRef.current = query;
       fetchData(query);
     }, DEBOUNCE_MS);
     
@@ -293,10 +292,11 @@ export function usePlaylistSearch(
       return;
     }
     
-    console.log('[usePlaylistSearch] Starting fetch for:', query);
-    lastQueryRef.current = query;
+    console.log('[usePlaylistSearch] Scheduling fetch for:', query);
     
     debounceTimerRef.current = setTimeout(() => {
+      console.log('[usePlaylistSearch] Executing fetch for:', query);
+      lastQueryRef.current = query;
       fetchData(query);
     }, DEBOUNCE_MS);
     
