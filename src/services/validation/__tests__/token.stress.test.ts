@@ -423,13 +423,18 @@ describe('Token Enforcement Stress Tests', () => {
       // BRAND_JIO_MUST_NOT has tokenValue: '*' (applies to all ecosystems)
       const rule = ENFORCEMENT_RULES.BRAND_JIO_MUST_NOT;
       
-      // Check if wildcard rule is applicable
-      const contentWithCompetitor = 'Airtel is mentioned here.';
-      const result = validateAgainstRule(contentWithCompetitor, rule);
+      // Neutral competitor mentions are now allowed
+      const neutralContent = 'Airtel is mentioned here.';
+      const neutralResult = validateAgainstRule(neutralContent, rule);
       
-      console.log(`[WILDCARD] Rule applies to all ecosystems: ${!result.passed}`);
+      // Negative comparisons should still be caught
+      const negativeContent = 'Airtel has terrible service.';
+      const negativeResult = validateAgainstRule(negativeContent, rule);
       
-      expect(result.passed).toBe(false); // Should catch competitor mention
+      console.log(`[WILDCARD] Rule applies to all ecosystems: neutral=${neutralResult.passed}, negative=${!negativeResult.passed}`);
+      
+      expect(neutralResult.passed).toBe(true); // Neutral mentions allowed
+      expect(negativeResult.passed).toBe(false); // Negative comparisons blocked
     });
   });
 
