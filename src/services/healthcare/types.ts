@@ -28,28 +28,3 @@ export interface HealthTopicResult {
   matchedKeywords: string[];
 }
 
-/**
- * Healthcare action configuration
- */
-export interface HealthcareAction {
-  /** Action type */
-  type: 'connect_doctor' | 'book_appointment';
-  /** Display label for button */
-  label: string;
-  /** URL to open (web or deep link) */
-  url: string;
-  /** Whether this is the primary action */
-  isPrimary: boolean;
-}
-
-/**
- * Healthcare action card data
- */
-export interface HealthcareActionCard {
-  /** Contextual message to display */
-  message: string;
-  /** Available actions */
-  actions: HealthcareAction[];
-  /** Health category for styling/context */
-  category: HealthCategory;
-}
