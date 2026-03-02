@@ -25,7 +25,8 @@ export type ViolationCategory =
   | 'corporate_speak'   // Inappropriate corporate language
   | 'sensitivity'       // Insensitive language
   | 'false_empathy'     // Empty empathy without follow-through (KB/13)
-  | 'passive_institutional'; // Passive/institutional phrasing (KB/11)
+  | 'passive_institutional' // Passive/institutional phrasing (KB/11)
+  | 'medication_recommendation'; // Recommending specific medications (liability risk)
 
 /**
  * Forbidden phrase match
@@ -417,6 +418,45 @@ export const FORBIDDEN_PHRASES: Record<ViolationCategory, Array<{
       description: 'hiding behind policy',
     },
   ],
+
+  // Medication recommendations - CRITICAL liability risk
+  medication_recommendation: [
+    {
+      // Catches: "take paracetamol", "try ibuprofen", "use aspirin", etc.
+      pattern: /\b(take|try|use|recommend|suggest)\b.{0,30}\b(paracetamol|ibuprofen|aspirin|acetaminophen|tylenol|advil|crocin|dolo|combiflam|disprin|saridon|brufen|metacin|meftal|voveran|diclofenac|naproxen|cetrizine|allegra|benadryl|gelusil|digene|eno|pudin hara|hajmola)\b/gi,
+      severity: 'critical',
+      replacement: 'please consult a doctor for medication advice',
+      description: 'recommending specific medication',
+    },
+    {
+      // Catches standalone medication names in recommendation context
+      pattern: /\b(paracetamol|ibuprofen|aspirin|acetaminophen|crocin|dolo|combiflam|disprin|saridon)\b.{0,20}\b(helps?|works?|is good|is effective|can relieve|will help)\b/gi,
+      severity: 'critical',
+      replacement: 'a doctor can recommend the right medication',
+      description: 'medication effectiveness claim',
+    },
+    {
+      // Catches: "over-the-counter pain relievers like..."
+      pattern: /\b(over-the-counter|otc)\s+(pain\s+)?relief(er)?s?\s+(like|such as)\b/gi,
+      severity: 'error',
+      replacement: '',
+      description: 'recommending OTC medications',
+    },
+    {
+      // Catches: "you can/should/could take [something] for/to..."
+      pattern: /\byou\s+(can|should|could|may)\s+take\s+\w+\s+(for|to help|to relieve|to ease)\b/gi,
+      severity: 'error',
+      replacement: 'a doctor can recommend what to take',
+      description: 'medication suggestion pattern',
+    },
+    {
+      // Catches dosage recommendations
+      pattern: /\b(take|have)\s+(\d+\s*)?(mg|ml|tablet|capsule|dose)\b/gi,
+      severity: 'critical',
+      replacement: 'consult a doctor for proper dosage',
+      description: 'dosage recommendation',
+    },
+  ],
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -537,6 +577,7 @@ export function getViolationsByCategory(
     sensitivity: [],
     false_empathy: [],
     passive_institutional: [],
+    medication_recommendation: [],
   };
   
   for (const violation of result.violations) {
