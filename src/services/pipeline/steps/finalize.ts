@@ -26,6 +26,38 @@ import type { FinalizeResult, ClassifyResult, AssembleResult } from '../types';
 import type { PipelineInput } from '../types';
 
 /**
+ * Strip conversational wrapper text from generated content.
+ * LLMs sometimes add meta-commentary like "I can help you personalize this..." 
+ * even when instructed to output only the content.
+ * This is a safety net to ensure clean output.
+ */
+function stripConversationalWrapper(content: string): string {
+  let result = content;
+  
+  // Patterns that indicate conversational wrapper (not part of the actual content)
+  const wrapperPatterns = [
+    // Offers to help further
+    /\n+I can (also )?help you (personalize|customize|modify|edit|refine|improve|send|share).*$/gim,
+    /\n+Would you like (me to|to).*\?$/gim,
+    /\n+Let me know if you('d like| want| need).*$/gim,
+    /\n+Feel free to (ask|let me know|reach out).*$/gim,
+    // Meta-commentary about the content
+    /^(Here('s| is) (the|a|an|your).*?:\s*\n+)/im,
+    /^(I('ve| have) (written|drafted|created|prepared).*?:\s*\n+)/im,
+    // Questions about next steps (at end of content)
+    /\n+Is there anything else.*\?$/gim,
+    /\n+Do you (want|need|have).*\?$/gim,
+    /\n+Shall I.*\?$/gim,
+  ];
+  
+  for (const pattern of wrapperPatterns) {
+    result = result.replace(pattern, '');
+  }
+  
+  return result.trim();
+}
+
+/**
  * Deterministic safety post-processor.
  * Catches safety-critical content that the LLM might generate despite instructions.
  * Runs BEFORE finishing layer so that joy/signatures are never added to safety responses.
@@ -58,14 +90,21 @@ export function finalize(
   const constitutionalContext = assembled.constitutionalContext;
   const isGeneralChat = classification.intent === 'general_chat';
 
-  // 0a. Safety post-process (deterministic catch-all for critical safety content)
+  // 0a. Strip conversational wrapper text (LLM meta-commentary)
+  try {
+    finalContent = stripConversationalWrapper(finalContent);
+  } catch (error) {
+    console.warn('[Pipeline:Finalize] Conversational wrapper strip failed:', error);
+  }
+
+  // 0b. Safety post-process (deterministic catch-all for critical safety content)
   try {
     finalContent = applySafetyPostProcess(finalContent, input.message);
   } catch (error) {
     console.warn('[Pipeline:Finalize] Safety post-process failed:', error);
   }
 
-  // 0b. Normalize markdown tables (fix malformed LLM output)
+  // 0c. Normalize markdown tables (fix malformed LLM output)
   try {
     finalContent = normalizeMarkdownTables(finalContent);
   } catch (error) {
