@@ -400,8 +400,8 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
     };
   }, []);
   
-  if (isDetecting || (musicTopic?.detected && isLoading)) {
-    console.log('[JioSaavnExploration] Loading...', { isDetecting, isLoading });
+  if (musicTopic?.detected && isLoading) {
+    console.log('[JioSaavnExploration] Loading playlists...', { isLoading });
     return (
       <div
         className="mt-4 rounded-2xl overflow-hidden"
@@ -419,7 +419,7 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
             }}
           />
           <span style={{ color: theme.text.medium, fontSize: '14px' }}>
-            {isDetecting ? 'Analyzing music content...' : 'Loading playlists...'}
+            Loading playlists...
           </span>
         </div>
         
