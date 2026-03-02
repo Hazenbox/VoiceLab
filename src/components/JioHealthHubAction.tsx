@@ -5,23 +5,23 @@
  * Follows the pattern from JioSaavnExploration.tsx.
  * 
  * Features:
- * - Auto-detects health topics from message content
+ * - LLM-based health topic detection (with keyword fallback)
  * - Shows branded card with JioHealthHub logo
  * - Single action button: "Find Doctors Nearby"
  * - Emergency disclaimer for severe symptoms
  * - Opens JioHealthHub URLs via window.open()
  */
 
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useState, useEffect } from 'react';
 import { Button } from '@marcelinodzn/ds-react';
 import { useThemeColors } from '../theme';
-import { detectHealthTopic, getHealthcareMessage } from '../services/healthcare/healthTopicDetector';
+import { classifyHealthContent } from '../services/healthcare/llmHealthDetector';
+import { getHealthcareMessage } from '../services/healthcare/healthTopicDetector';
+import type { HealthTopicResult } from '../services/healthcare/types';
 
 interface JioHealthHubActionProps {
   messageId: string;
   messageContent: string;
-  safetyDomain?: string;
-  ecosystem?: string;
 }
 
 const JIOHEALTHHUB_URL = 'https://www.jio.com/jcms/jiohealthhub/';
@@ -29,24 +29,51 @@ const JIOHEALTHHUB_URL = 'https://www.jio.com/jcms/jiohealthhub/';
 export const JioHealthHubAction = memo(function JioHealthHubAction({
   messageId,
   messageContent,
-  safetyDomain,
-  ecosystem,
 }: JioHealthHubActionProps) {
   console.log('[JioHealthHubAction] Rendering for message:', messageId, 'content length:', messageContent?.length);
   
   const theme = useThemeColors();
+  const [healthTopic, setHealthTopic] = useState<HealthTopicResult | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  const healthTopic = useMemo(() => {
-    return detectHealthTopic(messageContent, safetyDomain, ecosystem);
-  }, [messageContent, safetyDomain, ecosystem]);
+  // Use LLM-based detection (async)
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    
+    classifyHealthContent(messageContent, { timeout: 5000 })
+      .then(result => {
+        if (!cancelled) {
+          console.log('[JioHealthHubAction] LLM classification result:', {
+            detected: result.detected,
+            category: result.category,
+            confidence: result.confidence,
+          });
+          setHealthTopic(result);
+          setIsLoading(false);
+        }
+      })
+      .catch(error => {
+        console.warn('[JioHealthHubAction] Classification error:', error);
+        if (!cancelled) {
+          setHealthTopic({ detected: false, category: 'medical_advice', confidence: 0, matchedKeywords: [] });
+          setIsLoading(false);
+        }
+      });
+    
+    return () => { cancelled = true; };
+  }, [messageContent]);
   
   const handleFindDoctors = useCallback(() => {
     console.log('[JioHealthHubAction] Opening JioHealthHub to find doctors');
     window.open(JIOHEALTHHUB_URL, '_blank', 'noopener,noreferrer');
   }, []);
   
-  if (!healthTopic.detected) {
-    console.log('[JioHealthHubAction] Health topic not detected, returning null');
+  // Don't render while loading or if not detected
+  if (isLoading || !healthTopic?.detected) {
+    if (!isLoading) {
+      console.log('[JioHealthHubAction] Health topic not detected, returning null');
+    }
     return null;
   }
   

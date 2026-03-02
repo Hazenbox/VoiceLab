@@ -709,12 +709,10 @@ export const ChatPanel = memo(function ChatPanel({
             messageContent={assistantContent}
           />
           
-          {/* JioHealthHub Action - shows when health topics are detected */}
+          {/* JioHealthHub Action - shows when health topics are detected (LLM-based) */}
           <JioHealthHubAction
             messageId={message.id}
             messageContent={assistantContent}
-            safetyDomain={message.generationContext?.safetyDomain}
-            ecosystem={message.generationContext?.ecosystem}
           />
           
           {/* Actions row: Message Actions + Trust Badge + Auto-fixed badge */}
