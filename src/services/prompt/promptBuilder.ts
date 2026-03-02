@@ -75,7 +75,7 @@ export function getGuardrailsPrompt(): string {
    - DON'T: "${g.dontExample}"`
   ).join('\n\n');
 
-  return `## Jio Brand Guidelines (MANDATORY - 10 Guardrails)
+  return `## Jio Brand Guidelines (MANDATORY - 11 Guardrails)
 
 Follow these brand guidelines strictly. Each includes a DO and DON'T example:
 

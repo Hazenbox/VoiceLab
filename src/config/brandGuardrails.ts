@@ -1,7 +1,8 @@
 /**
- * The 10 Brand Guardrails from Jio Training Materials
+ * The 11 Brand Guardrails from Jio Training Materials
  * These are mandatory rules that must be included in every prompt
  * Source: Training 1.pdf, pages 53-56 (lines 1489-1569)
+ *         KB/02_VOICE_AND_TONE.md (guardrail 11)
  *
  * Shared config -- imported by prompt/ and trust/ to avoid cross-service coupling.
  */
@@ -85,5 +86,23 @@ export const BRAND_GUARDRAILS = [
     prompt: 'Respect everyone equally. Never judge or exclude based on background, income, or choices.',
     doExample: 'No matter where you start, you can build the future you want.',
     dontExample: 'If you\'re a highly motivated professional looking to advance, our solutions are for you.',
+  },
+  {
+    id: 'anti_corporate',
+    rule: 'We avoid corporate language',
+    description: 'Speak like a friend, not a press release. Corporate language creates emotional distance.',
+    prompt: `Avoid corporate language that creates emotional distance. Apply the 3-question test before every response:
+1. WHO DID WHAT? If passive voice hides the actor, rewrite with "we" or "you" as subject.
+2. WHAT'S THE BENEFIT? If buried after filler, move it to the first sentence.
+3. WOULD A FRIEND TEXT THIS? If it sounds like a press release, simplify.
+
+BANNED patterns (these signal corporate language failure):
+- Filler openers: "we would like to inform you", "please be advised", "kindly note"
+- Passive deflection: "has been credited", "was processed", "is being looked into"
+- Hedging: "as a gesture of goodwill", "due to circumstances beyond our control"
+- Exaggerated apology: "we regret any inconvenience", "we apologise for any inconvenience this may have caused"
+- Formal sign-offs: "best regards", "yours sincerely"`,
+    doExample: "We've added 1GB to your account. You can use it right away.",
+    dontExample: 'We would like to inform you that 1GB has been credited to your account as a gesture of goodwill.',
   },
 ] as const;
