@@ -1,30 +1,26 @@
 /**
  * JioSaavnExploration Component
  * 
- * Displays JioSaavn exploration cards when music topics are detected in AI responses.
- * Features larger music-focused cards with in-browser audio playback.
+ * Displays JioSaavn playlists with embedded songs when music topics are detected.
+ * Each playlist card shows cover art, 3 playable songs, and a "View playlist" button.
  * 
  * Features:
  * - Auto-detects music topics from message content
- * - Horizontal scrollable card layout with larger cards
+ * - Horizontal scrollable playlist cards (max 3-5)
  * - In-browser audio playback for songs
- * - Dynamic CTA buttons based on content type
+ * - Song rows with play/pause buttons
  * - Loading skeleton state
- * - Dismissible with X button
  */
 
 import { memo, useCallback, useState, useRef, useEffect } from 'react';
 import { useThemeColors } from '../theme';
-import { useJioSaavnSearch } from '../hooks/useJioSaavnSearch';
-import { ActionButton } from './ActionButton';
+import { usePlaylistSearch } from '../hooks/useJioSaavnSearch';
 import { DSIcon } from './DSIcon';
-import type { ExplorationItem } from '../services/jiosaavn/types';
+import type { ExplorationItem, PlaylistWithSongs } from '../services/jiosaavn/types';
 
 interface JioSaavnExplorationProps {
   messageId: string;
   messageContent: string;
-  isDismissed?: boolean;
-  onDismiss?: (messageId: string) => void;
 }
 
 const JIOSAAVN_GREEN = '#2bc5b4';
@@ -42,186 +38,215 @@ function formatDuration(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-function getCtaLabel(type: ExplorationItem['type']): string {
-  switch (type) {
-    case 'playlist':
-      return 'View playlist';
-    case 'artist':
-      return 'View artist';
-    case 'album':
-      return 'View album';
-    case 'song':
-      return 'View on JioSaavn';
-    default:
-      return 'View more';
-  }
-}
-
-const PlayButton = memo(function PlayButton({
-  isPlaying,
-  isCurrentSong,
-  onClick,
-  theme,
-}: {
-  isPlaying: boolean;
-  isCurrentSong: boolean;
-  onClick: (e: React.MouseEvent) => void;
-  theme: ReturnType<typeof useThemeColors>;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl"
-      style={{
-        opacity: isCurrentSong && isPlaying ? 1 : undefined,
-      }}
-      aria-label={isPlaying && isCurrentSong ? 'Pause' : 'Play'}
-    >
-      <div
-        className="w-12 h-12 rounded-full flex items-center justify-center"
-        style={{
-          backgroundColor: JIOSAAVN_GREEN,
-        }}
-      >
-        {isPlaying && isCurrentSong ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-            <rect x="6" y="4" width="4" height="16" rx="1" />
-            <rect x="14" y="4" width="4" height="16" rx="1" />
-          </svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        )}
-      </div>
-    </button>
-  );
-});
-
-const ExplorationCard = memo(function ExplorationCard({
-  item,
+const SongRow = memo(function SongRow({
+  song,
+  index,
   theme,
   audioState,
   onPlay,
   onPause,
 }: {
-  item: ExplorationItem;
+  song: ExplorationItem;
+  index: number;
   theme: ReturnType<typeof useThemeColors>;
   audioState: AudioPlayerState;
-  onPlay: (item: ExplorationItem) => void;
+  onPlay: (song: ExplorationItem) => void;
   onPause: () => void;
 }) {
-  const handleOpenLink = useCallback(() => {
-    if (item.jiosaavnUrl) {
-      window.open(item.jiosaavnUrl, '_blank', 'noopener,noreferrer');
-    }
-  }, [item.jiosaavnUrl]);
+  const isCurrentSong = audioState.playingId === song.id;
+  const isPlaying = isCurrentSong && audioState.isPlaying;
+  const canPlay = song.audioUrl;
   
-  const handlePlayClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (audioState.playingId === item.id && audioState.isPlaying) {
+  const handlePlayClick = useCallback(() => {
+    if (isPlaying) {
       onPause();
     } else {
-      onPlay(item);
+      onPlay(song);
     }
-  }, [item, audioState.playingId, audioState.isPlaying, onPlay, onPause]);
+  }, [song, isPlaying, onPlay, onPause]);
   
-  const isArtist = item.type === 'artist';
-  const isSong = item.type === 'song';
-  const isCurrentSong = audioState.playingId === item.id;
-  const canPlay = isSong && item.audioUrl;
+  const handleOpenLink = useCallback(() => {
+    if (song.jiosaavnUrl) {
+      window.open(song.jiosaavnUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [song.jiosaavnUrl]);
   
   return (
     <div
-      className="flex-shrink-0 rounded-xl overflow-hidden group"
+      className="flex items-center gap-3 py-2 px-3 rounded-lg transition-colors duration-150 cursor-pointer"
       style={{
-        backgroundColor: theme.background.bold,
-        width: '280px',
+        backgroundColor: isCurrentSong ? theme.stroke.low : 'transparent',
+      }}
+      onClick={handleOpenLink}
+      onMouseEnter={(e) => {
+        if (!isCurrentSong) {
+          e.currentTarget.style.backgroundColor = theme.background.bold;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isCurrentSong) {
+          e.currentTarget.style.backgroundColor = 'transparent';
+        }
       }}
     >
-      {/* Image with play button overlay */}
-      <div 
-        className="relative w-full aspect-square cursor-pointer"
-        onClick={canPlay ? handlePlayClick : handleOpenLink}
+      {/* Index number */}
+      <span
+        className="w-5 text-center flex-shrink-0"
+        style={{
+          color: theme.text.low,
+          fontSize: '13px',
+        }}
       >
-        {item.imageUrl ? (
+        {index + 1}
+      </span>
+      
+      {/* Song thumbnail */}
+      {song.imageUrl ? (
+        <img
+          src={song.imageUrl}
+          alt=""
+          className="w-10 h-10 rounded object-cover flex-shrink-0"
+          loading="lazy"
+        />
+      ) : (
+        <div
+          className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: theme.stroke.low }}
+        >
+          <DSIcon name="IcMusic" size="XS" style={{ color: theme.text.low }} />
+        </div>
+      )}
+      
+      {/* Song info */}
+      <div className="flex-1 min-w-0">
+        <p
+          className="truncate font-medium"
+          style={{
+            color: theme.text.high,
+            fontSize: '14px',
+            lineHeight: '1.3',
+          }}
+        >
+          {song.name}
+        </p>
+        <p
+          className="truncate"
+          style={{
+            color: theme.text.medium,
+            fontSize: '12px',
+            lineHeight: '1.3',
+          }}
+        >
+          {song.subtitle}
+          {song.duration ? ` - ${formatDuration(song.duration)}` : ''}
+        </p>
+      </div>
+      
+      {/* Play button */}
+      {canPlay && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePlayClick();
+          }}
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-150"
+          style={{
+            backgroundColor: isPlaying ? JIOSAAVN_GREEN : theme.stroke.low,
+          }}
+          onMouseEnter={(e) => {
+            if (!isPlaying) {
+              e.currentTarget.style.backgroundColor = theme.stroke.medium;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isPlaying) {
+              e.currentTarget.style.backgroundColor = theme.stroke.low;
+            }
+          }}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
+        >
+          {isPlaying ? (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+              <rect x="6" y="4" width="4" height="16" rx="1" />
+              <rect x="14" y="4" width="4" height="16" rx="1" />
+            </svg>
+          ) : (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill={theme.text.high}>
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
+        </button>
+      )}
+    </div>
+  );
+});
+
+const PlaylistCard = memo(function PlaylistCard({
+  playlist,
+  theme,
+  audioState,
+  onPlay,
+  onPause,
+}: {
+  playlist: PlaylistWithSongs;
+  theme: ReturnType<typeof useThemeColors>;
+  audioState: AudioPlayerState;
+  onPlay: (song: ExplorationItem) => void;
+  onPause: () => void;
+}) {
+  const handleViewPlaylist = useCallback(() => {
+    if (playlist.jiosaavnUrl) {
+      window.open(playlist.jiosaavnUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, [playlist.jiosaavnUrl]);
+  
+  return (
+    <div
+      className="flex-shrink-0 rounded-2xl overflow-hidden"
+      style={{
+        backgroundColor: theme.background.bold,
+        width: '300px',
+      }}
+    >
+      {/* Playlist cover image */}
+      <div className="relative w-full aspect-[4/3] overflow-hidden">
+        {playlist.imageUrl ? (
           <img
-            src={item.imageUrl}
+            src={playlist.imageUrl}
             alt=""
-            className={`w-full h-full object-cover ${isArtist ? '' : ''}`}
+            className="w-full h-full object-cover"
             loading="lazy"
           />
         ) : (
           <div
             className="w-full h-full flex items-center justify-center"
-            style={{
-              backgroundColor: theme.stroke.low,
-            }}
+            style={{ backgroundColor: theme.stroke.low }}
           >
             <DSIcon name="IcMusic" size="L" style={{ color: theme.text.low }} />
           </div>
         )}
-        
-        {/* Play button overlay for songs */}
-        {canPlay && (
-          <PlayButton
-            isPlaying={audioState.isPlaying}
-            isCurrentSong={isCurrentSong}
-            onClick={handlePlayClick}
-            theme={theme}
-          />
-        )}
-        
-        {/* Progress bar for playing song */}
-        {isCurrentSong && audioState.isPlaying && (
-          <div 
-            className="absolute bottom-0 left-0 right-0 h-1"
-            style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
-          >
-            <div
-              className="h-full transition-all duration-200"
-              style={{
-                backgroundColor: JIOSAAVN_GREEN,
-                width: `${(audioState.progress / audioState.duration) * 100}%`,
-              }}
-            />
-          </div>
-        )}
       </div>
       
-      {/* Content */}
-      <div className="p-3">
-        {/* Title and subtitle */}
-        <div className="mb-3">
-          <h4
-            className="font-semibold truncate"
-            style={{
-              color: theme.text.high,
-              fontSize: '15px',
-              lineHeight: '1.3',
-            }}
-          >
-            {item.name}
-          </h4>
-          <p
-            className="truncate mt-0.5"
-            style={{
-              color: theme.text.medium,
-              fontSize: '13px',
-              lineHeight: '1.3',
-            }}
-          >
-            {item.subtitle}
-            {item.year && ` (${item.year})`}
-            {item.songCount && ` - ${item.songCount} songs`}
-            {isSong && item.duration && ` - ${formatDuration(item.duration)}`}
-          </p>
-        </div>
-        
-        {/* CTA Button */}
+      {/* Songs list */}
+      <div className="py-2">
+        {playlist.songs.slice(0, 3).map((song, index) => (
+          <SongRow
+            key={song.id}
+            song={song}
+            index={index}
+            theme={theme}
+            audioState={audioState}
+            onPlay={onPlay}
+            onPause={onPause}
+          />
+        ))}
+      </div>
+      
+      {/* View playlist button */}
+      <div className="px-3 pb-3">
         <button
-          onClick={handleOpenLink}
-          className="w-full py-2 px-4 rounded-full text-sm font-medium transition-colors duration-150"
+          onClick={handleViewPlaylist}
+          className="w-full py-2.5 px-4 rounded-full text-sm font-medium transition-colors duration-150"
           style={{
             backgroundColor: theme.stroke.low,
             color: theme.text.high,
@@ -233,7 +258,7 @@ const ExplorationCard = memo(function ExplorationCard({
             e.currentTarget.style.backgroundColor = theme.stroke.low;
           }}
         >
-          {getCtaLabel(item.type)}
+          View playlist
         </button>
       </div>
     </div>
@@ -250,40 +275,51 @@ const LoadingSkeleton = memo(function LoadingSkeleton({
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="flex-shrink-0 rounded-xl animate-pulse overflow-hidden"
+          className="flex-shrink-0 rounded-2xl animate-pulse overflow-hidden"
           style={{
             backgroundColor: theme.background.bold,
-            width: '280px',
+            width: '300px',
           }}
         >
+          {/* Cover skeleton */}
           <div
-            className="w-full aspect-square"
+            className="w-full aspect-[4/3]"
             style={{ backgroundColor: theme.stroke.low }}
           />
-          <div className="p-3">
+          {/* Song rows skeleton */}
+          <div className="py-2 px-3">
+            {[1, 2, 3].map((j) => (
+              <div key={j} className="flex items-center gap-3 py-2">
+                <div
+                  className="w-5 h-4 rounded"
+                  style={{ backgroundColor: theme.stroke.low }}
+                />
+                <div
+                  className="w-10 h-10 rounded"
+                  style={{ backgroundColor: theme.stroke.low }}
+                />
+                <div className="flex-1">
+                  <div
+                    className="h-4 rounded mb-1"
+                    style={{ backgroundColor: theme.stroke.low, width: '70%' }}
+                  />
+                  <div
+                    className="h-3 rounded"
+                    style={{ backgroundColor: theme.stroke.low, width: '50%' }}
+                  />
+                </div>
+                <div
+                  className="w-8 h-8 rounded-full"
+                  style={{ backgroundColor: theme.stroke.low }}
+                />
+              </div>
+            ))}
+          </div>
+          {/* Button skeleton */}
+          <div className="px-3 pb-3">
             <div
-              className="rounded mb-2"
-              style={{
-                height: '18px',
-                width: '80%',
-                backgroundColor: theme.stroke.low,
-              }}
-            />
-            <div
-              className="rounded mb-3"
-              style={{
-                height: '14px',
-                width: '60%',
-                backgroundColor: theme.stroke.low,
-              }}
-            />
-            <div
-              className="rounded-full"
-              style={{
-                height: '36px',
-                width: '100%',
-                backgroundColor: theme.stroke.low,
-              }}
+              className="h-10 rounded-full"
+              style={{ backgroundColor: theme.stroke.low }}
             />
           </div>
         </div>
@@ -295,8 +331,6 @@ const LoadingSkeleton = memo(function LoadingSkeleton({
 export const JioSaavnExploration = memo(function JioSaavnExploration({
   messageId,
   messageContent,
-  isDismissed = false,
-  onDismiss,
 }: JioSaavnExplorationProps) {
   const theme = useThemeColors();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -308,23 +342,19 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
     duration: 0,
   });
   
-  const { data, isLoading, error, musicTopic } = useJioSaavnSearch(messageContent, {
-    enabled: !isDismissed,
+  const { data, isLoading, error, musicTopic } = usePlaylistSearch(messageContent, {
+    enabled: true,
     limit: 5,
   });
   
-  const handleDismiss = useCallback(() => {
-    onDismiss?.(messageId);
-  }, [messageId, onDismiss]);
-  
-  const handlePlay = useCallback((item: ExplorationItem) => {
-    if (!item.audioUrl) return;
+  const handlePlay = useCallback((song: ExplorationItem) => {
+    if (!song.audioUrl) return;
     
     if (audioRef.current) {
       audioRef.current.pause();
     }
     
-    const audio = new Audio(item.audioUrl);
+    const audio = new Audio(song.audioUrl);
     audioRef.current = audio;
     
     audio.addEventListener('loadedmetadata', () => {
@@ -360,7 +390,7 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
     
     audio.play().then(() => {
       setAudioState({
-        playingId: item.id,
+        playingId: song.id,
         isPlaying: true,
         progress: 0,
         duration: audio.duration || 0,
@@ -390,10 +420,6 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
     };
   }, []);
   
-  if (isDismissed) {
-    return null;
-  }
-  
   if (!musicTopic?.detected) {
     return null;
   }
@@ -402,7 +428,7 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
     return null;
   }
   
-  if (!isLoading && (!data || data.items.length === 0)) {
+  if (!isLoading && (!data || data.playlists.length === 0)) {
     return null;
   }
   
@@ -411,70 +437,57 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
       className="mt-4 rounded-2xl overflow-hidden"
       style={{
         backgroundColor: theme.background.subtle,
-        border: `1px solid ${theme.stroke.low}`,
       }}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between"
+        className="flex items-center gap-2"
         style={{
           paddingTop: '12px',
           paddingBottom: '12px',
           paddingLeft: '16px',
-          paddingRight: '12px',
-          borderBottom: `1px solid ${theme.stroke.low}`,
+          paddingRight: '16px',
         }}
       >
-        <div className="flex items-center gap-2">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="12" cy="12" r="10" fill={JIOSAAVN_GREEN} />
-            <path
-              d="M10 8l6 4-6 4V8z"
-              fill="white"
-            />
-          </svg>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle cx="12" cy="12" r="10" fill={JIOSAAVN_GREEN} />
+          <path
+            d="M10 8l6 4-6 4V8z"
+            fill="white"
+          />
+        </svg>
+        <span
+          style={{
+            color: theme.text.high,
+            fontSize: '14px',
+            fontWeight: 600,
+          }}
+        >
+          Explore on JioSaavn
+        </span>
+        {data?.query && (
           <span
             style={{
-              color: theme.text.high,
-              fontSize: '14px',
-              fontWeight: 600,
+              color: theme.text.low,
+              fontSize: '13px',
             }}
           >
-            Explore on JioSaavn
+            "{data.query}"
           </span>
-          {data?.query && (
-            <span
-              style={{
-                color: theme.text.low,
-                fontSize: '13px',
-              }}
-            >
-              "{data.query}"
-            </span>
-          )}
-        </div>
-        
-        {onDismiss && (
-          <ActionButton
-            icon={<DSIcon name="IcClose" size="XS" style={{ color: theme.text.medium }} />}
-            label="Dismiss"
-            onClick={handleDismiss}
-            size={28}
-          />
         )}
       </div>
       
-      {/* Cards container */}
+      {/* Playlist cards container */}
       <div
         className="overflow-x-auto scrollable-container"
         style={{
-          paddingTop: '16px',
+          paddingTop: '4px',
           paddingBottom: '16px',
           paddingLeft: '16px',
           paddingRight: '16px',
@@ -485,10 +498,10 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
           <LoadingSkeleton theme={theme} />
         ) : (
           <div className="flex gap-4">
-            {data?.items.map((item) => (
-              <ExplorationCard
-                key={`${item.type}-${item.id}`}
-                item={item}
+            {data?.playlists.slice(0, 5).map((playlist) => (
+              <PlaylistCard
+                key={playlist.id}
+                playlist={playlist}
                 theme={theme}
                 audioState={audioState}
                 onPlay={handlePlay}

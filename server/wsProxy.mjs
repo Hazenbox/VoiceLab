@@ -785,6 +785,104 @@ async function handleJioSaavnSongsProxy(req, res) {
   }
 }
 
+/**
+ * HTTP Proxy Handler for JioSaavn Playlist Details
+ * Returns playlist with songs including downloadUrl for streaming
+ */
+async function handleJioSaavnPlaylistProxy(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+  
+  if (req.method !== 'GET') {
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' }));
+    return;
+  }
+  
+  const parsedUrl = new URL(req.url, `http://localhost:${PROXY_PORT}`);
+  const playlistId = parsedUrl.searchParams.get('id');
+  const limitParam = parsedUrl.searchParams.get('limit');
+  
+  if (!playlistId || playlistId.trim().length === 0) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Missing or invalid playlist id parameter', code: 'INVALID_ID' }));
+    return;
+  }
+  
+  let limit = 3;
+  if (limitParam) {
+    const parsedLimit = parseInt(limitParam, 10);
+    if (!isNaN(parsedLimit) && parsedLimit > 0) {
+      limit = Math.min(parsedLimit, 10);
+    }
+  }
+  
+  console.log(`[Proxy] JioSaavn playlist details: id=${playlistId} (limit: ${limit})`);
+  
+  const apiUrl = new URL(`${JIOSAAVN_API_BASE}/playlists`);
+  apiUrl.searchParams.set('id', playlistId.trim());
+  apiUrl.searchParams.set('limit', limit.toString());
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), JIOSAAVN_TIMEOUT_MS);
+  
+  try {
+    const response = await fetch(apiUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'VoiceLab/1.0',
+      },
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!response.ok) {
+      console.error(`[Proxy] JioSaavn playlist upstream error: ${response.status}`);
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Failed to fetch playlist', code: 'UPSTREAM_ERROR' }));
+      return;
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success || !data.data) {
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Invalid response from JioSaavn', code: 'INVALID_UPSTREAM_RESPONSE' }));
+      return;
+    }
+    
+    console.log(`[Proxy] JioSaavn playlist success: ${data.data.name} with ${data.data.songs?.length || 0} songs`);
+    
+    res.writeHead(200, { 
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=300',
+    });
+    res.end(JSON.stringify(data));
+    
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      res.writeHead(504, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Request timeout', code: 'TIMEOUT' }));
+      return;
+    }
+    
+    console.error('[Proxy] JioSaavn playlist error:', error);
+    res.writeHead(500, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: false, error: 'Internal server error', code: 'INTERNAL_ERROR' }));
+  }
+}
+
 // Create HTTP server
 const server = http.createServer((req, res) => {
   // Parse URL for routing (handles query strings)
@@ -819,6 +917,12 @@ const server = http.createServer((req, res) => {
   // HuggingFace proxy endpoint
   if (pathname === '/api/huggingface') {
     handleHuggingFaceProxy(req, res);
+    return;
+  }
+  
+  // JioSaavn playlist details endpoint (with songs)
+  if (pathname === '/api/jiosaavn/playlist') {
+    handleJioSaavnPlaylistProxy(req, res);
     return;
   }
   

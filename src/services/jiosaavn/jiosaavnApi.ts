@@ -7,12 +7,15 @@
 
 import type {
   JioSaavnGlobalSearchResponse,
+  JioSaavnPlaylistDetailsResponse,
   JioSaavnSong,
   JioSaavnPlaylist,
   JioSaavnArtist,
   JioSaavnAlbum,
   ExplorationItem,
   ExplorationData,
+  PlaylistWithSongs,
+  PlaylistExplorationData,
 } from './types';
 
 const API_ENDPOINT = '/api/jiosaavn';
@@ -383,8 +386,207 @@ export async function searchSongsWithAudio(
   }
 }
 
+/**
+ * Fetch playlist details with songs
+ * Returns playlist info with first N songs including streaming URLs
+ */
+export async function fetchPlaylistDetails(
+  playlistId: string,
+  options: SearchOptions = {}
+): Promise<{ success: boolean; data: PlaylistWithSongs | null; error?: string }> {
+  const { limit = 3, signal } = options;
+  
+  if (!playlistId || playlistId.trim().length === 0) {
+    return {
+      success: false,
+      data: null,
+      error: 'Invalid playlist ID',
+    };
+  }
+  
+  try {
+    const url = new URL(`${API_ENDPOINT}/playlist`, window.location.origin);
+    url.searchParams.set('id', playlistId.trim());
+    url.searchParams.set('limit', limit.toString());
+    
+    console.log(`[JioSaavn] Fetching playlist: ${playlistId}`);
+    
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      signal,
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`[JioSaavn] Playlist API error: ${response.status}`, errorData);
+      return {
+        success: false,
+        data: null,
+        error: errorData.error || `HTTP ${response.status}`,
+      };
+    }
+    
+    const data: JioSaavnPlaylistDetailsResponse = await response.json();
+    
+    if (!data.success || !data.data) {
+      return {
+        success: false,
+        data: null,
+        error: 'Invalid response structure',
+      };
+    }
+    
+    const playlistData = data.data;
+    const songs: ExplorationItem[] = (playlistData.songs || []).map(transformSongToItem);
+    
+    return {
+      success: true,
+      data: {
+        id: playlistData.id,
+        name: playlistData.name,
+        imageUrl: getBestImageUrl(playlistData.image),
+        jiosaavnUrl: playlistData.url,
+        songCount: playlistData.songCount || undefined,
+        songs,
+      },
+    };
+    
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        success: false,
+        data: null,
+        error: 'Request cancelled',
+      };
+    }
+    
+    console.error('[JioSaavn] Playlist fetch error:', error);
+    
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Search for playlists and fetch their details with songs
+ * Returns playlists with embedded songs for the new UI layout
+ */
+export async function searchPlaylistsWithSongs(
+  query: string,
+  options: SearchOptions = {}
+): Promise<{ success: boolean; data: PlaylistExplorationData | null; error?: string }> {
+  const { limit = 5, signal } = options;
+  
+  if (!query || query.trim().length === 0) {
+    return {
+      success: false,
+      data: null,
+      error: 'Empty search query',
+    };
+  }
+  
+  const trimmedQuery = query.trim();
+  
+  try {
+    // First, search for playlists
+    const searchUrl = new URL(API_ENDPOINT, window.location.origin);
+    searchUrl.searchParams.set('query', trimmedQuery);
+    searchUrl.searchParams.set('limit', limit.toString());
+    
+    console.log(`[JioSaavn] Searching playlists for: "${trimmedQuery}"`);
+    
+    const searchResponse = await fetch(searchUrl.toString(), {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      signal,
+    });
+    
+    if (!searchResponse.ok) {
+      return {
+        success: false,
+        data: null,
+        error: `Search failed: HTTP ${searchResponse.status}`,
+      };
+    }
+    
+    const searchData: JioSaavnGlobalSearchResponse = await searchResponse.json();
+    
+    if (!searchData.success || !searchData.data?.playlists?.results) {
+      return {
+        success: false,
+        data: null,
+        error: 'No playlists found',
+      };
+    }
+    
+    // Get playlist IDs (limit to max 5)
+    const playlistResults = searchData.data.playlists.results.slice(0, Math.min(limit, 5));
+    
+    if (playlistResults.length === 0) {
+      return {
+        success: true,
+        data: {
+          query: trimmedQuery,
+          playlists: [],
+          timestamp: Date.now(),
+        },
+      };
+    }
+    
+    // Fetch details for each playlist in parallel
+    console.log(`[JioSaavn] Fetching ${playlistResults.length} playlist details...`);
+    
+    const playlistPromises = playlistResults.map(playlist =>
+      fetchPlaylistDetails(playlist.id, { limit: 3, signal })
+    );
+    
+    const playlistDetailsResults = await Promise.all(playlistPromises);
+    
+    // Filter successful results
+    const playlists: PlaylistWithSongs[] = playlistDetailsResults
+      .filter(result => result.success && result.data)
+      .map(result => result.data!);
+    
+    console.log(`[JioSaavn] Got ${playlists.length} playlists with songs`);
+    
+    return {
+      success: true,
+      data: {
+        query: trimmedQuery,
+        playlists,
+        timestamp: Date.now(),
+      },
+    };
+    
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        success: false,
+        data: null,
+        error: 'Request cancelled',
+      };
+    }
+    
+    console.error('[JioSaavn] Playlists search error:', error);
+    
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
 export const jiosaavnApi = {
   search: searchJioSaavn,
   searchSongs: searchSongsWithAudio,
+  searchPlaylistsWithSongs,
+  fetchPlaylist: fetchPlaylistDetails,
   clearCache: clearSearchCache,
 };

@@ -174,3 +174,45 @@ export interface ExplorationData {
   items: ExplorationItem[];
   timestamp: number;
 }
+
+/**
+ * Playlist with songs for the new UI layout
+ */
+export interface PlaylistWithSongs {
+  id: string;
+  name: string;
+  imageUrl: string;
+  jiosaavnUrl: string;
+  songCount?: number;
+  songs: ExplorationItem[];
+}
+
+/**
+ * Playlist details response from /api/playlists
+ */
+export interface JioSaavnPlaylistDetailsResponse {
+  success: boolean;
+  data: {
+    id: string;
+    name: string;
+    description?: string;
+    type: 'playlist';
+    year?: string | null;
+    playCount?: number | null;
+    language: string;
+    explicitContent: boolean;
+    url: string;
+    songCount?: number | null;
+    image: JioSaavnImage[];
+    songs: JioSaavnSong[];
+  };
+}
+
+/**
+ * Exploration data with playlists containing songs
+ */
+export interface PlaylistExplorationData {
+  query: string;
+  playlists: PlaylistWithSongs[];
+  timestamp: number;
+}

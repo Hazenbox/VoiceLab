@@ -419,13 +419,11 @@ export const ChatPanel = memo(function ChatPanel({
   const [multiLineMessages, setMultiLineMessages] = useState<Set<string>>(new Set());
   
   // Highlight state from trust panel interactions
-  const { highlightedText, highlightedMessageId, clearHighlight, dismissedExplorations, dismissExploration } = useUIStore(
+  const { highlightedText, highlightedMessageId, clearHighlight } = useUIStore(
     useShallow((s) => ({
       highlightedText: s.highlightedText,
       highlightedMessageId: s.highlightedMessageId,
       clearHighlight: s.clearHighlight,
-      dismissedExplorations: s.dismissedExplorations,
-      dismissExploration: s.dismissExploration,
     }))
   );
   
@@ -704,6 +702,12 @@ export const ChatPanel = memo(function ChatPanel({
             highlightedText={isHighlighted ? highlightedText ?? undefined : undefined}
           />
           
+          {/* JioSaavn Exploration - shows when music topics are detected */}
+          <JioSaavnExploration
+            messageId={message.id}
+            messageContent={assistantContent}
+          />
+          
           {/* Actions row: Message Actions + Trust Badge + Auto-fixed badge */}
           {/* Trust badge and auto-fixed label only shown for branded content, not general chat */}
           <div className="flex items-center gap-0 mt-1.5 -ml-2">
@@ -730,14 +734,6 @@ export const ChatPanel = memo(function ChatPanel({
               <Badge variant="positive">auto-fixed</Badge>
             )}
           </div>
-          
-          {/* JioSaavn Exploration - shows when music topics are detected */}
-          <JioSaavnExploration
-            messageId={message.id}
-            messageContent={assistantContent}
-            isDismissed={dismissedExplorations.has(message.id)}
-            onDismiss={dismissExploration}
-          />
         </div>
       </div>
     );
@@ -757,8 +753,6 @@ export const ChatPanel = memo(function ChatPanel({
     onVersionChange,
     highlightedText,
     highlightedMessageId,
-    dismissedExplorations,
-    dismissExploration,
   ]);
 
   // Render input area (reusable for both layouts)
