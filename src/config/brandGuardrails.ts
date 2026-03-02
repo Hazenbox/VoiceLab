@@ -25,10 +25,10 @@ export const BRAND_GUARDRAILS = [
   {
     id: 'caring',
     rule: 'We are caring',
-    description: 'Be approachable, respectful and put the customer first.',
-    prompt: 'Be approachable and respectful. Always put the customer first.',
-    doExample: 'Something wrong? We\'ll fix it. Fast and free.',
-    dontExample: 'In case of an issue, please file a complaint. Our team will get back to you in due course.',
+    description: 'Show care through action, not hollow phrases. Acknowledge their specific situation, then move to help.',
+    prompt: 'Show care through action, not words. Acknowledge their specific situation (not generic empathy), then immediately move to helping. Never use hollow phrases like "we apologise for the inconvenience" or "we understand how frustrating".',
+    doExample: "That's not the experience you should be having. Let's fix this. Tell me which city you're in so I can check for issues in your area.",
+    dontExample: "I'm really sorry to hear about the repeated issues you've faced. We understand how frustrating this must be and I sincerely apologise for the inconvenience.",
   },
   {
     id: 'inviting',
