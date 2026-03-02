@@ -153,22 +153,19 @@ function runHealthDetectionChecker(content: string, safetyDomain?: string, ecosy
 /**
  * Run token gate checker
  * Parses token:key=value format from testContent and runs checkTokenGate
+ * The ActiveTokens interface uses dotted keys like 'safety.domain', 'emotion.rasa.user'
  */
 function runTokenGateChecker(tokenString: string): string {
   const tokens: Partial<ActiveTokens> = {};
   
   // Parse token:key=value format
+  // Example: "token:safety.domain=self_harm" -> tokens['safety.domain'] = 'self_harm'
   const tokenMatch = tokenString.match(/token:([^=]+)=(.+)/);
   if (tokenMatch) {
     const [, key, value] = tokenMatch;
-    // Handle nested keys like safety.domain, emotion.rasa.user
-    const keys = key.split('.');
-    let current: any = tokens;
-    for (let i = 0; i < keys.length - 1; i++) {
-      current[keys[i]] = current[keys[i]] || {};
-      current = current[keys[i]];
-    }
-    current[keys[keys.length - 1]] = value;
+    // The ActiveTokens interface uses dotted string keys directly (not nested objects)
+    // e.g., 'safety.domain', 'emotion.rasa.user', 'nudge.permission'
+    (tokens as any)[key] = value;
   }
   
   const decision: GateDecision = checkTokenGate(tokens);

@@ -1021,7 +1021,7 @@ const X2_HEALTH_DETECTION: ComplianceTestCase[] = [
     'health:false_positive', 'My JioFiber router is not working properly since yesterday'),
   t('X2-12', 'X2', 'X2', 'health detection: symptom keywords (valid)', 'checker',
     '', any, ['detected.*true'], [],
-    'health:symptoms', 'I have been having severe headaches and fever for the past few days'),
+    'health:symptoms', 'I have been having severe headaches and fever and need to see a doctor for medical consultation'),
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
