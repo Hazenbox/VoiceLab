@@ -328,7 +328,7 @@ export const HowItWorksPage = memo(function HowItWorksPage({ onBack: _onBack }: 
               className="text-4xl font-extrabold tracking-tight mb-3"
               style={{ color: theme.text.high }}
             >
-              How Tone Studio works
+              How Conversation Studio works
             </h2>
           </div>
 
