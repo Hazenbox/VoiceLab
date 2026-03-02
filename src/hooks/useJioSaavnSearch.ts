@@ -216,7 +216,18 @@ export function usePlaylistSearch(
     return detectMusicTopic(content);
   }, [content, enabled]);
   
+  // Debug: Log when music topic changes
+  useEffect(() => {
+    console.log('[usePlaylistSearch] Music topic changed:', {
+      detected: musicTopic?.detected,
+      query: musicTopic?.searchQuery,
+      confidence: musicTopic?.confidence?.toFixed(2)
+    });
+  }, [musicTopic]);
+  
   const fetchData = useCallback(async (query: string) => {
+    console.log('[usePlaylistSearch] fetchData called with query:', query);
+    
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -232,6 +243,12 @@ export function usePlaylistSearch(
         signal: abortControllerRef.current.signal,
       });
       
+      console.log('[usePlaylistSearch] API result:', {
+        success: result.success,
+        playlistCount: result.data?.playlists?.length,
+        error: result.error
+      });
+      
       if (result.success && result.data) {
         setData(result.data);
         setError(null);
@@ -240,6 +257,7 @@ export function usePlaylistSearch(
         setData(null);
       }
     } catch (err) {
+      console.error('[usePlaylistSearch] Fetch error:', err);
       if (err instanceof Error && err.name !== 'AbortError') {
         setError(err.message);
         setData(null);
@@ -256,6 +274,11 @@ export function usePlaylistSearch(
     }
     
     if (!enabled || !musicTopic?.detected || !musicTopic.searchQuery) {
+      console.log('[usePlaylistSearch] Fetch skipped:', {
+        enabled,
+        detected: musicTopic?.detected,
+        hasQuery: !!musicTopic?.searchQuery
+      });
       setData(null);
       setError(null);
       setIsLoading(false);
@@ -266,9 +289,11 @@ export function usePlaylistSearch(
     
     // Skip if we already fetched this query
     if (query === lastQueryRef.current) {
+      console.log('[usePlaylistSearch] Query unchanged, skipping fetch:', query);
       return;
     }
     
+    console.log('[usePlaylistSearch] Starting fetch for:', query);
     lastQueryRef.current = query;
     
     debounceTimerRef.current = setTimeout(() => {

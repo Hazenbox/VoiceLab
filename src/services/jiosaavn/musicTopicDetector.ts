@@ -107,6 +107,7 @@ function findMatchedKeywords(text: string): {
   for (const artist of FAMOUS_ARTISTS) {
     if (normalizedText.includes(artist)) {
       foundArtist = artist;
+      console.log('[MusicDetector] Found famous artist:', artist);
       // Add high weight for artist match
       totalWeight += 0.9;
       matchCount++;
@@ -210,7 +211,10 @@ export function extractSearchQuery(text: string, matchedKeywords: string[]): str
 }
 
 export function detectMusicTopic(content: string): MusicTopicResult {
+  console.log('[MusicDetector] Running detection on content:', content.substring(0, 100) + '...');
+  
   if (!content || content.trim().length < 20) {
+    console.log('[MusicDetector] Content too short, skipping detection');
     return {
       detected: false,
       searchQuery: '',
@@ -247,12 +251,22 @@ export function detectMusicTopic(content: string): MusicTopicResult {
     }
   }
   
-  return {
+  const result = {
     detected,
     searchQuery,
     confidence: adjustedConfidence,
     matchedKeywords: matched,
   };
+  
+  console.log('[MusicDetector] Result:', {
+    detected: result.detected,
+    query: result.searchQuery,
+    confidence: result.confidence.toFixed(2),
+    keywords: result.matchedKeywords.slice(0, 5),
+    foundArtist: foundArtist || 'none'
+  });
+  
+  return result;
 }
 
 export function isMusicRelated(content: string): boolean {

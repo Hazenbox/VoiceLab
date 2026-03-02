@@ -554,6 +554,12 @@ export async function searchPlaylistsWithSongs(
       .map(result => result.data!);
     
     console.log(`[JioSaavn] Got ${playlists.length} playlists with songs`);
+    console.log('[JioSaavn] Returning playlist data:', {
+      success: true,
+      playlistCount: playlists.length,
+      totalSongs: playlists.reduce((sum, p) => sum + p.songs.length, 0),
+      playlistNames: playlists.map(p => p.name).slice(0, 3)
+    });
     
     return {
       success: true,

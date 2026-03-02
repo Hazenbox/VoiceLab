@@ -309,6 +309,8 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
   messageId,
   messageContent,
 }: JioSaavnExplorationProps) {
+  console.log('[JioSaavnExploration] Rendering for message:', messageId, 'content length:', messageContent?.length);
+  
   const theme = useThemeColors();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   
@@ -398,16 +400,21 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
   }, []);
   
   if (!musicTopic?.detected) {
+    console.log('[JioSaavnExploration] Not detected, returning null');
     return null;
   }
   
   if (error && !isLoading) {
+    console.log('[JioSaavnExploration] Error occurred:', error);
     return null;
   }
   
   if (!isLoading && (!data || data.playlists.length === 0)) {
+    console.log('[JioSaavnExploration] No playlists:', { hasData: !!data, count: data?.playlists?.length, isLoading });
     return null;
   }
+  
+  console.log('[JioSaavnExploration] Rendering UI with', data?.playlists?.length, 'playlists');
   
   return (
     <div
