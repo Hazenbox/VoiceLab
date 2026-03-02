@@ -144,16 +144,16 @@ const INDIAN_EVENTS: Array<{
   offers?: string[];
 }> = [
   // Fixed national holidays
-  { name: 'republic_day', type: 'national_holiday', months: [0], dates: [26], priority: 'high', greeting: 'Happy Republic Day!' },
-  { name: 'independence_day', type: 'national_holiday', months: [7], dates: [15], priority: 'high', greeting: 'Happy Independence Day!' },
+  { name: 'republic_day', type: 'national_holiday', months: [0], dates: [26], priority: 'high', greeting: 'Happy Republic Day.' },
+  { name: 'independence_day', type: 'national_holiday', months: [7], dates: [15], priority: 'high', greeting: 'Happy Independence Day.' },
   { name: 'gandhi_jayanti', type: 'national_holiday', months: [9], dates: [2], priority: 'normal', greeting: 'Remembering the Mahatma' },
   
   // Major festivals (approximate dates vary yearly)
-  { name: 'diwali', type: 'festival', months: [9, 10], priority: 'critical', greeting: 'Happy Diwali! 🪔', offers: ['diwali_data_pack', 'festive_recharge'] },
-  { name: 'holi', type: 'festival', months: [2, 3], priority: 'high', greeting: 'Happy Holi!', offers: ['holi_special'] },
-  { name: 'eid', type: 'festival', months: [3, 4, 5], priority: 'high', greeting: 'Eid Mubarak!' },
-  { name: 'christmas', type: 'festival', months: [11], dates: [25], priority: 'high', greeting: 'Merry Christmas!' },
-  { name: 'new_year', type: 'festival', months: [0], dates: [1], priority: 'high', greeting: 'Happy New Year!' },
+  { name: 'diwali', type: 'festival', months: [9, 10], priority: 'critical', greeting: 'Happy Diwali.', offers: ['diwali_data_pack', 'festive_recharge'] },
+  { name: 'holi', type: 'festival', months: [2, 3], priority: 'high', greeting: 'Happy Holi.', offers: ['holi_special'] },
+  { name: 'eid', type: 'festival', months: [3, 4, 5], priority: 'high', greeting: 'Eid Mubarak.' },
+  { name: 'christmas', type: 'festival', months: [11], dates: [25], priority: 'high', greeting: 'Merry Christmas.' },
+  { name: 'new_year', type: 'festival', months: [0], dates: [1], priority: 'high', greeting: 'Happy New Year.' },
   
   // Sale events
   { name: 'big_billion_days', type: 'sale_event', months: [9], priority: 'high', offers: ['bbd_special', 'cashback_offer'] },

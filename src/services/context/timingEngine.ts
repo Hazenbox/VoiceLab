@@ -49,7 +49,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 10,  // October/November (varies)
     dayStart: 20,
     dayEnd: 30,
-    greeting: 'Happy Diwali! 🪔',
+    greeting: 'Happy Diwali.',
     tone: 'celebratory, festive, light-filled',
     inclusive: true,
   },
@@ -59,7 +59,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 3,  // March (varies)
     dayStart: 8,
     dayEnd: 15,
-    greeting: 'Happy Holi! 🎨',
+    greeting: 'Happy Holi.',
     tone: 'playful, colorful, joyous',
     inclusive: true,
   },
@@ -69,7 +69,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 0,  // Varies significantly
     dayStart: 1,
     dayEnd: 3,
-    greeting: 'Eid Mubarak! 🌙',
+    greeting: 'Eid Mubarak.',
     tone: 'blessed, grateful, celebratory',
     inclusive: true,
   },
@@ -79,7 +79,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 12,
     dayStart: 24,
     dayEnd: 26,
-    greeting: 'Merry Christmas! 🎄',
+    greeting: 'Merry Christmas.',
     tone: 'warm, giving, festive',
     inclusive: true,
   },
@@ -89,7 +89,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 1,
     dayStart: 1,
     dayEnd: 3,
-    greeting: 'Happy New Year! 🎉',
+    greeting: 'Happy New Year.',
     tone: 'hopeful, fresh start, optimistic',
     inclusive: true,
   },
@@ -99,7 +99,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 8,
     dayStart: 15,
     dayEnd: 15,
-    greeting: 'Happy Independence Day! 🇮🇳',
+    greeting: 'Happy Independence Day.',
     tone: 'patriotic, proud, united',
     inclusive: true,
   },
@@ -109,7 +109,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 1,
     dayStart: 26,
     dayEnd: 26,
-    greeting: 'Happy Republic Day! 🇮🇳',
+    greeting: 'Happy Republic Day.',
     tone: 'patriotic, proud, celebratory',
     inclusive: true,
   },
@@ -119,7 +119,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 9,  // September (varies)
     dayStart: 10,
     dayEnd: 20,
-    greeting: 'Ganpati Bappa Morya! 🙏',
+    greeting: 'Ganpati Bappa Morya.',
     tone: 'devotional, joyous, community',
     inclusive: false,  // Regional (Maharashtra, parts of South)
   },
@@ -129,7 +129,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 10,  // October (varies)
     dayStart: 1,
     dayEnd: 10,
-    greeting: 'Happy Navratri! 🙏',
+    greeting: 'Happy Navratri.',
     tone: 'spiritual, energetic, celebratory',
     inclusive: false,  // Regional (Gujarat, North India)
   },
@@ -139,7 +139,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 8,  // August/September (varies)
     dayStart: 20,
     dayEnd: 30,
-    greeting: 'Happy Onam! 🌺',
+    greeting: 'Happy Onam.',
     tone: 'harvest celebration, prosperity, togetherness',
     inclusive: false,  // Regional (Kerala)
   },
@@ -149,7 +149,7 @@ export const FESTIVALS: readonly Festival[] = [
     month: 1,
     dayStart: 14,
     dayEnd: 17,
-    greeting: 'Happy Pongal! 🌾',
+    greeting: 'Happy Pongal.',
     tone: 'harvest celebration, gratitude, family',
     inclusive: false,  // Regional (Tamil Nadu)
   },

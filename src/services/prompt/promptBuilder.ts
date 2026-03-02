@@ -90,7 +90,7 @@ ${guardrailsText}
 - Use ₹ symbol for currency (NOT Rs. or INR). Example: ₹399
 - Use Indian number format: 1,00,000 (NOT 100,000)
 - Use 12-hour time format: 3:30 PM (NOT 15:30)
-- No Oxford comma. Example: "speed, value and reliability" (NOT "speed, value, and reliability")
+- No Oxford comma (Indian English style). Examples: "speed, value and reliability" NOT "speed, value, and reliability"; "light, warmth and togetherness" NOT "light, warmth, and togetherness"
 
 ## Conversation Flow (For Support/Chat)
 Follow this structure for conversational content:
@@ -401,7 +401,7 @@ ${isMarketing ? `1. **Subject Line**: Compelling, benefit-focused (40-60 charact
 > "Get 50% off on your next recharge. Click here."
 
 ### Example of CORRECT Response
-> **Subject**: Get 50% off on your next Jio recharge - limited time
+> **Subject**: Get 50% off on your next Jio recharge - limited time.
 >
 > Hi there,
 >
@@ -412,6 +412,40 @@ ${isMarketing ? `1. **Subject Line**: Compelling, benefit-focused (40-60 charact
 > [Recharge now and save]
 >
 > Thanks for being part of the Jio family.
+
+### Festival/Greeting Email Principles
+
+When the email is a **festival greeting** (Diwali, Holi, Eid, Christmas, New Year, etc.) or **celebration message**:
+
+1. **Emotion first**: Focus on warmth, wishes, and human connection - NOT services, features, or offers
+2. **Indian greeting**: Use "Namaste" for Indian festivals (Diwali, Holi, Navratri, etc.), not generic "Hi there"
+3. **Personal tone**: Write as if wishing a friend or family member, not a customer
+4. **Sign-off**: Use "With love from Jio." (brand signature phrase)
+5. **No sales pitch**: Festival greetings should NOT mention offers, products, discounts, or CTAs
+6. **Subject line**: End with a full stop (Jio brand signature). Example: "Happy Diwali from Jio."
+7. **Keep it brief**: 3-4 short sentences of genuine wishes, not marketing copy
+
+**Festival Email Example (DO)**:
+> Subject: Happy Diwali from Jio.
+>
+> Namaste,
+>
+> This Diwali, we wish you light, warmth and meaningful moments with the people who matter most.
+>
+> May your home be filled with joy and togetherness.
+>
+> Thank you for being a part of the Jio family.
+>
+> With love from Jio.
+
+**Festival Email Example (DON'T)**:
+> Subject: Happy Diwali. Light up your day with Jio
+>
+> Hi there,
+>
+> Wishing you a sparkling Diwali filled with joy, prosperity, and endless moments of happiness.
+>
+> At Jio, we're here to keep you connected, entertained, and in touch with what matters most.
 
 `;
 }

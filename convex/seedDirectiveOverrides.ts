@@ -91,7 +91,7 @@ const DIRECTIVE_OVERRIDES: DirectiveOverrideSeed[] = [
     overrideValue: JSON.stringify({ 
       minWarmth: 3, 
       allowCelebratory: true,
-      festivalGreetings: ['Happy Diwali!', 'Shubh Deepavali!']
+      festivalGreetings: ['Happy Diwali.', 'Shubh Deepavali.']
     }),
     priority: 5,
     reason: 'Celebratory tone adjustments for Diwali period',

@@ -410,6 +410,35 @@ export const KB_TRAINING_EXAMPLES: KBTrainingExample[] = [
     channel: 'app_notification',
     ecosystem: 'connectivity',
   },
+  {
+    id: 'kb-ch-11-festival-email',
+    scenario: 'festival greeting email (detail tier 5)',
+    inputContext: 'festival greeting email to customers',
+    outputContent: `subject: happy diwali from jio.
+
+namaste,
+
+this diwali, we wish you light, warmth and meaningful moments with the people who matter most.
+
+may your home be filled with joy and togetherness.
+
+thank you for being a part of the jio family.
+
+with love from jio.`,
+    avoidResponse: `subject: happy diwali. light up your day with jio
+
+hi there,
+
+wishing you a sparkling diwali filled with joy, prosperity, and endless moments of happiness.
+
+at jio, we're here to keep you connected, entertained, and in touch with what matters most.
+
+this diwali, let's light up the night together—with fast internet, amazing content, and smooth calls.`,
+    reason: 'festival email should be warm and personal, not generic marketing copy; focus on emotion and connection, not services; use Indian greeting (namaste) for Indian festivals; no Oxford comma; end subject with full stop; sign off with brand signature',
+    tags: ['festival', 'channel-specific', 'email'],
+    channel: 'marketing_email',
+    ecosystem: 'connectivity',
+  },
 ];
 
 /**

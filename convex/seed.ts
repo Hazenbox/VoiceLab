@@ -454,17 +454,17 @@ export const seedAll = mutation({
     // ── 4. Festivals ─────────────────────────────────────────────
 
     const festivals = [
-      { name: "Diwali", month: 10, dayStart: 20, dayEnd: 30, tone: "celebratory, festive, light-filled", inclusive: true, greeting: "Happy Diwali!" },
-      { name: "Holi", month: 3, dayStart: 8, dayEnd: 15, tone: "playful, colorful, joyous", inclusive: true, greeting: "Happy Holi!" },
-      { name: "Eid", month: 0, dayStart: 1, dayEnd: 3, tone: "blessed, grateful, celebratory", inclusive: true, greeting: "Eid Mubarak!" },
-      { name: "Christmas", month: 12, dayStart: 24, dayEnd: 26, tone: "warm, giving, festive", inclusive: true, greeting: "Merry Christmas!" },
-      { name: "New Year", month: 1, dayStart: 1, dayEnd: 3, tone: "hopeful, fresh start, optimistic", inclusive: true, greeting: "Happy New Year!" },
-      { name: "Independence Day", month: 8, dayStart: 15, dayEnd: 15, tone: "patriotic, proud, united", inclusive: true, greeting: "Happy Independence Day!" },
-      { name: "Republic Day", month: 1, dayStart: 26, dayEnd: 26, tone: "patriotic, proud, celebratory", inclusive: true, greeting: "Happy Republic Day!" },
-      { name: "Ganesh Chaturthi", month: 9, dayStart: 10, dayEnd: 20, tone: "devotional, joyous, community", inclusive: false, greeting: "Ganpati Bappa Morya!" },
-      { name: "Navratri", month: 10, dayStart: 1, dayEnd: 10, tone: "spiritual, energetic, celebratory", inclusive: false, greeting: "Happy Navratri!" },
-      { name: "Onam", month: 8, dayStart: 20, dayEnd: 30, tone: "harvest celebration, prosperity, togetherness", inclusive: false, greeting: "Happy Onam!" },
-      { name: "Pongal", month: 1, dayStart: 14, dayEnd: 17, tone: "harvest celebration, gratitude, family", inclusive: false, greeting: "Happy Pongal!" },
+      { name: "Diwali", month: 10, dayStart: 20, dayEnd: 30, tone: "celebratory, festive, light-filled", inclusive: true, greeting: "Happy Diwali." },
+      { name: "Holi", month: 3, dayStart: 8, dayEnd: 15, tone: "playful, colorful, joyous", inclusive: true, greeting: "Happy Holi." },
+      { name: "Eid", month: 0, dayStart: 1, dayEnd: 3, tone: "blessed, grateful, celebratory", inclusive: true, greeting: "Eid Mubarak." },
+      { name: "Christmas", month: 12, dayStart: 24, dayEnd: 26, tone: "warm, giving, festive", inclusive: true, greeting: "Merry Christmas." },
+      { name: "New Year", month: 1, dayStart: 1, dayEnd: 3, tone: "hopeful, fresh start, optimistic", inclusive: true, greeting: "Happy New Year." },
+      { name: "Independence Day", month: 8, dayStart: 15, dayEnd: 15, tone: "patriotic, proud, united", inclusive: true, greeting: "Happy Independence Day." },
+      { name: "Republic Day", month: 1, dayStart: 26, dayEnd: 26, tone: "patriotic, proud, celebratory", inclusive: true, greeting: "Happy Republic Day." },
+      { name: "Ganesh Chaturthi", month: 9, dayStart: 10, dayEnd: 20, tone: "devotional, joyous, community", inclusive: false, greeting: "Ganpati Bappa Morya." },
+      { name: "Navratri", month: 10, dayStart: 1, dayEnd: 10, tone: "spiritual, energetic, celebratory", inclusive: false, greeting: "Happy Navratri." },
+      { name: "Onam", month: 8, dayStart: 20, dayEnd: 30, tone: "harvest celebration, prosperity, togetherness", inclusive: false, greeting: "Happy Onam." },
+      { name: "Pongal", month: 1, dayStart: 14, dayEnd: 17, tone: "harvest celebration, gratitude, family", inclusive: false, greeting: "Happy Pongal." },
     ];
 
     for (const fest of festivals) {
