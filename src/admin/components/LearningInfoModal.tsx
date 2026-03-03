@@ -551,7 +551,7 @@ const BeforeAfterExample = memo(function BeforeAfterExample({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
           <DSIcon name="IcClose" size="S" style={{ color: '#ef4444' }} />
-          <Text size="XS" weight="high" color="medium">
+          <Text size="S" weight="high" color="high">
             {beforeLabel}
           </Text>
         </div>
@@ -569,7 +569,7 @@ const BeforeAfterExample = memo(function BeforeAfterExample({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
           <DSIcon name="IcCheck" size="S" style={{ color: '#22c55e' }} />
-          <Text size="XS" weight="high" color="medium">
+          <Text size="S" weight="high" color="high">
             {afterLabel}
           </Text>
         </div>
