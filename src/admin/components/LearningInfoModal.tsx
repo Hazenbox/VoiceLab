@@ -572,10 +572,10 @@ const BeforeAfterExample = memo(function BeforeAfterExample({
         border: `1px solid #ef444420`,
         backgroundColor: '#ef444408',
       }}>
-        <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.75rem' }}>
+        <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.125rem' }}>
           {beforeLabel}
         </Text>
-        <Text size="S" weight="low" color="high" style={{ lineHeight: 1.6 }}>
+        <Text size="S" weight="low" color="medium">
           {beforeText}
         </Text>
       </div>
@@ -587,10 +587,10 @@ const BeforeAfterExample = memo(function BeforeAfterExample({
         border: `1px solid #22c55e20`,
         backgroundColor: '#22c55e08',
       }}>
-        <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.75rem' }}>
+        <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.125rem' }}>
           {afterLabel}
         </Text>
-        <Text size="S" weight="low" color="high" style={{ lineHeight: 1.6 }}>
+        <Text size="S" weight="low" color="medium">
           {afterText}
         </Text>
       </div>
