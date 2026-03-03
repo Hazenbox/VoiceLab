@@ -5,12 +5,29 @@
  * feedback types, weighting system, admin controls, and the learning loop.
  */
 
-import { memo, useEffect, useCallback } from 'react';
+import { memo, useEffect, useCallback, ReactNode } from 'react';
 import { useThemeColors } from '../../theme';
 import { Title, Text, Divider, Button } from '@marcelinodzn/ds-react';
 import { DSIcon } from '../../components/DSIcon';
 import { ActionButton } from '../../components/ActionButton';
 import { FlowCanvas, FlowNode, FlowArrow, CurvedFlowArrow } from '../../components/FlowDiagram';
+
+/** Custom edit pen icon */
+const EditPenIcon = ({ style }: { style?: React.CSSProperties }) => (
+  <svg
+    width="21"
+    height="21"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={style}
+  >
+    <path
+      d="M19.4999 4.5C18.8363 3.83805 17.9372 3.46631 16.9999 3.46631C16.0626 3.46631 15.1635 3.83805 14.4999 4.5L14.2099 4.79L19.2099 9.79L19.4999 9.5C20.1618 8.83638 20.5336 7.93732 20.5336 7C20.5336 6.06268 20.1618 5.16362 19.4999 4.5ZM5.5499 13.5C5.19016 13.8617 4.92859 14.3091 4.7899 14.8L3.7899 18.45C3.72963 18.6998 3.73453 18.9608 3.80413 19.2082C3.87373 19.4555 4.0057 19.6808 4.18739 19.8625C4.36907 20.0442 4.59438 20.1762 4.84172 20.2458C5.08905 20.3154 5.35012 20.3203 5.5999 20.26L9.2499 19.21C9.7408 19.0713 10.1882 18.8097 10.5499 18.45L17.7899 11.21L12.7899 6.21L5.5499 13.5Z"
+      fill="currentColor"
+    />
+  </svg>
+);
 
 interface LearningInfoModalProps {
   isOpen: boolean;
@@ -129,19 +146,23 @@ export const LearningInfoModal = memo(function LearningInfoModal({
               marginTop: '1rem' 
             }}>
               <FeedbackType 
-                icon="IcConfirm"
+                icon={
+                  <span style={{ transform: 'scaleY(-1)', display: 'inline-block' }}>
+                    <DSIcon name="IcDislike" size="M" style={{ color: theme.secondary }} />
+                  </span>
+                }
                 label="Thumbs up" 
                 description="Positive signal"
                 theme={theme}
               />
               <FeedbackType 
-                icon="IcDislike"
+                icon={<DSIcon name="IcDislike" size="M" style={{ color: theme.secondary }} />}
                 label="Thumbs down" 
                 description="Negative signal"
                 theme={theme}
               />
               <FeedbackType 
-                icon="IcCode"
+                icon={<EditPenIcon style={{ color: theme.secondary }} />}
                 label="Edit" 
                 description="Correction pair"
                 theme={theme}
@@ -206,7 +227,6 @@ export const LearningInfoModal = memo(function LearningInfoModal({
                     weight="1.0" 
                     reason="Shows exact correction — strongest learning signal"
                     theme={theme}
-                    isHighest
                   />
                   <WeightRow 
                     type="Thumbs down" 
@@ -238,7 +258,7 @@ export const LearningInfoModal = memo(function LearningInfoModal({
                 <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.25rem' }}>
                   Recency decay
                 </Text>
-                <Text size="XS" weight="low" color="medium">
+                <Text size="S" weight="low" color="medium">
                   Corrections have a 14-day half-life. A correction from 2 weeks ago has half the weight 
                   of one from today. This ensures the system stays current with evolving preferences.
                 </Text>
@@ -260,7 +280,7 @@ export const LearningInfoModal = memo(function LearningInfoModal({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <AdminControl
-                icon="IcCheck"
+                icon="IcConfirm"
                 title="Approve corrections"
                 description="Confirmed corrections are applied with full weight to future generations"
                 theme={theme}
@@ -399,7 +419,7 @@ export const LearningInfoModal = memo(function LearningInfoModal({
 // Sub-components
 
 interface FeedbackTypeProps {
-  icon: string;
+  icon: ReactNode;
   label: string;
   description: string;
   theme: ReturnType<typeof useThemeColors>;
@@ -418,11 +438,13 @@ const FeedbackType = memo(function FeedbackType({
       backgroundColor: theme.background.bold,
       textAlign: 'center',
     }}>
-      <DSIcon name={icon} size="M" style={{ color: theme.secondary, marginBottom: '0.5rem' }} />
+      <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+        {icon}
+      </div>
       <Text size="XS" weight="high" color="high" style={{ display: 'block', marginBottom: '0.125rem' }}>
         {label}
       </Text>
-      <Text size="XS" weight="low" color="low" style={{ fontSize: '10px' }}>
+      <Text size="S" weight="low" color="medium">
         {description}
       </Text>
     </div>
@@ -434,7 +456,6 @@ interface WeightRowProps {
   weight: string;
   reason: string;
   theme: ReturnType<typeof useThemeColors>;
-  isHighest?: boolean;
   isLast?: boolean;
 }
 
@@ -443,7 +464,6 @@ const WeightRow = memo(function WeightRow({
   weight, 
   reason, 
   theme, 
-  isHighest,
   isLast 
 }: WeightRowProps) {
   return (
@@ -458,8 +478,8 @@ const WeightRow = memo(function WeightRow({
       </td>
       <td style={{ 
         padding: '0.5rem 0.75rem', 
-        color: isHighest ? theme.secondary : theme.text.high,
-        fontWeight: isHighest ? 600 : 500,
+        color: theme.text.high,
+        fontWeight: 500,
         fontFamily: 'monospace',
         fontSize: '13px',
         borderBottom: isLast ? 'none' : `1px solid ${theme.stroke.low}`,
@@ -517,7 +537,7 @@ const AdminControl = memo(function AdminControl({
         <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.125rem' }}>
           {title}
         </Text>
-        <Text size="XS" weight="low" color="medium">
+        <Text size="S" weight="low" color="medium">
           {description}
         </Text>
       </div>
@@ -538,7 +558,6 @@ const BeforeAfterExample = memo(function BeforeAfterExample({
   beforeText, 
   afterLabel, 
   afterText, 
-  theme 
 }: BeforeAfterExampleProps) {
   return (
     <div style={{ display: 'flex', gap: '1rem' }}>
@@ -549,12 +568,9 @@ const BeforeAfterExample = memo(function BeforeAfterExample({
         border: `1px solid #ef444420`,
         backgroundColor: '#ef444408',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-          <DSIcon name="IcClose" size="S" style={{ color: '#ef4444' }} />
-          <Text size="S" weight="high" color="high">
-            {beforeLabel}
-          </Text>
-        </div>
+        <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.75rem' }}>
+          {beforeLabel}
+        </Text>
         <Text size="S" weight="low" color="high" style={{ lineHeight: 1.6 }}>
           {beforeText}
         </Text>
@@ -567,12 +583,9 @@ const BeforeAfterExample = memo(function BeforeAfterExample({
         border: `1px solid #22c55e20`,
         backgroundColor: '#22c55e08',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-          <DSIcon name="IcCheck" size="S" style={{ color: '#22c55e' }} />
-          <Text size="S" weight="high" color="high">
-            {afterLabel}
-          </Text>
-        </div>
+        <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.75rem' }}>
+          {afterLabel}
+        </Text>
         <Text size="S" weight="low" color="high" style={{ lineHeight: 1.6 }}>
           {afterText}
         </Text>
