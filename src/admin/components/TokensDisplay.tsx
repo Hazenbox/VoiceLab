@@ -8,6 +8,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react';
 import { useThemeColors } from '../../theme/useColors';
 import { DSIcon } from '../../components/DSIcon';
+import { ActionButton } from '../../components/ActionButton';
 import { Title, Text, SearchField, Tabs, TabList, Tab } from '@marcelinodzn/ds-react';
 import { Badge } from '../../components/ui/Badge';
 import { 
@@ -15,6 +16,7 @@ import {
   TOTAL_TOKEN_COUNT 
 } from '../../services/tokens/tokenTypes';
 import { TOKEN_RULES } from '../../services/tokens/tokenRules';
+import { TokenInfoModal } from './TokenInfoModal';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Token Documentation - Comprehensive descriptions for each token
@@ -919,6 +921,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
   const [activeCategory, setActiveCategory] = useState<string>(
     Object.keys(TOKEN_GROUPS)[0]
   );
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const isClickScrolling = useRef(false);
 
@@ -1000,9 +1003,17 @@ export const TokensDisplay = memo(function TokensDisplay() {
       {/* Header row with title and search */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <Title size="L" as="h1" weight="high" color="high">
-            Tokens specification
-          </Title>
+          <div className="flex items-center gap-2">
+            <Title size="L" as="h1" weight="high" color="high">
+              Tokens specification
+            </Title>
+            <ActionButton
+              icon={<DSIcon name="IcInfo" size="S" style={{ color: theme.text.medium }} />}
+              label="Learn how tokens work"
+              onClick={() => setIsInfoModalOpen(true)}
+              size={28}
+            />
+          </div>
           <p
             style={{
               fontFamily: '"JioType Var"',
@@ -1109,6 +1120,12 @@ export const TokensDisplay = memo(function TokensDisplay() {
           </div>
         )}
       </div>
+
+      {/* Token Info Modal */}
+      <TokenInfoModal
+        isOpen={isInfoModalOpen}
+        onClose={() => setIsInfoModalOpen(false)}
+      />
     </div>
   );
 });
