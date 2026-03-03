@@ -115,7 +115,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
             <Title size="M" as="h3" weight="high" color="high" style={{ marginBottom: '0.75rem' }}>
               What are tokens?
             </Title>
-            <Text size="S" weight="low" color="medium" style={{ lineHeight: 1.6 }}>
+            <Text size="M" weight="low" color="medium" style={{ lineHeight: 1.6 }}>
               Tokens are structured labels that describe every aspect of a conversation. 
               The system automatically detects these from user messages and context, 
               then uses them to shape how the AI responds. Users never see tokens — 
