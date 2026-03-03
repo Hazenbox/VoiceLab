@@ -248,7 +248,7 @@ export const LearningInfoModal = memo(function LearningInfoModal({
             <div style={{
               padding: '0.875rem 1rem',
               borderRadius: '8px',
-              border: `1px solid ${theme.stroke.low}`,
+              border: `1px solid ${theme.stroke.medium}`,
               display: 'flex',
               alignItems: 'flex-start',
               gap: '0.75rem',
@@ -435,7 +435,7 @@ const FeedbackType = memo(function FeedbackType({
     <div style={{
       padding: '0.75rem',
       borderRadius: '8px',
-      border: `1px solid ${theme.stroke.low}`,
+      border: `1px solid ${theme.stroke.medium}`,
       display: 'flex',
       alignItems: 'flex-start',
       gap: '0.75rem',
@@ -520,7 +520,7 @@ const AdminControl = memo(function AdminControl({
     <div style={{
       padding: '0.875rem 1rem',
       borderRadius: '8px',
-      border: `1px solid ${theme.stroke.low}`,
+      border: `1px solid ${theme.stroke.medium}`,
       display: 'flex',
       alignItems: 'flex-start',
       gap: '0.75rem',
@@ -570,7 +570,7 @@ const BeforeAfterExample = memo(function BeforeAfterExample({
         flex: 1,
         padding: '1rem',
         borderRadius: '8px',
-        border: `1px solid ${theme.stroke.low}`,
+        border: `1px solid ${theme.stroke.medium}`,
       }}>
         <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.125rem' }}>
           {beforeLabel}
@@ -584,7 +584,7 @@ const BeforeAfterExample = memo(function BeforeAfterExample({
         flex: 1,
         padding: '1rem',
         borderRadius: '8px',
-        border: `1px solid ${theme.stroke.low}`,
+        border: `1px solid ${theme.stroke.medium}`,
       }}>
         <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.125rem' }}>
           {afterLabel}
