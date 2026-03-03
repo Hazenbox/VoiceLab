@@ -11,6 +11,7 @@ import { Title, Text, Divider, Button } from '@marcelinodzn/ds-react';
 import { DSIcon } from '../../components/DSIcon';
 import { ActionButton } from '../../components/ActionButton';
 import { FlowCanvas, FlowNode, FlowArrow } from '../../components/FlowDiagram';
+import { Badge } from '../../components/ui/Badge';
 
 interface TokenInfoModalProps {
   isOpen: boolean;
@@ -115,7 +116,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
             <Title size="M" as="h3" weight="high" color="high" style={{ marginBottom: '0.75rem' }}>
               What are tokens?
             </Title>
-            <Text size="M" weight="low" color="medium" style={{ lineHeight: 1.6 }}>
+            <Text size="S" weight="low" color="medium" style={{ lineHeight: 1.6 }}>
               Tokens are structured labels that describe every aspect of a conversation. 
               The system automatically detects these from user messages and context, 
               then uses them to shape how the AI responds. Users never see tokens — 
@@ -355,47 +356,118 @@ export const TokenInfoModal = memo(function TokenInfoModal({
 
             <div
               style={{
-                padding: '1.5rem',
+                padding: '1rem',
                 borderRadius: '12px',
-                backgroundColor: theme.background.ghost,
-                border: `1px solid ${theme.stroke.medium}`,
+                overflow: 'hidden',
+                backgroundColor: theme.background.bold,
+                border: `1px solid ${theme.stroke.low}`,
               }}
             >
-              <FlowCanvas height={620} viewBox="0 0 300 620" dotColor={theme.stroke.low}>
-                {[
-                  { y: 0,   label: 'User sends message' },
-                  { y: 70,  label: 'Token Classifier' },
-                  { y: 140, label: 'Tokens assembled' },
-                  { y: 210, label: 'Token Rules applied' },
-                  { y: 280, label: 'Token Gate check' },
-                  { y: 350, label: 'Prompt construction' },
-                  { y: 420, label: 'LLM generation' },
-                  { y: 490, label: 'Token Enforcement' },
-                  { y: 560, label: 'Response delivered' },
-                ].map((node, i, arr) => (
-                  <g key={node.label}>
-                    <FlowNode
-                      x={50}
-                      y={node.y}
-                      width={200}
-                      height={50}
-                      label={node.label}
-                      color={i === arr.length - 1 ? theme.secondary : '#ffffff'}
-                      textColor={i === arr.length - 1 ? '#fff' : theme.text.high}
-                      strokeColor={i === arr.length - 1 ? theme.secondary : theme.stroke.medium}
-                      noShadow
-                    />
-                    {i < arr.length - 1 && (
-                      <FlowArrow
-                        x1={150}
-                        y1={node.y + 53}
-                        x2={150}
-                        y2={node.y + 68}
-                        color={theme.secondary}
-                      />
-                    )}
-                  </g>
-                ))}
+              <FlowCanvas height={520} viewBox="0 0 650 520" dotColor={theme.stroke.low}>
+                {/* Step 1: User sends message */}
+                <FlowNode 
+                  x={175} y={10} width={300} height={40} 
+                  label="User sends message" 
+                  color={theme.background.ghost} 
+                  textColor={theme.text.high} 
+                  strokeColor={theme.stroke.medium} 
+                  noShadow 
+                />
+                <FlowArrow x1={325} y1={50} x2={325} y2={65} color={theme.text.low} />
+                
+                {/* Step 2: Token Classifier */}
+                <FlowNode 
+                  x={175} y={65} width={300} height={40} 
+                  label="Token Classifier" 
+                  sublabel="analyzes message + context"
+                  color={theme.background.ghost} 
+                  textColor={theme.text.high} 
+                  strokeColor={theme.stroke.medium} 
+                  noShadow 
+                />
+                <FlowArrow x1={325} y1={105} x2={325} y2={120} color={theme.text.low} />
+                
+                {/* Step 3: Tokens assembled */}
+                <FlowNode 
+                  x={175} y={120} width={300} height={40} 
+                  label="Tokens assembled" 
+                  sublabel="intent, emotion, safety, channel..."
+                  color={theme.secondary} 
+                  textColor="#fff" 
+                  strokeColor={theme.secondary} 
+                  noShadow 
+                />
+                <FlowArrow x1={325} y1={160} x2={325} y2={175} color={theme.text.low} />
+                
+                {/* Step 4: Token Rules */}
+                <FlowNode 
+                  x={175} y={175} width={300} height={40} 
+                  label="Token Rules" 
+                  sublabel="map values to LLM behavior"
+                  color={theme.secondary} 
+                  textColor="#fff" 
+                  strokeColor={theme.secondary} 
+                  noShadow 
+                />
+                <FlowArrow x1={325} y1={215} x2={325} y2={230} color={theme.text.low} />
+                
+                {/* Step 5: Token Gate */}
+                <FlowNode 
+                  x={175} y={230} width={300} height={40} 
+                  label="Token Gate" 
+                  sublabel="checks for blocking conditions"
+                  color={theme.secondary} 
+                  textColor="#fff" 
+                  strokeColor={theme.secondary} 
+                  noShadow 
+                />
+                <FlowArrow x1={325} y1={270} x2={325} y2={285} color={theme.text.low} />
+                
+                {/* Step 6: Prompt built */}
+                <FlowNode 
+                  x={175} y={285} width={300} height={40} 
+                  label="Prompt built" 
+                  sublabel="with token instructions embedded"
+                  color={theme.background.ghost} 
+                  textColor={theme.text.high} 
+                  strokeColor={theme.stroke.medium} 
+                  noShadow 
+                />
+                <FlowArrow x1={325} y1={325} x2={325} y2={340} color={theme.text.low} />
+                
+                {/* Step 7: LLM generates */}
+                <FlowNode 
+                  x={175} y={340} width={300} height={40} 
+                  label="LLM generates response" 
+                  sublabel="shaped by token rules"
+                  color={theme.background.ghost} 
+                  textColor={theme.text.high} 
+                  strokeColor={theme.stroke.medium} 
+                  noShadow 
+                />
+                <FlowArrow x1={325} y1={380} x2={325} y2={395} color={theme.text.low} />
+                
+                {/* Step 8: Token Enforcement */}
+                <FlowNode 
+                  x={175} y={395} width={300} height={40} 
+                  label="Token Enforcement" 
+                  sublabel="validates output against rules"
+                  color={theme.secondary} 
+                  textColor="#fff" 
+                  strokeColor={theme.secondary} 
+                  noShadow 
+                />
+                <FlowArrow x1={325} y1={435} x2={325} y2={450} color={theme.text.low} />
+                
+                {/* Step 9: Response delivered */}
+                <FlowNode 
+                  x={175} y={450} width={300} height={40} 
+                  label="Response delivered to user" 
+                  color={theme.background.ghost} 
+                  textColor={theme.text.high} 
+                  strokeColor={theme.stroke.medium} 
+                  noShadow 
+                />
               </FlowCanvas>
             </div>
           </section>
@@ -435,18 +507,12 @@ const TokenCategory = memo(function TokenCategory({ label, description, theme }:
       borderRadius: '8px',
       backgroundColor: theme.background.bold,
     }}>
-      <span style={{ 
-        display: 'block', 
-        fontSize: '13px', 
-        fontWeight: 500, 
-        color: theme.text.high, 
-        marginBottom: '0.25rem' 
-      }}>
+      <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.25rem' }}>
         {label}
-      </span>
-      <span style={{ fontSize: '12px', color: theme.text.low }}>
+      </Text>
+      <Text size="XS" weight="low" color="low">
         {description}
-      </span>
+      </Text>
     </div>
   );
 });
@@ -490,13 +556,13 @@ const ArchitectureLayer = memo(function ArchitectureLayer({
         }}>
           {number}
         </span>
-        <span style={{ fontSize: '13px', fontWeight: 500, color: theme.text.high }}>
+        <Text size="S" weight="high" color="high">
           {title}
-        </span>
+        </Text>
       </div>
-      <span style={{ fontSize: '12px', color: theme.text.medium, marginLeft: '28px', display: 'block' }}>
+      <Text size="XS" weight="low" color="medium" style={{ marginLeft: '28px' }}>
         {description}
-      </span>
+      </Text>
     </div>
   );
 });
@@ -572,17 +638,17 @@ const ExampleScenario = memo(function ExampleScenario({
         backgroundColor: theme.background.ghost,
         marginBottom: '0.75rem',
       }}>
-        <span style={{ fontSize: '12px', color: theme.text.low, display: 'block', marginBottom: '0.25rem' }}>
+        <Text size="XS" weight="low" color="low" style={{ display: 'block', marginBottom: '0.25rem' }}>
           User message:
-        </span>
+        </Text>
         <Text size="S" weight="low" color="high" style={{ fontStyle: 'italic' }}>
           "{userMessage}"
         </Text>
       </div>
 
-      <span style={{ fontSize: '12px', color: theme.text.medium, display: 'block', marginBottom: '0.5rem' }}>
+      <Text size="XS" weight="medium" color="medium" style={{ display: 'block', marginBottom: '0.5rem' }}>
         Detected tokens:
-      </span>
+      </Text>
       <div style={{ 
         display: 'flex', 
         flexWrap: 'wrap', 
@@ -590,26 +656,15 @@ const ExampleScenario = memo(function ExampleScenario({
         marginBottom: '0.75rem',
       }}>
         {tokens.map((t) => (
-          <span 
-            key={t.key}
-            style={{
-              padding: '0.25rem 0.5rem',
-              borderRadius: '4px',
-              backgroundColor: theme.background.ghost,
-              fontSize: '11px',
-              fontFamily: 'monospace',
-              color: theme.text.medium,
-            }}
-          >
-            <span style={{ color: theme.text.low }}>{t.key}:</span>{' '}
-            <span style={{ color: theme.text.high, fontWeight: 500 }}>{t.value}</span>
-          </span>
+          <Badge key={t.key} variant="informative" emphasis="low">
+            {t.key}: {t.value}
+          </Badge>
         ))}
       </div>
 
-      <span style={{ fontSize: '12px', color: theme.text.medium, display: 'block', marginBottom: '0.25rem' }}>
+      <Text size="XS" weight="medium" color="medium" style={{ display: 'block', marginBottom: '0.25rem' }}>
         AI behavior:
-      </span>
+      </Text>
       <Text size="S" weight="low" color="high">
         {result}
       </Text>
