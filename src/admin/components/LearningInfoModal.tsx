@@ -342,7 +342,7 @@ export const LearningInfoModal = memo(function LearningInfoModal({
                   label="User sees response" 
                   color={theme.background.ghost} 
                   textColor={theme.text.high} 
-                  strokeColor={theme.stroke.medium} 
+                  strokeColor={theme.background.ghost} 
                   noShadow 
                   labelFontSize={13}
                 />
@@ -355,7 +355,7 @@ export const LearningInfoModal = memo(function LearningInfoModal({
                   sublabel="thumbs up, thumbs down, edit"
                   color={theme.background.ghost} 
                   textColor={theme.text.high} 
-                  strokeColor={theme.stroke.medium} 
+                  strokeColor={theme.background.ghost} 
                   noShadow 
                   labelFontSize={13}
                   sublabelFontSize={11}
@@ -369,7 +369,7 @@ export const LearningInfoModal = memo(function LearningInfoModal({
                   sublabel="extracts patterns"
                   color={theme.background.ghost} 
                   textColor={theme.text.high} 
-                  strokeColor={theme.stroke.medium} 
+                  strokeColor={theme.background.ghost} 
                   noShadow 
                   labelFontSize={13}
                   sublabelFontSize={11}
@@ -433,20 +433,24 @@ const FeedbackType = memo(function FeedbackType({
 }: FeedbackTypeProps) {
   return (
     <div style={{
-      padding: '0.75rem 0.5rem',
+      padding: '0.75rem',
       borderRadius: '8px',
       backgroundColor: theme.background.bold,
-      textAlign: 'center',
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '0.75rem',
     }}>
-      <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ flexShrink: 0, marginTop: '2px' }}>
         {icon}
       </div>
-      <Text size="XS" weight="high" color="high" style={{ display: 'block', marginBottom: '0.125rem' }}>
-        {label}
-      </Text>
-      <Text size="S" weight="low" color="medium">
-        {description}
-      </Text>
+      <div>
+        <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.125rem' }}>
+          {label}
+        </Text>
+        <Text size="S" weight="low" color="medium">
+          {description}
+        </Text>
+      </div>
     </div>
   );
 });
