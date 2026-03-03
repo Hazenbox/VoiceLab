@@ -489,22 +489,12 @@ const KnowledgeCategory = memo(function KnowledgeCategory({
   label, 
   description, 
   theme,
-  variant 
 }: KnowledgeCategoryProps) {
-  const variantColors: Record<string, string> = {
-    negative: '#ef4444',
-    positive: '#22c55e',
-    informative: '#3b82f6',
-    neutral: theme.text.medium,
-    warning: '#f59e0b',
-  };
-
   return (
     <div style={{
       padding: '0.75rem',
       borderRadius: '8px',
       backgroundColor: theme.background.bold,
-      borderLeft: `3px solid ${variantColors[variant]}`,
     }}>
       <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.25rem' }}>
         {label}
