@@ -23,6 +23,10 @@ import { formatDuration, formatRelativeTime } from './utils/formatters';
 import { CorrectionApprovalList } from './components/CorrectionApproval';
 import { CategorySection } from './components/CategorySection';
 import { TokensDisplay } from './components/TokensDisplay';
+import { KnowledgeInfoModal } from './components/KnowledgeInfoModal';
+import { LearningInfoModal } from './components/LearningInfoModal';
+import { DSIcon } from '../components/DSIcon';
+import { ActionButton } from '../components/ActionButton';
 
 // ── Utility: Feedback badge ──────────────────────────────────────
 function FeedbackBadge({ type }: { type: string }) {
@@ -56,13 +60,33 @@ function FeedbackBadge({ type }: { type: string }) {
 // Badge component imported from '../components/ui/Badge'
 
 // ── Utility: Page Header (main page title) ───────────────────────
-function PageHeader({ title, description }: { title: string; description: string }) {
+function PageHeader({ 
+  title, 
+  description, 
+  onInfoClick,
+  infoLabel 
+}: { 
+  title: string; 
+  description: string; 
+  onInfoClick?: () => void;
+  infoLabel?: string;
+}) {
   const theme = useThemeColors();
   return (
     <div className="mb-6">
-      <Title size="L" as="h1" weight="high" color="high">
-        {title}
-      </Title>
+      <div className="flex items-center gap-2">
+        <Title size="L" as="h1" weight="high" color="high">
+          {title}
+        </Title>
+        {onInfoClick && (
+          <ActionButton
+            icon={<DSIcon name="IcInfo" size="S" style={{ color: theme.text.medium }} />}
+            label={infoLabel || `Learn how ${title.toLowerCase()} works`}
+            onClick={onInfoClick}
+            size={28}
+          />
+        )}
+      </div>
       <p 
         style={{
           fontFamily: '"JioType Var"',
@@ -700,6 +724,7 @@ function AdminLearningCenter() {
   
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [feedbackTypeFilter, setFeedbackTypeFilter] = useState<string>('all');
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   
   // Combined refresh for all learning center data
   const refreshAll = useCallback(() => {
@@ -743,7 +768,9 @@ function AdminLearningCenter() {
       <div className="flex justify-between items-center mb-4">
         <PageHeader 
           title="Learning center" 
-          description="How user feedback improves content generation" 
+          description="How user feedback improves content generation"
+          onInfoClick={() => setIsInfoModalOpen(true)}
+          infoLabel="Learn how learning center works"
         />
       </div>
 
@@ -920,6 +947,12 @@ function AdminLearningCenter() {
         </p>
         <CorrectionApprovalList deviceId={userProfile?.deviceId} feedbackCounts={feedbackCounts} />
       </AdminCard>
+
+      {/* Learning Info Modal */}
+      <LearningInfoModal
+        isOpen={isInfoModalOpen}
+        onClose={() => setIsInfoModalOpen(false)}
+      />
     </>
   );
 }
@@ -982,6 +1015,7 @@ function AdminKnowledge() {
   // Type selection and search state
   const [selectedType, setSelectedType] = useState<string>('avoid_word');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   
   // Lazy queries for knowledge - only refresh on demand
   const { 
@@ -1516,9 +1550,17 @@ function AdminKnowledge() {
       {/* Header row with title and search */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <Title size="L" as="h1" weight="high" color="high">
-            Knowledge base
-          </Title>
+          <div className="flex items-center gap-2">
+            <Title size="L" as="h1" weight="high" color="high">
+              Knowledge base
+            </Title>
+            <ActionButton
+              icon={<DSIcon name="IcInfo" size="S" style={{ color: theme.text.medium }} />}
+              label="Learn how knowledge base works"
+              onClick={() => setIsInfoModalOpen(true)}
+              size={28}
+            />
+          </div>
           <p
             style={{
               fontFamily: '"JioType Var"',
@@ -1592,6 +1634,12 @@ function AdminKnowledge() {
           {renderTypeContent(selectedType)}
         </div>
       )}
+
+      {/* Knowledge Info Modal */}
+      <KnowledgeInfoModal
+        isOpen={isInfoModalOpen}
+        onClose={() => setIsInfoModalOpen(false)}
+      />
     </>
   );
 }

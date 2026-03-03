@@ -38,6 +38,10 @@ export { TimeRangeSelector, getTimestampForRange } from './TimeRangeSelector';
 export type { TimeRange } from './TimeRangeSelector';
 export { TokensDisplay } from './TokensDisplay';
 
+// ── Info Modal Components ─────────────────────────────────────────────────────
+export { KnowledgeInfoModal } from './KnowledgeInfoModal';
+export { LearningInfoModal } from './LearningInfoModal';
+
 // ── Chart Components ─────────────────────────────────────────────────────────
 export {
   ChartContainer,
