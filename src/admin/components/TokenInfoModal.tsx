@@ -10,6 +10,7 @@ import { useThemeColors } from '../../theme';
 import { Title, Text, Divider, Button } from '@marcelinodzn/ds-react';
 import { DSIcon } from '../../components/DSIcon';
 import { ActionButton } from '../../components/ActionButton';
+import { FlowCanvas, FlowNode, FlowArrow } from '../../components/FlowDiagram';
 
 interface TokenInfoModalProps {
   isOpen: boolean;
@@ -352,16 +353,50 @@ export const TokenInfoModal = memo(function TokenInfoModal({
               From user message to AI response, tokens shape every step:
             </Text>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <FlowStep number={1} text="User sends message" theme={theme} />
-              <FlowStep number={2} text="Token Classifier analyzes message + context" theme={theme} />
-              <FlowStep number={3} text="Tokens assembled (intent, emotion, safety, channel...)" theme={theme} />
-              <FlowStep number={4} text="Token Rules map values to LLM behavior instructions" theme={theme} />
-              <FlowStep number={5} text="Token Gate checks for blocking conditions" theme={theme} />
-              <FlowStep number={6} text="Prompt built with token instructions embedded" theme={theme} />
-              <FlowStep number={7} text="LLM generates response shaped by token rules" theme={theme} />
-              <FlowStep number={8} text="Token Enforcement validates output against content rules" theme={theme} />
-              <FlowStep number={9} text="Response delivered to user" theme={theme} isLast />
+            <div
+              style={{
+                padding: '1.5rem',
+                borderRadius: '12px',
+                backgroundColor: theme.background.ghost,
+                border: `1px solid ${theme.stroke.medium}`,
+              }}
+            >
+              <FlowCanvas height={620} viewBox="0 0 300 620" dotColor={theme.stroke.low}>
+                {[
+                  { y: 0,   label: 'User sends message' },
+                  { y: 70,  label: 'Token Classifier' },
+                  { y: 140, label: 'Tokens assembled' },
+                  { y: 210, label: 'Token Rules applied' },
+                  { y: 280, label: 'Token Gate check' },
+                  { y: 350, label: 'Prompt construction' },
+                  { y: 420, label: 'LLM generation' },
+                  { y: 490, label: 'Token Enforcement' },
+                  { y: 560, label: 'Response delivered' },
+                ].map((node, i, arr) => (
+                  <g key={node.label}>
+                    <FlowNode
+                      x={50}
+                      y={node.y}
+                      width={200}
+                      height={50}
+                      label={node.label}
+                      color={i === arr.length - 1 ? theme.secondary : '#ffffff'}
+                      textColor={i === arr.length - 1 ? '#fff' : theme.text.high}
+                      strokeColor={i === arr.length - 1 ? theme.secondary : theme.stroke.medium}
+                      noShadow
+                    />
+                    {i < arr.length - 1 && (
+                      <FlowArrow
+                        x1={150}
+                        y1={node.y + 53}
+                        x2={150}
+                        y2={node.y + 68}
+                        color={theme.secondary}
+                      />
+                    )}
+                  </g>
+                ))}
+              </FlowCanvas>
             </div>
           </section>
         </div>
@@ -400,12 +435,18 @@ const TokenCategory = memo(function TokenCategory({ label, description, theme }:
       borderRadius: '8px',
       backgroundColor: theme.background.bold,
     }}>
-      <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.25rem' }}>
+      <span style={{ 
+        display: 'block', 
+        fontSize: '13px', 
+        fontWeight: 500, 
+        color: theme.text.high, 
+        marginBottom: '0.25rem' 
+      }}>
         {label}
-      </Text>
-      <Text size="XS" weight="low" color="low">
+      </span>
+      <span style={{ fontSize: '12px', color: theme.text.low }}>
         {description}
-      </Text>
+      </span>
     </div>
   );
 });
@@ -449,13 +490,13 @@ const ArchitectureLayer = memo(function ArchitectureLayer({
         }}>
           {number}
         </span>
-        <Text size="S" weight="high" color="high">
+        <span style={{ fontSize: '13px', fontWeight: 500, color: theme.text.high }}>
           {title}
-        </Text>
+        </span>
       </div>
-      <Text size="XS" weight="low" color="medium" style={{ marginLeft: '28px' }}>
+      <span style={{ fontSize: '12px', color: theme.text.medium, marginLeft: '28px', display: 'block' }}>
         {description}
-      </Text>
+      </span>
     </div>
   );
 });
@@ -482,7 +523,7 @@ const ImpactRow = memo(function ImpactRow({ token, value, impact, theme, isLast 
       </td>
       <td style={{ 
         padding: '0.5rem 0.75rem', 
-        color: theme.accent,
+        color: theme.text.high,
         fontWeight: 500,
         borderBottom: isLast ? 'none' : `1px solid ${theme.stroke.low}`,
       }}>
@@ -531,17 +572,17 @@ const ExampleScenario = memo(function ExampleScenario({
         backgroundColor: theme.background.ghost,
         marginBottom: '0.75rem',
       }}>
-        <Text size="XS" weight="low" color="low" style={{ display: 'block', marginBottom: '0.25rem' }}>
+        <span style={{ fontSize: '12px', color: theme.text.low, display: 'block', marginBottom: '0.25rem' }}>
           User message:
-        </Text>
+        </span>
         <Text size="S" weight="low" color="high" style={{ fontStyle: 'italic' }}>
           "{userMessage}"
         </Text>
       </div>
 
-      <Text size="XS" weight="medium" color="medium" style={{ display: 'block', marginBottom: '0.5rem' }}>
+      <span style={{ fontSize: '12px', color: theme.text.medium, display: 'block', marginBottom: '0.5rem' }}>
         Detected tokens:
-      </Text>
+      </span>
       <div style={{ 
         display: 'flex', 
         flexWrap: 'wrap', 
@@ -561,67 +602,17 @@ const ExampleScenario = memo(function ExampleScenario({
             }}
           >
             <span style={{ color: theme.text.low }}>{t.key}:</span>{' '}
-            <span style={{ color: theme.accent }}>{t.value}</span>
+            <span style={{ color: theme.text.high, fontWeight: 500 }}>{t.value}</span>
           </span>
         ))}
       </div>
 
-      <Text size="XS" weight="medium" color="medium" style={{ display: 'block', marginBottom: '0.25rem' }}>
+      <span style={{ fontSize: '12px', color: theme.text.medium, display: 'block', marginBottom: '0.25rem' }}>
         AI behavior:
-      </Text>
+      </span>
       <Text size="S" weight="low" color="high">
         {result}
       </Text>
-    </div>
-  );
-});
-
-interface FlowStepProps {
-  number: number;
-  text: string;
-  theme: ReturnType<typeof useThemeColors>;
-  isLast?: boolean;
-}
-
-const FlowStep = memo(function FlowStep({ number, text, theme, isLast }: FlowStepProps) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-      <div style={{
-        width: '24px',
-        height: '24px',
-        borderRadius: '50%',
-        backgroundColor: theme.accent,
-        color: '#fff',
-        fontSize: '12px',
-        fontWeight: 600,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-      }}>
-        {number}
-      </div>
-      <div style={{
-        flex: 1,
-        padding: '0.5rem 0.75rem',
-        borderRadius: '6px',
-        backgroundColor: theme.background.bold,
-        borderLeft: `2px solid ${theme.accent}`,
-      }}>
-        <Text size="S" weight="low" color="high">
-          {text}
-        </Text>
-      </div>
-      {!isLast && (
-        <div style={{ 
-          position: 'absolute',
-          left: '11px',
-          marginTop: '24px',
-          width: '2px',
-          height: '8px',
-          backgroundColor: theme.stroke.low,
-        }} />
-      )}
     </div>
   );
 });
