@@ -554,7 +554,7 @@ const ArchitectureLayer = memo(function ArchitectureLayer({
     <div style={{
       padding: '0.875rem 1rem',
       borderRadius: '8px',
-      border: `1px solid ${highlighted ? color : theme.stroke.low}`,
+      border: highlighted ? 'none' : `1px solid ${theme.stroke.low}`,
       backgroundColor: highlighted ? `${color}10` : theme.background.bold,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
