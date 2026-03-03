@@ -117,14 +117,14 @@ export const LearningInfoModal = memo(function LearningInfoModal({
             </Title>
             <Text size="S" weight="low" color="medium" style={{ lineHeight: 1.6 }}>
               The learning center is a continuous improvement system that learns from user feedback. 
-              Every thumbs up, thumbs down, edit, or comment teaches the AI what works and what 
+              Every thumbs up, thumbs down, edit, or save teaches the AI what works and what 
               doesn&apos;t. Over time, the system gets better at generating content that matches 
               your team&apos;s style and preferences.
             </Text>
             
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(5, 1fr)', 
+              gridTemplateColumns: 'repeat(4, 1fr)', 
               gap: '0.5rem',
               marginTop: '1rem' 
             }}>
@@ -144,12 +144,6 @@ export const LearningInfoModal = memo(function LearningInfoModal({
                 icon="IcEdit"
                 label="Edit" 
                 description="Correction pair"
-                theme={theme}
-              />
-              <FeedbackType 
-                icon="IcComment"
-                label="Comment" 
-                description="Style preference"
                 theme={theme}
               />
               <FeedbackType 
@@ -224,12 +218,6 @@ export const LearningInfoModal = memo(function LearningInfoModal({
                     type="Thumbs down" 
                     weight="0.8" 
                     reason="Clear negative signal, but no specific fix provided"
-                    theme={theme}
-                  />
-                  <WeightRow 
-                    type="Comment" 
-                    weight="0.6" 
-                    reason="Qualitative feedback, useful for style preferences"
                     theme={theme}
                   />
                   <WeightRow 
