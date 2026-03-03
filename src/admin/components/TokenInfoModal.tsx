@@ -372,6 +372,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   textColor={theme.text.high} 
                   strokeColor={theme.stroke.medium} 
                   noShadow 
+                  labelFontSize={13}
                 />
                 <FlowArrow x1={325} y1={50} x2={325} y2={65} color={theme.text.low} />
                 
@@ -384,6 +385,8 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   textColor={theme.text.high} 
                   strokeColor={theme.stroke.medium} 
                   noShadow 
+                  labelFontSize={13}
+                  sublabelFontSize={11}
                 />
                 <FlowArrow x1={325} y1={105} x2={325} y2={120} color={theme.text.low} />
                 
@@ -396,6 +399,8 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   textColor="#fff" 
                   strokeColor={theme.secondary} 
                   noShadow 
+                  labelFontSize={13}
+                  sublabelFontSize={11}
                 />
                 <FlowArrow x1={325} y1={160} x2={325} y2={175} color={theme.text.low} />
                 
@@ -408,6 +413,8 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   textColor="#fff" 
                   strokeColor={theme.secondary} 
                   noShadow 
+                  labelFontSize={13}
+                  sublabelFontSize={11}
                 />
                 <FlowArrow x1={325} y1={215} x2={325} y2={230} color={theme.text.low} />
                 
@@ -420,6 +427,8 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   textColor="#fff" 
                   strokeColor={theme.secondary} 
                   noShadow 
+                  labelFontSize={13}
+                  sublabelFontSize={11}
                 />
                 <FlowArrow x1={325} y1={270} x2={325} y2={285} color={theme.text.low} />
                 
@@ -432,6 +441,8 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   textColor={theme.text.high} 
                   strokeColor={theme.stroke.medium} 
                   noShadow 
+                  labelFontSize={13}
+                  sublabelFontSize={11}
                 />
                 <FlowArrow x1={325} y1={325} x2={325} y2={340} color={theme.text.low} />
                 
@@ -444,6 +455,8 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   textColor={theme.text.high} 
                   strokeColor={theme.stroke.medium} 
                   noShadow 
+                  labelFontSize={13}
+                  sublabelFontSize={11}
                 />
                 <FlowArrow x1={325} y1={380} x2={325} y2={395} color={theme.text.low} />
                 
@@ -456,6 +469,8 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   textColor="#fff" 
                   strokeColor={theme.secondary} 
                   noShadow 
+                  labelFontSize={13}
+                  sublabelFontSize={11}
                 />
                 <FlowArrow x1={325} y1={435} x2={325} y2={450} color={theme.text.low} />
                 
@@ -467,6 +482,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   textColor={theme.text.high} 
                   strokeColor={theme.stroke.medium} 
                   noShadow 
+                  labelFontSize={13}
                 />
               </FlowCanvas>
             </div>

@@ -28,10 +28,14 @@ export interface FlowNodeProps {
   strokeColor: string;
   badge?: { text: string; color: string; textColor: string };
   noShadow?: boolean;
+  labelFontSize?: number;
+  sublabelFontSize?: number;
 }
 
 export const FlowNode = memo(function FlowNode({ 
-  x, y, width, height, label, sublabel, color, textColor, strokeColor, badge, noShadow
+  x, y, width, height, label, sublabel, color, textColor, strokeColor, badge, noShadow,
+  labelFontSize = 12,
+  sublabelFontSize = 10,
 }: FlowNodeProps) {
   return (
     <g>
@@ -81,7 +85,7 @@ export const FlowNode = memo(function FlowNode({
         textAnchor="middle"
         dominantBaseline="middle"
         fill={textColor}
-        fontSize={12}
+        fontSize={labelFontSize}
         fontWeight={500}
         fontFamily="'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
       >
@@ -94,7 +98,7 @@ export const FlowNode = memo(function FlowNode({
           textAnchor="middle"
           dominantBaseline="middle"
           fill={textColor}
-          fontSize={10}
+          fontSize={sublabelFontSize}
           opacity={0.7}
           fontFamily="'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
         >
