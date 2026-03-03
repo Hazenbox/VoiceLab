@@ -129,19 +129,19 @@ export const LearningInfoModal = memo(function LearningInfoModal({
               marginTop: '1rem' 
             }}>
               <FeedbackType 
-                icon="IcThumbUp"
+                icon="IcConfirm"
                 label="Thumbs up" 
                 description="Positive signal"
                 theme={theme}
               />
               <FeedbackType 
-                icon="IcThumbDown"
+                icon="IcDislike"
                 label="Thumbs down" 
                 description="Negative signal"
                 theme={theme}
               />
               <FeedbackType 
-                icon="IcEdit"
+                icon="IcCode"
                 label="Edit" 
                 description="Correction pair"
                 theme={theme}
@@ -233,7 +233,7 @@ export const LearningInfoModal = memo(function LearningInfoModal({
               alignItems: 'flex-start',
               gap: '0.75rem',
             }}>
-              <DSIcon name="IcClock" size="S" style={{ color: theme.secondary, marginTop: '2px' }} />
+              <DSIcon name="IcRefresh" size="S" style={{ color: theme.secondary, marginTop: '2px' }} />
               <div>
                 <Text size="S" weight="high" color="high" style={{ display: 'block', marginBottom: '0.25rem' }}>
                   Recency decay
@@ -274,7 +274,7 @@ export const LearningInfoModal = memo(function LearningInfoModal({
                 color="#ef4444"
               />
               <AdminControl
-                icon="IcEye"
+                icon="IcSearch"
                 title="Review queue"
                 description="See all pending corrections, sorted by impact and recency"
                 theme={theme}
