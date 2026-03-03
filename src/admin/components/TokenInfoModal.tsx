@@ -190,7 +190,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                 title="Jio Experience Layer (TOKENS)"
                 description="Routing, brand tone, safety posture, emotion response, cultural localization, nudging controls"
                 theme={theme}
-                color={theme.accent}
+                color={theme.secondary}
                 highlighted
               />
               <div style={{ display: 'flex', justifyContent: 'center' }}>
