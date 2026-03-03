@@ -5,7 +5,8 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/:path*" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/assets/:path*", "destination": "/assets/:path*" },
+    { "source": "/((?!assets/).*)", "destination": "/" }
   ],
   "headers": [
     {

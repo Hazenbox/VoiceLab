@@ -21,10 +21,57 @@ const JIOSAAVN_API_BASE = 'https://saavn.sumit.co/api';
 const DEFAULT_LIMIT = 5;
 const MAX_LIMIT = 10;
 const REQUEST_TIMEOUT_MS = 10000;
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 500;
 
 export const config = {
   maxDuration: 15,
 };
+
+function createEmptyResponse() {
+  return {
+    success: true,
+    data: {
+      songs: { results: [], position: 0 },
+      playlists: { results: [], position: 0 },
+      artists: { results: [], position: 0 },
+      albums: { results: [], position: 0 },
+      topQuery: { results: [], position: 0 },
+    },
+    _meta: {
+      fallback: true,
+      reason: 'upstream_unavailable',
+    },
+  };
+}
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  retries: number = MAX_RETRIES
+): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.warn(`[API/jiosaavn] Attempt ${attempt + 1}/${retries + 1} failed:`, lastError.message);
+      
+      if (attempt < retries) {
+        await sleep(RETRY_DELAY_MS * (attempt + 1));
+      }
+    }
+  }
+  
+  throw lastError;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!handleCors(req, res)) return;
@@ -76,7 +123,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     console.log(`[API/jiosaavn] Searching: "${searchQuery}" (limit: ${limit})`);
     
-    const response = await fetch(apiUrl.toString(), {
+    const response = await fetchWithRetry(apiUrl.toString(), {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -91,30 +138,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error(`[API/jiosaavn] Upstream error: ${response.status} ${response.statusText}`);
       
       if (response.status === 429) {
-        return res.status(429).json({
-          success: false,
-          error: 'JioSaavn API rate limit exceeded',
-          code: 'UPSTREAM_RATE_LIMIT',
-          retryAfter: 60,
+        res.setHeader('Cache-Control', 'no-store');
+        return res.status(200).json({
+          ...createEmptyResponse(),
+          _meta: { fallback: true, reason: 'rate_limited' },
         });
       }
       
-      return res.status(502).json({
-        success: false,
-        error: 'Failed to fetch from JioSaavn API',
-        code: 'UPSTREAM_ERROR',
-        upstreamStatus: response.status,
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({
+        ...createEmptyResponse(),
+        _meta: { fallback: true, reason: 'upstream_error', upstreamStatus: response.status },
       });
     }
     
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('[API/jiosaavn] Failed to parse upstream response:', parseError);
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({
+        ...createEmptyResponse(),
+        _meta: { fallback: true, reason: 'parse_error' },
+      });
+    }
     
     if (!data.success || !data.data) {
       console.warn('[API/jiosaavn] Invalid response structure from upstream');
-      return res.status(502).json({
-        success: false,
-        error: 'Invalid response from JioSaavn API',
-        code: 'INVALID_UPSTREAM_RESPONSE',
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({
+        ...createEmptyResponse(),
+        _meta: { fallback: true, reason: 'invalid_response' },
       });
     }
     
@@ -152,19 +207,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     clearTimeout(timeoutId);
     
     if (error instanceof Error && error.name === 'AbortError') {
-      console.error('[API/jiosaavn] Request timeout');
-      return res.status(504).json({
-        success: false,
-        error: 'Request to JioSaavn API timed out',
-        code: 'TIMEOUT',
+      console.error('[API/jiosaavn] Request timeout after retries');
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({
+        ...createEmptyResponse(),
+        _meta: { fallback: true, reason: 'timeout' },
       });
     }
     
     console.error('[API/jiosaavn] Unexpected error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR',
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).json({
+      ...createEmptyResponse(),
+      _meta: { 
+        fallback: true, 
+        reason: 'internal_error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
     });
   }
 }
