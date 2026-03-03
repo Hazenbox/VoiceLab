@@ -363,7 +363,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                 border: `1px solid ${theme.stroke.low}`,
               }}
             >
-              <FlowCanvas height={520} viewBox="0 0 650 520" dotColor={theme.stroke.low}>
+              <FlowCanvas height={600} viewBox="0 0 650 600" dotColor={theme.stroke.low}>
                 {/* Step 1: User sends message */}
                 <FlowNode 
                   x={175} y={10} width={300} height={40} 
@@ -374,11 +374,11 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   noShadow 
                   labelFontSize={13}
                 />
-                <FlowArrow x1={325} y1={50} x2={325} y2={65} color={theme.text.low} />
+                <FlowArrow x1={325} y1={50} x2={325} y2={75} color={theme.text.low} />
                 
                 {/* Step 2: Token Classifier */}
                 <FlowNode 
-                  x={175} y={65} width={300} height={40} 
+                  x={175} y={75} width={300} height={40} 
                   label="Token Classifier" 
                   sublabel="analyzes message + context"
                   color={theme.background.ghost} 
@@ -388,11 +388,11 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   labelFontSize={13}
                   sublabelFontSize={11}
                 />
-                <FlowArrow x1={325} y1={105} x2={325} y2={120} color={theme.text.low} />
+                <FlowArrow x1={325} y1={115} x2={325} y2={140} color={theme.text.low} />
                 
                 {/* Step 3: Tokens assembled */}
                 <FlowNode 
-                  x={175} y={120} width={300} height={40} 
+                  x={175} y={140} width={300} height={40} 
                   label="Tokens assembled" 
                   sublabel="intent, emotion, safety, channel..."
                   color={theme.secondary} 
@@ -402,11 +402,11 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   labelFontSize={13}
                   sublabelFontSize={11}
                 />
-                <FlowArrow x1={325} y1={160} x2={325} y2={175} color={theme.text.low} />
+                <FlowArrow x1={325} y1={180} x2={325} y2={205} color={theme.text.low} />
                 
                 {/* Step 4: Token Rules */}
                 <FlowNode 
-                  x={175} y={175} width={300} height={40} 
+                  x={175} y={205} width={300} height={40} 
                   label="Token Rules" 
                   sublabel="map values to LLM behavior"
                   color={theme.secondary} 
@@ -416,11 +416,11 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   labelFontSize={13}
                   sublabelFontSize={11}
                 />
-                <FlowArrow x1={325} y1={215} x2={325} y2={230} color={theme.text.low} />
+                <FlowArrow x1={325} y1={245} x2={325} y2={270} color={theme.text.low} />
                 
                 {/* Step 5: Token Gate */}
                 <FlowNode 
-                  x={175} y={230} width={300} height={40} 
+                  x={175} y={270} width={300} height={40} 
                   label="Token Gate" 
                   sublabel="checks for blocking conditions"
                   color={theme.secondary} 
@@ -430,11 +430,11 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   labelFontSize={13}
                   sublabelFontSize={11}
                 />
-                <FlowArrow x1={325} y1={270} x2={325} y2={285} color={theme.text.low} />
+                <FlowArrow x1={325} y1={310} x2={325} y2={335} color={theme.text.low} />
                 
                 {/* Step 6: Prompt built */}
                 <FlowNode 
-                  x={175} y={285} width={300} height={40} 
+                  x={175} y={335} width={300} height={40} 
                   label="Prompt built" 
                   sublabel="with token instructions embedded"
                   color={theme.background.ghost} 
@@ -444,11 +444,11 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   labelFontSize={13}
                   sublabelFontSize={11}
                 />
-                <FlowArrow x1={325} y1={325} x2={325} y2={340} color={theme.text.low} />
+                <FlowArrow x1={325} y1={375} x2={325} y2={400} color={theme.text.low} />
                 
                 {/* Step 7: LLM generates */}
                 <FlowNode 
-                  x={175} y={340} width={300} height={40} 
+                  x={175} y={400} width={300} height={40} 
                   label="LLM generates response" 
                   sublabel="shaped by token rules"
                   color={theme.background.ghost} 
@@ -458,11 +458,11 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   labelFontSize={13}
                   sublabelFontSize={11}
                 />
-                <FlowArrow x1={325} y1={380} x2={325} y2={395} color={theme.text.low} />
+                <FlowArrow x1={325} y1={440} x2={325} y2={465} color={theme.text.low} />
                 
                 {/* Step 8: Token Enforcement */}
                 <FlowNode 
-                  x={175} y={395} width={300} height={40} 
+                  x={175} y={465} width={300} height={40} 
                   label="Token Enforcement" 
                   sublabel="validates output against rules"
                   color={theme.secondary} 
@@ -472,11 +472,11 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   labelFontSize={13}
                   sublabelFontSize={11}
                 />
-                <FlowArrow x1={325} y1={435} x2={325} y2={450} color={theme.text.low} />
+                <FlowArrow x1={325} y1={505} x2={325} y2={530} color={theme.text.low} />
                 
                 {/* Step 9: Response delivered */}
                 <FlowNode 
-                  x={175} y={450} width={300} height={40} 
+                  x={175} y={530} width={300} height={40} 
                   label="Response delivered to user" 
                   color={theme.background.ghost} 
                   textColor={theme.text.high} 
