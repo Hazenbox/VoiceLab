@@ -1005,7 +1005,7 @@ export const TokensDisplay = memo(function TokensDisplay() {
         <div>
           <div className="flex items-center gap-2">
             <Title size="L" as="h1" weight="high" color="high">
-              Tokens specification
+              Tokens
             </Title>
             <ActionButton
               icon={<DSIcon name="IcInfo" size="S" style={{ color: theme.text.medium }} />}
