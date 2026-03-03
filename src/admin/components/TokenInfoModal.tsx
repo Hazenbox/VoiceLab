@@ -370,7 +370,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   label="User sends message" 
                   color={theme.background.ghost} 
                   textColor={theme.text.high} 
-                  strokeColor={theme.stroke.medium} 
+                  strokeColor={theme.background.ghost} 
                   noShadow 
                   labelFontSize={13}
                 />
@@ -383,7 +383,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   sublabel="analyzes message + context"
                   color={theme.background.ghost} 
                   textColor={theme.text.high} 
-                  strokeColor={theme.stroke.medium} 
+                  strokeColor={theme.background.ghost} 
                   noShadow 
                   labelFontSize={13}
                   sublabelFontSize={11}
@@ -439,7 +439,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   sublabel="with token instructions embedded"
                   color={theme.background.ghost} 
                   textColor={theme.text.high} 
-                  strokeColor={theme.stroke.medium} 
+                  strokeColor={theme.background.ghost} 
                   noShadow 
                   labelFontSize={13}
                   sublabelFontSize={11}
@@ -453,7 +453,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   sublabel="shaped by token rules"
                   color={theme.background.ghost} 
                   textColor={theme.text.high} 
-                  strokeColor={theme.stroke.medium} 
+                  strokeColor={theme.background.ghost} 
                   noShadow 
                   labelFontSize={13}
                   sublabelFontSize={11}
@@ -480,7 +480,7 @@ export const TokenInfoModal = memo(function TokenInfoModal({
                   label="Response delivered to user" 
                   color={theme.background.ghost} 
                   textColor={theme.text.high} 
-                  strokeColor={theme.stroke.medium} 
+                  strokeColor={theme.background.ghost} 
                   noShadow 
                   labelFontSize={13}
                 />
