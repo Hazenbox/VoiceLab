@@ -742,8 +742,8 @@ function AdminLearningCenter() {
     });
   }, [corrections, learningStats, feedbackCounts]);
 
-  // Loading state
-  if (correctionsLoading || (corrections === undefined && learningStats === undefined)) {
+  // Loading state - wait for ALL required data before rendering
+  if (correctionsLoading || corrections === undefined || learningStats === undefined) {
     return <AdminLoadingSkeleton />;
   }
   
