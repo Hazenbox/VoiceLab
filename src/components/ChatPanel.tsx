@@ -704,12 +704,10 @@ export const ChatPanel = memo(function ChatPanel({
           />
           
           {/* JioSaavn Exploration - shows when music topics are detected */}
-          {/* TEMPORARILY HIDDEN - uncomment to re-enable
           <JioSaavnExploration
             messageId={message.id}
             messageContent={assistantContent}
           />
-          */}
           
           {/* JioHealthHub Action - shows when health topics are detected (LLM-based) */}
           {/* TEMPORARILY HIDDEN - uncomment to re-enable
