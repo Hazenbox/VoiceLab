@@ -182,7 +182,10 @@ export async function classifyMusicContent(
     clearTimeout(timeoutId);
     
     if (!response.ok) {
-      throw new Error(`LLM request failed: ${response.status}`);
+      console.warn(`[LLMMusicDetector] LLM request failed: ${response.status}, using keyword fallback`);
+      const fallbackResult = keywordDetectMusicTopic(content);
+      setCache(content, fallbackResult);
+      return fallbackResult;
     }
     
     const data = await response.json();

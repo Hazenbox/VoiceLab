@@ -182,7 +182,10 @@ export async function classifyHealthContent(
     clearTimeout(timeoutId);
     
     if (!response.ok) {
-      throw new Error(`LLM request failed: ${response.status}`);
+      console.warn(`[LLMHealthDetector] LLM request failed: ${response.status}, using keyword fallback`);
+      const fallbackResult = keywordDetectHealthTopic(content);
+      setCache(content, fallbackResult);
+      return fallbackResult;
     }
     
     const data = await response.json();
