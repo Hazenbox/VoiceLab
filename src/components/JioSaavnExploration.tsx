@@ -400,8 +400,8 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
     };
   }, []);
   
-  if (musicTopic?.detected && isLoading) {
-    console.log('[JioSaavnExploration] Loading playlists...', { isLoading });
+  if (isDetecting || (musicTopic?.detected && isLoading)) {
+    console.log('[JioSaavnExploration] Loading playlists...', { isLoading, isDetecting });
     return (
       <div
         className="mt-4 rounded-2xl overflow-hidden"
