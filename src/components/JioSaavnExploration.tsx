@@ -400,7 +400,9 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
     };
   }, []);
   
-  if (isDetecting || (musicTopic?.detected && isLoading)) {
+  // Only show loading skeleton AFTER music is detected and playlists are loading
+  // Don't show during detection phase to avoid false loading states for non-music content
+  if (musicTopic?.detected && isLoading) {
     console.log('[JioSaavnExploration] Loading playlists...', { isLoading, isDetecting });
     return (
       <div
@@ -445,6 +447,11 @@ export const JioSaavnExploration = memo(function JioSaavnExploration({
         </div>
       </div>
     );
+  }
+  
+  // Don't show anything while detecting (avoid false positives)
+  if (isDetecting) {
+    return null;
   }
   
   if (!musicTopic?.detected) {
